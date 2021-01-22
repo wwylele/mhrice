@@ -1,0 +1,11 @@
+[package]
+name = "mhrice"
+version = "0.1.0"
+authors = ["Weiyi Wang <wwylele@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+murmur3 = "0.5"
