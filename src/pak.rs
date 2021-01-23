@@ -1,15 +1,9 @@
+use crate::{read_ext::ReadExt, suffix::SUFFIX_MAP};
 use anyhow::*;
 use murmur3::murmur3_32;
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::io::{Read, Seek, SeekFrom};
-
-#[derive(Debug)]
-struct FileInfo {
-    offset: u64,
-    len_compressed: u64,
-    len: u64,
-    format: u64,
-}
 
 #[derive(Debug, Copy, Clone)]
 pub struct PakFileIndex(u32);
@@ -27,54 +21,67 @@ impl<F: Read + Seek> PakReader<F> {
         if &magic != b"KPKA" {
             bail!("Wrong magic for PAK file");
         }
-        let mut version = [0; 4];
-        file.read_exact(&mut version)?;
-        if u32::from_le_bytes(version) != 4 {
+        let version = file.read_u32()?;
+        if version != 4 {
             bail!("Wrong version for PAK file");
         }
-        let mut count_buf = [0; 4];
-        file.read_exact(&mut count_buf)?;
-        let count = u32::from_le_bytes(count_buf);
+        let count = file.read_u32()?;
         file.seek(SeekFrom::Current(4))?;
 
         let mut hash_map = HashMap::new();
         for index in 0..count {
-            let mut hash = [0; 8];
-            file.read_exact(&mut hash)?;
+            let hash = file.read_u64()?;
             file.seek(SeekFrom::Current(0x28))?;
-            hash_map.insert(u64::from_le_bytes(hash), PakFileIndex(index));
+            if hash_map.insert(hash, PakFileIndex(index)).is_some() {
+                bail!("Duplicate hash");
+            }
         }
 
         Ok(PakReader { file, hash_map })
     }
 
-    pub fn find_file(&mut self, path: &str) -> Option<(PakFileIndex, String)> {
+    pub fn find_file(&mut self, path: &str) -> Result<(PakFileIndex, String)> {
         fn iter(a: [u8; 2]) -> impl Iterator<Item = u8> {
             std::iter::once(a[0]).chain(std::iter::once(a[1]))
         }
 
-        // It is still unknown how the suffix is determined, so let's just try
-        // all numbers under 100
-        for suffix in 0..100 {
-            let full_path = format!("natives/NSW/{}.{}", path, suffix);
-            let upper: Vec<u8> = full_path
-                .to_uppercase()
-                .encode_utf16()
-                .flat_map(|u| iter(u16::to_le_bytes(u)))
-                .collect();
-            let lower: Vec<u8> = full_path
-                .to_lowercase()
-                .encode_utf16()
-                .flat_map(|u| iter(u16::to_le_bytes(u)))
-                .collect();
-            let seed = 0xFFFF_FFFF;
-            let hash: u64 = u64::from(murmur3_32(&mut &lower[..], seed).unwrap())
-                | (u64::from(murmur3_32(&mut &upper[..], seed).unwrap()) << 32);
-            if let Some(&index) = self.hash_map.get(&hash) {
-                return Some((index, full_path));
-            }
-        }
+        let dot = path.rfind('.').context("Path missing extension")?;
+        let suffix = *SUFFIX_MAP
+            .get(&path[dot + 1..])
+            .context("Unknown extension")?;
+        let full_path = format!("natives/NSW/{}.{}", path, suffix);
+        let upper: Vec<u8> = full_path
+            .to_uppercase()
+            .encode_utf16()
+            .flat_map(|u| iter(u16::to_le_bytes(u)))
+            .collect();
+        let lower: Vec<u8> = full_path
+            .to_lowercase()
+            .encode_utf16()
+            .flat_map(|u| iter(u16::to_le_bytes(u)))
+            .collect();
+        let seed = 0xFFFF_FFFF;
+        let hash: u64 = u64::from(murmur3_32(&mut &lower[..], seed).unwrap())
+            | (u64::from(murmur3_32(&mut &upper[..], seed).unwrap()) << 32);
+        let index = *self.hash_map.get(&hash).context("No matching hash")?;
+        Ok((index, full_path))
+    }
 
-        None
+    pub fn read_file(&mut self, PakFileIndex(index): PakFileIndex) -> Result<Vec<u8>> {
+        let info_offset = 0x10 + 0x30 * u64::from(index) + 8;
+        self.file.seek(SeekFrom::Start(info_offset))?;
+        let offset = self.file.read_u64()?;
+        let len_compressed = self.file.read_u64()?;
+        let len = self.file.read_u64()?;
+        let format = self.file.read_u64()?;
+        if format != 2 {
+            bail!("Unsupported format: {}", format);
+        }
+        self.file.seek(SeekFrom::Start(offset))?;
+        let decoded = zstd::decode_all(self.file.by_ref().take(len_compressed))?;
+        if u64::try_from(decoded.len()).unwrap() != len {
+            bail!("Expected size {}, actual size {}", len, decoded.len());
+        }
+        Ok(decoded)
     }
 }
