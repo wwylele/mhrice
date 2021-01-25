@@ -1,4 +1,4 @@
-use crate::file_ext::FileExt;
+use crate::file_ext::*;
 use crate::suffix::SUFFIX_MAP;
 use anyhow::*;
 use murmur3::murmur3_32;

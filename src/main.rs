@@ -5,6 +5,7 @@ use std::io::Cursor;
 use structopt::*;
 
 mod align;
+mod extract;
 mod file_ext;
 mod pak;
 mod pfb;
@@ -39,6 +40,11 @@ enum Mhrice {
     },
 
     Scan {
+        #[structopt(short, long)]
+        pak: String,
+    },
+
+    GenJson {
         #[structopt(short, long)]
         pak: String,
     },
@@ -114,20 +120,13 @@ fn scan(pak: String) -> Result<()> {
             let index: usize = index.try_into()?;
             nodes[index].parsed = true;
 
-            for child in user.children {
-                let (cindex, _) = if let Ok(found) = pak.find_file(&child.name) {
-                    found
-                } else {
-                    println!("missing {}", child.name);
-                    continue;
-                };
-                let cindex: usize = cindex.raw().try_into()?;
-                nodes[cindex].name = Some(child.name);
-                nodes[cindex].has_parent = true;
-                nodes[index].children.push(cindex);
-            }
+            let children = user
+                .children
+                .into_iter()
+                .map(|c| c.name)
+                .chain(user.resource_names);
 
-            for child in user.resource_names {
+            for child in children {
                 let (cindex, _) = if let Ok(found) = pak.find_file(&child) {
                     found
                 } else {
@@ -145,20 +144,13 @@ fn scan(pak: String) -> Result<()> {
             let index: usize = index.try_into()?;
             nodes[index].parsed = true;
 
-            for child in pfb.children {
-                let (cindex, _) = if let Ok(found) = pak.find_file(&child.name) {
-                    found
-                } else {
-                    println!("missing {}", child.name);
-                    continue;
-                };
-                let cindex: usize = cindex.raw().try_into()?;
-                nodes[cindex].name = Some(child.name);
-                nodes[cindex].has_parent = true;
-                nodes[index].children.push(cindex);
-            }
+            let children = pfb
+                .children
+                .into_iter()
+                .map(|c| c.name)
+                .chain(pfb.resource_names);
 
-            for child in pfb.resource_names {
+            for child in children {
                 let (cindex, _) = if let Ok(found) = pak.find_file(&child) {
                     found
                 } else {
@@ -175,33 +167,15 @@ fn scan(pak: String) -> Result<()> {
                 .context(format!("Failed to open SCN at {}", index))?;
             let index: usize = index.try_into()?;
             nodes[index].parsed = true;
-            for child in scn.children {
-                let (cindex, _) = if let Ok(found) = pak.find_file(&child.name) {
-                    found
-                } else {
-                    println!("missing {}", child.name);
-                    continue;
-                };
-                let cindex: usize = cindex.raw().try_into()?;
-                nodes[cindex].name = Some(child.name);
-                nodes[cindex].has_parent = true;
-                nodes[index].children.push(cindex);
-            }
 
-            for child in scn.resource_a_names {
-                let (cindex, _) = if let Ok(found) = pak.find_file(&child) {
-                    found
-                } else {
-                    println!("missing {}", child);
-                    continue;
-                };
-                let cindex: usize = cindex.raw().try_into()?;
-                nodes[cindex].name = Some(child);
-                nodes[cindex].has_parent = true;
-                nodes[index].children.push(cindex);
-            }
+            let children = scn
+                .children
+                .into_iter()
+                .map(|c| c.name)
+                .chain(scn.resource_a_names)
+                .chain(scn.resource_b_names);
 
-            for child in scn.resource_b_names {
+            for child in children {
                 let (cindex, _) = if let Ok(found) = pak.find_file(&child) {
                     found
                 } else {
@@ -224,6 +198,9 @@ fn scan(pak: String) -> Result<()> {
         visit_tree(&mut nodes, index, 0);
     }
 
+    let named = nodes.iter().filter(|p| p.name.is_some()).count();
+    println!("Named file ratio = {}", named as f64 / nodes.len() as f64);
+
     for user in nodes {
         if user.parsed && !user.visited {
             bail!("Cycle detected")
@@ -234,10 +211,18 @@ fn scan(pak: String) -> Result<()> {
     Ok(())
 }
 
+fn gen_json(pak: String) -> Result<()> {
+    let pedia = extract::gen_pedia(pak)?;
+    let json = serde_json::to_string_pretty(&pedia)?;
+    println!("{}", json);
+    Ok(())
+}
+
 fn main() -> Result<()> {
     match Mhrice::from_args() {
         Mhrice::Dump { pak, name, output } => dump(pak, name, output),
         Mhrice::DumpIndex { pak, index, output } => dump_index(pak, index, output),
         Mhrice::Scan { pak } => scan(pak),
+        Mhrice::GenJson { pak } => gen_json(pak),
     }
 }

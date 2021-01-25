@@ -1,8 +1,8 @@
-use crate::file_ext::FileExt;
+use crate::file_ext::*;
 use crate::rsz::Rsz;
 use crate::user::UserChild;
 use anyhow::*;
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{Read, Seek};
 
 #[derive(Debug)]
 pub struct Scn {
@@ -18,33 +18,55 @@ impl Scn {
         if &magic != b"SCN\0" {
             bail!("Wrong magic for SCN file");
         }
-        let a_count = file.read_u32()?;
+        let nergigante_count = file.read_u32()?;
         let resource_a_count = file.read_u32()?;
-        let c_count = file.read_u32()?;
+        let velkhana_count = file.read_u32()?;
         let resource_b_count = file.read_u32()?;
         let child_count = file.read_u32()?;
 
-        let what_offset = file.read_u64()?;
+        let velkhana_offset = file.read_u64()?;
         let resource_a_list_offset = file.read_u64()?;
         let resource_b_list_offset = file.read_u64()?;
         let child_list_offset = file.read_u64()?;
         let rsz_offset = file.read_u64()?;
-        // TODO: more data here
 
-        file.seek(SeekFrom::Start(resource_a_list_offset))?; // TODO: Remove this
-        file.seek_align_up(resource_a_list_offset, 16)
+        let _ = (0..nergigante_count)
+            .map(|_| {
+                file.read_u32()?;
+                file.read_u32()?;
+                file.read_u32()?;
+                file.read_u32()?;
+                file.read_u32()?;
+                file.read_u32()?;
+                file.read_u32()?;
+                file.read_u32()?;
+                Ok(())
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        file.seek_noop(velkhana_offset)
+            .context("Undisconvered data before velkhana list")?;
+        let _ = (0..velkhana_count)
+            .map(|_| {
+                file.read_u32()?;
+                file.read_u32()?;
+                Ok(())
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        file.seek_assert_align_up(resource_a_list_offset, 16)
             .context("Undisconvered data before resource A list")?;
         let resource_a_name_offsets = (0..resource_a_count)
             .map(|_| file.read_u64())
             .collect::<Result<Vec<_>>>()?;
 
-        file.seek_align_up(resource_b_list_offset, 16)
+        file.seek_assert_align_up(resource_b_list_offset, 16)
             .context("Undisconvered data before resource B list")?;
         let resource_b_name_offsets = (0..resource_b_count)
             .map(|_| file.read_u64())
             .collect::<Result<Vec<_>>>()?;
 
-        file.seek_align_up(child_list_offset, 16)
+        file.seek_assert_align_up(child_list_offset, 16)
             .context("Undisconvered data before child list")?;
         let child_info = (0..child_count)
             .map(|_| {

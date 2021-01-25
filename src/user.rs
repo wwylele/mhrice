@@ -1,4 +1,4 @@
-use crate::file_ext::FileExt;
+use crate::file_ext::*;
 use crate::rsz::Rsz;
 use anyhow::*;
 use std::io::{Read, Seek};
@@ -32,13 +32,13 @@ impl User {
         let child_list_offset = file.read_u64()?;
         let rsz_offset = file.read_u64()?;
 
-        file.seek_align_up(resource_list_offset, 16)
+        file.seek_assert_align_up(resource_list_offset, 16)
             .context("Undisconvered data before resource list")?;
         let resource_name_offsets = (0..resource_count)
             .map(|_| file.read_u64())
             .collect::<Result<Vec<_>>>()?;
 
-        file.seek_align_up(child_list_offset, 16)
+        file.seek_assert_align_up(child_list_offset, 16)
             .context("Undisconvered data before child list")?;
         let child_info = (0..child_count)
             .map(|_| {
