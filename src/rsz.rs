@@ -111,7 +111,8 @@ impl Rsz {
         let mut node_buf: Vec<Option<Box<dyn Any>>> = vec![None];
         let mut cursor = Cursor::new(&self.data);
         for td in self.type_descriptors.iter().skip(1) {
-            let deserializer = RSZ_TYPE_MAP.get(td).context("Unsupported type")?;
+            let hash = u32::try_from(*td & 0xFFFFFFFF)?;
+            let deserializer = RSZ_TYPE_MAP.get(&hash).context("Unsupported type")?;
             let mut rsz_deserializer = RszDeserializer {
                 node_buf: &mut node_buf,
                 cursor: &mut cursor,
@@ -191,18 +192,20 @@ impl<'a, 'b> Read for RszDeserializer<'a, 'b> {
 
 pub trait FromRsz: Sized {
     fn from_rsz(rsz: &mut RszDeserializer) -> Result<Self>;
-    const HASH: u64;
+    const SYMBOL: &'static str;
+    fn type_hash() -> u32 {
+        murmur3::murmur3_32(&mut Self::SYMBOL.as_bytes(), 0xFFFF_FFFF).unwrap()
+    }
 }
 
 type RszDeserializerFn = fn(&mut RszDeserializer) -> Result<Box<dyn Any>>;
 
-static RSZ_TYPE_MAP: Lazy<HashMap<u64, RszDeserializerFn>> = Lazy::new(|| {
+static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
     let mut m = HashMap::new();
 
-    fn register<T: 'static + FromRsz>(m: &mut HashMap<u64, RszDeserializerFn>) {
-        let old = m.insert(T::HASH, |rsz| {
-            Ok(Box::new(T::from_rsz(rsz)?) as Box<dyn Any>)
-        });
+    fn register<T: 'static + FromRsz>(m: &mut HashMap<u32, RszDeserializerFn>) {
+        let hash = T::type_hash();
+        let old = m.insert(hash, |rsz| Ok(Box::new(T::from_rsz(rsz)?) as Box<dyn Any>));
         if old.is_some() {
             panic!("Multiple type reigstered for the same hash")
         }
@@ -210,9 +213,9 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u64, RszDeserializerFn>> = Lazy::new(|| {
 
     use crate::extract::*;
 
-    register::<HitzoneValue>(&mut m);
-    register::<HitzoneValuePack>(&mut m);
-    register::<MonsterMeatData>(&mut m);
+    register::<MeatGroupInfo>(&mut m);
+    register::<EnemyMeatContainer>(&mut m);
+    register::<EnemyMeatData>(&mut m);
 
     m
 });

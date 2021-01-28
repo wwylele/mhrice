@@ -12,11 +12,13 @@ mod pfb;
 mod rsz;
 mod scn;
 mod suffix;
+mod tdb;
 mod user;
 
 use pak::*;
 use pfb::*;
 use scn::*;
+use tdb::*;
 use user::*;
 
 #[derive(StructOpt)]
@@ -47,6 +49,11 @@ enum Mhrice {
     GenJson {
         #[structopt(short, long)]
         pak: String,
+    },
+
+    ReadTdb {
+        #[structopt(short, long)]
+        tdb: String,
     },
 }
 
@@ -218,11 +225,17 @@ fn gen_json(pak: String) -> Result<()> {
     Ok(())
 }
 
+fn read_tdb(tdb: String) -> Result<()> {
+    let tdb = Tdb::new(File::open(tdb)?)?;
+    Ok(())
+}
+
 fn main() -> Result<()> {
     match Mhrice::from_args() {
         Mhrice::Dump { pak, name, output } => dump(pak, name, output),
         Mhrice::DumpIndex { pak, index, output } => dump_index(pak, index, output),
         Mhrice::Scan { pak } => scan(pak),
         Mhrice::GenJson { pak } => gen_json(pak),
+        Mhrice::ReadTdb { tdb } => read_tdb(tdb),
     }
 }

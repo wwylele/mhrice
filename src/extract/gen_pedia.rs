@@ -31,7 +31,7 @@ pub fn gen_monsters(pak: &mut PakReader<impl Read + Seek>) -> Result<Vec<Monster
             main_pfb
                 .children
                 .iter()
-                .filter(|child| u64::from(child.hash) == MonsterMeatData::HASH & 0xFFFF_FFFF),
+                .filter(|child| child.hash == EnemyMeatData::type_hash()),
         )?
         .name;
 
