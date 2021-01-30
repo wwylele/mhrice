@@ -3,6 +3,7 @@ name = "mhrice"
 version = "0.1.0"
 authors = ["Weiyi Wang <wwylele@gmail.com>"]
 edition = "2018"
+build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -14,3 +15,14 @@ once_cell = "1.5"
 structopt = "0.3"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+typed-html = { git = "https://github.com/bodil/typed-html.git" }
+chrono = "0.4"
+rusoto_core = "0.46"
+rusoto_s3 = "0.46"
+futures = "0.3"
+walkdir = "2"
+tokio = { version = "1", features = ["fs"] }
+tokio-util = { version = "0.6", features = ["codec"] }
+
+[build-dependencies]
+built = { version = "0.4", features = ["git2"] }

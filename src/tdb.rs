@@ -79,20 +79,39 @@ impl Tdb {
             })
             .collect::<Result<Vec<_>>>()?;
 
+        struct B {
+            a: u64,
+            b: u32,
+            c: u32,
+            d: u32,
+        }
         file.seek_assert_align_up(b_offset, 16)?;
-        (0..b_count)
+        let bs = (0..b_count)
             .map(|_| {
-                file.read_u64()?;
-                file.read_u64()?;
-                file.read_u64()?;
-                file.read_u64()?;
-                file.read_u64()?;
-                file.read_u64()?;
-                file.read_u64()?;
-                file.read_u64()?;
-                file.read_u64()?;
-                file.read_u64()?;
-                Ok(())
+                file.read_u32()?;
+                file.read_u32()?;
+                let a = file.read_u64()?; // >>36 and becomes a index into types? >> 18 and becomes an index into bs?
+
+                file.read_u32()?;
+                file.read_u32()?;
+                file.read_u32()?;
+                file.read_u32()?;
+
+                file.read_u32()?;
+                let b = file.read_u32()?;
+                file.read_u32()?;
+                file.read_u32()?;
+
+                file.read_u32()?;
+                let c = file.read_u32()?;
+                let d = file.read_u32()?;
+                file.read_u32()?;
+
+                file.read_u32()?;
+                file.read_u32()?;
+                file.read_u32()?;
+                file.read_u32()?;
+                Ok(B { a, b, c, d })
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -247,13 +266,22 @@ impl Tdb {
             })
             .collect::<Result<Vec<_>>>()?;
 
+        struct Param {
+            a: u32,
+            name_offset_sometimes: u32,
+            c: u32,
+        }
         file.seek_assert_align_up(k_offset, 16)?;
-        (0..k_count)
+        let params = (0..k_count)
             .map(|_| {
-                file.read_u32()?;
-                file.read_u32()?;
-                file.read_u32()?;
-                Ok(())
+                let a = file.read_u32()?;
+                let name_offset_sometimes = file.read_u32()?;
+                let c = file.read_u32()?;
+                Ok(Param {
+                    a,
+                    name_offset_sometimes,
+                    c,
+                })
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -277,7 +305,17 @@ impl Tdb {
         let mut string_table = vec![0; string_table_len.try_into()?];
         file.read_exact(&mut string_table)?;
 
-        let read_string = move |offset: u32| {
+        let string_all: std::collections::HashSet<u32> = string_table[0..string_table.len() - 1]
+            .iter()
+            .enumerate()
+            .filter(|&(index, &c)| c == 0)
+            .map(|(index, _)| index as u32 + 1)
+            .collect();
+        let string_all = std::rc::Rc::new(std::cell::RefCell::new(string_all));
+        let string_all_ref = string_all.clone();
+
+        let mut read_string = move |offset: u32| {
+            string_all_ref.borrow_mut().remove(&offset);
             let offset = usize::try_from(offset)?;
             if offset >= string_table.len() {
                 bail!("offset out of bount");
@@ -297,11 +335,8 @@ impl Tdb {
         file.read_exact(&mut p)?;
 
         file.seek_assert_align_up(q_offset, 16)?;
-        (0..q_count)
-            .map(|_| {
-                file.read_u32()?;
-                Ok(())
-            })
+        let qs = (0..q_count)
+            .map(|_| Ok(file.read_u32()?))
             .collect::<Result<Vec<_>>>()?;
 
         for type_info in types {
@@ -324,18 +359,32 @@ impl Tdb {
             );
         }
 
-        for property in properties {
+        /*for property in properties {
             println!("{}", read_string(property.name_offset)?);
             println!("{:04X} - {:04X}", property.a, property.b);
         }
         for method in methods {
             println!("{}", read_string(method.name_offset)?);
             println!(" - {} - {}", method.a, method.b);
-        }
-        for field in fields {
+        }*/
+        /* for field in fields {
             println!("{}", read_string(field.name_offset)?);
             println!(" - {},{} - {}", field.a1, field.a2, field.b);
         }
+
+        for q in qs {
+            println!("{}", read_string(q)?);
+        }
+
+        for param in params {
+            println!(" - {:?}", read_string(param.name_offset_sometimes));
+        }
+
+        println!("#########");
+        let k = string_all.borrow().clone();
+        for unvisited in k {
+            println!("{:08X} - {}", unvisited, read_string(unvisited)?);
+        }*/
 
         Ok(Tdb {})
     }

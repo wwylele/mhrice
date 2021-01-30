@@ -1,8 +1,15 @@
+#![recursion_limit = "2048"]
+
 use anyhow::*;
+use rusoto_core::{ByteStream, Region};
+use rusoto_s3::*;
+use std::convert::TryFrom;
 use std::convert::TryInto;
 use std::fs::File;
 use std::io::Cursor;
+use std::path::*;
 use structopt::*;
+use walkdir::WalkDir;
 
 mod align;
 mod extract;
@@ -20,6 +27,11 @@ use pfb::*;
 use scn::*;
 use tdb::*;
 use user::*;
+
+pub mod built_info {
+    // The file has been placed there by the build script.
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
 
 #[derive(StructOpt)]
 enum Mhrice {
@@ -49,6 +61,15 @@ enum Mhrice {
     GenJson {
         #[structopt(short, long)]
         pak: String,
+    },
+
+    GenWebsite {
+        #[structopt(short, long)]
+        pak: String,
+        #[structopt(short, long)]
+        output: String,
+        #[structopt(long)]
+        s3: Option<String>,
     },
 
     ReadTdb {
@@ -225,6 +246,86 @@ fn gen_json(pak: String) -> Result<()> {
     Ok(())
 }
 
+async fn upload_s3(
+    path: PathBuf,
+    len: u64,
+    mime: &str,
+    bucket: String,
+    key: String,
+    client: &S3Client,
+) -> Result<()> {
+    use futures::StreamExt;
+    use tokio_util::codec;
+    let file = tokio::fs::File::open(path).await?;
+    let stream =
+        codec::FramedRead::new(file, codec::BytesCodec::new()).map(|r| r.map(|r| r.freeze()));
+    let request = PutObjectRequest {
+        bucket,
+        key,
+        body: Some(ByteStream::new(stream)),
+        content_length: Some(i64::try_from(len)?),
+        content_type: Some(mime.to_owned()),
+        ..PutObjectRequest::default()
+    };
+    client.put_object(request).await?;
+    Ok(())
+}
+
+fn upload_s3_folder(path: &Path, bucket: String, client: &S3Client) -> Result<()> {
+    use futures::future::try_join_all;
+    use tokio::runtime::Runtime;
+    let mut futures = vec![];
+    for entry in WalkDir::new(path) {
+        let entry = entry?;
+        if !entry.file_type().is_file() {
+            continue;
+        }
+        let len = entry.metadata()?.len();
+        let mime = match entry
+            .path()
+            .extension()
+            .context("Missing extension")?
+            .to_str()
+            .context("Extension is not UTF-8")?
+        {
+            "html" => "text/html",
+            _ => "application/octet-stream",
+        };
+
+        let key = entry
+            .path()
+            .strip_prefix(path)?
+            .to_str()
+            .context("Path contain non UTF-8 character")?
+            .to_owned();
+
+        futures.push(upload_s3(
+            entry.into_path(),
+            len,
+            mime,
+            bucket.clone(),
+            key,
+            client,
+        ));
+    }
+
+    Runtime::new()?.block_on(try_join_all(futures))?;
+
+    Ok(())
+}
+
+fn gen_website(pak: String, output: String, s3: Option<String>) -> Result<()> {
+    let pedia = extract::gen_pedia(pak)?;
+    extract::gen_website(pedia, &output)?;
+    if let Some(bucket) = s3 {
+        println!("Uploading to S3...");
+        let s3client = S3Client::new(Region::UsEast1);
+        upload_s3_folder(Path::new(&output), bucket, &s3client)?;
+    }
+
+    Ok(())
+}
+
 fn read_tdb(tdb: String) -> Result<()> {
     let tdb = Tdb::new(File::open(tdb)?)?;
     Ok(())
@@ -236,6 +337,7 @@ fn main() -> Result<()> {
         Mhrice::DumpIndex { pak, index, output } => dump_index(pak, index, output),
         Mhrice::Scan { pak } => scan(pak),
         Mhrice::GenJson { pak } => gen_json(pak),
+        Mhrice::GenWebsite { pak, output, s3 } => gen_website(pak, output, s3),
         Mhrice::ReadTdb { tdb } => read_tdb(tdb),
     }
 }

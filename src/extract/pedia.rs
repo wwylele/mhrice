@@ -36,7 +36,7 @@ impl FromRsz for MeatGroupInfo {
 
 #[derive(Debug, Serialize)]
 pub struct EnemyMeatContainer {
-    pub values: Vec<MeatGroupInfo>,
+    pub meat_group_infos: Vec<MeatGroupInfo>,
 }
 
 impl FromRsz for EnemyMeatContainer {
@@ -44,16 +44,16 @@ impl FromRsz for EnemyMeatContainer {
     fn from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
         rsz.align_up(4)?;
         let count = rsz.read_u32()?;
-        let values = (0..count)
+        let meat_group_infos = (0..count)
             .map(|_| rsz.get_child())
             .collect::<Result<Vec<_>>>()?;
-        Ok(EnemyMeatContainer { values })
+        Ok(EnemyMeatContainer { meat_group_infos })
     }
 }
 
 #[derive(Debug, Serialize)]
 pub struct EnemyMeatData {
-    pub packs: Vec<EnemyMeatContainer>,
+    pub meat_containers: Vec<EnemyMeatContainer>,
 }
 
 impl FromRsz for EnemyMeatData {
@@ -61,10 +61,10 @@ impl FromRsz for EnemyMeatData {
     fn from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
         rsz.align_up(4)?;
         let count = rsz.read_u32()?;
-        let packs = (0..count)
+        let meat_containers = (0..count)
             .map(|_| rsz.get_child())
             .collect::<Result<Vec<_>>>()?;
-        Ok(EnemyMeatData { packs })
+        Ok(EnemyMeatData { meat_containers })
     }
 }
 
