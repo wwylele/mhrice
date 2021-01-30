@@ -2,4 +2,14 @@
 
 ## What?
 
-This is my workspace for reverse engineering MHRice. The main goal is to build a database website for information like hitzone value and quest modifiers etc, but this repo also contains some other random stuff that I found.
+To build http://mhrice.info, and to reverse engineer the game.
+
+
+## License
+
+Licensed under either of
+
+- Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
