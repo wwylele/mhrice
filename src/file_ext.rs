@@ -10,6 +10,7 @@ pub trait ReadExt {
     fn read_u64(&mut self) -> Result<u64>;
     fn read_magic(&mut self) -> Result<[u8; 4]>;
     fn read_u16str(&mut self) -> Result<String>;
+    fn read_f32(&mut self) -> Result<f32>;
 }
 
 pub trait SeekExt {
@@ -57,6 +58,11 @@ impl<T: Read + ?Sized> ReadExt for T {
             u16str.push(c);
         }
         Ok(String::from_utf16(&u16str)?)
+    }
+    fn read_f32(&mut self) -> Result<f32> {
+        let mut buf = [0; 4];
+        self.read_exact(&mut buf)?;
+        Ok(f32::from_le_bytes(buf))
     }
 }
 

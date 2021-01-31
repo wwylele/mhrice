@@ -34,12 +34,26 @@ pub fn gen_monsters(pak: &mut PakReader<impl Read + Seek>) -> Result<Vec<Monster
                 .filter(|child| child.hash == EnemyMeatData::type_hash()),
         )?
         .name;
-
         let (meat_data_index, _) = pak.find_file(meat_data_path)?;
         let meat_data = User::new(Cursor::new(pak.read_file(meat_data_index)?))?;
         let meat_data = meat_data.rsz.deserialize_single()?;
 
-        monsters.push(Monster { id, meat_data })
+        let condition_damage_path = &exactly_one(
+            main_pfb
+                .children
+                .iter()
+                .filter(|child| child.hash == EnemyConditionDamageData::type_hash()),
+        )?
+        .name;
+        let (condition_damage_index, _) = pak.find_file(condition_damage_path)?;
+        let condition_damage_data = User::new(Cursor::new(pak.read_file(condition_damage_index)?))?;
+        let condition_damage_data = condition_damage_data.rsz.deserialize_single()?;
+
+        monsters.push(Monster {
+            id,
+            meat_data,
+            condition_damage_data,
+        })
     }
 
     Ok(monsters)

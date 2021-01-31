@@ -21,7 +21,7 @@ impl Tdb {
 
         let b_count = file.read_u32()?;
         let d_count = file.read_u32()?;
-        let f_count = file.read_u32()?;
+        let field_membership_count = file.read_u32()?;
         let type_count = file.read_u32()?;
         let field_count = file.read_u32()?;
         let method_count = file.read_u32()?;
@@ -48,7 +48,7 @@ impl Tdb {
         let type_offset = file.read_u64()?;
         let d_offset = file.read_u64()?;
         let method_offset = file.read_u64()?;
-        let f_offset = file.read_u64()?;
+        let field_membership_offset = file.read_u64()?;
         let field_offset = file.read_u64()?;
         let h_offset = file.read_u64()?;
         let property_offset = file.read_u64()?;
@@ -80,17 +80,35 @@ impl Tdb {
             .collect::<Result<Vec<_>>>()?;
 
         struct B {
-            a: u64,
+            base_index: u64,
+            parent_index: u64,
+            af: u64,
+            prev_index: u64,
+            next_index: u64,
+            type_index: u64,
+            bf: u64,
             b: u32,
             c: u32,
             d: u32,
         }
         file.seek_assert_align_up(b_offset, 16)?;
         let bs = (0..b_count)
-            .map(|_| {
-                file.read_u32()?;
-                file.read_u32()?;
-                let a = file.read_u64()?; // >>36 and becomes a index into types? >> 18 and becomes an index into bs?
+            .map(|i| {
+                let index_a = file.read_u64()?;
+                let index = index_a & 0x3FFFF;
+                let base_index = (index_a >> 18) & 0x3FFFF;
+                let parent_index = (index_a >> 36) & 0x3FFFF;
+                let af = index_a >> 54;
+
+                if index != u64::from(i) {
+                    bail!("Unexpected index");
+                }
+
+                let index_b = file.read_u64()?;
+                let prev_index = index_b & 0x3FFFF;
+                let next_index = (index_b >> 18) & 0x3FFFF;
+                let type_index = (index_b >> 36) & 0x3FFFF;
+                let bf = index_b >> 54;
 
                 file.read_u32()?;
                 file.read_u32()?;
@@ -111,7 +129,18 @@ impl Tdb {
                 file.read_u32()?;
                 file.read_u32()?;
                 file.read_u32()?;
-                Ok(B { a, b, c, d })
+                Ok(B {
+                    base_index,
+                    parent_index,
+                    af,
+                    prev_index,
+                    next_index,
+                    type_index,
+                    bf,
+                    b,
+                    c,
+                    d,
+                })
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -124,11 +153,23 @@ impl Tdb {
             })
             .collect::<Result<Vec<_>>>()?;
 
-        file.seek_assert_align_up(f_offset, 16)?;
-        (0..f_count)
+        struct FieldMembership {
+            b_index: u64,
+            field_index: u64,
+            position: u64,
+        }
+        file.seek_assert_align_up(field_membership_offset, 16)?;
+        let field_memberships = (0..field_membership_count)
             .map(|_| {
-                file.read_u64()?;
-                Ok(())
+                let data = file.read_u64()?;
+                let b_index = data & 0x3FFFF;
+                let field_index = (data >> 18) & 0xFFFFF;
+                let position = data >> 38;
+                Ok(FieldMembership {
+                    b_index,
+                    field_index,
+                    position,
+                })
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -339,7 +380,65 @@ impl Tdb {
             .map(|_| Ok(file.read_u32()?))
             .collect::<Result<Vec<_>>>()?;
 
-        for type_info in types {
+        for field_membership in field_memberships {
+            let b = &bs[field_membership.b_index as usize];
+            let type_name = read_string(types[b.type_index as usize].name_offset)?;
+            let field_name =
+                read_string(fields[field_membership.field_index as usize].name_offset)?;
+            println!(
+                "{} + {}: {}",
+                type_name, field_membership.position, field_name
+            );
+        }
+
+        /*let mut parent_ref = vec![0; types.len()];
+        for (i, b) in bs.iter().enumerate() {
+            if b.parent_index != 0 {
+                let self_index = b.type_index as usize;
+                let parent_index = bs[b.parent_index as usize].type_index as usize;
+                /*if parent_ref[self_index] != 0 && parent_ref[self_index] != parent_index {
+                    bail!("Collision at B[{}]", i)
+                }*/
+                parent_ref[self_index] = parent_index;
+            }
+        }
+
+        for i in 0..types.len() {
+            if (types[i].namespace_offset == 0) == (parent_ref[i] == 0) {
+                //bail!("huh {}", i)
+                continue;
+            }
+            let mut cur = i;
+            let mut name = "".to_owned();
+            loop {
+                name = ".".to_owned() + &read_string(types[cur].name_offset)? + &name;
+                if parent_ref[cur] == 0 {
+                    name = read_string(types[cur].namespace_offset)? + &name;
+                    break;
+                }
+                cur = parent_ref[cur];
+            }
+            println!(
+                "{:08X}, {}",
+                murmur3::murmur3_32(&mut name.as_bytes(), 0xFFFFFFFF)?,
+                name
+            );
+        }*/
+
+        /*for (i, b) in bs.into_iter().enumerate() {
+            println!(
+                "*B[{:8}] base=B[{:8}] parent=B[{:8}] prev==B[{:8}] next=B[{:8}] type=C[{:8}] af={:4} bf={:4}",
+                i, b.base_index, b.parent_index, b.prev_index, b.next_index, b.type_index, b.af, b.bf
+            );
+        }
+
+        for (i, type_info) in types.into_iter().enumerate() {
+            let name = read_string(type_info.name_offset)?;
+            let namespace = read_string(type_info.namespace_offset)?;
+            println!("*C[{:8}] {}.{}", i, namespace, name);
+        }*/
+
+        /*for type_info in types {
             let name = read_string(type_info.name_offset)?;
             let namespace = read_string(type_info.namespace_offset)?;
             println!("{}.{} - {} bytes", namespace, name, type_info.len);
@@ -359,7 +458,7 @@ impl Tdb {
             );
         }
 
-        /*for property in properties {
+        for property in properties {
             println!("{}", read_string(property.name_offset)?);
             println!("{:04X} - {:04X}", property.a, property.b);
         }

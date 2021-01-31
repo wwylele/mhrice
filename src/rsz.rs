@@ -117,7 +117,8 @@ impl Rsz {
                 node_buf: &mut node_buf,
                 cursor: &mut cursor,
             };
-            let node = deserializer(&mut rsz_deserializer)?;
+            let node = deserializer(&mut rsz_deserializer)
+                .context(format!("Error deserializing for type {:016X}", td))?;
             node_buf.push(Some(node));
         }
 
@@ -211,11 +212,42 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
         }
     }
 
+    macro_rules! r {
+        ($($t:ty),*$(,)?) => {
+            $(register::<$t>(&mut m);)*
+        };
+    }
+
     use crate::extract::*;
 
-    register::<MeatGroupInfo>(&mut m);
-    register::<EnemyMeatContainer>(&mut m);
-    register::<EnemyMeatData>(&mut m);
+    r!(MeatGroupInfo, EnemyMeatContainer, EnemyMeatData);
+
+    r!(
+        StockData,
+        ParalyzeDamageData,
+        SleepDamageData,
+        StunDamageData,
+        StaminaDamageData,
+        FlashDamageLvData,
+        FlashDamageData,
+        PoisonDamageData,
+        BlastDamageData,
+        MarionetteStartDamageData,
+        AdjustMeatDownData,
+        WaterDamageData,
+        FireDamageData,
+        IceDamageData,
+        ThunderAdjustParamData,
+        ThunderDamageData,
+        FallTrapDamageData,
+        FallQuickSandDamageData,
+        FallOtomoTrapDamageData,
+        ShockTrapDamageData,
+        CaptureDamageData,
+        KoyashiDamageData,
+        SteelFangData,
+        EnemyConditionDamageData,
+    );
 
     m
 });
