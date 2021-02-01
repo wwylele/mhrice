@@ -248,7 +248,8 @@ impl Tdb {
         struct Field {
             a1: u16,
             a2: u16,
-            b: u32,
+            b_index: u32,
+            b_upper: u32,
             name_offset: u32,
         }
         file.seek_assert_align_up(field_offset, 16)?;
@@ -257,11 +258,14 @@ impl Tdb {
                 let a1 = file.read_u16()?;
                 let a2 = file.read_u16()?;
                 let b = file.read_u32()?;
+                let b_index = b & 0x3FFFF;
+                let b_upper = b >> 18;
                 let name_offset = file.read_u32()?;
                 Ok(Field {
                     a1,
                     a2,
-                    b,
+                    b_index,
+                    b_upper,
                     name_offset,
                 })
             })
@@ -383,11 +387,13 @@ impl Tdb {
         for field_membership in field_memberships {
             let b = &bs[field_membership.b_index as usize];
             let type_name = read_string(types[b.type_index as usize].name_offset)?;
-            let field_name =
-                read_string(fields[field_membership.field_index as usize].name_offset)?;
+            let field = &fields[field_membership.field_index as usize];
+            let field_name = read_string(field.name_offset)?;
+            let sub_b = &bs[field.b_index as usize];
+            let sub_type_name = read_string(types[sub_b.type_index as usize].name_offset)?;
             println!(
-                "{} + {}: {}",
-                type_name, field_membership.position, field_name
+                "{} + {}: ({}) {}",
+                type_name, field_membership.position, sub_type_name, field_name
             );
         }
 

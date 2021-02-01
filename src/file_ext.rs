@@ -8,6 +8,10 @@ pub trait ReadExt {
     fn read_u16(&mut self) -> Result<u16>;
     fn read_u32(&mut self) -> Result<u32>;
     fn read_u64(&mut self) -> Result<u64>;
+    fn read_i8(&mut self) -> Result<i8>;
+    fn read_i16(&mut self) -> Result<i16>;
+    fn read_i32(&mut self) -> Result<i32>;
+    fn read_i64(&mut self) -> Result<i64>;
     fn read_magic(&mut self) -> Result<[u8; 4]>;
     fn read_u16str(&mut self) -> Result<String>;
     fn read_f32(&mut self) -> Result<f32>;
@@ -39,6 +43,26 @@ impl<T: Read + ?Sized> ReadExt for T {
         let mut buf = [0; 8];
         self.read_exact(&mut buf)?;
         Ok(u64::from_le_bytes(buf))
+    }
+    fn read_i8(&mut self) -> Result<i8> {
+        let mut buf = [0; 1];
+        self.read_exact(&mut buf)?;
+        Ok(buf[0] as i8)
+    }
+    fn read_i16(&mut self) -> Result<i16> {
+        let mut buf = [0; 2];
+        self.read_exact(&mut buf)?;
+        Ok(i16::from_le_bytes(buf))
+    }
+    fn read_i32(&mut self) -> Result<i32> {
+        let mut buf = [0; 4];
+        self.read_exact(&mut buf)?;
+        Ok(i32::from_le_bytes(buf))
+    }
+    fn read_i64(&mut self) -> Result<i64> {
+        let mut buf = [0; 8];
+        self.read_exact(&mut buf)?;
+        Ok(i64::from_le_bytes(buf))
     }
     fn read_magic(&mut self) -> Result<[u8; 4]> {
         let mut buf = [0; 4];

@@ -1,7 +1,7 @@
 use super::pedia::*;
 use crate::pak::PakReader;
 use crate::pfb::Pfb;
-use crate::rsz::FromRsz;
+use crate::rsz::*;
 use crate::user::User;
 use anyhow::*;
 use std::fs::File;

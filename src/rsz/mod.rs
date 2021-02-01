@@ -199,6 +199,126 @@ pub trait FromRsz: Sized {
     }
 }
 
+trait FieldFromRsz: Sized {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self>;
+}
+
+impl FieldFromRsz for u8 {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.read_u8()
+    }
+}
+
+impl FieldFromRsz for u16 {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.align_up(2)?;
+        rsz.read_u16()
+    }
+}
+
+impl FieldFromRsz for u32 {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.align_up(4)?;
+        rsz.read_u32()
+    }
+}
+
+impl FieldFromRsz for u64 {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.align_up(8)?;
+        rsz.read_u64()
+    }
+}
+
+impl FieldFromRsz for i8 {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.read_i8()
+    }
+}
+
+impl FieldFromRsz for i16 {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.align_up(2)?;
+        rsz.read_i16()
+    }
+}
+
+impl FieldFromRsz for i32 {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.align_up(4)?;
+        rsz.read_i32()
+    }
+}
+
+impl FieldFromRsz for i64 {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.align_up(8)?;
+        rsz.read_i64()
+    }
+}
+
+impl FieldFromRsz for f32 {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.align_up(4)?;
+        rsz.read_f32()
+    }
+}
+
+impl<T: FromRsz + 'static> FieldFromRsz for T {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.align_up(4)?;
+        rsz.get_child()
+    }
+}
+
+impl<T: FromRsz + 'static> FieldFromRsz for Vec<T> {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.align_up(4)?;
+        let count = rsz.read_u32()?;
+        (0..count)
+            .map(|_| rsz.get_child())
+            .collect::<Result<Vec<_>>>()
+    }
+}
+
+macro_rules! rsz_struct {
+    (
+        #[rsz($symbol:literal)]
+        $(#[$outer_meta:meta])*
+        $outer_vis:vis struct $struct_name:ident {
+            $(
+                $(#[$inner_meta:meta])*
+                $inner_vis:vis $field_name:ident : $field_type:ty
+            ),*$(,)?
+        }
+    ) => {
+        $(#[$outer_meta])*
+        $outer_vis struct $struct_name {
+            $(
+                $(#[$inner_meta])*
+                $inner_vis $field_name : $field_type,
+            )*
+        }
+
+        impl crate::rsz::FromRsz for $struct_name {
+            const SYMBOL: &'static str = $symbol;
+            fn from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
+                Ok(Self {
+                    $(
+                        $field_name: <$field_type>::field_from_rsz(rsz)?,
+                    )*
+                })
+            }
+        }
+    };
+}
+
+mod condition_damage_data;
+mod meat_data;
+
+pub use condition_damage_data::*;
+pub use meat_data::*;
+
 type RszDeserializerFn = fn(&mut RszDeserializer) -> Result<Box<dyn Any>>;
 
 static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
@@ -217,8 +337,6 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
             $(register::<$t>(&mut m);)*
         };
     }
-
-    use crate::extract::*;
 
     r!(MeatGroupInfo, EnemyMeatContainer, EnemyMeatData);
 
