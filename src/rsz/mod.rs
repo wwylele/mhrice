@@ -1,6 +1,7 @@
 use crate::file_ext::*;
 use anyhow::*;
 use once_cell::sync::Lazy;
+use serde::*;
 use std::any::*;
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -271,13 +272,31 @@ impl<T: FromRsz + 'static> FieldFromRsz for T {
     }
 }
 
-impl<T: FromRsz + 'static> FieldFromRsz for Vec<T> {
+impl<T: FieldFromRsz + 'static> FieldFromRsz for Vec<T> {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
         rsz.align_up(4)?;
         let count = rsz.read_u32()?;
         (0..count)
-            .map(|_| rsz.get_child())
+            .map(|_| T::field_from_rsz(rsz))
             .collect::<Result<Vec<_>>>()
+    }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(transparent)]
+struct Utf16String(String);
+
+impl FieldFromRsz for Utf16String {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.align_up(4)?;
+        let count = rsz.read_u32()?;
+        let mut utf16 = (0..count)
+            .map(|_| rsz.read_u16())
+            .collect::<Result<Vec<_>>>()?;
+        if utf16.pop() != Some(0) {
+            bail!("String not null-terminated");
+        }
+        Ok(Utf16String(String::from_utf16(&utf16)?))
     }
 }
 
@@ -305,7 +324,7 @@ macro_rules! rsz_struct {
             fn from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
                 Ok(Self {
                     $(
-                        $field_name: <$field_type>::field_from_rsz(rsz)?,
+                        $field_name: <$field_type>::field_from_rsz(rsz).context(stringify!($field_name))?,
                     )*
                 })
             }
@@ -313,11 +332,19 @@ macro_rules! rsz_struct {
     };
 }
 
+mod anger_data;
 mod condition_damage_data;
+mod data_base;
+mod data_tune;
 mod meat_data;
+mod parts_break_data;
 
+pub use anger_data::*;
 pub use condition_damage_data::*;
+pub use data_base::*;
+pub use data_tune::*;
 pub use meat_data::*;
+pub use parts_break_data::*;
 
 type RszDeserializerFn = fn(&mut RszDeserializer) -> Result<Box<dyn Any>>;
 
@@ -365,6 +392,37 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
         KoyashiDamageData,
         SteelFangData,
         EnemyConditionDamageData,
+    );
+
+    r!(EnemyDataBase);
+
+    r!(EnemyAngerSeparateData, EnemyAngerData);
+
+    r!(
+        PartsLockParam,
+        PartsBreakData,
+        ConditionPartsBreakData,
+        PartsBreakGroupData,
+        PartsLossData,
+        ConditionPartsLossData,
+        PartsLossGroupData,
+        EnemyPartsBreakData
+    );
+
+    r!(
+        EnemyPartsData,
+        DataTunePartsBreakData,
+        DataTuneEnemyPartsBreakData,
+        DataTunePartsLossData,
+        DataTuneEnemyPartsLossData,
+        EnablePartsGroup,
+        MultiPartsVital,
+        EnemyMultiPartsSystemVitalData,
+        EnemyMultiPartsVitalData,
+        EnemyGimmickVitalData,
+        EnemyMarionetteVitalData,
+        CharacterContollerTune,
+        EnemyDataTune,
     );
 
     m
