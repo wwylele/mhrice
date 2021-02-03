@@ -14,6 +14,7 @@ use walkdir::WalkDir;
 mod align;
 mod extract;
 mod file_ext;
+mod msg;
 mod pak;
 mod pfb;
 mod rsz;
@@ -22,6 +23,7 @@ mod suffix;
 mod tdb;
 mod user;
 
+use msg::*;
 use pak::*;
 use pfb::*;
 use scn::*;
@@ -75,6 +77,18 @@ enum Mhrice {
     ReadTdb {
         #[structopt(short, long)]
         tdb: String,
+    },
+
+    ReadMsg {
+        #[structopt(short, long)]
+        msg: String,
+    },
+
+    ScanMsg {
+        #[structopt(short, long)]
+        pak: String,
+        #[structopt(short, long)]
+        output: String,
     },
 }
 
@@ -331,6 +345,28 @@ fn read_tdb(tdb: String) -> Result<()> {
     Ok(())
 }
 
+fn read_msg(msg: String) -> Result<()> {
+    let msg = Msg::new(File::open(msg)?)?;
+    Ok(())
+}
+
+fn scan_msg(pak: String, output: String) -> Result<()> {
+    let mut pak = PakReader::new(File::open(pak)?)?;
+    let count = pak.get_file_count();
+    for i in 0..count {
+        let file = pak.read_file_at(i)?;
+        if file.len() < 8 || file[4..8] != b"GMSG"[..] {
+            continue;
+        }
+        let msg = Msg::new(Cursor::new(&file)).context(format!("at {}", i))?;
+        std::fs::write(
+            PathBuf::from(&output).join(format!("{}.txt", i)),
+            serde_json::to_string_pretty(&msg)?,
+        )?;
+    }
+    Ok(())
+}
+
 fn main() -> Result<()> {
     match Mhrice::from_args() {
         Mhrice::Dump { pak, name, output } => dump(pak, name, output),
@@ -339,5 +375,7 @@ fn main() -> Result<()> {
         Mhrice::GenJson { pak } => gen_json(pak),
         Mhrice::GenWebsite { pak, output, s3 } => gen_website(pak, output, s3),
         Mhrice::ReadTdb { tdb } => read_tdb(tdb),
+        Mhrice::ReadMsg { msg } => read_msg(msg),
+        Mhrice::ScanMsg { pak, output } => scan_msg(pak, output),
     }
 }

@@ -76,9 +76,6 @@ impl<T: Read + ?Sized> ReadExt for T {
             if c == 0 {
                 break;
             }
-            if !(0x20..0x7F).contains(&c) {
-                bail!("non-ASCII string")
-            }
             u16str.push(c);
         }
         Ok(String::from_utf16(&u16str)?)
