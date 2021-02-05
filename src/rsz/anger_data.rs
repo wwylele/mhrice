@@ -1,4 +1,5 @@
 use super::*;
+use crate::rsz_struct;
 use serde::*;
 
 rsz_struct! {

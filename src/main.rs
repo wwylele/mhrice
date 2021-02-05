@@ -1,13 +1,16 @@
 #![recursion_limit = "2048"]
 
 use anyhow::*;
+use rayon::prelude::*;
+use regex::bytes::*;
 use rusoto_core::{ByteStream, Region};
 use rusoto_s3::*;
 use std::convert::TryFrom;
 use std::convert::TryInto;
 use std::fs::File;
-use std::io::Cursor;
+use std::io::{BufRead, BufReader, Cursor};
 use std::path::*;
+use std::sync::Mutex;
 use structopt::*;
 use walkdir::WalkDir;
 
@@ -87,6 +90,27 @@ enum Mhrice {
     ScanMsg {
         #[structopt(short, long)]
         pak: String,
+        #[structopt(short, long)]
+        output: String,
+    },
+
+    Grep {
+        #[structopt(short, long)]
+        pak: String,
+
+        pattern: String,
+    },
+
+    SearchPath {
+        #[structopt(short, long)]
+        pak: String,
+    },
+
+    DumpTree {
+        #[structopt(short, long)]
+        pak: String,
+        #[structopt(short, long)]
+        list: String,
         #[structopt(short, long)]
         output: String,
     },
@@ -367,6 +391,113 @@ fn scan_msg(pak: String, output: String) -> Result<()> {
     Ok(())
 }
 
+fn grep(pak: String, pattern: String) -> Result<()> {
+    let mut pak = PakReader::new(File::open(pak)?)?;
+    println!("Searching for patterns \"{}\"", &pattern);
+    let count = pak.get_file_count();
+    let re = RegexBuilder::new(&pattern).unicode(false).build()?;
+    for i in 0..count {
+        let file = pak.read_file_at(i)?;
+        if re.is_match(&file) {
+            println!("Matched @ {}", i);
+        }
+    }
+    Ok(())
+}
+
+fn search_path(pak: String) -> Result<()> {
+    let pak = Mutex::new(PakReader::new(File::open(pak)?)?);
+    let count = pak.lock().unwrap().get_file_count();
+    let counter = std::sync::atomic::AtomicU32::new(0);
+    let paths: std::collections::BTreeMap<String, Option<u32>> = (0..count)
+        .into_par_iter()
+        .map(|index| {
+            let file = pak.lock().unwrap().read_file_at(index)?;
+            let mut paths = vec![];
+            for &suffix in suffix::SUFFIX_MAP.keys() {
+                let mut full_suffix = vec![0; (suffix.len() + 2) * 2];
+                full_suffix[0] = b'.';
+                for (i, &c) in suffix.as_bytes().iter().enumerate() {
+                    full_suffix[i * 2 + 2] = c;
+                }
+                for (suffix_pos, window) in file.windows(full_suffix.len()).enumerate() {
+                    if window != full_suffix {
+                        continue;
+                    }
+                    let end = suffix_pos + full_suffix.len() - 2;
+                    let mut begin = suffix_pos;
+                    loop {
+                        if begin < 2 {
+                            break;
+                        }
+                        let earlier = begin - 2;
+                        if !file[earlier].is_ascii_graphic() {
+                            break;
+                        }
+                        if file[earlier + 1] != 0 {
+                            break;
+                        }
+
+                        begin = earlier;
+                    }
+                    let mut path = String::new();
+                    for pos in (begin..end).step_by(2) {
+                        path.push(char::from(file[pos]));
+                    }
+                    let index = pak.lock().unwrap().find_file(&path).ok().map(|x| x.0.raw());
+                    paths.push((path, index));
+                }
+            }
+
+            let counter_prev = counter.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            if counter_prev % 100 == 0 {
+                eprintln!("{}", counter_prev)
+            }
+
+            Ok(paths)
+        })
+        .flat_map_iter(|paths: Result<_>| paths.unwrap())
+        .collect();
+
+    for (path, index) in paths {
+        println!("{} $ {:?}", path, index);
+    }
+
+    Ok(())
+}
+
+fn dump_tree(pak: String, list: String, output: String) -> Result<()> {
+    let mut pak = PakReader::new(File::open(pak)?)?;
+    let mut visited = vec![false; usize::try_from(pak.get_file_count())?];
+    let list = File::open(list)?;
+    for line in BufReader::new(list).lines() {
+        let line = line?;
+        let path = line.split(' ').next().context("Empty line")?;
+        let index = if let Ok((index, _)) = pak.find_file(path) {
+            index
+        } else {
+            continue;
+        };
+        let path = PathBuf::from(&output).join(path);
+        std::fs::create_dir_all(path.parent().context("no parent")?)?;
+        std::fs::write(path, &pak.read_file(index)?)?;
+        visited[usize::try_from(index.raw())?] = true;
+    }
+
+    for (index, visited) in visited.into_iter().enumerate() {
+        if visited {
+            continue;
+        }
+        let path = PathBuf::from(&output)
+            .join("_unknown")
+            .join(format!("{}", index));
+        std::fs::create_dir_all(path.parent().context("no parent")?)?;
+        std::fs::write(path, &pak.read_file_at(u32::try_from(index)?)?)?;
+    }
+
+    Ok(())
+}
+
 fn main() -> Result<()> {
     match Mhrice::from_args() {
         Mhrice::Dump { pak, name, output } => dump(pak, name, output),
@@ -377,5 +508,8 @@ fn main() -> Result<()> {
         Mhrice::ReadTdb { tdb } => read_tdb(tdb),
         Mhrice::ReadMsg { msg } => read_msg(msg),
         Mhrice::ScanMsg { pak, output } => scan_msg(pak, output),
+        Mhrice::Grep { pak, pattern } => grep(pak, pattern),
+        Mhrice::SearchPath { pak } => search_path(pak),
+        Mhrice::DumpTree { pak, list, output } => dump_tree(pak, list, output),
     }
 }

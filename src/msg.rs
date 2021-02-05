@@ -13,6 +13,7 @@ pub struct MsgAttributeHeader {
 #[derive(Serialize)]
 pub struct MsgEntry {
     pub name: String,
+    pub guid: String,
     pub attributes: Vec<String>,
     pub content: Vec<String>,
 }
@@ -89,16 +90,16 @@ impl Msg {
                     .map(|_| file.read_u64())
                     .collect::<Result<Vec<_>>>()?;
 
-                Ok((name, attributes, content))
+                Ok((name, guid, attributes, content))
             })
             .collect::<Result<Vec<_>>>()?
             .into_iter()
-            .map(|(name, attributes, content)| {
+            .map(|(name, guid, attributes, content)| {
                 file.seek_noop(attributes)?;
-                let n = (0..attribute_count)
+                let attributes = (0..attribute_count)
                     .map(|_| file.read_u64())
                     .collect::<Result<Vec<_>>>()?;
-                Ok((name, n, content))
+                Ok((name, guid, attributes, content))
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -120,8 +121,9 @@ impl Msg {
 
         let entries = entries
             .into_iter()
-            .map(|(name, attributes, content)| {
+            .map(|(name, guid, attributes, content)| {
                 let name = (&data[usize::try_from(name - data_offset)?..]).read_u16str()?;
+                let guid = guid.iter().map(|b| format!("{:02x}", b)).collect();
                 let attributes = attributes
                     .into_iter()
                     .map(|n| (&data[usize::try_from(n - data_offset)?..]).read_u16str())
@@ -132,6 +134,7 @@ impl Msg {
                     .collect::<Result<Vec<_>>>()?;
                 Ok(MsgEntry {
                     name,
+                    guid,
                     attributes,
                     content,
                 })

@@ -1,3 +1,17 @@
+mod anger_data;
+mod condition_damage_data;
+mod data_base;
+mod data_tune;
+mod meat_data;
+mod parts_break_data;
+
+pub use anger_data::*;
+pub use condition_damage_data::*;
+pub use data_base::*;
+pub use data_tune::*;
+pub use meat_data::*;
+pub use parts_break_data::*;
+
 use crate::file_ext::*;
 use anyhow::*;
 use once_cell::sync::Lazy;
@@ -300,6 +314,7 @@ impl FieldFromRsz for Utf16String {
     }
 }
 
+#[macro_export]
 macro_rules! rsz_struct {
     (
         #[rsz($symbol:literal)]
@@ -331,20 +346,6 @@ macro_rules! rsz_struct {
         }
     };
 }
-
-mod anger_data;
-mod condition_damage_data;
-mod data_base;
-mod data_tune;
-mod meat_data;
-mod parts_break_data;
-
-pub use anger_data::*;
-pub use condition_damage_data::*;
-pub use data_base::*;
-pub use data_tune::*;
-pub use meat_data::*;
-pub use parts_break_data::*;
 
 type RszDeserializerFn = fn(&mut RszDeserializer) -> Result<Box<dyn Any>>;
 

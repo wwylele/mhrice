@@ -23,6 +23,8 @@ futures = "0.3"
 walkdir = "2"
 tokio = { version = "1", features = ["fs"] }
 tokio-util = { version = "0.6", features = ["codec"] }
+regex = "1.4"
+rayon = "1.5"
 
 [build-dependencies]
 built = { version = "0.4", features = ["git2"] }
