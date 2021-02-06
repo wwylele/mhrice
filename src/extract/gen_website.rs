@@ -1,15 +1,20 @@
 use super::pedia::*;
+use crate::rsz::*;
 use anyhow::*;
 use chrono::prelude::*;
+use std::convert::TryInto;
 use std::fs::{create_dir, remove_dir_all, write};
 use std::path::*;
-use typed_html::{dom::*, elements::*, html, text};
+use typed_html::{dom::*, elements::*, html, text, types::*};
 
 fn head_common() -> Vec<Box<dyn MetadataContent<String>>> {
     vec![
         html!(<meta charset="UTF-8" />),
+        html!(<link rel="icon" type="image/png" href="/favicon.png" />),
         html!(<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css" />),
+        html!(<link rel="stylesheet" href="/mhrice.css" />),
         html!(<script src="https://kit.fontawesome.com/ceb13a2ba1.js" crossorigin="anonymous" />),
+        html!(<script src="/mhrice.js" crossorigin="anonymous" />),
     ]
 }
 
@@ -39,6 +44,335 @@ fn navbar() -> Box<dyn FlowContent<String>> {
     </div>)
 }
 
+fn gen_extractive_type(extractive_type: u32) -> Result<Box<span<String>>> {
+    match extractive_type {
+        0 => Ok(html!(<span class="mh-extract-red">"Red"</span>)),
+        1 => Ok(html!(<span class="mh-extract-white">"White"</span>)),
+        2 => Ok(html!(<span class="mh-extract-orange">"Orange"</span>)),
+        3 => Ok(html!(<span class="mh-extract-unknown">"None"</span>)),
+        x => Ok(html!(<span class="mh-extract-unknown">{ text!("Unknown({})", x) }</span>)),
+    }
+}
+
+fn safe_float(v: f32) -> String {
+    let normal = format!("{}", v);
+    if normal.len() < 5 {
+        normal
+    } else {
+        format!("{:e}", v)
+    }
+}
+
+fn gen_condition_base(data: ConditionDamageDataBase) -> Vec<Box<dyn TableColumnContent<String>>> {
+    vec![
+        html!(<td>
+            <span class="mh-default-cond">{text!("{} (+{}) → {}",
+                data.default_stock.default_limit, data.default_stock.add_limit, data.default_stock.max_limit)}
+            </span>
+            <span class="mh-ride-cond mh-hidden">{text!("{} (+{}) → {}",
+                data.ride_stock.default_limit, data.ride_stock.add_limit, data.ride_stock.max_limit)}
+            </span>
+        </td>),
+        html!(<td>
+            <span class="mh-default-cond">{text!("{} / {} sec",
+                data.default_stock.sub_value, data.default_stock.sub_interval)}</span>
+            <span class="mh-ride-cond mh-hidden">{text!("{} / {} sec",
+                data.ride_stock.sub_value, data.ride_stock.sub_interval)}</span>
+        </td>),
+        html!(<td>{text!("{}", data.max_stock)}</td>),
+        html!(<td>{text!("{} sec (-{} sec) → {} sec",
+            safe_float(data.active_time), data.sub_active_time, data.min_active_time)}</td>),
+        html!(<td>{text!("+{} sec", data.add_tired_time)}</td>),
+        html!(<td>{text!("{} / {} sec", data.damage, data.damage_interval)}</td>),
+    ]
+}
+
+fn gen_disabled(disabled: bool) -> &'static str {
+    if disabled {
+        "mh-disabled"
+    } else {
+        ""
+    }
+}
+
+fn gen_condition_paralyze(data: ParalyzeDamageData, disabled: bool) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td>"Paralyze"</td>
+            { gen_condition_base(data.base) }
+            <td> {text!("Preset={}", data.preset_type)} </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_sleep(data: SleepDamageData, disabled: bool) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td>"Sleep"</td>
+            { gen_condition_base(data.base) }
+            <td> {text!("Preset = {}", data.preset_type)} </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_stun(data: StunDamageData, disabled: bool) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td>"Stun"</td>
+            { gen_condition_base(data.base) }
+            <td> {text!("Preset = {}", data.preset_type)} </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_stamina(data: StaminaDamageData, disabled: bool) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td>"Exhaust"</td>
+            { gen_condition_base(data.base) }
+            <td> {text!("Stamina reduction = {}, Preset={}", data.sub_stamina, data.preset_type)} </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_flash(data: FlashDamageData, disabled: bool) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td>"Flash"</td>
+            { gen_condition_base(data.base) }
+            <td>
+            { data.damage_lvs.into_iter().map(|lv| {
+                html!(<div> {
+                    text!("Activate count = {}, Active time = {}",
+                    lv.activate_count, lv.active_time)
+                } </div>)
+            }) }
+            {text!("Ignore refresh stance = {}", data.ignore_refresh_stance)}
+            <br />
+            {text!("Distance = {} ~ {}, Angle = {}", data.min_distance, data.max_distance, data.angle)}
+            <br />
+            {text!("Preset = {}", data.preset_type)}
+            </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_poison(data: PoisonDamageData, disabled: bool) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td>"Poison"</td>
+            { gen_condition_base(data.base) }
+            <td> {text!("Preset = {}", data.preset_type)} </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_blast(data: BlastDamageData, disabled: bool) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td>"Blast"</td>
+            { gen_condition_base(data.base) }
+            <td> {text!("Blast damage = {}, Preset = {}", data.blast_damage, data.preset_type)} </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_ride(data: MarionetteStartDamageData, disabled: bool) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td>"Ride"</td>
+            { gen_condition_base(data.base) }
+            <td> {text!("Unique = {}, Nora first limit = {}", data.use_data, data.nora_first_limit)} </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_water(data: WaterDamageData, disabled: bool) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td>"Water"</td>
+            { gen_condition_base(data.base) }
+            <td>
+            {text!("Melee hzv adjust: hard = {}, soft = {}, judge = {}",
+                data.melee_adjust.hard_meat_adjust_value,
+                data.melee_adjust.soft_meat_adjust_value,
+                data.melee_adjust.judge_meat_value
+            )}
+            <br />
+            {text!("Shot hzv adjust: hard = {}, soft = {}, judge = {}",
+                data.shot_adjust.hard_meat_adjust_value,
+                data.shot_adjust.soft_meat_adjust_value,
+                data.shot_adjust.judge_meat_value
+            )}
+            <br />
+            {text!("Preset = {}", data.preset_type)}
+            </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_fire(data: FireDamageData, disabled: bool) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td>"Fire"</td>
+            { gen_condition_base(data.base) }
+            <td> {text!("Hit-damage rate = {}, Preset = {}", data.hit_damage_rate, data.preset_type)} </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_ice(data: IceDamageData, disabled: bool) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td>"Ice"</td>
+            { gen_condition_base(data.base) }
+            <td> {text!("Motion speed rate = {}, Preset = {}", data.motion_speed_rate, data.preset_type)} </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_thunder(data: ThunderDamageData, disabled: bool) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td>"Thunder"</td>
+            { gen_condition_base(data.base) }
+            <td>
+            {text!("Stun hzv adjust: rate = {}, min = {}, max = {}, default = {}",
+                data.stun_meat_adjust.hit_damage_to_stun_rate,
+                data.stun_meat_adjust.hit_damage_to_stun_min,
+                data.stun_meat_adjust.hit_damage_to_stun_max,
+                data.stun_meat_adjust.default_stun_damage_rate
+            )}
+            <br />
+            {text!("Normal hzv adjust: rate = {}, min = {}, max = {}, default = {}",
+                data.normal_meat_adjust.hit_damage_to_stun_rate,
+                data.normal_meat_adjust.hit_damage_to_stun_min,
+                data.normal_meat_adjust.hit_damage_to_stun_max,
+                data.normal_meat_adjust.default_stun_damage_rate
+            )}
+            <br />
+            {text!("Stun active limit = {}, Preset = {}",
+                data.stun_active_limit, data.preset_type)}
+            </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_fall_trap(data: FallTrapDamageData, disabled: bool) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td>"Fall trap"</td>
+            { gen_condition_base(data.base) }
+            <td> {text!("Preset = {}", data.preset_type)} </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_fall_quick_sand(
+    data: FallQuickSandDamageData,
+    disabled: bool,
+) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td class="mh-spoiler">"Quick sand"</td>
+            { gen_condition_base(data.base) }
+            <td> {text!("Preset = {}", data.preset_type)} </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_fall_otomo_trap(
+    data: FallOtomoTrapDamageData,
+    disabled: bool,
+) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td class="mh-spoiler">"Buddy fall trap"</td>
+            { gen_condition_base(data.base) }
+            <td> {text!("Poison stacking = {}, Preset = {}",
+                data.already_poison_stock_value, data.preset_type)} </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_shock_trap(data: ShockTrapDamageData, disabled: bool) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td>"Shock trap"</td>
+            { gen_condition_base(data.base) }
+            <td> {text!("Preset = {}", data.preset_type)} </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_shock_otomo_trap(
+    data: ShockTrapDamageData,
+    disabled: bool,
+) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td class="mh-spoiler">"Buddy shock trap"</td>
+            { gen_condition_base(data.base) }
+            <td> {text!("Preset = {}", data.preset_type)} </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_capture(data: CaptureDamageData, disabled: bool) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td>"Capture"</td>
+            { gen_condition_base(data.base) }
+            <td> {text!("Preset = {}", data.preset_type)} </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_dung(data: KoyashiDamageData, disabled: bool) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td>"Dung"</td>
+            { gen_condition_base(data.base) }
+            <td> {text!("Preset = {}", data.preset_type)} </td>
+        </tr>
+    );
+    Ok(content)
+}
+
+fn gen_condition_steel_fang(data: SteelFangData, disabled: bool) -> Result<Box<tr<String>>> {
+    let content = html!(
+        <tr class=gen_disabled(disabled)>
+            <td class="mh-spoiler">"\"Steel fang\""</td>
+            { gen_condition_base(data.base) }
+            <td> {text!("Active limit = {}, Preset = {}, Unique target param = {}",
+                data.active_limit_count, data.preset_type, data.is_unique_target_param)}
+                <br />
+                {text!("Distance = {} ~ {}, Angle = {}",
+                data.min_distance, data.max_distance, data.angle)}
+            </td>
+        </tr>
+    );
+    Ok(content)
+}
+
 fn gen_monster(monster: Monster, folder: &Path) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
@@ -51,7 +385,30 @@ fn gen_monster(monster: Monster, folder: &Path) -> Result<()> {
                 <main> <div class="container"> <div class="content">
                 <h1 class="title">{text!("Monster {:03}", monster.id)}</h1>
                 <section class="section">
+                <h2 class="subtitle">"Basic data"</h2>
+                <p>{ text!("Base HP: {}", monster.data_tune.base_hp_vital) }</p>
+                <p>{ text!("Limping threshold: (village) {}% / (LR) {}% / (HR) {}%",
+                    monster.data_tune.dying_village_hp_vital_rate,
+                    monster.data_tune.dying_low_level_hp_vital_rate,
+                    monster.data_tune.dying_high_level_hp_vital_rate
+                ) }</p>
+                <p>{ text!("Capturing threshold: (village) {}% / (LR) {}% / (HR) {}%",
+                    monster.data_tune.capture_village_hp_vital_rate,
+                    monster.data_tune.capture_low_level_hp_vital_rate,
+                    monster.data_tune.capture_high_level_hp_vital_rate
+                ) }</p>
+                <p>{ text!("Sleep recovering: {} seconds / recover {}% HP",
+                    monster.data_tune.self_sleep_time,
+                    monster.data_tune.self_sleep_recover_hp_vital_rate
+                ) }</p>
+                </section>
+
+                <section class="section">
                 <h2 class="subtitle">"Hitzone data"</h2>
+                <div>
+                    <input type="checkbox" onclick="onCheckDisplay(this, 'mh-invalid-meat', null)" id="mh-invalid-meat-check"/>
+                    <label for="mh-invalid-meat-check">"Display invalid parts"</label>
+                </div>
                 <table>
                     <thead>
                     <tr>
@@ -69,30 +426,137 @@ fn gen_monster(monster: Monster, folder: &Path) -> Result<()> {
                     </tr>
                     </thead>
                     <tbody>{
-                        monster.meat_data.meat_containers.into_iter().enumerate().flat_map(|(part, container)| {
-                            std::iter::repeat(part).zip(container.meat_group_infos.into_iter().enumerate())
-                                .map(|(part, (phase, group_info))| {
-                                    html!(<tr>
-                                        <td>{text!("{}", part)}</td>
-                                        <td>{text!("{}", phase)}</td>
-                                        <td>{text!("{}", group_info.slash)}</td>
-                                        <td>{text!("{}", group_info.impact)}</td>
-                                        <td>{text!("{}", group_info.shot)}</td>
-                                        <td>{text!("{}", group_info.fire)}</td>
-                                        <td>{text!("{}", group_info.water)}</td>
-                                        <td>{text!("{}", group_info.thunder)}</td>
-                                        <td>{text!("{}", group_info.ice)}</td>
-                                        <td>{text!("{}", group_info.dragon)}</td>
-                                        <td>{text!("{}", group_info.dizzy)}</td>
-                                    </tr>)
+                        monster.meat_data.meat_containers.into_iter()
+                            .enumerate().flat_map(|(part, meats)| {
+
+                            let span = meats.meat_group_infos.len();
+                            let mut part_common: Option<Vec<Box<td<String>>>> = Some(vec![
+                                html!(<td rowspan={span}>{ text!("{}", part) }</td>),
+                            ]);
+
+                            let invalid = &meats.meat_group_infos == &[
+                                MeatGroupInfo {
+                                    slash: 0,
+                                    impact: 0,
+                                    shot: 0,
+                                    fire: 0,
+                                    water: 0,
+                                    thunder: 0,
+                                    ice: 0,
+                                    dragon: 0,
+                                    dizzy: 0,
+                                }
+                            ];
+
+                            let hidden: SpacedSet<Class> = if invalid {
+                                "mh-invalid-meat mh-hidden"
+                            } else {
+                                ""
+                            }.try_into().unwrap();
+
+                            meats.meat_group_infos.into_iter().enumerate()
+                                .map(move |(phase, group_info)| {
+                                    let mut tds = part_common.take().unwrap_or_else(||vec![]);
+                                    tds.extend(vec![
+                                        html!(<td>{text!("{}", phase)}</td>),
+                                        html!(<td>{text!("{}", group_info.slash)}</td>),
+                                        html!(<td>{text!("{}", group_info.impact)}</td>),
+                                        html!(<td>{text!("{}", group_info.shot)}</td>),
+                                        html!(<td>{text!("{}", group_info.fire)}</td>),
+                                        html!(<td>{text!("{}", group_info.water)}</td>),
+                                        html!(<td>{text!("{}", group_info.thunder)}</td>),
+                                        html!(<td>{text!("{}", group_info.ice)}</td>),
+                                        html!(<td>{text!("{}", group_info.dragon)}</td>),
+                                        html!(<td>{text!("{}", group_info.dizzy)}</td>),
+                                    ]);
+                                    html!(<tr class=hidden.clone()> {tds} </tr>)
                                 })
                         })
                     }</tbody>
                 </table>
                 </section>
+                <section class="section">
+                <h2 class="subtitle">
+                    "Parts"
+                </h2>
+                <div>
+                    <input type="checkbox" onclick="onCheckDisplay(this, 'mh-invalid-part', null)" id="mh-invalid-part-check"/>
+                    <label for="mh-invalid-part-check">"Display invalid parts"</label>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>"Part"</th>
+                            <th>"Stagger"</th>
+                            <th>"Extract"</th>
+                        </tr>
+                    </thead>
+                    <tbody>{
+                        monster.data_tune.enemy_parts_data.into_iter().enumerate().map(|(index, part)| {
+                            let hidden: SpacedSet<Class> = if part.extractive_type == 3 {
+                                "mh-invalid-part mh-hidden"
+                            } else {
+                                ""
+                            }.try_into().unwrap();
+                            html!(<tr class=hidden>
+                                <td>{ text!("{}", index) }</td>
+                                <td>{ text!("{}", part.vital) }</td>
+                                <td>{ gen_extractive_type(part.extractive_type) }</td>
+                            </tr>)
+                        })
+                    }</tbody>
+                </table>
+                </section>
+
+                <section>
+                <h2 class="subtitle">
+                    "Abnormal status"
+                </h2>
+                <div>
+                    <input type="checkbox" onclick="onCheckDisplay(this, 'mh-ride-cond', 'mh-default-cond')" id="mh-ride-cond-check"/>
+                    <label for="mh-ride-cond-check">"Display data for riding"</label>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>"Threshold"</th>
+                            <th>"Decay"</th>
+                            <th>"Max stock"</th>
+                            <th>"Active time"</th>
+                            <th>"Add tired time"</th>
+                            <th>"Damage"</th>
+                            <th>"Additional information"</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {gen_condition_paralyze(monster.condition_damage_data.paralyze, monster.condition_damage_data.use_paralyze == 1)}
+                        {gen_condition_sleep(monster.condition_damage_data.sleep, monster.condition_damage_data.use_sleep == 1)}
+                        {gen_condition_stun(monster.condition_damage_data.stun, monster.condition_damage_data.use_stun == 1)}
+                        {gen_condition_stamina(monster.condition_damage_data.stamina, monster.condition_damage_data.use_stamina == 1)}
+                        {gen_condition_flash(monster.condition_damage_data.flash, monster.condition_damage_data.use_flash == 1)}
+                        {gen_condition_poison(monster.condition_damage_data.poison, monster.condition_damage_data.use_poison == 1)}
+                        {gen_condition_blast(monster.condition_damage_data.blast, monster.condition_damage_data.use_blast == 1)}
+                        {gen_condition_ride(monster.condition_damage_data.ride, monster.condition_damage_data.use_ride == 1)}
+                        {gen_condition_water(monster.condition_damage_data.water, monster.condition_damage_data.use_water == 1)}
+                        {gen_condition_fire(monster.condition_damage_data.fire, monster.condition_damage_data.use_fire == 1)}
+                        {gen_condition_ice(monster.condition_damage_data.ice, monster.condition_damage_data.use_ice== 1)}
+                        {gen_condition_thunder(monster.condition_damage_data.thunder, monster.condition_damage_data.use_thunder == 1)}
+                        {gen_condition_fall_trap(monster.condition_damage_data.fall_trap, monster.condition_damage_data.use_fall_trap == 1)}
+                        {gen_condition_fall_quick_sand(monster.condition_damage_data.fall_quick_sand, monster.condition_damage_data.use_fall_quick_sand == 1)}
+                        {gen_condition_fall_otomo_trap(monster.condition_damage_data.fall_otomo_trap, monster.condition_damage_data.use_fall_otomo_trap == 1)}
+                        {gen_condition_shock_trap(monster.condition_damage_data.shock_trap, monster.condition_damage_data.use_shock_trap == 1)}
+                        {gen_condition_shock_otomo_trap(monster.condition_damage_data.shock_otomo_trap, monster.condition_damage_data.use_shock_otomo_trap == 1)}
+                        {gen_condition_capture(monster.condition_damage_data.capture, monster.condition_damage_data.use_capture == 1)}
+                        {gen_condition_dung(monster.condition_damage_data.dung, monster.condition_damage_data.use_dung == 1)}
+                        {gen_condition_steel_fang(monster.condition_damage_data.steel_fang, monster.condition_damage_data.use_steel_fang == 1)}
+                    </tbody>
+                </table>
+                </section>
+
                 </div> </div> </main>
             </body>
-        </html>
+        </html>: String
     );
 
     let file = PathBuf::from(folder).join(format!("{:03}.html", monster.id));
@@ -100,7 +564,11 @@ fn gen_monster(monster: Monster, folder: &Path) -> Result<()> {
     Ok(())
 }
 
-pub fn gen_monsters(monsters: Vec<Monster>, root: &Path) -> Result<()> {
+pub fn gen_monsters(
+    monsters: Vec<Monster>,
+    small_monsters: Vec<Monster>,
+    root: &Path,
+) -> Result<()> {
     let monsters_path = root.join("monster.html");
 
     let doc: DOMTree<String> = html!(
@@ -113,6 +581,8 @@ pub fn gen_monsters(monsters: Vec<Monster>, root: &Path) -> Result<()> {
                 { navbar() }
                 <main> <div class="container"> <div class="content">
                 <h1 class="title">"Monsters"</h1>
+                <section class="section">
+                <h2 class="subtitle">"Large monsters"</h2>
                 <ul>{
                     monsters.iter().map(|monster| {
                         html!{<li>
@@ -122,6 +592,19 @@ pub fn gen_monsters(monsters: Vec<Monster>, root: &Path) -> Result<()> {
                         </li>}
                     })
                 }</ul>
+                </section>
+                <section class="section">
+                <h2 class="subtitle">"Small monsters"</h2>
+                <ul>{
+                    small_monsters.iter().map(|monster| {
+                        html!{<li>
+                            <a href={format!("/small-monster/{:03}.html", monster.id)}>{
+                                text!("Small monster {:03}", monster.id)
+                            }</a>
+                        </li>}
+                    })
+                }</ul>
+                </section>
                 </div> </div> </main>
             </body>
         </html>
@@ -132,6 +615,12 @@ pub fn gen_monsters(monsters: Vec<Monster>, root: &Path) -> Result<()> {
     let monster_path = root.join("monster");
     create_dir(&monster_path)?;
     for monster in monsters {
+        gen_monster(monster, &monster_path)?;
+    }
+
+    let monster_path = root.join("small-monster");
+    create_dir(&monster_path)?;
+    for monster in small_monsters {
         gen_monster(monster, &monster_path)?;
     }
     Ok(())
@@ -189,6 +678,22 @@ pub fn gen_about(root: &Path) -> Result<()> {
     Ok(())
 }
 
+pub fn gen_static(root: &Path) -> Result<()> {
+    write(
+        root.to_path_buf().join("mhrice.css"),
+        include_bytes!("static/mhrice.css"),
+    )?;
+    write(
+        root.to_path_buf().join("mhrice.js"),
+        include_bytes!("static/mhrice.js"),
+    )?;
+    write(
+        root.to_path_buf().join("favicon.png"),
+        include_bytes!("static/favicon.png"),
+    )?;
+    Ok(())
+}
+
 pub fn gen_website(pedia: Pedia, output: &str) -> Result<()> {
     let root = PathBuf::from(output);
     if root.exists() {
@@ -196,7 +701,8 @@ pub fn gen_website(pedia: Pedia, output: &str) -> Result<()> {
     }
     create_dir(&root)?;
 
-    gen_monsters(pedia.monsters, &root)?;
+    gen_monsters(pedia.monsters, pedia.small_monsters, &root)?;
     gen_about(&root)?;
+    gen_static(&root)?;
     Ok(())
 }

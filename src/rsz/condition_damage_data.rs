@@ -6,18 +6,18 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.StockData")]
     #[derive(Debug, Serialize)]
     pub struct StockData {
-        default_limit: f32,
-        add_limit: f32,
-        max_limit: f32,
-        sub_value: f32,
-        sub_interval: f32,
+        pub default_limit: f32,
+        pub add_limit: f32,
+        pub max_limit: f32,
+        pub sub_value: f32,
+        pub sub_interval: f32,
     }
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.ParalyzeDamageData")]
+    #[rsz()]
     #[derive(Debug, Serialize)]
-    pub struct ParalyzeDamageData {
+    pub struct ConditionDamageDataBase {
         pub default_stock: StockData,
         pub ride_stock: StockData,
         pub max_stock: f32,
@@ -27,6 +27,15 @@ rsz_struct! {
         pub add_tired_time: f32,
         pub damage_interval: f32,
         pub damage: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.EnemyConditionDamageData.ParalyzeDamageData")]
+    #[derive(Debug, Serialize)]
+    pub struct ParalyzeDamageData {
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub preset_type: u32,
     }
 }
@@ -35,15 +44,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.SleepDamageData")]
     #[derive(Debug, Serialize)]
     pub struct SleepDamageData {
-        pub default_stock: StockData,
-        pub ride_stock: StockData,
-        pub max_stock: f32,
-        pub active_time: f32,
-        pub sub_active_time: f32,
-        pub min_active_time: f32,
-        pub add_tired_time: f32,
-        pub damage_interval: f32,
-        pub damage: f32,
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub preset_type: u32,
     }
 }
@@ -52,15 +54,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.StunDamageData")]
     #[derive(Debug, Serialize)]
     pub struct StunDamageData {
-        pub default_stock: StockData,
-        pub ride_stock: StockData,
-        pub max_stock: f32,
-        pub active_time: f32,
-        pub sub_active_time: f32,
-        pub min_active_time: f32,
-        pub add_tired_time: f32,
-        pub damage_interval: f32,
-        pub damage: f32,
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub preset_type: u32,
     }
 }
@@ -69,15 +64,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.StaminaDamageData")]
     #[derive(Debug, Serialize)]
     pub struct StaminaDamageData {
-        pub default_stock: StockData,
-        pub ride_stock: StockData,
-        pub max_stock: f32,
-        pub active_time: f32,
-        pub sub_active_time: f32,
-        pub min_active_time: f32,
-        pub add_tired_time: f32,
-        pub damage_interval: f32,
-        pub damage: f32,
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub sub_stamina: f32,
         pub preset_type: u32,
     }
@@ -87,8 +75,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyFlashDamageParam.DamageLvData")]
     #[derive(Debug, Serialize)]
     pub struct FlashDamageLvData {
-        activate_count: i32,
-        active_time: f32,
+        pub activate_count: i32,
+        pub active_time: f32,
     }
 }
 
@@ -96,15 +84,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.FlashDamageData")]
     #[derive(Debug, Serialize)]
     pub struct FlashDamageData {
-        pub default_stock: StockData,
-        pub ride_stock: StockData,
-        pub max_stock: f32,
-        pub active_time: f32,
-        pub sub_active_time: f32,
-        pub min_active_time: f32,
-        pub add_tired_time: f32,
-        pub damage_interval: f32,
-        pub damage: f32,
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub damage_lvs: Vec<FlashDamageLvData>,
         pub ignore_refresh_stance: u32, // Stand, Fly, Diving, Wall, Ceiling
         pub max_distance: f32,
@@ -118,15 +99,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.PoisonDamageData")]
     #[derive(Debug, Serialize)]
     pub struct PoisonDamageData {
-        pub default_stock: StockData,
-        pub ride_stock: StockData,
-        pub max_stock: f32,
-        pub active_time: f32,
-        pub sub_active_time: f32,
-        pub min_active_time: f32,
-        pub add_tired_time: f32,
-        pub damage_interval: f32,
-        pub damage: f32,
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub preset_type: u32,
     }
 }
@@ -135,15 +109,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.BlastDamageData")]
     #[derive(Debug, Serialize)]
     pub struct BlastDamageData {
-        pub default_stock: StockData,
-        pub ride_stock: StockData,
-        pub max_stock: f32,
-        pub active_time: f32,
-        pub sub_active_time: f32,
-        pub min_active_time: f32,
-        pub add_tired_time: f32,
-        pub damage_interval: f32,
-        pub damage: f32,
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub blast_damage: f32,
         pub preset_type: u32,
     }
@@ -153,15 +120,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.MarionetteStartDamageData")]
     #[derive(Debug, Serialize)]
     pub struct MarionetteStartDamageData {
-        pub default_stock: StockData,
-        pub ride_stock: StockData,
-        pub max_stock: f32,
-        pub active_time: f32,
-        pub sub_active_time: f32,
-        pub min_active_time: f32,
-        pub add_tired_time: f32,
-        pub damage_interval: f32,
-        pub damage: f32,
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub use_data: u32, // Common, Unique
         pub nora_first_limit: f32,
     }
@@ -171,9 +131,9 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.WaterDamageData.AdjustMeatDownData")]
     #[derive(Debug, Serialize)]
     pub struct AdjustMeatDownData {
-        hard_meat_adjust_value: f32,
-        soft_meat_adjust_value: f32,
-        judge_meat_value: f32,
+        pub hard_meat_adjust_value: f32,
+        pub soft_meat_adjust_value: f32,
+        pub judge_meat_value: f32,
     }
 }
 
@@ -181,15 +141,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.WaterDamageData")]
     #[derive(Debug, Serialize)]
     pub struct WaterDamageData {
-        pub default_stock: StockData,
-        pub ride_stock: StockData,
-        pub max_stock: f32,
-        pub active_time: f32,
-        pub sub_active_time: f32,
-        pub min_active_time: f32,
-        pub add_tired_time: f32,
-        pub damage_interval: f32,
-        pub damage: f32,
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub melee_adjust: AdjustMeatDownData,
         pub shot_adjust: AdjustMeatDownData,
         pub preset_type: u32,
@@ -200,15 +153,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.FireDamageData")]
     #[derive(Debug, Serialize)]
     pub struct FireDamageData {
-        pub default_stock: StockData,
-        pub ride_stock: StockData,
-        pub max_stock: f32,
-        pub active_time: f32,
-        pub sub_active_time: f32,
-        pub min_active_time: f32,
-        pub add_tired_time: f32,
-        pub damage_interval: f32,
-        pub damage: f32,
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub hit_damage_rate: f32,
         pub preset_type: u32,
     }
@@ -218,15 +164,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.IceDamageData")]
     #[derive(Debug, Serialize)]
     pub struct IceDamageData {
-        pub default_stock: StockData,
-        pub ride_stock: StockData,
-        pub max_stock: f32,
-        pub active_time: f32,
-        pub sub_active_time: f32,
-        pub min_active_time: f32,
-        pub add_tired_time: f32,
-        pub damage_interval: f32,
-        pub damage: f32,
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub motion_speed_rate: f32,
         pub preset_type: u32,
     }
@@ -247,15 +186,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.ThunderDamageData")]
     #[derive(Debug, Serialize)]
     pub struct ThunderDamageData {
-        pub default_stock: StockData,
-        pub ride_stock: StockData,
-        pub max_stock: f32,
-        pub active_time: f32,
-        pub sub_active_time: f32,
-        pub min_active_time: f32,
-        pub add_tired_time: f32,
-        pub damage_interval: f32,
-        pub damage: f32,
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub stun_meat_adjust: ThunderAdjustParamData,
         pub normal_meat_adjust: ThunderAdjustParamData,
         pub stun_active_limit: i32,
@@ -267,15 +199,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.FallTrapDamageData")]
     #[derive(Debug, Serialize)]
     pub struct FallTrapDamageData {
-        pub default_stock: StockData,
-        pub ride_stock: StockData,
-        pub max_stock: f32,
-        pub active_time: f32,
-        pub sub_active_time: f32,
-        pub min_active_time: f32,
-        pub add_tired_time: f32,
-        pub damage_interval: f32,
-        pub damage: f32,
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub render_offset_y: f32,
         pub render_offset_speed: f32,
         pub render_offset_reset_time: f32,
@@ -287,15 +212,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.FallQuickSandDamageData")]
     #[derive(Debug, Serialize)]
     pub struct FallQuickSandDamageData {
-        pub default_stock: StockData,
-        pub ride_stock: StockData,
-        pub max_stock: f32,
-        pub active_time: f32,
-        pub sub_active_time: f32,
-        pub min_active_time: f32,
-        pub add_tired_time: f32,
-        pub damage_interval: f32,
-        pub damage: f32,
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub render_offset_y: f32,
         pub render_offset_speed: f32,
         pub render_offset_reset_time: f32,
@@ -307,15 +225,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.FallOtomoTrapDamageData")]
     #[derive(Debug, Serialize)]
     pub struct FallOtomoTrapDamageData {
-        pub default_stock: StockData,
-        pub ride_stock: StockData,
-        pub max_stock: f32,
-        pub active_time: f32,
-        pub sub_active_time: f32,
-        pub min_active_time: f32,
-        pub add_tired_time: f32,
-        pub damage_interval: f32,
-        pub damage: f32,
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub already_poison_stock_value: f32,
         pub preset_type: u32,
     }
@@ -325,15 +236,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.ShockTrapDamageData")]
     #[derive(Debug, Serialize)]
     pub struct ShockTrapDamageData {
-        pub default_stock: StockData,
-        pub ride_stock: StockData,
-        pub max_stock: f32,
-        pub active_time: f32,
-        pub sub_active_time: f32,
-        pub min_active_time: f32,
-        pub add_tired_time: f32,
-        pub damage_interval: f32,
-        pub damage: f32,
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub preset_type: u32,
     }
 }
@@ -342,15 +246,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.CaptureDamageData")]
     #[derive(Debug, Serialize)]
     pub struct CaptureDamageData {
-        pub default_stock: StockData,
-        pub ride_stock: StockData,
-        pub max_stock: f32,
-        pub active_time: f32,
-        pub sub_active_time: f32,
-        pub min_active_time: f32,
-        pub add_tired_time: f32,
-        pub damage_interval: f32,
-        pub damage: f32,
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub preset_type: u32,
     }
 }
@@ -359,15 +256,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.KoyashiDamageData")]
     #[derive(Debug, Serialize)]
     pub struct KoyashiDamageData {
-        pub default_stock: StockData,
-        pub ride_stock: StockData,
-        pub max_stock: f32,
-        pub active_time: f32,
-        pub sub_active_time: f32,
-        pub min_active_time: f32,
-        pub add_tired_time: f32,
-        pub damage_interval: f32,
-        pub damage: f32,
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub preset_type: u32,
     }
 }
@@ -376,15 +266,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.SteelFangData")]
     #[derive(Debug, Serialize)]
     pub struct SteelFangData {
-        pub default_stock: StockData,
-        pub ride_stock: StockData,
-        pub max_stock: f32,
-        pub active_time: f32,
-        pub sub_active_time: f32,
-        pub min_active_time: f32,
-        pub add_tired_time: f32,
-        pub damage_interval: f32,
-        pub damage: f32,
+        #[serde(flatten)]
+        pub base: ConditionDamageDataBase,
         pub active_limit_count: i32,
         pub preset_type: u32,
         pub is_unique_target_param: u32,

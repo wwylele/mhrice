@@ -327,7 +327,10 @@ fn upload_s3_folder(path: &Path, bucket: String, client: &S3Client) -> Result<()
             .context("Extension is not UTF-8")?
         {
             "html" => "text/html",
-            _ => "application/octet-stream",
+            "css" => "text/css",
+            "js" => "text/javascript",
+            "png" => "image/png",
+            _ => bail!("Unknown extension"),
         };
 
         let key = entry

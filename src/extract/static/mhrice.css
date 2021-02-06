@@ -1,0 +1,40 @@
+span.mh-extract-red {
+    background-color: red;
+    color: black;
+}
+
+span.mh-extract-orange {
+    background-color: orange;
+    color: black;
+}
+
+span.mh-extract-white {
+    background-color: white;
+    color: black;
+}
+
+span.mh-extract-unknown {
+    background-color: black;
+    color: white;
+}
+
+.mh-hidden {
+    display: none;
+}
+
+.mh-disabled {
+    text-decoration: line-through;
+}
+
+.mh-spoiler {
+    color: black;
+    background-color:black;
+}
+
+.mh-spoiler:hover {
+    background-color:white;
+}
+
+.mh-ride-cond {
+    color: red;
+}

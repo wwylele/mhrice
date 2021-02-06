@@ -298,7 +298,7 @@ impl<T: FieldFromRsz + 'static> FieldFromRsz for Vec<T> {
 
 #[derive(Debug, Serialize)]
 #[serde(transparent)]
-struct Utf16String(String);
+pub struct Utf16String(String);
 
 impl FieldFromRsz for Utf16String {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
@@ -315,9 +315,40 @@ impl FieldFromRsz for Utf16String {
 }
 
 #[macro_export]
+macro_rules! rsz_inner {
+    ($rsz:ident, $($field_name:ident : $field_type:ty,)*) => {
+        Ok(Self {
+            $(
+                $field_name: <$field_type>::field_from_rsz($rsz).context(stringify!($field_name))?,
+            )*
+        })
+    }
+}
+
+#[macro_export]
+macro_rules! rsz_inner_trait {
+    (rsz($symbol:literal), $struct_name:ident, $($field_name:ident : $field_type:ty,)*) => {
+        impl crate::rsz::FromRsz for $struct_name {
+            const SYMBOL: &'static str = $symbol;
+            fn from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
+                crate::rsz_inner!(rsz, $($field_name : $field_type,)*)
+            }
+        }
+    };
+
+    (rsz(), $struct_name:ident, $($field_name:ident : $field_type:ty,)*) => {
+        impl crate::rsz::FieldFromRsz for $struct_name {
+            fn field_from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
+                crate::rsz_inner!(rsz, $($field_name : $field_type,)*)
+            }
+        }
+    }
+}
+
+#[macro_export]
 macro_rules! rsz_struct {
     (
-        #[rsz($symbol:literal)]
+        #[rsz($($symbol:literal)?)]
         $(#[$outer_meta:meta])*
         $outer_vis:vis struct $struct_name:ident {
             $(
@@ -334,16 +365,7 @@ macro_rules! rsz_struct {
             )*
         }
 
-        impl crate::rsz::FromRsz for $struct_name {
-            const SYMBOL: &'static str = $symbol;
-            fn from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
-                Ok(Self {
-                    $(
-                        $field_name: <$field_type>::field_from_rsz(rsz).context(stringify!($field_name))?,
-                    )*
-                })
-            }
-        }
+        crate::rsz_inner_trait!(rsz($($symbol)?), $struct_name, $($field_name : $field_type,)*);
     };
 }
 

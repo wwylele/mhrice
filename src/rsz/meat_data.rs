@@ -4,7 +4,7 @@ use serde::*;
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyMeatContainer.MeatGroupInfo")]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, PartialEq, Eq)]
     pub struct MeatGroupInfo {
         pub slash: u16,
         pub impact: u16,

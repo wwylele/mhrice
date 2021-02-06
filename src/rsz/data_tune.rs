@@ -6,8 +6,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyPartsData")]
     #[derive(Debug, Serialize)]
     pub struct EnemyPartsData {
-        vital: i32,
-        extractive_type: u32, // red, white, orange, none
+        pub vital: i32,
+        pub extractive_type: u32, // red, white, orange, none
     }
 }
 
@@ -15,11 +15,11 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyDataTune.PartsBreakData")]
     #[derive(Debug, Serialize)]
     pub struct DataTunePartsBreakData {
-        break_level: i32,
-        vital: i32,
-        ignore_condition: i32, // none, in_times, equal
-        ignore_check_count: i32,
-        reward_data: i32,
+        pub break_level: i32,
+        pub vital: i32,
+        pub ignore_condition: i32, // none, in_times, equal
+        pub ignore_check_count: i32,
+        pub reward_data: i32,
     }
 }
 
@@ -27,8 +27,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyDataTune.EnemyPartsBreakData")]
     #[derive(Debug, Serialize)]
     pub struct DataTuneEnemyPartsBreakData {
-        parts_group: u32,
-        parts_break_data_list: Vec<DataTunePartsBreakData>,
+        pub parts_group: u32,
+        pub parts_break_data_list: Vec<DataTunePartsBreakData>,
     }
 }
 
@@ -36,8 +36,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyDataTune.PartsLossData")]
     #[derive(Debug, Serialize)]
     pub struct DataTunePartsLossData {
-        vital: i32,
-        permit_damage_attr: u32, // slash, strike, all
+        pub vital: i32,
+        pub permit_damage_attr: u32, // slash, strike, all
     }
 }
 
@@ -45,8 +45,8 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyDataTune.EnemyPartsLossData")]
     #[derive(Debug, Serialize)]
     pub struct DataTuneEnemyPartsLossData {
-        parts_group: u32,
-        parts_loss_data: DataTunePartsLossData,
+        pub parts_group: u32,
+        pub parts_loss_data: DataTunePartsLossData,
     }
 }
 
@@ -62,7 +62,7 @@ rsz_struct! {
     #[rsz("snow.enemy.MultiPartsVital")]
     #[derive(Debug, Serialize)]
     pub struct MultiPartsVital {
-        vital: i32,
+        pub vital: i32,
     }
 }
 
@@ -71,19 +71,19 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct EnemyMultiPartsSystemVitalData {
         //?
-        use_type: u32, // common, unique
-        enable_parts_data_num: i32,
-        priority: u32,
-        enable_parts_data: EnablePartsGroup,
-        enable_last_attack_parts: Vec<u32>, //?
-        is_enable_hyakuryu: u8,
-        is_enable_overwrite_down: u8,
-        is_prio_damage_customize: u8,
-        prio_damage_catagory_flag: u32, // see DamageCategoryFlag
-        is_multi_rate_ex: u8,
-        multi_parts_vital_data: Vec<MultiPartsVital>,
-        enable_parts_names: Vec<Utf16String>,
-        enable_parts_values: Vec<u32>,
+        pub use_type: u32, // common, unique
+        pub enable_parts_data_num: i32,
+        pub priority: u32,
+        pub enable_parts_data: EnablePartsGroup,
+        pub enable_last_attack_parts: Vec<u32>, //?
+        pub is_enable_hyakuryu: u8,
+        pub is_enable_overwrite_down: u8,
+        pub is_prio_damage_customize: u8,
+        pub prio_damage_catagory_flag: u32, // see DamageCategoryFlag
+        pub is_multi_rate_ex: u8,
+        pub multi_parts_vital_data: Vec<MultiPartsVital>,
+        pub enable_parts_names: Vec<Utf16String>,
+        pub enable_parts_values: Vec<u32>,
     }
 }
 
@@ -92,19 +92,19 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct EnemyMultiPartsVitalData {
         //?
-        use_type: u32, // common, unique
-        enable_parts_data_num: i32,
-        priority: u32,
-        enable_parts_data: EnablePartsGroup,
-        enable_last_attack_parts: Vec<u32>, //?
-        is_enable_hyakuryu: u8,
-        is_enable_overwrite_down: u8,
-        is_prio_damage_customize: u8,
-        prio_damage_catagory_flag: u32, // see DamageCategoryFlag
-        is_multi_rate_ex: u8,
-        multi_parts_vital_data: Vec<MultiPartsVital>,
-        enable_parts_names: Vec<Utf16String>,
-        enable_parts_values: Vec<u32>,
+        pub use_type: u32, // common, unique
+        pub enable_parts_data_num: i32,
+        pub priority: u32,
+        pub enable_parts_data: EnablePartsGroup,
+        pub enable_last_attack_parts: Vec<u32>, //?
+        pub is_enable_hyakuryu: u8,
+        pub is_enable_overwrite_down: u8,
+        pub is_prio_damage_customize: u8,
+        pub prio_damage_catagory_flag: u32, // see DamageCategoryFlag
+        pub is_multi_rate_ex: u8,
+        pub multi_parts_vital_data: Vec<MultiPartsVital>,
+        pub enable_parts_names: Vec<Utf16String>,
+        pub enable_parts_values: Vec<u32>,
     }
 }
 
