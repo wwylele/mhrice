@@ -1,4 +1,5 @@
 use super::*;
+use crate::rsz_enum;
 use crate::rsz_struct;
 use serde::*;
 
@@ -277,6 +278,15 @@ rsz_struct! {
     }
 }
 
+rsz_enum! {
+    #[rsz(u8)]
+    #[derive(Debug, Serialize)]
+    pub enum ConditionDamageDataUsed {
+        Use = 0,
+        NotUse = 1,
+    }
+}
+
 rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData")]
     #[derive(Debug, Serialize)]
@@ -301,26 +311,25 @@ rsz_struct! {
         pub capture: CaptureDamageData,
         pub dung: KoyashiDamageData,
         pub steel_fang: SteelFangData,
-        // 0 = use, 1 = not use
-        pub use_paralyze: u8,
-        pub use_sleep: u8,
-        pub use_stun: u8,
-        pub use_stamina: u8,
-        pub use_flash: u8,
-        pub use_poison: u8,
-        pub use_blast: u8,
-        pub use_ride: u8,
-        pub use_water: u8,
-        pub use_fire: u8,
-        pub use_ice: u8,
-        pub use_thunder: u8,
-        pub use_fall_trap: u8,
-        pub use_fall_quick_sand: u8,
-        pub use_fall_otomo_trap: u8,
-        pub use_shock_trap: u8,
-        pub use_shock_otomo_trap: u8,
-        pub use_capture: u8,
-        pub use_dung: u8,
-        pub use_steel_fang: u8,
+        pub use_paralyze: ConditionDamageDataUsed,
+        pub use_sleep: ConditionDamageDataUsed,
+        pub use_stun: ConditionDamageDataUsed,
+        pub use_stamina: ConditionDamageDataUsed,
+        pub use_flash: ConditionDamageDataUsed,
+        pub use_poison: ConditionDamageDataUsed,
+        pub use_blast: ConditionDamageDataUsed,
+        pub use_ride: ConditionDamageDataUsed,
+        pub use_water: ConditionDamageDataUsed,
+        pub use_fire: ConditionDamageDataUsed,
+        pub use_ice: ConditionDamageDataUsed,
+        pub use_thunder: ConditionDamageDataUsed,
+        pub use_fall_trap: ConditionDamageDataUsed,
+        pub use_fall_quick_sand: ConditionDamageDataUsed,
+        pub use_fall_otomo_trap: ConditionDamageDataUsed,
+        pub use_shock_trap: ConditionDamageDataUsed,
+        pub use_shock_otomo_trap: ConditionDamageDataUsed,
+        pub use_capture: ConditionDamageDataUsed,
+        pub use_dung: ConditionDamageDataUsed,
+        pub use_steel_fang: ConditionDamageDataUsed,
     }
 }

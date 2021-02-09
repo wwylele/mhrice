@@ -1,13 +1,25 @@
 use super::*;
+use crate::rsz_enum;
 use crate::rsz_struct;
 use serde::*;
+
+rsz_enum! {
+    #[rsz(u32)]
+    #[derive(Debug, Serialize, PartialEq, Eq)]
+    pub enum ExtractiveType {
+        Red = 0,
+        White = 1,
+        Orange = 2,
+        None = 3,
+    }
+}
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyPartsData")]
     #[derive(Debug, Serialize)]
     pub struct EnemyPartsData {
         pub vital: i32,
-        pub extractive_type: u32, // red, white, orange, none
+        pub extractive_type: ExtractiveType,
     }
 }
 

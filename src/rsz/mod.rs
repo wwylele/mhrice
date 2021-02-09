@@ -369,6 +369,38 @@ macro_rules! rsz_struct {
     };
 }
 
+#[macro_export]
+macro_rules! rsz_enum {
+    (
+        #[rsz($base:ty)]
+        $(#[$outer_meta:meta])*
+        $outer_vis:vis enum $enum_name:ident {
+            $(
+                $(#[$inner_meta:meta])*
+                $field_name:ident = $field_value:literal
+            ),*$(,)?
+        }
+    ) => {
+        $(#[$outer_meta])*
+        $outer_vis enum $enum_name {
+            $(
+                $(#[$inner_meta])*
+                $field_name = $field_value,
+            )*
+        }
+
+        impl crate::rsz::FieldFromRsz for $enum_name {
+            fn field_from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
+                let value = <$base>::field_from_rsz(rsz)?;
+                match value {
+                    $($field_value => Ok($enum_name::$field_name),)*
+                    x => bail!("Unknown value {} for enum {}", x, stringify!($enum_name))
+                }
+            }
+        }
+    };
+}
+
 type RszDeserializerFn = fn(&mut RszDeserializer) -> Result<Box<dyn Any>>;
 
 static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
