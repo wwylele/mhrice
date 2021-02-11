@@ -82,12 +82,10 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyMultiPartsSystemVitalData")]
     #[derive(Debug, Serialize)]
     pub struct EnemyMultiPartsSystemVitalData {
-        //?
         pub use_type: u32, // common, unique
-        pub enable_parts_data_num: i32,
         pub priority: u32,
-        pub enable_parts_data: EnablePartsGroup,
-        pub enable_last_attack_parts: Vec<u32>, //?
+        pub enable_parts_data: Vec<EnablePartsGroup>,
+        pub enable_last_attack_parts: Vec<Utf16String>,
         pub is_enable_hyakuryu: u8,
         pub is_enable_overwrite_down: u8,
         pub is_prio_damage_customize: u8,

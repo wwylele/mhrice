@@ -1,3 +1,4 @@
+use crate::bitfield::*;
 use crate::file_ext::*;
 use anyhow::*;
 use std::convert::{TryFrom, TryInto};
@@ -19,7 +20,7 @@ impl Tdb {
             bail!("Expected 0");
         }
 
-        let b_count = file.read_u32()?;
+        let type_instance_count = file.read_u32()?;
         let d_count = file.read_u32()?;
         let field_membership_count = file.read_u32()?;
         let type_count = file.read_u32()?;
@@ -41,10 +42,10 @@ impl Tdb {
 
         let unknown = file.read_u32()?;
         let string_table_len = file.read_u32()?;
-        let p_len = file.read_u32()?;
+        let array_table_len = file.read_u32()?;
 
         let a_offset = file.read_u64()?;
-        let b_offset = file.read_u64()?;
+        let type_instance_offset = file.read_u64()?;
         let type_offset = file.read_u64()?;
         let d_offset = file.read_u64()?;
         let method_offset = file.read_u64()?;
@@ -58,7 +59,7 @@ impl Tdb {
         let m_offset = file.read_u64()?;
         let n_offset = file.read_u64()?;
         let string_table_offset = file.read_u64()?;
-        let p_offset = file.read_u64()?;
+        let array_table_offset = file.read_u64()?;
         let q_offset = file.read_u64()?;
 
         file.seek_noop(a_offset)?;
@@ -79,36 +80,32 @@ impl Tdb {
             })
             .collect::<Result<Vec<_>>>()?;
 
-        struct B {
-            base_index: u64,
-            parent_index: u64,
+        struct TypeInstance {
+            base_type_instance_index: u64,
+            parent_type_instance_index: u64,
             af: u64,
-            prev_index: u64,
-            next_index: u64,
+            arrayize_type_instance_index: u64,
+            dearrayize_type_instance_index: u64,
             type_index: u64,
             bf: u64,
             b: u32,
             c: u32,
-            d: u32,
+            interface_list_offset: u32,
+            field_membership_start_index: u32,
+            template_argument_list_offset: u32,
         }
-        file.seek_assert_align_up(b_offset, 16)?;
-        let bs = (0..b_count)
+        file.seek_assert_align_up(type_instance_offset, 16)?;
+        let type_instances = (0..type_instance_count)
             .map(|i| {
-                let index_a = file.read_u64()?;
-                let index = index_a & 0x3FFFF;
-                let base_index = (index_a >> 18) & 0x3FFFF;
-                let parent_index = (index_a >> 36) & 0x3FFFF;
-                let af = index_a >> 54;
+                let (index, base_type_instance_index, parent_type_instance_index, af) =
+                    file.read_u64()?.bit_split((18, 18, 18, 10));
 
                 if index != u64::from(i) {
                     bail!("Unexpected index");
                 }
 
-                let index_b = file.read_u64()?;
-                let prev_index = index_b & 0x3FFFF;
-                let next_index = (index_b >> 18) & 0x3FFFF;
-                let type_index = (index_b >> 36) & 0x3FFFF;
-                let bf = index_b >> 54;
+                let (arrayize_type_instance_index, dearrayize_type_instance_index, type_index, bf) =
+                    file.read_u64()?.bit_split((18, 18, 18, 10));
 
                 file.read_u32()?;
                 file.read_u32()?;
@@ -118,28 +115,30 @@ impl Tdb {
                 file.read_u32()?;
                 let b = file.read_u32()?;
                 file.read_u32()?;
-                file.read_u32()?;
+                let field_membership_start_index = file.read_u32()?;
 
                 file.read_u32()?;
                 let c = file.read_u32()?;
-                let d = file.read_u32()?;
-                file.read_u32()?;
+                let interface_list_offset = file.read_u32()?;
+                let template_argument_list_offset = file.read_u32()?;
 
                 file.read_u32()?;
                 file.read_u32()?;
                 file.read_u32()?;
                 file.read_u32()?;
-                Ok(B {
-                    base_index,
-                    parent_index,
+                Ok(TypeInstance {
+                    base_type_instance_index,
+                    parent_type_instance_index,
                     af,
-                    prev_index,
-                    next_index,
+                    arrayize_type_instance_index,
+                    dearrayize_type_instance_index,
                     type_index,
                     bf,
                     b,
                     c,
-                    d,
+                    interface_list_offset,
+                    field_membership_start_index,
+                    template_argument_list_offset,
                 })
             })
             .collect::<Result<Vec<_>>>()?;
@@ -154,19 +153,17 @@ impl Tdb {
             .collect::<Result<Vec<_>>>()?;
 
         struct FieldMembership {
-            b_index: u64,
+            type_instance_index: u64,
             field_index: u64,
             position: u64,
         }
         file.seek_assert_align_up(field_membership_offset, 16)?;
         let field_memberships = (0..field_membership_count)
             .map(|_| {
-                let data = file.read_u64()?;
-                let b_index = data & 0x3FFFF;
-                let field_index = (data >> 18) & 0xFFFFF;
-                let position = data >> 38;
+                let (type_instance_index, field_index, position) =
+                    file.read_u64()?.bit_split((18, 20, 26));
                 Ok(FieldMembership {
-                    b_index,
+                    type_instance_index,
                     field_index,
                     position,
                 })
@@ -181,8 +178,9 @@ impl Tdb {
 
             n0: u16,
             n1: u16,
-            n2: u16,
-            n3: u16,
+
+            field_count: u32,
+
             n4: u16,
             n5: u16,
             n6: u16,
@@ -202,8 +200,7 @@ impl Tdb {
 
                 let n0 = file.read_u16()?;
                 let n1 = file.read_u16()?;
-                let n2 = file.read_u16()?;
-                let n3 = file.read_u16()?;
+                let field_count = file.read_u32()?;
                 let n4 = file.read_u16()?;
                 let n5 = file.read_u16()?;
                 let n6 = file.read_u16()?;
@@ -218,8 +215,7 @@ impl Tdb {
                     s2,
                     n0,
                     n1,
-                    n2,
-                    n3,
+                    field_count,
                     n4,
                     n5,
                     n6,
@@ -248,7 +244,7 @@ impl Tdb {
         struct Field {
             a1: u16,
             a2: u16,
-            b_index: u32,
+            type_instance_index: u32,
             b_upper: u32,
             name_offset: u32,
         }
@@ -257,14 +253,12 @@ impl Tdb {
             .map(|_| {
                 let a1 = file.read_u16()?;
                 let a2 = file.read_u16()?;
-                let b = file.read_u32()?;
-                let b_index = b & 0x3FFFF;
-                let b_upper = b >> 18;
+                let (type_instance_index, b_upper) = file.read_u32()?.bit_split((18, 14));
                 let name_offset = file.read_u32()?;
                 Ok(Field {
                     a1,
                     a2,
-                    b_index,
+                    type_instance_index,
                     b_upper,
                     name_offset,
                 })
@@ -350,17 +344,7 @@ impl Tdb {
         let mut string_table = vec![0; string_table_len.try_into()?];
         file.read_exact(&mut string_table)?;
 
-        let string_all: std::collections::HashSet<u32> = string_table[0..string_table.len() - 1]
-            .iter()
-            .enumerate()
-            .filter(|&(index, &c)| c == 0)
-            .map(|(index, _)| index as u32 + 1)
-            .collect();
-        let string_all = std::rc::Rc::new(std::cell::RefCell::new(string_all));
-        let string_all_ref = string_all.clone();
-
-        let mut read_string = move |offset: u32| {
-            string_all_ref.borrow_mut().remove(&offset);
+        let read_string = move |offset: u32| {
             let offset = usize::try_from(offset)?;
             if offset >= string_table.len() {
                 bail!("offset out of bount");
@@ -375,27 +359,306 @@ impl Tdb {
             Ok(std::str::from_utf8(&string_table[offset..end])?.to_owned())
         };
 
-        file.seek_assert_align_up(p_offset, 16)?;
-        let mut p = vec![0; p_len.try_into()?];
-        file.read_exact(&mut p)?;
+        file.seek_assert_align_up(array_table_offset, 16)?;
+        let mut array_table = vec![0; array_table_len.try_into()?];
+        file.read_exact(&mut array_table)?;
 
         file.seek_assert_align_up(q_offset, 16)?;
         let qs = (0..q_count)
             .map(|_| Ok(file.read_u32()?))
             .collect::<Result<Vec<_>>>()?;
 
-        for field_membership in field_memberships {
-            let b = &bs[field_membership.b_index as usize];
+        #[derive(Clone)]
+        struct Mono {
+            full_name: String,
+        }
+
+        let mut monos: Vec<Option<Mono>> = vec![None; type_instances.len()];
+
+        fn build_mono(
+            monos: &mut [Option<Mono>],
+            index: usize,
+            type_instances: &[TypeInstance],
+            types: &[Type],
+            array_table: &[u8],
+            read_string: impl Fn(u32) -> Result<String> + Copy,
+        ) -> Result<()> {
+            if index > monos.len() {
+                bail!("Index out of bound: {}", index);
+            }
+            if monos[index].is_some() {
+                return Ok(());
+            }
+
+            if index == 0 {
+                monos[index] = Some(Mono {
+                    full_name: "".to_string(),
+                });
+                return Ok(());
+            }
+
+            let ti = &type_instances[index];
+            let ty = types
+                .get(ti.type_index as usize)
+                .context("Type index out of bound")?;
+
+            if ti.dearrayize_type_instance_index != 0 {
+                build_mono(
+                    monos,
+                    ti.dearrayize_type_instance_index as usize,
+                    type_instances,
+                    types,
+                    array_table,
+                    read_string,
+                )
+                .context(format!("Build dearrayize mono for {}", index))?;
+                let full_name = monos[ti.dearrayize_type_instance_index as usize]
+                    .as_ref()
+                    .unwrap()
+                    .full_name
+                    .clone()
+                    + "[]";
+
+                monos[index] = Some(Mono { full_name });
+
+                return Ok(());
+            }
+
+            let parent = if ti.parent_type_instance_index != 0 {
+                build_mono(
+                    monos,
+                    ti.parent_type_instance_index as usize,
+                    type_instances,
+                    types,
+                    array_table,
+                    read_string,
+                )
+                .context(format!("Build parent mono for {}", index))?;
+                Some(
+                    monos[ti.parent_type_instance_index as usize]
+                        .as_ref()
+                        .unwrap()
+                        .clone(),
+                )
+            } else {
+                None
+            };
+
+            let namespace = read_string(ty.namespace_offset)?;
+
+            if !namespace.is_empty() && parent.is_some() {
+                bail!("Parent collision");
+            }
+
+            let parent_string = if let Some(parent) = parent {
+                parent.full_name
+            } else {
+                namespace
+            };
+
+            let mut full_name = parent_string + "." + &read_string(ty.name_offset)?;
+
+            if ti.template_argument_list_offset != 0 {
+                let mut template_argument_list =
+                    &array_table[ti.template_argument_list_offset as usize..];
+                let (template_type_instance_index, targ_count) =
+                    template_argument_list.read_u32()?.bit_split((18, 14));
+
+                if template_type_instance_index as usize != index {
+                    let mut targs = vec![];
+                    for _ in 0..targ_count {
+                        let (targ_type_instance_id, _) =
+                            template_argument_list.read_u32()?.bit_split((18, 14));
+                        build_mono(
+                            monos,
+                            targ_type_instance_id as usize,
+                            type_instances,
+                            types,
+                            array_table,
+                            read_string,
+                        )
+                        .context(format!("Build targ mono for {}", index))?;
+                        targs.push(
+                            monos[targ_type_instance_id as usize]
+                                .as_ref()
+                                .unwrap()
+                                .clone(),
+                        );
+                    }
+
+                    let mut targs = targs.into_iter();
+
+                    let insert_points: Vec<_> =
+                        full_name.match_indices('`').map(|(i, _)| i).collect();
+                    if insert_points.is_empty() {
+                        bail!("Non template: {}", index);
+                    }
+                    let mut inserted = full_name[0..insert_points[0]].to_owned();
+
+                    for (i, &insert_point) in insert_points.iter().enumerate() {
+                        let digit_begin = insert_point + 1;
+                        let mut digit_end = digit_begin;
+                        while digit_end < full_name.len()
+                            && full_name.as_bytes()[digit_end].is_ascii_digit()
+                        {
+                            digit_end += 1;
+                        }
+                        let count: usize = full_name[digit_begin..digit_end].parse()?;
+                        let args: Vec<_> =
+                            targs.by_ref().take(count).map(|a| a.full_name).collect();
+                        if args.len() != count {
+                            bail!("Not enough targ: {}", index);
+                        }
+                        inserted += "<";
+                        inserted += &args.join(",");
+                        inserted += ">";
+                        let next_insert_point = if i == insert_points.len() - 1 {
+                            full_name.len()
+                        } else {
+                            insert_points[i + 1]
+                        };
+                        inserted += &full_name[digit_end..next_insert_point];
+                    }
+                    if targs.next().is_some() {
+                        bail!("Excessive targ: {}", index);
+                    }
+                    full_name = inserted;
+                }
+            }
+
+            monos[index] = Some(Mono { full_name });
+
+            Ok(())
+        }
+
+        for i in 0..type_instances.len() {
+            build_mono(
+                &mut monos,
+                i,
+                &type_instances,
+                &types,
+                &array_table,
+                &read_string,
+            )?;
+        }
+
+        for (i, type_instance) in type_instances.iter().enumerate() {
+            println!("#################################\n$TI[{}]", i);
+
+            println!("{{ {} }}", &monos[i].as_ref().unwrap().full_name);
+
+            println!(
+                "base type instance: {{ {} }} TI[{}]",
+                &monos[type_instance.base_type_instance_index as usize]
+                    .as_ref()
+                    .unwrap()
+                    .full_name,
+                type_instance.base_type_instance_index
+            );
+            println!(
+                "parent type instance: {{ {} }} TI[{}]",
+                &monos[type_instance.parent_type_instance_index as usize]
+                    .as_ref()
+                    .unwrap()
+                    .full_name,
+                type_instance.parent_type_instance_index
+            );
+            println!("type: Type[{}]", type_instance.type_index);
+
+            let ty = types
+                .get(type_instance.type_index as usize)
+                .context("Type index out of bound")?;
+
+            println!("  -> name: {}", read_string(ty.name_offset)?);
+            println!("  -> field_count: {}", ty.field_count);
+
+            println!(
+                "TemplateArgList: [{}]",
+                type_instance.template_argument_list_offset
+            );
+            let mut template_argument_list =
+                &array_table[type_instance.template_argument_list_offset as usize..];
+            let (template_type_instance_id, targ_count) =
+                template_argument_list.read_u32()?.bit_split((18, 14));
+            println!(
+                " --> Template = TypeInstance[{}]",
+                template_type_instance_id
+            );
+            for _ in 0..targ_count {
+                let (targ_type_instance_id, targ_high) =
+                    template_argument_list.read_u32()?.bit_split((18, 14));
+                println!(
+                    " --> TypeInstance[{}], {}",
+                    targ_type_instance_id, targ_high
+                );
+            }
+
+            println!("InterfaceList[{}]", type_instance.interface_list_offset);
+            let mut interface_list = &array_table[type_instance.interface_list_offset as usize..];
+            let interface_count = interface_list.read_u32()?;
+            for _ in 0..interface_count {
+                let (interface_type_instance_id, interface_high) =
+                    interface_list.read_u32()?.bit_split((18, 14));
+                println!(
+                    "  ->  {{ {} }} TI[{}], {}",
+                    &monos[interface_type_instance_id as usize]
+                        .as_ref()
+                        .unwrap()
+                        .full_name,
+                    interface_type_instance_id,
+                    interface_high,
+                );
+            }
+
+            println!(
+                "Field membership start index: {}",
+                type_instance.field_membership_start_index
+            );
+            println!("Fields:");
+            for j in 0..ty.field_count {
+                let field_membership_index = type_instance.field_membership_start_index + j;
+                let field_membership = field_memberships
+                    .get(field_membership_index as usize)
+                    .context("Field membership index out of bound")?;
+                if field_membership.type_instance_index != i as u64 {
+                    bail!("field_membership.type_instance_index mismatch")
+                }
+                println!(
+                    "Membership[{}]: at {}",
+                    field_membership_index, field_membership.position
+                );
+                let field = fields
+                    .get(field_membership.field_index as usize)
+                    .context("Field index out of bound")?;
+
+                println!(
+                    "  -> Field[{}]: {}, {}, {{ {} }} TI[{}], {}, {}",
+                    field_membership.field_index,
+                    field.a1,
+                    field.a2,
+                    &monos[field.type_instance_index as usize]
+                        .as_ref()
+                        .unwrap()
+                        .full_name,
+                    field.type_instance_index,
+                    field.b_upper,
+                    read_string(field.name_offset)?
+                );
+            }
+        }
+
+        /*for field_membership in field_memberships {
+            let b = &type_instances[field_membership.b_index as usize];
             let type_name = read_string(types[b.type_index as usize].name_offset)?;
             let field = &fields[field_membership.field_index as usize];
             let field_name = read_string(field.name_offset)?;
-            let sub_b = &bs[field.b_index as usize];
+            let sub_b = &type_instances[field.b_index as usize];
             let sub_type_name = read_string(types[sub_b.type_index as usize].name_offset)?;
             println!(
                 "{} + {}: ({}) {}",
                 type_name, field_membership.position, sub_type_name, field_name
             );
-        }
+        }*/
 
         /*let mut parent_ref = vec![0; types.len()];
         for (i, b) in bs.iter().enumerate() {

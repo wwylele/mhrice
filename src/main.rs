@@ -15,6 +15,7 @@ use structopt::*;
 use walkdir::WalkDir;
 
 mod align;
+mod bitfield;
 mod extract;
 mod file_ext;
 mod msg;
