@@ -4,13 +4,13 @@ use serde::*;
 use std::convert::TryFrom;
 use std::io::{Read, Seek};
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub struct MsgAttributeHeader {
     pub j: i32,
     pub name: String,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub struct MsgEntry {
     pub name: String,
     pub guid: String,
@@ -18,7 +18,7 @@ pub struct MsgEntry {
     pub content: Vec<String>,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub struct Msg {
     pub attribute_headers: Vec<MsgAttributeHeader>,
     pub entries: Vec<MsgEntry>,
@@ -154,5 +154,9 @@ impl Msg {
             attribute_headers,
             entries,
         })
+    }
+
+    pub fn get_entry(&self, name: &str) -> Option<&MsgEntry> {
+        self.entries.iter().find(|entry| entry.name == name)
     }
 }

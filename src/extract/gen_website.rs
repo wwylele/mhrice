@@ -1,4 +1,5 @@
 use super::pedia::*;
+use crate::msg::*;
 use crate::rsz::*;
 use anyhow::*;
 use chrono::prelude::*;
@@ -422,7 +423,12 @@ fn gen_condition_steel_fang(
     Ok(content)
 }
 
-fn gen_monster(monster: Monster, folder: &Path) -> Result<()> {
+fn gen_monster(
+    is_large: bool,
+    monster: Monster,
+    monster_aliases: &Msg,
+    folder: &Path,
+) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -432,7 +438,20 @@ fn gen_monster(monster: Monster, folder: &Path) -> Result<()> {
             <body>
                 { navbar() }
                 <main> <div class="container"> <div class="content">
-                <h1 class="title">{text!("Monster {:03}", monster.id)}</h1>
+                <h1 class="title">{
+                    if is_large {
+                        let name_name = format!("Alias_EnemyIndex{:03}",
+                            monster.boss_init_set_data.as_ref()
+                            .context(format!("Cannot found boss_init_set for monster {}", monster.id))?
+                            .enemy_type);
+                        let name = &monster_aliases.get_entry(&name_name)
+                            .context(format!("Cannot found name for monster {}", monster.id))?
+                            .content[1];
+                        text!("{}", name)
+                    } else {
+                        text!("Monster {:03}", monster.id)
+                    }
+                }</h1>
                 <section class="section">
                 <h2 class="subtitle">"Basic data"</h2>
                 <p>{ text!("Base HP: {}", monster.data_tune.base_hp_vital) }</p>
@@ -616,6 +635,8 @@ fn gen_monster(monster: Monster, folder: &Path) -> Result<()> {
 pub fn gen_monsters(
     monsters: Vec<Monster>,
     small_monsters: Vec<Monster>,
+    monster_names: &Msg,
+    monster_aliases: &Msg,
     root: &Path,
 ) -> Result<()> {
     let monsters_path = root.join("monster.html");
@@ -634,12 +655,19 @@ pub fn gen_monsters(
                 <h2 class="subtitle">"Large monsters"</h2>
                 <ul>{
                     monsters.iter().map(|monster| {
-                        html!{<li>
+                        Ok(html!{<li>
                             <a href={format!("/monster/{:03}.html", monster.id)}>{
-                                text!("Monster {:03}", monster.id)
+                                let name_name = format!("EnemyIndex{:03}",
+                                    monster.boss_init_set_data.as_ref()
+                                    .context(format!("Cannot found boss_init_set for monster {}", monster.id))?
+                                    .enemy_type);
+                                let name = &monster_names.get_entry(&name_name)
+                                    .context(format!("Cannot found name for monster {}", monster.id))?
+                                    .content[1];
+                                text!("{}", name)
                             }</a>
-                        </li>}
-                    })
+                        </li>})
+                    }).collect::<Result<Vec<_>>>()?
                 }</ul>
                 </section>
                 <section class="section">
@@ -664,13 +692,13 @@ pub fn gen_monsters(
     let monster_path = root.join("monster");
     create_dir(&monster_path)?;
     for monster in monsters {
-        gen_monster(monster, &monster_path)?;
+        gen_monster(true, monster, &monster_aliases, &monster_path)?;
     }
 
     let monster_path = root.join("small-monster");
     create_dir(&monster_path)?;
     for monster in small_monsters {
-        gen_monster(monster, &monster_path)?;
+        gen_monster(false, monster, &monster_aliases, &monster_path)?;
     }
     Ok(())
 }
@@ -750,7 +778,13 @@ pub fn gen_website(pedia: Pedia, output: &str) -> Result<()> {
     }
     create_dir(&root)?;
 
-    gen_monsters(pedia.monsters, pedia.small_monsters, &root)?;
+    gen_monsters(
+        pedia.monsters,
+        pedia.small_monsters,
+        &pedia.monster_names,
+        &pedia.monster_aliases,
+        &root,
+    )?;
     gen_about(&root)?;
     gen_static(&root)?;
     Ok(())

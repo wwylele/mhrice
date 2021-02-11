@@ -1,4 +1,5 @@
 mod anger_data;
+mod boss_init_set_data;
 mod condition_damage_data;
 mod data_base;
 mod data_tune;
@@ -6,6 +7,7 @@ mod meat_data;
 mod parts_break_data;
 
 pub use anger_data::*;
+pub use boss_init_set_data::*;
 pub use condition_damage_data::*;
 pub use data_base::*;
 pub use data_tune::*;
@@ -479,6 +481,8 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
         CharacterContollerTune,
         EnemyDataTune,
     );
+
+    r!(LotInfo, SetInfo, StageInfo, EnemyBossInitSetData);
 
     m
 });

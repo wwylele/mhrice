@@ -1,4 +1,5 @@
 use super::pedia::*;
+use crate::msg::*;
 use crate::pak::PakReader;
 use crate::pfb::Pfb;
 use crate::rsz::*;
@@ -17,7 +18,8 @@ fn exactly_one<T>(mut iterator: impl Iterator<Item = T>) -> Result<T> {
 
 pub fn gen_monsters(
     pak: &mut PakReader<impl Read + Seek>,
-    path_gen: fn(u32) -> String,
+    pfb_path_gen: fn(u32) -> String,
+    boss_init_path_gen: fn(u32) -> Option<String>,
 ) -> Result<Vec<Monster>> {
     let mut monsters = vec![];
 
@@ -37,7 +39,7 @@ pub fn gen_monsters(
     }
 
     for id in 0..1000 {
-        let main_pfb_path = path_gen(id);
+        let main_pfb_path = pfb_path_gen(id);
         let main_pfb_index = if let Ok((index, _)) = pak.find_file(&main_pfb_path) {
             index
         } else {
@@ -52,6 +54,18 @@ pub fn gen_monsters(
         let anger_data = sub_file(pak, &main_pfb)?;
         let parts_break_data = sub_file(pak, &main_pfb)?;
 
+        let boss_init_set_data = if let Some(path) = boss_init_path_gen(id) {
+            let (index, _) = pak.find_file(&path)?;
+            let data = User::new(Cursor::new(pak.read_file(index)?))?;
+            Some(
+                data.rsz
+                    .deserialize_single()
+                    .context("boss_init_set_data")?,
+            )
+        } else {
+            None
+        };
+
         monsters.push(Monster {
             id,
             data_base,
@@ -60,6 +74,7 @@ pub fn gen_monsters(
             condition_damage_data,
             anger_data,
             parts_break_data,
+            boss_init_set_data,
         })
     }
 
@@ -69,16 +84,35 @@ pub fn gen_monsters(
 pub fn gen_pedia(pak: String) -> Result<Pedia> {
     let mut pak = PakReader::new(File::open(pak)?)?;
 
-    let monsters = gen_monsters(&mut pak, |id| {
-        format!("enemy/em{0:03}/00/prefab/em{0:03}_00.pfb", id)
-    })
+    let monsters = gen_monsters(
+        &mut pak,
+        |id| format!("enemy/em{0:03}/00/prefab/em{0:03}_00.pfb", id),
+        |id| {
+            Some(format!(
+                "enemy/em{0:03}/00/user_data/em{0:03}_00_boss_init_set_data.user",
+                id
+            ))
+        },
+    )
     .context("Generating large monsters")?;
-    let small_monsters = gen_monsters(&mut pak, |id| {
-        format!("enemy/ems{0:03}/00/prefab/ems{0:03}_00.pfb", id)
-    })
+
+    let small_monsters = gen_monsters(
+        &mut pak,
+        |id| format!("enemy/ems{0:03}/00/prefab/ems{0:03}_00.pfb", id),
+        |_| None,
+    )
     .context("Generating small monsters")?;
+
+    let (monster_names, _) = pak.find_file("Message/Tag/Tag_EM_Name.msg")?;
+    let monster_names = Msg::new(Cursor::new(pak.read_file(monster_names)?))?;
+
+    let (monster_aliases, _) = pak.find_file("Message/Tag/Tag_EM_Name_Alias.msg")?;
+    let monster_aliases = Msg::new(Cursor::new(pak.read_file(monster_aliases)?))?;
+
     Ok(Pedia {
         monsters,
         small_monsters,
+        monster_names,
+        monster_aliases,
     })
 }
