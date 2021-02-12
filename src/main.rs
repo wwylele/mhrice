@@ -369,12 +369,13 @@ fn gen_website(pak: String, output: String, s3: Option<String>) -> Result<()> {
 }
 
 fn read_tdb(tdb: String) -> Result<()> {
-    let tdb = Tdb::new(File::open(tdb)?)?;
+    let _ = Tdb::new(File::open(tdb)?)?;
     Ok(())
 }
 
 fn read_msg(msg: String) -> Result<()> {
     let msg = Msg::new(File::open(msg)?)?;
+    println!("{}", serde_json::to_string_pretty(&msg)?);
     Ok(())
 }
 

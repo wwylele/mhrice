@@ -1,6 +1,8 @@
 use super::*;
+use crate::rsz_bitflags;
 use crate::rsz_enum;
 use crate::rsz_struct;
+use bitflags::*;
 use serde::*;
 
 rsz_enum! {
@@ -23,13 +25,23 @@ rsz_struct! {
     }
 }
 
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize)]
+    pub enum PartsBreakDataIgnoreCondition {
+        None = 0,
+        InTimes = 1,
+        Equal = 2,
+    }
+}
+
 rsz_struct! {
     #[rsz("snow.enemy.EnemyDataTune.PartsBreakData")]
     #[derive(Debug, Serialize)]
     pub struct DataTunePartsBreakData {
         pub break_level: i32,
         pub vital: i32,
-        pub ignore_condition: i32, // none, in_times, equal
+        pub ignore_condition: PartsBreakDataIgnoreCondition,
         pub ignore_check_count: i32,
         pub reward_data: i32,
     }
@@ -39,8 +51,18 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyDataTune.EnemyPartsBreakData")]
     #[derive(Debug, Serialize)]
     pub struct DataTuneEnemyPartsBreakData {
-        pub parts_group: u32,
+        pub parts_group: u16,
         pub parts_break_data_list: Vec<DataTunePartsBreakData>,
+    }
+}
+
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize)]
+    pub enum PermitDamageAttrEnum{
+        Slash = 0,
+        Strike = 1,
+        All = 2,
     }
 }
 
@@ -49,7 +71,7 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct DataTunePartsLossData {
         pub vital: i32,
-        pub permit_damage_attr: u32, // slash, strike, all
+        pub permit_damage_attr: PermitDamageAttrEnum,
     }
 }
 
@@ -57,7 +79,7 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyDataTune.EnemyPartsLossData")]
     #[derive(Debug, Serialize)]
     pub struct DataTuneEnemyPartsLossData {
-        pub parts_group: u32,
+        pub parts_group: u16,
         pub parts_loss_data: DataTunePartsLossData,
     }
 }
@@ -66,7 +88,7 @@ rsz_struct! {
     #[rsz("snow.enemy.EnablePartsGroup")]
     #[derive(Debug, Serialize)]
     pub struct EnablePartsGroup {
-        pub enable_parts: Vec<u8>,
+        pub enable_parts: Vec<bool>,
     }
 }
 
@@ -78,22 +100,57 @@ rsz_struct! {
     }
 }
 
+bitflags! {
+    #[derive(Serialize)]
+    pub struct DamageCategoryFlag: u32 {
+        const MARIONETTE_FRIENDLY_FIRE = 0x00000001;
+        const MARIONETTE_START         = 0x00000002;
+        const PARTS_LOSS               = 0x00000004;
+        const FALL_TRAP                = 0x00000008;
+        const SHOCK_TRAP               = 0x00000010;
+        const PARALYZE                 = 0x00000020;
+        const SLEEP                    = 0x00000040;
+        const STUN                     = 0x00000080;
+        const MARIONETTE_L             = 0x00000100;
+        const FLASH                    = 0x00000200;
+        const SOUND                    = 0x00000400;
+        const GIMMICK_L                = 0x00000800;
+        const EM2_EM_L                 = 0x00001000;
+        const GIMMICK_KNOCK_BACK       = 0x00002000;
+        const HIGH_PARTS               = 0x00004000;
+        const MARIONETTE_M             = 0x00008000;
+        const GIMMICK_M                = 0x00010000;
+        const EM2_EM_M                 = 0x00020000;
+        const MULTI_PARTS              = 0x00040000;
+        const ELEMENT_WEAK             = 0x00080000;
+        const PARTS_BREAK              = 0x00100000;
+        const SLEEP_END                = 0x00200000;
+        const STAMINA                  = 0x00400000;
+        const PARTS                    = 0x00800000;
+        const MARIONETTE_S             = 0x01000000;
+        const GIMMICK_S                = 0x02000000;
+        const EM2_EM_S                 = 0x04000000;
+        const STEEL_FANG               = 0x08000000;
+    }
+}
+rsz_bitflags!(DamageCategoryFlag: u32);
+
 rsz_struct! {
     #[rsz("snow.enemy.EnemyMultiPartsSystemVitalData")]
     #[derive(Debug, Serialize)]
     pub struct EnemyMultiPartsSystemVitalData {
-        pub use_type: u32, // common, unique
+        pub use_type: UseDataType,
         pub priority: u32,
         pub enable_parts_data: Vec<EnablePartsGroup>,
         pub enable_last_attack_parts: Vec<Utf16String>,
-        pub is_enable_hyakuryu: u8,
-        pub is_enable_overwrite_down: u8,
-        pub is_prio_damage_customize: u8,
-        pub prio_damage_catagory_flag: u32, // see DamageCategoryFlag
-        pub is_multi_rate_ex: u8,
+        pub is_enable_hyakuryu: bool,
+        pub is_enable_overwrite_down: bool,
+        pub is_prio_damage_customize: bool,
+        pub prio_damage_catagory_flag: DamageCategoryFlag,
+        pub is_multi_rate_ex: bool,
         pub multi_parts_vital_data: Vec<MultiPartsVital>,
         pub enable_parts_names: Vec<Utf16String>,
-        pub enable_parts_values: Vec<u32>,
+        pub enable_parts_values: Vec<i32>,
     }
 }
 
@@ -101,20 +158,18 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyMultiPartsVitalData")]
     #[derive(Debug, Serialize)]
     pub struct EnemyMultiPartsVitalData {
-        //?
-        pub use_type: u32, // common, unique
-        pub enable_parts_data_num: i32,
+        pub use_type: UseDataType,
         pub priority: u32,
-        pub enable_parts_data: EnablePartsGroup,
-        pub enable_last_attack_parts: Vec<u32>, //?
-        pub is_enable_hyakuryu: u8,
-        pub is_enable_overwrite_down: u8,
-        pub is_prio_damage_customize: u8,
-        pub prio_damage_catagory_flag: u32, // see DamageCategoryFlag
-        pub is_multi_rate_ex: u8,
+        pub enable_parts_data: Vec<EnablePartsGroup>,
+        pub enable_last_attack_parts: Vec<Utf16String>,
+        pub is_enable_hyakuryu: bool,
+        pub is_enable_overwrite_down: bool,
+        pub is_prio_damage_customize: bool,
+        pub prio_damage_catagory_flag: DamageCategoryFlag,
+        pub is_multi_rate_ex: bool,
         pub multi_parts_vital_data: Vec<MultiPartsVital>,
         pub enable_parts_names: Vec<Utf16String>,
-        pub enable_parts_values: Vec<u32>,
+        pub enable_parts_values: Vec<i32>,
     }
 }
 
@@ -148,6 +203,25 @@ rsz_struct! {
     }
 }
 
+rsz_enum! {
+    #[rsz(u8)]
+    #[derive(Debug, Serialize)]
+    pub enum HitWeight {
+        PushedOnly = 0,
+        SSSS = 1,
+        SSS = 2,
+        SS = 3,
+        S = 4,
+        Normal =5,
+        L = 6,
+        LL = 7,
+        LLL = 8,
+        LLLL = 9,
+        SpUse = 10,
+        NoMove = 11,
+    }
+}
+
 rsz_struct! {
     #[rsz("snow.enemy.EnemyDataTune")]
     #[derive(Debug, Serialize)]
@@ -163,7 +237,7 @@ rsz_struct! {
         pub terrain_action_check_dist: f32,
         pub adjust_wall_point_offset: f32,
         pub character_controller_tune_data: Vec<CharacterContollerTune>,
-        pub weight: u32,
+        pub weight: HitWeight,
         pub dying_village_hp_vital_rate: f32,
         pub dying_low_level_hp_vital_rate: f32,
         pub dying_high_level_hp_vital_rate: f32,
@@ -172,7 +246,7 @@ rsz_struct! {
         pub capture_high_level_hp_vital_rate: f32,
         pub self_sleep_recover_hp_vital_rate: f32,
         pub self_sleep_time: f32,
-        pub in_combat_self_sleep_flag: u32,
+        pub in_combat_self_sleep_flag: bool,
         pub dummy_shadow_scale: f32,
         // "group shell"?
         pub max_num_for_normal_quest: i32,

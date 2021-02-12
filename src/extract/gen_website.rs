@@ -154,6 +154,36 @@ fn gen_condition_flash(
     data: FlashDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
+    let mut ignore_refresh_stance = vec![];
+    if data
+        .ignore_refresh_stance
+        .contains(StanceStatusFlags::STAND)
+    {
+        ignore_refresh_stance.push("stand");
+    }
+
+    if data.ignore_refresh_stance.contains(StanceStatusFlags::FLY) {
+        ignore_refresh_stance.push("fly");
+    }
+
+    if data
+        .ignore_refresh_stance
+        .contains(StanceStatusFlags::DIVING)
+    {
+        ignore_refresh_stance.push("diving");
+    }
+
+    if data.ignore_refresh_stance.contains(StanceStatusFlags::WALL) {
+        ignore_refresh_stance.push("wall");
+    }
+
+    if data
+        .ignore_refresh_stance
+        .contains(StanceStatusFlags::CEILING)
+    {
+        ignore_refresh_stance.push("ceiling");
+    }
+
     let content = html!(
         <tr class=gen_disabled(used)>
             <td>"Flash"</td>
@@ -165,7 +195,8 @@ fn gen_condition_flash(
                     lv.activate_count, lv.active_time)
                 } </div>)
             }) }
-            {text!("Ignore refresh stance = {}", data.ignore_refresh_stance)}
+            <br />
+            {text!("Ignore refresh stance = {}", ignore_refresh_stance.join(", "))}
             <br />
             {text!("Distance = {} ~ {}, Angle = {}", data.min_distance, data.max_distance, data.angle)}
             <br />
@@ -208,11 +239,15 @@ fn gen_condition_ride(
     data: MarionetteStartDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
+    let use_data = match data.use_data {
+        UseDataType::Common => "common",
+        UseDataType::Unique => "unique",
+    };
     let content = html!(
         <tr class=gen_disabled(used)>
             <td>"Ride"</td>
             { gen_condition_base(data.base) }
-            <td> {text!("Unique = {}, Nora first limit = {}", data.use_data, data.nora_first_limit)} </td>
+            <td> {text!("{}, Nora first limit = {}", use_data, data.nora_first_limit)} </td>
         </tr>
     );
     Ok(content)
@@ -228,15 +263,15 @@ fn gen_condition_water(
             { gen_condition_base(data.base) }
             <td>
             {text!("Melee hzv adjust: hard = {}, soft = {}, judge = {}",
-                data.melee_adjust.hard_meat_adjust_value,
-                data.melee_adjust.soft_meat_adjust_value,
-                data.melee_adjust.judge_meat_value
+                data.slash_strike_adjust.hard_meat_adjust_value,
+                data.slash_strike_adjust.soft_meat_adjust_value,
+                data.slash_strike_adjust.judge_meat_value
             )}
             <br />
             {text!("Shot hzv adjust: hard = {}, soft = {}, judge = {}",
-                data.shot_adjust.hard_meat_adjust_value,
-                data.shot_adjust.soft_meat_adjust_value,
-                data.shot_adjust.judge_meat_value
+                data.shell_adjust.hard_meat_adjust_value,
+                data.shell_adjust.soft_meat_adjust_value,
+                data.shell_adjust.judge_meat_value
             )}
             <br />
             {text!("Preset = {}", data.preset_type)}
@@ -494,25 +529,25 @@ fn gen_monster(
                     </tr>
                     </thead>
                     <tbody>{
-                        monster.meat_data.meat_containers.into_iter()
+                        monster.meat_data.meat_container.into_iter()
                             .enumerate().flat_map(|(part, meats)| {
 
-                            let span = meats.meat_group_infos.len();
+                            let span = meats.meat_group_info.len();
                             let mut part_common: Option<Vec<Box<td<String>>>> = Some(vec![
                                 html!(<td rowspan={span}>{ text!("{}", part) }</td>),
                             ]);
 
-                            let invalid = &meats.meat_group_infos == &[
+                            let invalid = &meats.meat_group_info == &[
                                 MeatGroupInfo {
                                     slash: 0,
-                                    impact: 0,
-                                    shot: 0,
+                                    strike: 0,
+                                    shell: 0,
                                     fire: 0,
                                     water: 0,
                                     thunder: 0,
                                     ice: 0,
                                     dragon: 0,
-                                    dizzy: 0,
+                                    piyo: 0,
                                 }
                             ];
 
@@ -522,20 +557,20 @@ fn gen_monster(
                                 ""
                             }.try_into().unwrap();
 
-                            meats.meat_group_infos.into_iter().enumerate()
+                            meats.meat_group_info.into_iter().enumerate()
                                 .map(move |(phase, group_info)| {
                                     let mut tds = part_common.take().unwrap_or_else(||vec![]);
                                     tds.extend(vec![
                                         html!(<td>{text!("{}", phase)}</td>),
                                         html!(<td>{text!("{}", group_info.slash)}</td>),
-                                        html!(<td>{text!("{}", group_info.impact)}</td>),
-                                        html!(<td>{text!("{}", group_info.shot)}</td>),
+                                        html!(<td>{text!("{}", group_info.strike)}</td>),
+                                        html!(<td>{text!("{}", group_info.shell)}</td>),
                                         html!(<td>{text!("{}", group_info.fire)}</td>),
                                         html!(<td>{text!("{}", group_info.water)}</td>),
                                         html!(<td>{text!("{}", group_info.thunder)}</td>),
                                         html!(<td>{text!("{}", group_info.ice)}</td>),
                                         html!(<td>{text!("{}", group_info.dragon)}</td>),
-                                        html!(<td>{text!("{}", group_info.dizzy)}</td>),
+                                        html!(<td>{text!("{}", group_info.piyo)}</td>),
                                     ]);
                                     html!(<tr class=hidden.clone()> {tds} </tr>)
                                 })
@@ -598,26 +633,26 @@ fn gen_monster(
                         </tr>
                     </thead>
                     <tbody>
-                        {gen_condition_paralyze(monster.condition_damage_data.paralyze, monster.condition_damage_data.use_paralyze)}
-                        {gen_condition_sleep(monster.condition_damage_data.sleep, monster.condition_damage_data.use_sleep)}
-                        {gen_condition_stun(monster.condition_damage_data.stun, monster.condition_damage_data.use_stun)}
-                        {gen_condition_stamina(monster.condition_damage_data.stamina, monster.condition_damage_data.use_stamina)}
-                        {gen_condition_flash(monster.condition_damage_data.flash, monster.condition_damage_data.use_flash)}
-                        {gen_condition_poison(monster.condition_damage_data.poison, monster.condition_damage_data.use_poison)}
-                        {gen_condition_blast(monster.condition_damage_data.blast, monster.condition_damage_data.use_blast)}
-                        {gen_condition_ride(monster.condition_damage_data.ride, monster.condition_damage_data.use_ride)}
-                        {gen_condition_water(monster.condition_damage_data.water, monster.condition_damage_data.use_water)}
-                        {gen_condition_fire(monster.condition_damage_data.fire, monster.condition_damage_data.use_fire)}
-                        {gen_condition_ice(monster.condition_damage_data.ice, monster.condition_damage_data.use_ice)}
-                        {gen_condition_thunder(monster.condition_damage_data.thunder, monster.condition_damage_data.use_thunder)}
-                        {gen_condition_fall_trap(monster.condition_damage_data.fall_trap, monster.condition_damage_data.use_fall_trap)}
-                        {gen_condition_fall_quick_sand(monster.condition_damage_data.fall_quick_sand, monster.condition_damage_data.use_fall_quick_sand)}
-                        {gen_condition_fall_otomo_trap(monster.condition_damage_data.fall_otomo_trap, monster.condition_damage_data.use_fall_otomo_trap)}
-                        {gen_condition_shock_trap(monster.condition_damage_data.shock_trap, monster.condition_damage_data.use_shock_trap)}
-                        {gen_condition_shock_otomo_trap(monster.condition_damage_data.shock_otomo_trap, monster.condition_damage_data.use_shock_otomo_trap)}
-                        {gen_condition_capture(monster.condition_damage_data.capture, monster.condition_damage_data.use_capture)}
-                        {gen_condition_dung(monster.condition_damage_data.dung, monster.condition_damage_data.use_dung)}
-                        {gen_condition_steel_fang(monster.condition_damage_data.steel_fang, monster.condition_damage_data.use_steel_fang)}
+                        {gen_condition_paralyze(monster.condition_damage_data.paralyze_data, monster.condition_damage_data.use_paralyze)}
+                        {gen_condition_sleep(monster.condition_damage_data.sleep_data, monster.condition_damage_data.use_sleep)}
+                        {gen_condition_stun(monster.condition_damage_data.stun_data, monster.condition_damage_data.use_stun)}
+                        {gen_condition_stamina(monster.condition_damage_data.stamina_data, monster.condition_damage_data.use_stamina)}
+                        {gen_condition_flash(monster.condition_damage_data.flash_data, monster.condition_damage_data.use_flash)}
+                        {gen_condition_poison(monster.condition_damage_data.poison_data, monster.condition_damage_data.use_poison)}
+                        {gen_condition_blast(monster.condition_damage_data.blast_data, monster.condition_damage_data.use_blast)}
+                        {gen_condition_ride(monster.condition_damage_data.marionette_data, monster.condition_damage_data.use_ride)}
+                        {gen_condition_water(monster.condition_damage_data.water_data, monster.condition_damage_data.use_water)}
+                        {gen_condition_fire(monster.condition_damage_data.fire_data, monster.condition_damage_data.use_fire)}
+                        {gen_condition_ice(monster.condition_damage_data.ice_data, monster.condition_damage_data.use_ice)}
+                        {gen_condition_thunder(monster.condition_damage_data.thunder_data, monster.condition_damage_data.use_thunder)}
+                        {gen_condition_fall_trap(monster.condition_damage_data.fall_trap_data, monster.condition_damage_data.use_fall_trap)}
+                        {gen_condition_fall_quick_sand(monster.condition_damage_data.fall_quick_sand_data, monster.condition_damage_data.use_fall_quick_sand)}
+                        {gen_condition_fall_otomo_trap(monster.condition_damage_data.fall_otomo_trap_data, monster.condition_damage_data.use_fall_otomo_trap)}
+                        {gen_condition_shock_trap(monster.condition_damage_data.shock_trap_data, monster.condition_damage_data.use_shock_trap)}
+                        {gen_condition_shock_otomo_trap(monster.condition_damage_data.shock_otomo_trap_data, monster.condition_damage_data.use_shock_otomo_trap)}
+                        {gen_condition_capture(monster.condition_damage_data.capture_data, monster.condition_damage_data.use_capture)}
+                        {gen_condition_dung(monster.condition_damage_data.koyashi_data, monster.condition_damage_data.use_dung)}
+                        {gen_condition_steel_fang(monster.condition_damage_data.steel_fang_data, monster.condition_damage_data.use_steel_fang)}
                     </tbody>
                 </table>
                 </section>

@@ -941,6 +941,7 @@ name = "mhrice"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bitflags",
  "built",
  "chrono",
  "futures",

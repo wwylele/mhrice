@@ -220,6 +220,16 @@ trait FieldFromRsz: Sized {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self>;
 }
 
+impl FieldFromRsz for bool {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        match rsz.read_u8()? {
+            0 => Ok(false),
+            1 => Ok(true),
+            _ => bail!("Invalid bool"),
+        }
+    }
+}
+
 impl FieldFromRsz for u8 {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
         rsz.read_u8()
@@ -398,6 +408,20 @@ macro_rules! rsz_enum {
                     $($field_value => Ok($enum_name::$field_name),)*
                     x => bail!("Unknown value {} for enum {}", x, stringify!($enum_name))
                 }
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! rsz_bitflags {
+    ($ident:ty : $base:ty) => {
+        impl crate::rsz::FieldFromRsz for $ident {
+            fn field_from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
+                let value = <$base>::field_from_rsz(rsz)?;
+                <$ident>::from_bits(value).with_context(|| {
+                    format!("Unknown bit flag {:08X} for {}", value, stringify!($ident))
+                })
             }
         }
     };

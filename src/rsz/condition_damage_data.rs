@@ -1,6 +1,8 @@
 use super::*;
+use crate::rsz_bitflags;
 use crate::rsz_enum;
 use crate::rsz_struct;
+use bitflags::*;
 use serde::*;
 
 rsz_struct! {
@@ -81,6 +83,18 @@ rsz_struct! {
     }
 }
 
+bitflags! {
+    #[derive(Serialize)]
+    pub struct StanceStatusFlags: u32 {
+        const STAND = 1;
+        const FLY = 2;
+        const DIVING = 4;
+        const WALL = 8;
+        const CEILING = 16;
+    }
+}
+rsz_bitflags!(StanceStatusFlags: u32);
+
 rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.FlashDamageData")]
     #[derive(Debug, Serialize)]
@@ -88,7 +102,7 @@ rsz_struct! {
         #[serde(flatten)]
         pub base: ConditionDamageDataBase,
         pub damage_lvs: Vec<FlashDamageLvData>,
-        pub ignore_refresh_stance: u32, // Stand, Fly, Diving, Wall, Ceiling
+        pub ignore_refresh_stance: StanceStatusFlags,
         pub max_distance: f32,
         pub min_distance: f32,
         pub angle: f32,
@@ -117,13 +131,22 @@ rsz_struct! {
     }
 }
 
+rsz_enum! {
+    #[rsz(u32)]
+    #[derive(Debug, Serialize)]
+    pub enum UseDataType {
+        Common = 0,
+        Unique = 1,
+    }
+}
+
 rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.MarionetteStartDamageData")]
     #[derive(Debug, Serialize)]
     pub struct MarionetteStartDamageData {
         #[serde(flatten)]
         pub base: ConditionDamageDataBase,
-        pub use_data: u32, // Common, Unique
+        pub use_data: UseDataType,
         pub nora_first_limit: f32,
     }
 }
@@ -144,8 +167,8 @@ rsz_struct! {
     pub struct WaterDamageData {
         #[serde(flatten)]
         pub base: ConditionDamageDataBase,
-        pub melee_adjust: AdjustMeatDownData,
-        pub shot_adjust: AdjustMeatDownData,
+        pub slash_strike_adjust: AdjustMeatDownData,
+        pub shell_adjust: AdjustMeatDownData,
         pub preset_type: u32,
     }
 }
@@ -291,26 +314,26 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData")]
     #[derive(Debug, Serialize)]
     pub struct EnemyConditionDamageData {
-        pub paralyze: ParalyzeDamageData,
-        pub sleep: SleepDamageData,
-        pub stun: StunDamageData,
-        pub stamina: StaminaDamageData,
-        pub flash: FlashDamageData,
-        pub poison: PoisonDamageData,
-        pub blast: BlastDamageData,
-        pub ride: MarionetteStartDamageData,
-        pub water: WaterDamageData,
-        pub fire: FireDamageData,
-        pub ice: IceDamageData,
-        pub thunder: ThunderDamageData,
-        pub fall_trap: FallTrapDamageData,
-        pub fall_quick_sand: FallQuickSandDamageData,
-        pub fall_otomo_trap: FallOtomoTrapDamageData,
-        pub shock_trap: ShockTrapDamageData,
-        pub shock_otomo_trap: ShockTrapDamageData,
-        pub capture: CaptureDamageData,
-        pub dung: KoyashiDamageData,
-        pub steel_fang: SteelFangData,
+        pub paralyze_data: ParalyzeDamageData,
+        pub sleep_data: SleepDamageData,
+        pub stun_data: StunDamageData,
+        pub stamina_data: StaminaDamageData,
+        pub flash_data: FlashDamageData,
+        pub poison_data: PoisonDamageData,
+        pub blast_data: BlastDamageData,
+        pub marionette_data: MarionetteStartDamageData,
+        pub water_data: WaterDamageData,
+        pub fire_data: FireDamageData,
+        pub ice_data: IceDamageData,
+        pub thunder_data: ThunderDamageData,
+        pub fall_trap_data: FallTrapDamageData,
+        pub fall_quick_sand_data: FallQuickSandDamageData,
+        pub fall_otomo_trap_data: FallOtomoTrapDamageData,
+        pub shock_trap_data: ShockTrapDamageData,
+        pub shock_otomo_trap_data: ShockTrapDamageData,
+        pub capture_data: CaptureDamageData,
+        pub koyashi_data: KoyashiDamageData,
+        pub steel_fang_data: SteelFangData,
         pub use_paralyze: ConditionDamageDataUsed,
         pub use_sleep: ConditionDamageDataUsed,
         pub use_stun: ConditionDamageDataUsed,
