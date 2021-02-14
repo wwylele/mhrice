@@ -95,12 +95,12 @@ impl Tdb {
         let property_count = file.read_u32()?;
         let h_count = file.read_u32()?;
         let j_count = file.read_u32()?;
-        let k_count = file.read_u32()?;
+        let param_count = file.read_u32()?;
         let l_count = file.read_u32()?;
         let constant_count = file.read_u32()?;
         let n_count = file.read_u32()?;
         let q_count = file.read_u32()?;
-        let a_count = file.read_u32()?;
+        let assembly_count = file.read_u32()?;
 
         if file.read_u32()? != 0 {
             bail!("Expected 0");
@@ -110,7 +110,7 @@ impl Tdb {
         let string_table_len = file.read_u32()?;
         let heap_len = file.read_u32()?;
 
-        let a_offset = file.read_u64()?;
+        let assembly_offset = file.read_u64()?;
         let type_instance_offset = file.read_u64()?;
         let type_offset = file.read_u64()?;
         let method_membership_offset = file.read_u64()?;
@@ -120,7 +120,7 @@ impl Tdb {
         let h_offset = file.read_u64()?;
         let property_offset = file.read_u64()?;
         let j_offset = file.read_u64()?;
-        let k_offset = file.read_u64()?;
+        let param_offset = file.read_u64()?;
         let l_offset = file.read_u64()?;
         let constant_offset = file.read_u64()?;
         let n_offset = file.read_u64()?;
@@ -128,8 +128,8 @@ impl Tdb {
         let heap_offset = file.read_u64()?;
         let q_offset = file.read_u64()?;
 
-        file.seek_noop(a_offset)?;
-        (0..a_count)
+        file.seek_noop(assembly_offset)?;
+        (0..assembly_count)
             .map(|_| {
                 file.read_u64()?;
                 file.read_u64()?;
@@ -220,12 +220,12 @@ impl Tdb {
         struct MethodMembership {
             type_instance_index: usize,
             method_index: usize,
-            a: u64,
+            param_list_offset: usize,
         }
         file.seek_assert_align_up(method_membership_offset, 16)?;
         let method_memberships = (0..method_membership_count)
             .map(|_| {
-                let (type_instance_index, method_index, a) =
+                let (type_instance_index, method_index, param_list_offset) =
                     file.read_u64()?.bit_split((18, 20, 26));
                 let zero = file.read_u64()?;
                 if zero != 0 {
@@ -234,7 +234,7 @@ impl Tdb {
                 Ok(MethodMembership {
                     type_instance_index: type_instance_index.try_into()?,
                     method_index: method_index.try_into()?,
-                    a,
+                    param_list_offset: param_list_offset.try_into()?,
                 })
             })
             .collect::<Result<Vec<_>>>()?;
@@ -319,7 +319,8 @@ impl Tdb {
         struct Method {
             a1: u16,
             vtable_slot: i16,
-            b: u32,
+            b1: u16,
+            b2: u16,
             name_offset: u32,
         }
         file.seek_assert_align_up(method_offset, 16)?;
@@ -327,12 +328,14 @@ impl Tdb {
             .map(|_| {
                 let a1 = file.read_u16()?;
                 let vtable_slot = file.read_i16()?;
-                let b = file.read_u32()?;
+                let b1 = file.read_u16()?;
+                let b2 = file.read_u16()?;
                 let name_offset = file.read_u32()?;
                 Ok(Method {
                     a1,
                     vtable_slot,
-                    b,
+                    b1,
+                    b2,
                     name_offset,
                 })
             })
@@ -403,20 +406,27 @@ impl Tdb {
             .collect::<Result<Vec<_>>>()?;
 
         struct Param {
-            a: u32,
-            name_offset_sometimes: u32,
-            c: u32,
+            k: u16,
+            a: u16,
+            name_offset: u32,
+            no_high: u32,
+            type_instance_index: usize,
+            ti_high: u32,
         }
-        file.seek_assert_align_up(k_offset, 16)?;
-        let params = (0..k_count)
+        file.seek_assert_align_up(param_offset, 16)?;
+        let params = (0..param_count)
             .map(|_| {
-                let a = file.read_u32()?;
-                let name_offset_sometimes = file.read_u32()?;
-                let c = file.read_u32()?;
+                let k = file.read_u16()?;
+                let a = file.read_u16()?;
+                let (name_offset, no_high) = file.read_u32()?.bit_split((30, 2));
+                let (type_instance_index, ti_high) = file.read_u32()?.bit_split((18, 14));
                 Ok(Param {
+                    k,
                     a,
-                    name_offset_sometimes,
-                    c,
+                    name_offset,
+                    no_high,
+                    type_instance_index: type_instance_index.try_into()?,
+                    ti_high,
                 })
             })
             .collect::<Result<Vec<_>>>()?;
@@ -679,13 +689,46 @@ impl Tdb {
                     .context("Method index out of bound")?;
 
                 println!(
-                    "@{} -> {}, ^{}, {}, {}",
-                    method_membership.a,
+                    "-> {}, ^{}, {}, {}, {}",
                     method.a1,
                     method.vtable_slot,
-                    method.b,
+                    method.b1,
+                    method.b2,
                     read_string(method.name_offset)?
                 );
+
+                let mut mp = &heap[method_membership.param_list_offset..];
+                let param_count = mp.read_u16()?;
+                let hmm = mp.read_u16()?;
+                let return_value_index = usize::try_from(mp.read_u32()?)?;
+                let return_value = &params[return_value_index];
+                println!(
+                    "      !=> {} |return| [{}{}, {}{}, {}, {}] {} {}",
+                    hmm,
+                    return_value.k,
+                    if return_value.k != 0 { "*$*" } else { "" },
+                    return_value.a,
+                    if return_value.a != 0 { "*%*" } else { "" },
+                    return_value.no_high,
+                    return_value.ti_high,
+                    symbols[return_value.type_instance_index].as_ref().unwrap(),
+                    read_string(return_value.name_offset)?
+                );
+                for _ in 0..param_count {
+                    let param_index = usize::try_from(mp.read_u32()?)?;
+                    let param = &params[param_index];
+                    println!(
+                        "      ==> [{}{}, {}{}, {}, {}] {} {}",
+                        param.k,
+                        if param.k != 0 { "*$*" } else { "" },
+                        param.a,
+                        if param.a != 0 { "*%*" } else { "" },
+                        param.no_high,
+                        param.ti_high,
+                        symbols[param.type_instance_index].as_ref().unwrap(),
+                        read_string(param.name_offset)?
+                    );
+                }
             }
 
             println!(
