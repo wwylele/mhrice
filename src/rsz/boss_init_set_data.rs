@@ -16,7 +16,7 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyBossInitSetData.SetInfo")]
     #[derive(Debug, Serialize)]
     pub struct SetInfo {
-        pub set_name: Utf16String,
+        pub set_name: String,
         pub info: Vec<LotInfo>
     }
 }

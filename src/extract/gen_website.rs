@@ -522,8 +522,8 @@ fn gen_monster(
                         <th>"Shot"</th>
                         <th>"Fire"</th>
                         <th>"Water"</th>
-                        <th>"Thunder"</th>
                         <th>"Ice"</th>
+                        <th>"Thunder"</th>
                         <th>"Dragon"</th>
                         <th>"Dizzy"</th>
                     </tr>
@@ -544,8 +544,8 @@ fn gen_monster(
                                     shell: 0,
                                     fire: 0,
                                     water: 0,
-                                    thunder: 0,
                                     ice: 0,
+                                    elect: 0,
                                     dragon: 0,
                                     piyo: 0,
                                 }
@@ -567,8 +567,8 @@ fn gen_monster(
                                         html!(<td>{text!("{}", group_info.shell)}</td>),
                                         html!(<td>{text!("{}", group_info.fire)}</td>),
                                         html!(<td>{text!("{}", group_info.water)}</td>),
-                                        html!(<td>{text!("{}", group_info.thunder)}</td>),
                                         html!(<td>{text!("{}", group_info.ice)}</td>),
+                                        html!(<td>{text!("{}", group_info.elect)}</td>),
                                         html!(<td>{text!("{}", group_info.dragon)}</td>),
                                         html!(<td>{text!("{}", group_info.piyo)}</td>),
                                     ]);

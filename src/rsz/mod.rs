@@ -17,7 +17,6 @@ pub use parts_break_data::*;
 use crate::file_ext::*;
 use anyhow::*;
 use once_cell::sync::Lazy;
-use serde::*;
 use std::any::*;
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -195,11 +194,6 @@ impl<'a, 'b> RszDeserializer<'a, 'b> {
             .map_err(|_| anyhow!("Type mismatch"))?;
         Ok(*node)
     }
-
-    pub fn align_up(&mut self, align: u64) -> Result<()> {
-        self.cursor.seek_align_up(align)?;
-        Ok(())
-    }
 }
 
 impl<'a, 'b> Read for RszDeserializer<'a, 'b> {
@@ -238,21 +232,21 @@ impl FieldFromRsz for u8 {
 
 impl FieldFromRsz for u16 {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
-        rsz.align_up(2)?;
+        rsz.cursor.seek_align_up(2)?;
         rsz.read_u16()
     }
 }
 
 impl FieldFromRsz for u32 {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
-        rsz.align_up(4)?;
+        rsz.cursor.seek_align_up(4)?;
         rsz.read_u32()
     }
 }
 
 impl FieldFromRsz for u64 {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
-        rsz.align_up(8)?;
+        rsz.cursor.seek_align_up(8)?;
         rsz.read_u64()
     }
 }
@@ -265,42 +259,42 @@ impl FieldFromRsz for i8 {
 
 impl FieldFromRsz for i16 {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
-        rsz.align_up(2)?;
+        rsz.cursor.seek_align_up(2)?;
         rsz.read_i16()
     }
 }
 
 impl FieldFromRsz for i32 {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
-        rsz.align_up(4)?;
+        rsz.cursor.seek_align_up(4)?;
         rsz.read_i32()
     }
 }
 
 impl FieldFromRsz for i64 {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
-        rsz.align_up(8)?;
+        rsz.cursor.seek_align_up(8)?;
         rsz.read_i64()
     }
 }
 
 impl FieldFromRsz for f32 {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
-        rsz.align_up(4)?;
+        rsz.cursor.seek_align_up(4)?;
         rsz.read_f32()
     }
 }
 
 impl<T: FromRsz + 'static> FieldFromRsz for T {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
-        rsz.align_up(4)?;
+        rsz.cursor.seek_align_up(4)?;
         rsz.get_child()
     }
 }
 
 impl<T: FieldFromRsz + 'static> FieldFromRsz for Vec<T> {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
-        rsz.align_up(4)?;
+        rsz.cursor.seek_align_up(4)?;
         let count = rsz.read_u32()?;
         (0..count)
             .map(|_| T::field_from_rsz(rsz))
@@ -308,13 +302,9 @@ impl<T: FieldFromRsz + 'static> FieldFromRsz for Vec<T> {
     }
 }
 
-#[derive(Debug, Serialize)]
-#[serde(transparent)]
-pub struct Utf16String(String);
-
-impl FieldFromRsz for Utf16String {
+impl FieldFromRsz for String {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
-        rsz.align_up(4)?;
+        rsz.cursor.seek_align_up(4)?;
         let count = rsz.read_u32()?;
         let mut utf16 = (0..count)
             .map(|_| rsz.read_u16())
@@ -322,7 +312,7 @@ impl FieldFromRsz for Utf16String {
         if utf16.pop() != Some(0) {
             bail!("String not null-terminated");
         }
-        Ok(Utf16String(String::from_utf16(&utf16)?))
+        Ok(String::from_utf16(&utf16)?)
     }
 }
 

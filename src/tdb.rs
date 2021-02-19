@@ -1,6 +1,7 @@
 use crate::bitfield::*;
 use crate::file_ext::*;
 use anyhow::*;
+use bitflags::*;
 use std::convert::{TryFrom, TryInto};
 use std::io::{Read, Seek};
 
@@ -47,7 +48,7 @@ fn display_field_attributes(attributes: u16) -> String {
     }
 
     if attributes & 0x800 != 0 {
-        s += " 800"
+        s += " pointer"
     }
 
     if attributes & 0x1000 != 0 {
@@ -66,6 +67,141 @@ fn display_field_attributes(attributes: u16) -> String {
         s += " default"
     }
 
+    s
+}
+
+bitflags! {
+    struct ParamAttribute: u16 {
+        const IN                = 0x0001;
+        const OUT               = 0x0002;
+        const LCID              = 0x0004;
+        const RETVAL            = 0x0008;
+        const OPTIONAL          = 0x0010;
+        const HAS_DEFAULT       = 0x1000;
+        const HAS_FIELD_MARSHAL = 0x2000;
+    }
+}
+
+bitflags! {
+    struct MethodAttribute: u16 {
+        const PRIVATE_SCOPE            = 0x0000;
+        const PRIVATE                  = 0x0001;
+        const FAM_AND_ASSEM            = 0x0002;
+        const ASSEMBLY                 = 0x0003;
+        const FAMILY                   = 0x0004;
+        const FAM_OR_ASSEM             = 0x0005;
+        const PUBLIC                   = 0x0006;
+        const MEMBER_ACCESS_MASK       = 0x0007;
+
+        const UNMANAGED_EXPORT         = 0x0008;
+        const STATIC                   = 0x0010;
+        const FINAL                    = 0x0020;
+        const VIRTUAL                  = 0x0040;
+        const HIDE_BY_SIG              = 0x0080;
+        const NEW_SLOT                 = 0x0100;
+        const CHECK_ACCESS_ON_OVERRIDE = 0x0200;
+        const ABSTRACT                 = 0x0400;
+        const SPECIAL_NAME             = 0x0800;
+        const RT_SPECIAL_NAME          = 0x1000;
+        const PINVOKE_IMPL             = 0x2000;
+        const HAS_SECURITY             = 0x4000;
+        const REQUIRE_SEC_OBJECT       = 0x8000;
+    }
+}
+
+fn display_method_attributes(attributes: MethodAttribute) -> String {
+    let mut s = String::new();
+
+    if attributes.contains(MethodAttribute::UNMANAGED_EXPORT) {
+        s += "[export]"
+    }
+
+    if attributes.contains(MethodAttribute::HIDE_BY_SIG) {
+        s += "[hid_by_sig]";
+    }
+
+    if attributes.contains(MethodAttribute::NEW_SLOT) {
+        s += "[new_slot]";
+    }
+
+    if attributes.contains(MethodAttribute::CHECK_ACCESS_ON_OVERRIDE) {
+        s += "[check_access_override]";
+    }
+
+    if attributes.contains(MethodAttribute::SPECIAL_NAME) {
+        s += "[special]";
+    }
+
+    if attributes.contains(MethodAttribute::RT_SPECIAL_NAME) {
+        s += "[rt_special]";
+    }
+
+    if attributes.contains(MethodAttribute::PINVOKE_IMPL) {
+        s += "[pinvoke]";
+    }
+
+    if attributes.contains(MethodAttribute::HAS_SECURITY) {
+        s += "[has_security]";
+    }
+
+    if attributes.contains(MethodAttribute::REQUIRE_SEC_OBJECT) {
+        s += "[require_sec_object]";
+    }
+
+    s += match attributes & MethodAttribute::MEMBER_ACCESS_MASK {
+        MethodAttribute::PRIVATE_SCOPE => "[hidden]private ",
+        MethodAttribute::PRIVATE => "private ",
+        MethodAttribute::FAM_AND_ASSEM => "private protected ",
+        MethodAttribute::ASSEMBLY => "internal ",
+        MethodAttribute::FAMILY => "protected ",
+        MethodAttribute::FAM_OR_ASSEM => "protected internal ",
+        MethodAttribute::PUBLIC => "public ",
+        MethodAttribute::MEMBER_ACCESS_MASK => "[public?] ",
+        _ => panic!(),
+    };
+
+    if attributes.contains(MethodAttribute::STATIC) {
+        s += "static ";
+    }
+
+    if attributes.contains(MethodAttribute::FINAL) {
+        s += "sealed ";
+    }
+
+    if attributes.contains(MethodAttribute::VIRTUAL) {
+        s += "virtual ";
+    }
+
+    if attributes.contains(MethodAttribute::ABSTRACT) {
+        s += "abstract ";
+    }
+
+    s
+}
+
+fn display_param_attributes(attributes: ParamAttribute) -> String {
+    let mut s = String::new();
+    if attributes.contains(ParamAttribute::IN) {
+        s += "in";
+    }
+    if attributes.contains(ParamAttribute::OUT) {
+        s += "out";
+    }
+    if attributes.contains(ParamAttribute::LCID) {
+        s += "[lcid]";
+    }
+    if attributes.contains(ParamAttribute::RETVAL) {
+        s += "[ret]";
+    }
+    if attributes.contains(ParamAttribute::OPTIONAL) {
+        s += "[opt]";
+    }
+    if attributes.contains(ParamAttribute::HAS_DEFAULT) {
+        s += "[default]";
+    }
+    if attributes.contains(ParamAttribute::HAS_FIELD_MARSHAL) {
+        s += "[marshal]";
+    }
     s
 }
 
@@ -94,11 +230,11 @@ impl Tdb {
         let method_count = file.read_u32()?;
         let property_count = file.read_u32()?;
         let h_count = file.read_u32()?;
-        let j_count = file.read_u32()?;
+        let event_count = file.read_u32()?;
         let param_count = file.read_u32()?;
-        let l_count = file.read_u32()?;
+        let attribute_count = file.read_u32()?;
         let constant_count = file.read_u32()?;
-        let n_count = file.read_u32()?;
+        let attribute_list_count = file.read_u32()?;
         let q_count = file.read_u32()?;
         let assembly_count = file.read_u32()?;
 
@@ -119,11 +255,11 @@ impl Tdb {
         let field_offset = file.read_u64()?;
         let h_offset = file.read_u64()?;
         let property_offset = file.read_u64()?;
-        let j_offset = file.read_u64()?;
+        let event_offset = file.read_u64()?;
         let param_offset = file.read_u64()?;
-        let l_offset = file.read_u64()?;
+        let attribute_offset = file.read_u64()?;
         let constant_offset = file.read_u64()?;
-        let n_offset = file.read_u64()?;
+        let attribute_list_offset = file.read_u64()?;
         let string_table_offset = file.read_u64()?;
         let heap_offset = file.read_u64()?;
         let q_offset = file.read_u64()?;
@@ -155,12 +291,16 @@ impl Tdb {
             type_index: usize,
             bf: u64,
             b: u32,
-            c: u32,
             interface_list_offset: usize,
             method_membership_start_index: usize,
             field_membership_start_index: usize,
             template_argument_list_offset: usize,
             hash: u32,
+            j: u32,
+            a: u32,
+            d: u32,
+            event_start_index: usize,
+            event_count: usize,
         }
         file.seek_assert_align_up(type_instance_offset, 16)?;
         let type_instances = (0..type_instance_count)
@@ -175,18 +315,21 @@ impl Tdb {
                 let (arrayize_type_instance_index, dearrayize_type_instance_index, type_index, bf) =
                     file.read_u64()?.bit_split((18, 18, 18, 10));
 
-                file.read_u32()?;
-                file.read_u32()?;
+                let j = file.read_u32()?;
+                let x = file.read_u32()?;
+                if x != 0 {
+                    bail!("Expected 0: {}", index);
+                }
                 let hash = file.read_u32()?;
                 file.read_u32()?;
 
-                file.read_u32()?;
+                let a = file.read_u32()?;
                 let b = file.read_u32()?;
                 let method_membership_start_index = file.read_u32()?;
                 let field_membership_start_index = file.read_u32()?;
 
-                file.read_u32()?;
-                let c = file.read_u32()?;
+                let d = file.read_u32()?;
+                let (event_count, event_start_index) = file.read_u32()?.bit_split((12, 20));
                 let interface_list_offset = file.read_u32()?;
                 let template_argument_list_offset = file.read_u32()?;
 
@@ -207,12 +350,16 @@ impl Tdb {
                     type_index: type_index.try_into()?,
                     bf,
                     b,
-                    c,
                     interface_list_offset: interface_list_offset.try_into()?,
                     method_membership_start_index: method_membership_start_index.try_into()?,
                     field_membership_start_index: field_membership_start_index.try_into()?,
                     template_argument_list_offset: template_argument_list_offset.try_into()?,
                     hash,
+                    j,
+                    a,
+                    d,
+                    event_start_index: event_start_index.try_into()?,
+                    event_count: event_count.try_into()?,
                 })
             })
             .collect::<Result<Vec<_>>>()?;
@@ -293,7 +440,7 @@ impl Tdb {
                 let n4 = file.read_u16()?;
                 let n5 = file.read_u16()?;
                 let n6 = file.read_u16()?;
-                let n7 = file.read_u16()?;
+                let n7 = file.read_u16()?; // property?
 
                 let flag_a = file.read_u64()?;
                 let flag_b = file.read_u64()?;
@@ -317,24 +464,25 @@ impl Tdb {
             .collect::<Result<Vec<_>>>()?;
 
         struct Method {
-            a1: u16,
+            attribute_list_index: usize,
             vtable_slot: i16,
-            b1: u16,
+            attributes: MethodAttribute,
             b2: u16,
             name_offset: u32,
         }
         file.seek_assert_align_up(method_offset, 16)?;
         let methods = (0..method_count)
             .map(|_| {
-                let a1 = file.read_u16()?;
+                let attribute_list_index = file.read_u16()?;
                 let vtable_slot = file.read_i16()?;
-                let b1 = file.read_u16()?;
+                let attributes = file.read_u16()?;
                 let b2 = file.read_u16()?;
                 let name_offset = file.read_u32()?;
                 Ok(Method {
-                    a1,
+                    attribute_list_index: attribute_list_index.try_into()?,
                     vtable_slot,
-                    b1,
+                    attributes: MethodAttribute::from_bits(attributes)
+                        .context("Unknown method attr")?,
                     b2,
                     name_offset,
                 })
@@ -342,7 +490,7 @@ impl Tdb {
             .collect::<Result<Vec<_>>>()?;
 
         struct Field {
-            a1: u16,
+            attribute_list_index: usize,
             attributes: u16,
             type_instance_index: usize,
             constant_index: usize,
@@ -351,12 +499,12 @@ impl Tdb {
         file.seek_assert_align_up(field_offset, 16)?;
         let fields = (0..field_count)
             .map(|_| {
-                let a1 = file.read_u16()?;
+                let attribute_list_index = file.read_u16()?;
                 let attributes = file.read_u16()?;
                 let (type_instance_index, constant_index) = file.read_u32()?.bit_split((18, 14));
                 let name_offset = file.read_u32()?;
                 Ok(Field {
-                    a1,
+                    attribute_list_index: attribute_list_index.try_into()?,
                     attributes,
                     type_instance_index: type_instance_index.try_into()?,
                     constant_index: constant_index.try_into()?,
@@ -375,58 +523,88 @@ impl Tdb {
 
         struct Property {
             a: u16,
-            b: u16,
+            attribute_list_index: usize,
             name_offset: u32,
         }
         file.seek_assert_align_up(property_offset, 16)?;
         let properties = (0..property_count)
             .map(|_| {
                 let a = file.read_u16()?;
-                let b = file.read_u16()?;
+                if a != 0 && a != 0x4000 {
+                    bail!("Unexpected flag")
+                }
+                let attribute_list_index = file.read_u16()?;
                 let name_offset = file.read_u32()?;
-                Ok(Property { a, b, name_offset })
+                Ok(Property {
+                    a,
+                    attribute_list_index: attribute_list_index.try_into()?,
+                    name_offset,
+                })
             })
             .collect::<Result<Vec<_>>>()?;
 
-        file.seek_assert_align_up(j_offset, 16)?;
-        (0..j_count)
+        struct Event {
+            name_offset: u32,
+            add_method_membership_index: usize,
+            remove_method_membership_index: usize,
+        }
+        file.seek_assert_align_up(event_offset, 16)?;
+        let events = (0..event_count)
             .map(|_| {
-                file.read_u64()?;
-                file.read_u64()?;
-                Ok(())
+                let a = file.read_u32()?;
+                if a != 0 {
+                    bail!("expected 0")
+                }
+                let name_offset = file.read_u32()?;
+                let add_method_membership_index = file.read_u32()?;
+                let remove_method_membership_index = file.read_u32()?;
+                Ok(Event {
+                    name_offset,
+                    add_method_membership_index: add_method_membership_index.try_into()?,
+                    remove_method_membership_index: remove_method_membership_index.try_into()?,
+                })
             })
             .collect::<Result<Vec<_>>>()?;
 
-        file.seek_assert_align_up(l_offset, 16)?;
-        (0..l_count)
+        struct Attribute {
+            ctor_method_index: usize,
+            arguments_offset: usize,
+        }
+        file.seek_assert_align_up(attribute_offset, 16)?;
+        let attributes = (0..attribute_count)
             .map(|_| {
-                file.read_u64()?;
-                Ok(())
+                let ctor_method_index = file.read_u32()?;
+                let arguments_offset = file.read_u32()?;
+                Ok(Attribute {
+                    ctor_method_index: ctor_method_index.try_into()?,
+                    arguments_offset: arguments_offset.try_into()?,
+                })
             })
             .collect::<Result<Vec<_>>>()?;
 
         struct Param {
-            k: u16,
-            a: u16,
+            attribute_list_index: usize,
+            default_const_index: usize,
             name_offset: u32,
             no_high: u32,
             type_instance_index: usize,
-            ti_high: u32,
+            attribute: ParamAttribute,
         }
         file.seek_assert_align_up(param_offset, 16)?;
         let params = (0..param_count)
             .map(|_| {
-                let k = file.read_u16()?;
-                let a = file.read_u16()?;
+                let attribute_list_index = file.read_u16()?;
+                let default_const_index = file.read_u16()?;
                 let (name_offset, no_high) = file.read_u32()?.bit_split((30, 2));
-                let (type_instance_index, ti_high) = file.read_u32()?.bit_split((18, 14));
+                let (type_instance_index, attribute) = file.read_u32()?.bit_split((18, 14));
                 Ok(Param {
-                    k,
-                    a,
+                    attribute_list_index: attribute_list_index.try_into()?,
+                    default_const_index: default_const_index.try_into()?,
                     name_offset,
                     no_high,
                     type_instance_index: type_instance_index.try_into()?,
-                    ti_high,
+                    attribute: ParamAttribute::from_bits(u16::try_from(attribute)?)
+                        .context("Unknown param attr")?,
                 })
             })
             .collect::<Result<Vec<_>>>()?;
@@ -449,8 +627,8 @@ impl Tdb {
             })
             .collect::<Result<Vec<_>>>()?;
 
-        file.seek_assert_align_up(n_offset, 16)?;
-        let ns = (0..n_count)
+        file.seek_assert_align_up(attribute_list_offset, 16)?;
+        let attribute_lists = (0..attribute_list_count)
             .map(|_| file.read_u32())
             .collect::<Result<Vec<_>>>()?;
 
@@ -478,7 +656,7 @@ impl Tdb {
         file.read_exact(&mut heap)?;
 
         file.seek_assert_align_up(q_offset, 16)?;
-        let _ = (0..q_count)
+        let qs = (0..q_count)
             .map(|_| Ok(file.read_u32()?))
             .collect::<Result<Vec<_>>>()?;
 
@@ -612,6 +790,57 @@ impl Tdb {
             )?;
         }
 
+        let print_attributes = |attribute_list_index: usize| -> Result<()> {
+            fn read_vint<F: ReadExt>(mut f: F) -> Result<usize> {
+                let a = f.read_u8()?.into();
+                if a < 128 {
+                    Ok(a)
+                } else {
+                    let b: usize = f.read_u8()?.into();
+                    Ok(((a - 128) << 8) + b)
+                }
+            }
+
+            let attribute_list = attribute_lists[attribute_list_index] as usize;
+            let mut attribute_list = &heap[attribute_list..];
+            let attribute_count = attribute_list.read_u16()?;
+            let attribute_list = (0..attribute_count)
+                .map(|_| attribute_list.read_u16())
+                .collect::<Result<Vec<_>>>()?;
+            for attribute in attribute_list {
+                let attribute = &attributes[attribute as usize];
+                let ctor = &method_memberships[attribute.ctor_method_index];
+                println!(
+                    "    -> ## {}",
+                    symbols[ctor.type_instance_index].as_ref().unwrap()
+                );
+                let mut attribute_args = &heap[attribute.arguments_offset..];
+                let args_len = read_vint(&mut attribute_args)?;
+                let mut args_data = &attribute_args[0..args_len];
+                println!("        =#=> {:?}", args_data);
+                let x = args_data.read_u16()?;
+                if x != 1 {
+                    bail!("expected 1");
+                }
+                /*let sub_len = read_vint(&mut args_data)?;
+                let data = &args_data[0..sub_len];
+                args_data = &args_data[sub_len..];
+                if args_data.len() != 2 {
+                    eprintln!("oof {}", args_data.len())
+                }
+                let x = args_data.read_u16()?;
+                if x != 0 {
+                    bail!("expected 0");
+                }
+                if !args_data.is_empty() {
+                    bail!("expected end");
+                }*/
+            }
+            Ok(())
+        };
+
+        let mut hmm_max = 0;
+
         for (i, type_instance) in type_instances.iter().enumerate() {
             println!("#################################\n$TI[{}]", i);
             let full_name = &symbols[i].as_ref().unwrap();
@@ -642,6 +871,15 @@ impl Tdb {
 
             println!("  -> name: {}", read_string(ty.name_offset)?);
             println!("  -> size: {}", ty.len);
+
+            println!(
+                "s2={}, n4={}, n5={}, n6={}, n7={}",
+                ty.s2, ty.n4, ty.n5, ty.n6, ty.n7
+            );
+
+            if type_instance.d != 0 {
+                println!("&&^^&& {}", type_instance.d);
+            }
 
             println!(
                 "TemplateArgList: [{}]",
@@ -689,45 +927,64 @@ impl Tdb {
                     .context("Method index out of bound")?;
 
                 println!(
-                    "-> {}, ^{}, {}, {}, {}",
-                    method.a1,
+                    "-> ^{}, {}, {} {}",
                     method.vtable_slot,
-                    method.b1,
                     method.b2,
+                    display_method_attributes(method.attributes),
                     read_string(method.name_offset)?
                 );
+
+                if method.attribute_list_index != 0 {
+                    print_attributes(method.attribute_list_index)?;
+                }
 
                 let mut mp = &heap[method_membership.param_list_offset..];
                 let param_count = mp.read_u16()?;
                 let hmm = mp.read_u16()?;
+                hmm_max = u16::max(hmm_max, hmm);
                 let return_value_index = usize::try_from(mp.read_u32()?)?;
                 let return_value = &params[return_value_index];
                 println!(
-                    "      !=> {} |return| [{}{}, {}{}, {}, {}] {} {}",
+                    "      !=> {} |return| /{}/ [{}] {} {}",
                     hmm,
-                    return_value.k,
-                    if return_value.k != 0 { "*$*" } else { "" },
-                    return_value.a,
-                    if return_value.a != 0 { "*%*" } else { "" },
+                    display_param_attributes(return_value.attribute),
                     return_value.no_high,
-                    return_value.ti_high,
                     symbols[return_value.type_instance_index].as_ref().unwrap(),
                     read_string(return_value.name_offset)?
                 );
+                if return_value.attribute_list_index != 0 {
+                    print_attributes(return_value.attribute_list_index)?;
+                }
                 for _ in 0..param_count {
                     let param_index = usize::try_from(mp.read_u32()?)?;
                     let param = &params[param_index];
                     println!(
-                        "      ==> [{}{}, {}{}, {}, {}] {} {}",
-                        param.k,
-                        if param.k != 0 { "*$*" } else { "" },
-                        param.a,
-                        if param.a != 0 { "*%*" } else { "" },
+                        "      ==> /{}/ [{}] {} {}",
+                        display_param_attributes(param.attribute),
                         param.no_high,
-                        param.ti_high,
                         symbols[param.type_instance_index].as_ref().unwrap(),
                         read_string(param.name_offset)?
                     );
+                    if param.attribute_list_index != 0 {
+                        print_attributes(param.attribute_list_index)?;
+                    }
+
+                    if param.default_const_index != 0 {
+                        let constant = constants[param.default_const_index];
+                        match constant {
+                            Constant::Integral(offset) => {
+                                let field_type_instance =
+                                    &type_instances[param.type_instance_index];
+                                let len = types[field_type_instance.type_index].len;
+                                let value = &heap[offset..][..len];
+                                println!("    -> DefaultValue: {:?}", value);
+                            }
+                            Constant::String(offset) => {
+                                let s = read_string(offset)?;
+                                println!("    -> DefaultValue: \"{}\"", s);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -757,10 +1014,8 @@ impl Tdb {
                     read_string(field.name_offset)?
                 );
 
-                if field.a1 != 0 {
-                    let n = ns[field.a1 as usize] as usize;
-                    let nn = &heap[n..][..4];
-                    println!("    -> N[{}]: {:?}", n, nn);
+                if field.attribute_list_index != 0 {
+                    print_attributes(field.attribute_list_index)?;
                 }
 
                 if field.constant_index != 0 {
@@ -779,6 +1034,26 @@ impl Tdb {
                     }
                 }
             }
+
+            println!("Events:");
+            for j in 0..type_instance.event_count {
+                let event = &events[type_instance.event_start_index + j];
+                println!("& {}", read_string(event.name_offset)?);
+            }
+        }
+
+        for q in qs {
+            println!("~ {}", read_string(q)?);
+        }
+
+        println!("{}", hmm_max);
+
+        for (i, property) in properties.into_iter().enumerate() {
+            println!("[{}] ++ {}", i, read_string(property.name_offset)?);
+            if property.a != 0 {
+                println!("*");
+            }
+            print_attributes(property.attribute_list_index)?;
         }
 
         Ok(Tdb {})

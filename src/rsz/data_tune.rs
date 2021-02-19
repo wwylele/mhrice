@@ -142,14 +142,14 @@ rsz_struct! {
         pub use_type: UseDataType,
         pub priority: u32,
         pub enable_parts_data: Vec<EnablePartsGroup>,
-        pub enable_last_attack_parts: Vec<Utf16String>,
+        pub enable_last_attack_parts: Vec<String>,
         pub is_enable_hyakuryu: bool,
         pub is_enable_overwrite_down: bool,
         pub is_prio_damage_customize: bool,
         pub prio_damage_catagory_flag: DamageCategoryFlag,
         pub is_multi_rate_ex: bool,
         pub multi_parts_vital_data: Vec<MultiPartsVital>,
-        pub enable_parts_names: Vec<Utf16String>,
+        pub enable_parts_names: Vec<String>,
         pub enable_parts_values: Vec<i32>,
     }
 }
@@ -161,14 +161,14 @@ rsz_struct! {
         pub use_type: UseDataType,
         pub priority: u32,
         pub enable_parts_data: Vec<EnablePartsGroup>,
-        pub enable_last_attack_parts: Vec<Utf16String>,
+        pub enable_last_attack_parts: Vec<String>,
         pub is_enable_hyakuryu: bool,
         pub is_enable_overwrite_down: bool,
         pub is_prio_damage_customize: bool,
         pub prio_damage_catagory_flag: DamageCategoryFlag,
         pub is_multi_rate_ex: bool,
         pub multi_parts_vital_data: Vec<MultiPartsVital>,
-        pub enable_parts_names: Vec<Utf16String>,
+        pub enable_parts_names: Vec<String>,
         pub enable_parts_values: Vec<i32>,
     }
 }

@@ -11,8 +11,8 @@ rsz_struct! {
         pub shell: u16,
         pub fire: u16,
         pub water: u16,
-        pub thunder: u16,
         pub ice: u16,
+        pub elect: u16,
         pub dragon: u16,
         pub piyo: u16,
     }
