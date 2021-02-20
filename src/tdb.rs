@@ -954,6 +954,20 @@ impl Tdb {
                 }
             }
 
+            if type_instance.dearrayize_type_instance_index != 0 {
+                println!("    // Omitted ");
+                println!("}}");
+                println!();
+                continue;
+            }
+
+            if full_name.contains('!') {
+                println!("    // Omitted ");
+                println!("}}");
+                println!();
+                continue;
+            }
+
             println!();
             println!("    /*** Method ***/");
             println!();
