@@ -5,69 +5,30 @@ use bitflags::*;
 use std::convert::{TryFrom, TryInto};
 use std::io::{Read, Seek};
 
-fn display_field_attributes(attributes: u16) -> String {
-    let mut s = match attributes & 7 {
-        0 => "private",
-        1 => "private-parent",
-        2 => "protected-asm",
-        3 => "asm",
-        4 => "protected",
-        5 => "protected-or-asm",
-        6 => "public",
-        7 => "access?",
-        _ => panic!(),
-    }
-    .to_owned();
+bitflags! {
+    struct FieldAttribute: u16 {
+        const PRIVATE_SCOPE            = 0x0000;
+        const PRIVATE                  = 0x0001;
+        const FAM_AND_ASSEM            = 0x0002;
+        const ASSEMBLY                 = 0x0003;
+        const FAMILY                   = 0x0004;
+        const FAM_OR_ASSEM             = 0x0005;
+        const PUBLIC                   = 0x0006;
+        const MEMBER_ACCESS_MASK       = 0x0007;
 
-    if attributes & 0x10 != 0 {
-        s += " static"
+        const STATIC                   = 0x0010;
+        const READONLY                 = 0x0020;
+        const LITERAL                  = 0x0040;
+        const NO_SERIALIZE             = 0x0080;
+        const HAS_RVA                  = 0x0100;
+        const SPECIAL                  = 0x0200;
+        const RT_SPECIAL               = 0x0400;
+        const POINTER                  = 0x0800;
+        const MARSHAL                  = 0x1000;
+        const PINVOKE                  = 0x2000;
+        const UNK                      = 0x4000;
+        const DEFAULT                  = 0x8000;
     }
-
-    if attributes & 0x20 != 0 {
-        s += " readonly"
-    }
-
-    if attributes & 0x40 != 0 {
-        s += " literal"
-    }
-
-    if attributes & 0x80 != 0 {
-        s += " no-serialize"
-    }
-
-    if attributes & 0x100 != 0 {
-        s += " has-rva"
-    }
-
-    if attributes & 0x200 != 0 {
-        s += " special"
-    }
-
-    if attributes & 0x400 != 0 {
-        s += " rt-special"
-    }
-
-    if attributes & 0x800 != 0 {
-        s += " pointer"
-    }
-
-    if attributes & 0x1000 != 0 {
-        s += " marshal"
-    }
-
-    if attributes & 0x2000 != 0 {
-        s += " pinvoke"
-    }
-
-    if attributes & 0x4000 != 0 {
-        s += " 4000"
-    }
-
-    if attributes & 0x8000 != 0 {
-        s += " default"
-    }
-
-    s
 }
 
 bitflags! {
@@ -107,6 +68,72 @@ bitflags! {
         const HAS_SECURITY             = 0x4000;
         const REQUIRE_SEC_OBJECT       = 0x8000;
     }
+}
+
+fn display_field_attributes(attributes: FieldAttribute) -> String {
+    let mut s = String::new();
+
+    if attributes.contains(FieldAttribute::LITERAL) {
+        s += "[literal]"
+    }
+
+    if attributes.contains(FieldAttribute::NO_SERIALIZE) {
+        s += "[no-serialize]"
+    }
+
+    if attributes.contains(FieldAttribute::HAS_RVA) {
+        s += "[has-rva]"
+    }
+
+    if attributes.contains(FieldAttribute::SPECIAL) {
+        s += "[special]"
+    }
+
+    if attributes.contains(FieldAttribute::RT_SPECIAL) {
+        s += "[rt-special]"
+    }
+
+    if attributes.contains(FieldAttribute::POINTER) {
+        s += "[pointer]"
+    }
+
+    if attributes.contains(FieldAttribute::MARSHAL) {
+        s += "[marshal]"
+    }
+
+    if attributes.contains(FieldAttribute::PINVOKE) {
+        s += "[pinvoke]"
+    }
+
+    if attributes.contains(FieldAttribute::UNK) {
+        s += "[4000]"
+    }
+
+    if attributes.contains(FieldAttribute::DEFAULT) {
+        s += "[default]"
+    }
+
+    s += match attributes & FieldAttribute::MEMBER_ACCESS_MASK {
+        FieldAttribute::PRIVATE_SCOPE => "[hidden]private ",
+        FieldAttribute::PRIVATE => "private ",
+        FieldAttribute::FAM_AND_ASSEM => "private protected ",
+        FieldAttribute::ASSEMBLY => "internal ",
+        FieldAttribute::FAMILY => "protected ",
+        FieldAttribute::FAM_OR_ASSEM => "protected internal ",
+        FieldAttribute::PUBLIC => "public ",
+        FieldAttribute::MEMBER_ACCESS_MASK => "[public?] ",
+        _ => panic!(),
+    };
+
+    if attributes.contains(FieldAttribute::STATIC) {
+        s += "static "
+    }
+
+    if attributes.contains(FieldAttribute::READONLY) {
+        s += "readonly "
+    }
+
+    s
 }
 
 fn display_method_attributes(attributes: MethodAttribute) -> String {
@@ -229,7 +256,7 @@ impl Tdb {
         let field_count = file.read_u32()?;
         let method_count = file.read_u32()?;
         let property_count = file.read_u32()?;
-        let h_count = file.read_u32()?;
+        let property_membership_count = file.read_u32()?;
         let event_count = file.read_u32()?;
         let param_count = file.read_u32()?;
         let attribute_count = file.read_u32()?;
@@ -253,7 +280,7 @@ impl Tdb {
         let method_offset = file.read_u64()?;
         let field_membership_offset = file.read_u64()?;
         let field_offset = file.read_u64()?;
-        let h_offset = file.read_u64()?;
+        let property_membership_offset = file.read_u64()?;
         let property_offset = file.read_u64()?;
         let event_offset = file.read_u64()?;
         let param_offset = file.read_u64()?;
@@ -264,21 +291,38 @@ impl Tdb {
         let heap_offset = file.read_u64()?;
         let q_offset = file.read_u64()?;
 
+        struct Assembly {
+            name_offset: u32,
+            full_path_offset: u32,
+            dll_name_offset: u32,
+        }
         file.seek_noop(assembly_offset)?;
-        (0..assembly_count)
+        let assemblies = (0..assembly_count)
             .map(|_| {
                 file.read_u64()?;
                 file.read_u64()?;
+
                 file.read_u64()?;
                 file.read_u64()?;
+
+                file.read_u32()?;
+                let name_offset = file.read_u32()?;
+                let full_path_offset = file.read_u32()?;
+                file.read_u32()?;
+
+                let dll_name_offset = file.read_u32()?;
+                file.read_u32()?;
+                file.read_u64()?;
+
                 file.read_u64()?;
                 file.read_u64()?;
+
                 file.read_u64()?;
-                file.read_u64()?;
-                file.read_u64()?;
-                file.read_u64()?;
-                file.read_u64()?;
-                Ok(())
+                Ok(Assembly {
+                    name_offset,
+                    full_path_offset,
+                    dll_name_offset,
+                })
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -289,7 +333,7 @@ impl Tdb {
             arrayize_type_instance_index: usize,
             dearrayize_type_instance_index: usize,
             type_index: usize,
-            bf: u64,
+            special_type_id: u64,
             b: u32,
             interface_list_offset: usize,
             method_membership_start_index: usize,
@@ -297,10 +341,11 @@ impl Tdb {
             template_argument_list_offset: usize,
             hash: u32,
             j: u32,
-            a: u32,
-            d: u32,
             event_start_index: usize,
             event_count: usize,
+            property_membership_start_index: usize,
+            property_count: usize,
+            default_ctor_method_membership_index: usize,
         }
         file.seek_assert_align_up(type_instance_offset, 16)?;
         let type_instances = (0..type_instance_count)
@@ -323,12 +368,13 @@ impl Tdb {
                 let hash = file.read_u32()?;
                 file.read_u32()?;
 
-                let a = file.read_u32()?;
+                let default_ctor_method_membership_index = file.read_u32()?;
                 let b = file.read_u32()?;
                 let method_membership_start_index = file.read_u32()?;
                 let field_membership_start_index = file.read_u32()?;
 
-                let d = file.read_u32()?;
+                let (property_count, property_membership_start_index) =
+                    file.read_u32()?.bit_split((12, 20));
                 let (event_count, event_start_index) = file.read_u32()?.bit_split((12, 20));
                 let interface_list_offset = file.read_u32()?;
                 let template_argument_list_offset = file.read_u32()?;
@@ -348,7 +394,7 @@ impl Tdb {
                     arrayize_type_instance_index: arrayize_type_instance_index.try_into()?,
                     dearrayize_type_instance_index: dearrayize_type_instance_index.try_into()?,
                     type_index: type_index.try_into()?,
-                    bf,
+                    special_type_id: bf,
                     b,
                     interface_list_offset: interface_list_offset.try_into()?,
                     method_membership_start_index: method_membership_start_index.try_into()?,
@@ -356,10 +402,12 @@ impl Tdb {
                     template_argument_list_offset: template_argument_list_offset.try_into()?,
                     hash,
                     j,
-                    a,
-                    d,
                     event_start_index: event_start_index.try_into()?,
                     event_count: event_count.try_into()?,
+                    property_count: property_count.try_into()?,
+                    property_membership_start_index: property_membership_start_index.try_into()?,
+                    default_ctor_method_membership_index: default_ctor_method_membership_index
+                        .try_into()?,
                 })
             })
             .collect::<Result<Vec<_>>>()?;
@@ -440,7 +488,7 @@ impl Tdb {
                 let n4 = file.read_u16()?;
                 let n5 = file.read_u16()?;
                 let n6 = file.read_u16()?;
-                let n7 = file.read_u16()?; // property?
+                let n7 = file.read_u16()?;
 
                 let flag_a = file.read_u64()?;
                 let flag_b = file.read_u64()?;
@@ -491,7 +539,7 @@ impl Tdb {
 
         struct Field {
             attribute_list_index: usize,
-            attributes: u16,
+            attributes: FieldAttribute,
             type_instance_index: usize,
             constant_index: usize,
             name_offset: u32,
@@ -505,7 +553,8 @@ impl Tdb {
                 let name_offset = file.read_u32()?;
                 Ok(Field {
                     attribute_list_index: attribute_list_index.try_into()?,
-                    attributes,
+                    attributes: FieldAttribute::from_bits(attributes)
+                        .context("Unknown field attribute")?,
                     type_instance_index: type_instance_index.try_into()?,
                     constant_index: constant_index.try_into()?,
                     name_offset,
@@ -513,11 +562,21 @@ impl Tdb {
             })
             .collect::<Result<Vec<_>>>()?;
 
-        file.seek_assert_align_up(h_offset, 16)?;
-        (0..h_count)
+        struct PropertyMembership {
+            property_index: usize,
+            get_method_membership_index: usize,
+            set_method_membership_index: usize,
+        }
+        file.seek_assert_align_up(property_membership_offset, 16)?;
+        let property_memberships = (0..property_membership_count)
             .map(|_| {
-                file.read_u64()?;
-                Ok(())
+                let (property_index, get_method_membership_index, set_method_membership_index) =
+                    file.read_u64()?.bit_split((20, 22, 22));
+                Ok(PropertyMembership {
+                    property_index: property_index.try_into()?,
+                    get_method_membership_index: get_method_membership_index.try_into()?,
+                    set_method_membership_index: set_method_membership_index.try_into()?,
+                })
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -753,9 +812,8 @@ impl Tdb {
                 if template_type_instance_index != index {
                     let mut targs = vec![];
                     for _ in 0..targ_count {
-                        let (targ_type_instance_id, _) =
-                            template_argument_list.read_u32()?.bit_split((18, 14));
-                        let targ_type_instance_id = targ_type_instance_id.try_into()?;
+                        let targ_type_instance_id: usize =
+                            template_argument_list.read_u32()?.try_into()?;
                         let targ = build_symbol(
                             symbols,
                             targ_type_instance_id,
@@ -810,92 +868,38 @@ impl Tdb {
             for attribute in attribute_list {
                 let attribute = &attributes[attribute as usize];
                 let ctor = &method_memberships[attribute.ctor_method_index];
-                println!(
-                    "    -> ## {}",
-                    symbols[ctor.type_instance_index].as_ref().unwrap()
-                );
                 let mut attribute_args = &heap[attribute.arguments_offset..];
                 let args_len = read_vint(&mut attribute_args)?;
-                let mut args_data = &attribute_args[0..args_len];
-                println!("        =#=> {:?}", args_data);
-                let x = args_data.read_u16()?;
-                if x != 1 {
-                    bail!("expected 1");
-                }
-                /*let sub_len = read_vint(&mut args_data)?;
-                let data = &args_data[0..sub_len];
-                args_data = &args_data[sub_len..];
-                if args_data.len() != 2 {
-                    eprintln!("oof {}", args_data.len())
-                }
-                let x = args_data.read_u16()?;
-                if x != 0 {
-                    bail!("expected 0");
-                }
-                if !args_data.is_empty() {
-                    bail!("expected end");
-                }*/
+                let args_data = &attribute_args[0..args_len];
+                print!(
+                    "[{}({:?})]",
+                    symbols[ctor.type_instance_index].as_ref().unwrap(),
+                    args_data,
+                );
             }
             Ok(())
         };
 
-        let mut hmm_max = 0;
+        let mut order: Vec<_> = (0..type_instances.len()).collect();
+        order.sort_by_key(|&i| symbols[i].as_ref().unwrap());
 
-        for (i, type_instance) in type_instances.iter().enumerate() {
-            println!("#################################\n$TI[{}]", i);
+        for i in order {
+            let type_instance = &type_instances[i];
+            println!("/// $TI[{}]", i);
             let full_name = &symbols[i].as_ref().unwrap();
             let calc_hash = murmur3::murmur3_32(&mut full_name.as_bytes(), 0xFFFF_FFFF)?;
             if i != 0 && calc_hash != type_instance.hash {
                 bail!("Mismatched hash for TI[{}]", i)
             }
-            println!("% {:08X}", calc_hash);
-            println!("${{ {} }}", full_name);
-
+            println!("/// % {:08X}", calc_hash);
             println!(
-                "extends {}",
-                &symbols[type_instance.base_type_instance_index]
+                "class {}: {}",
+                full_name,
+                symbols[type_instance.base_type_instance_index]
                     .as_ref()
-                    .unwrap(),
-            );
-            println!(
-                "belongs to {}",
-                &symbols[type_instance.parent_type_instance_index]
-                    .as_ref()
-                    .unwrap(),
-            );
-            println!("type: Type[{}]", type_instance.type_index);
-
-            let ty = types
-                .get(type_instance.type_index)
-                .context("Type index out of bound")?;
-
-            println!("  -> name: {}", read_string(ty.name_offset)?);
-            println!("  -> size: {}", ty.len);
-
-            println!(
-                "s2={}, n4={}, n5={}, n6={}, n7={}",
-                ty.s2, ty.n4, ty.n5, ty.n6, ty.n7
+                    .unwrap()
             );
 
-            if type_instance.d != 0 {
-                println!("&&^^&& {}", type_instance.d);
-            }
-
-            println!(
-                "TemplateArgList: [{}]",
-                type_instance.template_argument_list_offset
-            );
-            let mut template_argument_list = &heap[type_instance.template_argument_list_offset..];
-            let (template_type_instance_id, targ_count) =
-                template_argument_list.read_u32()?.bit_split((18, 14));
-            println!(" --> Template = TI[{}]", template_type_instance_id);
-            for _ in 0..targ_count {
-                let (targ_type_instance_id, targ_high) =
-                    template_argument_list.read_u32()?.bit_split((18, 14));
-                println!(" --> TI[{}], {}", targ_type_instance_id, targ_high);
-            }
-
-            println!("implements[{}]", type_instance.interface_list_offset);
             let mut interface_list = &heap[type_instance.interface_list_offset..];
             let interface_count = interface_list.read_u32()?;
             for _ in 0..interface_count {
@@ -903,16 +907,56 @@ impl Tdb {
                     interface_list.read_u32()?.bit_split((18, 14));
                 let interface_type_instance_id: usize = interface_type_instance_id.try_into()?;
                 println!(
-                    "  ->  {}, ^{}",
+                    "    ,{} /* ^{} */",
                     &symbols[interface_type_instance_id].as_ref().unwrap(),
                     interface_vtable_slot_start,
                 );
             }
 
+            println!("{{");
+
+            let ty = types
+                .get(type_instance.type_index)
+                .context("Type index out of bound")?;
+
+            println!("    // size: {}", ty.len);
+
             println!(
-                "Method membership start index: {}",
-                type_instance.method_membership_start_index
+                "    // s2={}, n4={}, n5={}, n6={}, n7={}",
+                ty.s2, ty.n4, ty.n5, ty.n6, ty.n7
             );
+
+            if type_instance.template_argument_list_offset != 0 {
+                let mut template_argument_list =
+                    &heap[type_instance.template_argument_list_offset..];
+                let (template_type_instance_id, targ_count) =
+                    template_argument_list.read_u32()?.bit_split((18, 14));
+                let template_type_instance_id: usize = template_type_instance_id.try_into()?;
+                println!(
+                    "    // Template = {}",
+                    symbols[template_type_instance_id].as_ref().unwrap()
+                );
+                if template_type_instance_id == i {
+                    for _ in 0..targ_count {
+                        let flag = template_argument_list.read_u32()?;
+                        let name_offset = template_argument_list.read_u32()?;
+                        println!(
+                            "     // param {}, 0x{:08X}",
+                            read_string(name_offset)?,
+                            flag
+                        );
+                    }
+                } else {
+                    println!("    // Omitted ");
+                    println!("}}");
+                    println!();
+                    continue;
+                }
+            }
+
+            println!();
+            println!("    /*** Method ***/");
+            println!();
             for j in 0..ty.method_count {
                 let method_membership_index = type_instance.method_membership_start_index + j;
                 let method_membership = method_memberships
@@ -926,48 +970,48 @@ impl Tdb {
                     .get(method_membership.method_index)
                     .context("Method index out of bound")?;
 
-                println!(
-                    "-> ^{}, {}, {} {}",
-                    method.vtable_slot,
-                    method.b2,
-                    display_method_attributes(method.attributes),
-                    read_string(method.name_offset)?
-                );
-
                 if method.attribute_list_index != 0 {
+                    print!("    ");
                     print_attributes(method.attribute_list_index)?;
+                    println!();
                 }
 
                 let mut mp = &heap[method_membership.param_list_offset..];
                 let param_count = mp.read_u16()?;
-                let hmm = mp.read_u16()?;
-                hmm_max = u16::max(hmm_max, hmm);
+                let abi_id = mp.read_u16()?;
                 let return_value_index = usize::try_from(mp.read_u32()?)?;
                 let return_value = &params[return_value_index];
-                println!(
-                    "      !=> {} |return| /{}/ [{}] {} {}",
-                    hmm,
-                    display_param_attributes(return_value.attribute),
-                    return_value.no_high,
-                    symbols[return_value.type_instance_index].as_ref().unwrap(),
-                    read_string(return_value.name_offset)?
-                );
                 if return_value.attribute_list_index != 0 {
+                    println!("/* returns */");
+                    print!("    ");
                     print_attributes(return_value.attribute_list_index)?;
+                    println!();
                 }
+
+                println!(
+                    "    /* ^{} , {}, {}*/ {} {} {} (",
+                    method.vtable_slot,
+                    method.b2,
+                    return_value.no_high,
+                    display_method_attributes(method.attributes),
+                    symbols[return_value.type_instance_index].as_ref().unwrap(),
+                    read_string(method.name_offset)?
+                );
+
                 for _ in 0..param_count {
                     let param_index = usize::try_from(mp.read_u32()?)?;
                     let param = &params[param_index];
-                    println!(
-                        "      ==> /{}/ [{}] {} {}",
-                        display_param_attributes(param.attribute),
-                        param.no_high,
-                        symbols[param.type_instance_index].as_ref().unwrap(),
-                        read_string(param.name_offset)?
-                    );
+                    print!("        ");
                     if param.attribute_list_index != 0 {
                         print_attributes(param.attribute_list_index)?;
                     }
+                    print!(
+                        "/*{}*/ {} {} {}",
+                        param.no_high,
+                        display_param_attributes(param.attribute),
+                        symbols[param.type_instance_index].as_ref().unwrap(),
+                        read_string(param.name_offset)?
+                    );
 
                     if param.default_const_index != 0 {
                         let constant = constants[param.default_const_index];
@@ -977,22 +1021,23 @@ impl Tdb {
                                     &type_instances[param.type_instance_index];
                                 let len = types[field_type_instance.type_index].len;
                                 let value = &heap[offset..][..len];
-                                println!("    -> DefaultValue: {:?}", value);
+                                print!(" = {:?}", value);
                             }
                             Constant::String(offset) => {
                                 let s = read_string(offset)?;
-                                println!("    -> DefaultValue: \"{}\"", s);
+                                print!(" = \"{}\"", s);
                             }
                         }
                     }
+                    println!(",");
                 }
+
+                println!("    );");
             }
 
-            println!(
-                "Field membership start index: {}",
-                type_instance.field_membership_start_index
-            );
-            println!("Fields:");
+            println!();
+            println!("    /*** Field ***/");
+            println!();
             for j in 0..ty.field_count {
                 let field_membership_index = type_instance.field_membership_start_index + j;
                 let field_membership = field_memberships
@@ -1006,17 +1051,19 @@ impl Tdb {
                     .get(field_membership.field_index)
                     .context("Field index out of bound")?;
 
-                println!(
-                    "@{} -> {}, {{ {} }}, {}",
+                if field.attribute_list_index != 0 {
+                    print!("    ");
+                    print_attributes(field.attribute_list_index)?;
+                    println!();
+                }
+
+                print!(
+                    "    /* +{} */ {} {} {}",
                     field_membership.position,
                     display_field_attributes(field.attributes),
                     &symbols[field.type_instance_index].as_ref().unwrap(),
                     read_string(field.name_offset)?
                 );
-
-                if field.attribute_list_index != 0 {
-                    print_attributes(field.attribute_list_index)?;
-                }
 
                 if field.constant_index != 0 {
                     let constant = constants[field.constant_index];
@@ -1025,35 +1072,59 @@ impl Tdb {
                             let field_type_instance = &type_instances[field.type_instance_index];
                             let len = types[field_type_instance.type_index].len;
                             let value = &heap[offset..][..len];
-                            println!("    -> Value: {:?}", value);
+                            print!(" = {:?}", value);
                         }
                         Constant::String(offset) => {
                             let s = read_string(offset)?;
-                            println!("    -> Value: \"{}\"", s);
+                            print!(" = \"{}\"", s);
                         }
                     }
                 }
+
+                println!(";");
             }
 
-            println!("Events:");
+            println!();
+            println!("    /*** Event ***/");
+            println!();
             for j in 0..type_instance.event_count {
                 let event = &events[type_instance.event_start_index + j];
-                println!("& {}", read_string(event.name_offset)?);
+                println!("    public event {};", read_string(event.name_offset)?);
             }
+
+            println!();
+            println!("    /*** Property ***/");
+            println!();
+            for j in 0..type_instance.property_count {
+                let property_membership =
+                    &property_memberships[type_instance.property_membership_start_index + j];
+                let property = &properties[property_membership.property_index];
+                if property.attribute_list_index != 0 {
+                    print!("    ");
+                    print_attributes(property.attribute_list_index)?;
+                    println!();
+                }
+                println!(
+                    "    public property {};",
+                    read_string(property.name_offset)?
+                );
+            }
+
+            println!("}}");
+            println!();
         }
 
         for q in qs {
-            println!("~ {}", read_string(q)?);
+            println!("// ~ {}", read_string(q)?);
         }
 
-        println!("{}", hmm_max);
-
-        for (i, property) in properties.into_iter().enumerate() {
-            println!("[{}] ++ {}", i, read_string(property.name_offset)?);
-            if property.a != 0 {
-                println!("*");
-            }
-            print_attributes(property.attribute_list_index)?;
+        for assembly in assemblies {
+            println!(
+                "// <Asm> {}, {}, {}",
+                read_string(assembly.name_offset)?,
+                read_string(assembly.full_path_offset)?,
+                read_string(assembly.dll_name_offset)?
+            );
         }
 
         Ok(Tdb {})
