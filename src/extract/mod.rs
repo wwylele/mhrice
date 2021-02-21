@@ -1,3 +1,4 @@
+mod gen_monster;
 mod gen_pedia;
 mod gen_website;
 mod pedia;
