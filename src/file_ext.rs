@@ -21,6 +21,7 @@ pub trait SeekExt {
     fn seek_noop(&mut self, from_start: u64) -> Result<u64>;
     fn seek_assert_align_up(&mut self, from_start: u64, align: u64) -> Result<u64>;
     fn seek_align_up(&mut self, align: u64) -> Result<u64>;
+    fn tell(&mut self) -> Result<u64>;
 }
 
 impl<T: Read + ?Sized> ReadExt for T {
@@ -124,5 +125,9 @@ impl<T: Seek + Read + ?Sized> SeekExt for T {
         }
 
         Ok(aligned)
+    }
+
+    fn tell(&mut self) -> Result<u64> {
+        Ok(self.seek(SeekFrom::Current(0))?)
     }
 }

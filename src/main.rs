@@ -18,6 +18,7 @@ mod align;
 mod bitfield;
 mod extract;
 mod file_ext;
+mod mesh;
 mod msg;
 mod pak;
 mod pfb;
@@ -27,6 +28,7 @@ mod suffix;
 mod tdb;
 mod user;
 
+use mesh::*;
 use msg::*;
 use pak::*;
 use pfb::*;
@@ -112,6 +114,18 @@ enum Mhrice {
         pak: String,
         #[structopt(short, long)]
         list: String,
+        #[structopt(short, long)]
+        output: String,
+    },
+
+    ScanMesh {
+        #[structopt(short, long)]
+        pak: String,
+    },
+
+    DumpMesh {
+        #[structopt(short, long)]
+        mesh: String,
         #[structopt(short, long)]
         output: String,
     },
@@ -396,6 +410,19 @@ fn scan_msg(pak: String, output: String) -> Result<()> {
     Ok(())
 }
 
+fn scan_mesh(pak: String) -> Result<()> {
+    let mut pak = PakReader::new(File::open(pak)?)?;
+    let count = pak.get_file_count();
+    for i in 0..count {
+        let file = pak.read_file_at(i)?;
+        if file.len() < 4 || file[0..4] != b"MESH"[..] {
+            continue;
+        }
+        let _ = Mesh::new(Cursor::new(&file)).context(format!("at {}", i))?;
+    }
+    Ok(())
+}
+
 fn grep(pak: String, pattern: String) -> Result<()> {
     let mut pak = PakReader::new(File::open(pak)?)?;
     println!("Searching for patterns \"{}\"", &pattern);
@@ -503,6 +530,12 @@ fn dump_tree(pak: String, list: String, output: String) -> Result<()> {
     Ok(())
 }
 
+fn dump_mesh(mesh: String, output: String) -> Result<()> {
+    let mesh = Mesh::new(File::open(mesh)?)?;
+    mesh.dump(output)?;
+    Ok(())
+}
+
 fn main() -> Result<()> {
     match Mhrice::from_args() {
         Mhrice::Dump { pak, name, output } => dump(pak, name, output),
@@ -516,5 +549,7 @@ fn main() -> Result<()> {
         Mhrice::Grep { pak, pattern } => grep(pak, pattern),
         Mhrice::SearchPath { pak } => search_path(pak),
         Mhrice::DumpTree { pak, list, output } => dump_tree(pak, list, output),
+        Mhrice::ScanMesh { pak } => scan_mesh(pak),
+        Mhrice::DumpMesh { mesh, output } => dump_mesh(mesh, output),
     }
 }
