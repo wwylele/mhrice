@@ -427,6 +427,7 @@ pub fn gen_monster(
     monster_aliases: &Msg,
     folder: &Path,
 ) -> Result<()> {
+    let collider_mapping = monster.collider_mapping;
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -493,9 +494,15 @@ pub fn gen_monster(
                         monster.meat_data.meat_container.into_iter()
                             .enumerate().flat_map(|(part, meats)| {
 
+                            let part_name = if let Some(names) = collider_mapping.meat_map.get(&part) {
+                                names.iter().map(|s|s.as_str()).collect::<Vec<&str>>().join(", ")
+                            } else {
+                                format!("{}", part)
+                            };
+
                             let span = meats.meat_group_info.len();
                             let mut part_common: Option<Vec<Box<td<String>>>> = Some(vec![
-                                html!(<td rowspan={span}>{ text!("{}", part) }</td>),
+                                html!(<td rowspan={span}>{ text!("{}", part_name) }</td>),
                             ]);
 
                             let invalid = &meats.meat_group_info == &[
@@ -557,13 +564,19 @@ pub fn gen_monster(
                     </thead>
                     <tbody>{
                         monster.data_tune.enemy_parts_data.into_iter().enumerate().map(|(index, part)| {
+                            let part_name = if let Some(names) = collider_mapping.part_map.get(&index) {
+                                names.iter().map(|s|s.as_str()).collect::<Vec<&str>>().join(", ")
+                            } else {
+                                format!("{}", index)
+                            };
+
                             let hidden: SpacedSet<Class> = if part.extractive_type == ExtractiveType::None {
                                 "mh-invalid-part mh-hidden"
                             } else {
                                 ""
                             }.try_into().unwrap();
                             html!(<tr class=hidden>
-                                <td>{ text!("{}", index) }</td>
+                                <td>{ text!("{}", part_name) }</td>
                                 <td>{ text!("{}", part.vital) }</td>
                                 <td>{ gen_extractive_type(part.extractive_type) }</td>
                             </tr>)

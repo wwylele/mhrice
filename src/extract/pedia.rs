@@ -1,6 +1,14 @@
 use crate::msg::*;
 use crate::rsz::*;
 use serde::*;
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
+
+#[derive(Debug, Serialize)]
+pub struct ColliderMapping {
+    pub meat_map: BTreeMap<usize, BTreeSet<String>>,
+    pub part_map: BTreeMap<usize, BTreeSet<String>>,
+}
 
 #[derive(Debug, Serialize)]
 pub struct Monster {
@@ -12,6 +20,7 @@ pub struct Monster {
     pub anger_data: EnemyAngerData,
     pub parts_break_data: EnemyPartsBreakData,
     pub boss_init_set_data: Option<EnemyBossInitSetData>,
+    pub collider_mapping: ColliderMapping,
 }
 
 #[derive(Debug, Serialize)]

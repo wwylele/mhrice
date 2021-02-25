@@ -22,6 +22,7 @@ mod mesh;
 mod msg;
 mod pak;
 mod pfb;
+mod rcol;
 mod rsz;
 mod scn;
 mod suffix;
@@ -32,6 +33,7 @@ use mesh::*;
 use msg::*;
 use pak::*;
 use pfb::*;
+use rcol::*;
 use scn::*;
 use tdb::*;
 use user::*;
@@ -123,11 +125,21 @@ enum Mhrice {
         pak: String,
     },
 
+    ScanRcol {
+        #[structopt(short, long)]
+        pak: String,
+    },
+
     DumpMesh {
         #[structopt(short, long)]
         mesh: String,
         #[structopt(short, long)]
         output: String,
+    },
+
+    DumpRcol {
+        #[structopt(short, long)]
+        rcol: String,
     },
 }
 
@@ -423,6 +435,21 @@ fn scan_mesh(pak: String) -> Result<()> {
     Ok(())
 }
 
+fn scan_rcol(pak: String) -> Result<()> {
+    let mut pak = PakReader::new(File::open(pak)?)?;
+    let count = pak.get_file_count();
+
+    for i in 0..count {
+        let file = pak.read_file_at(i)?;
+        if file.len() < 4 || file[0..4] != b"RCOL"[..] {
+            continue;
+        }
+        let _ = Rcol::new(Cursor::new(&file), false).context(format!("at {}", i))?;
+    }
+
+    Ok(())
+}
+
 fn grep(pak: String, pattern: String) -> Result<()> {
     let mut pak = PakReader::new(File::open(pak)?)?;
     println!("Searching for patterns \"{}\"", &pattern);
@@ -536,6 +563,12 @@ fn dump_mesh(mesh: String, output: String) -> Result<()> {
     Ok(())
 }
 
+fn dump_rcol(rcol: String) -> Result<()> {
+    let rcol = Rcol::new(File::open(rcol)?, false)?;
+    rcol.dump()?;
+    Ok(())
+}
+
 fn main() -> Result<()> {
     match Mhrice::from_args() {
         Mhrice::Dump { pak, name, output } => dump(pak, name, output),
@@ -550,6 +583,8 @@ fn main() -> Result<()> {
         Mhrice::SearchPath { pak } => search_path(pak),
         Mhrice::DumpTree { pak, list, output } => dump_tree(pak, list, output),
         Mhrice::ScanMesh { pak } => scan_mesh(pak),
+        Mhrice::ScanRcol { pak } => scan_rcol(pak),
         Mhrice::DumpMesh { mesh, output } => dump_mesh(mesh, output),
+        Mhrice::DumpRcol { rcol } => dump_rcol(rcol),
     }
 }

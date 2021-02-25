@@ -2,9 +2,13 @@ use super::pedia::*;
 use crate::msg::*;
 use crate::pak::PakReader;
 use crate::pfb::Pfb;
+use crate::rcol::Rcol;
 use crate::rsz::*;
 use crate::user::User;
 use anyhow::*;
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
+use std::convert::TryInto;
 use std::fs::File;
 use std::io::{Cursor, Read, Seek};
 
@@ -16,10 +20,40 @@ fn exactly_one<T>(mut iterator: impl Iterator<Item = T>) -> Result<T> {
     Ok(next)
 }
 
+pub fn gen_collider_mapping(rcol: Rcol) -> Result<ColliderMapping> {
+    let mut meat_map: BTreeMap<usize, BTreeSet<String>> = BTreeMap::new();
+    let mut part_map: BTreeMap<usize, BTreeSet<String>> = BTreeMap::new();
+
+    for attachment in rcol.group_attachments {
+        if let Some(data) = attachment.user_data.downcast::<EmHitDamageRsData>() {
+            let entry = part_map.entry(data.parts_group.try_into()?).or_default();
+            entry.insert(data.base.name.clone());
+            entry.insert(attachment.name);
+            entry.insert(
+                rcol.collider_groups[attachment.collider_group_index]
+                    .name
+                    .clone(),
+            );
+        }
+    }
+
+    for group in rcol.collider_groups {
+        for collider in group.colliders {
+            if let Some(data) = collider.user_data.downcast::<EmHitDamageShapeData>() {
+                let entry = meat_map.entry(data.meat.try_into()?).or_default();
+                entry.insert(data.base.name.clone());
+            }
+        }
+    }
+
+    Ok(ColliderMapping { meat_map, part_map })
+}
+
 pub fn gen_monsters(
     pak: &mut PakReader<impl Read + Seek>,
     pfb_path_gen: fn(u32) -> String,
     boss_init_path_gen: fn(u32) -> Option<String>,
+    collider_path_gen: fn(u32) -> String,
 ) -> Result<Vec<Monster>> {
     let mut monsters = vec![];
 
@@ -66,6 +100,11 @@ pub fn gen_monsters(
             None
         };
 
+        let rcol_path = collider_path_gen(id);
+        let (rcol_index, _) = pak.find_file(&rcol_path)?;
+        let rcol = Rcol::new(Cursor::new(pak.read_file(rcol_index)?), true).context(rcol_path)?;
+        let collider_mapping = gen_collider_mapping(rcol)?;
+
         monsters.push(Monster {
             id,
             data_base,
@@ -75,6 +114,7 @@ pub fn gen_monsters(
             anger_data,
             parts_break_data,
             boss_init_set_data,
+            collider_mapping,
         })
     }
 
@@ -93,6 +133,7 @@ pub fn gen_pedia(pak: String) -> Result<Pedia> {
                 id
             ))
         },
+        |id| format!("enemy/em{0:03}/00/collision/em{0:03}_00_colliders.rcol", id),
     )
     .context("Generating large monsters")?;
 
@@ -100,6 +141,12 @@ pub fn gen_pedia(pak: String) -> Result<Pedia> {
         &mut pak,
         |id| format!("enemy/ems{0:03}/00/prefab/ems{0:03}_00.pfb", id),
         |_| None,
+        |id| {
+            format!(
+                "enemy/ems{0:03}/00/collision/ems{0:03}_00_colliders.rcol",
+                id
+            )
+        },
     )
     .context("Generating small monsters")?;
 

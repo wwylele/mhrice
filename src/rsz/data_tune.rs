@@ -59,7 +59,7 @@ rsz_struct! {
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
-    pub enum PermitDamageAttrEnum{
+    pub enum PermitDamageAttrEnum {
         Slash = 0,
         Strike = 1,
         All = 2,
