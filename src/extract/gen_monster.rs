@@ -428,6 +428,16 @@ pub fn gen_monster(
     folder: &Path,
 ) -> Result<()> {
     let collider_mapping = monster.collider_mapping;
+    let meat_figure = format!(
+        "/resources/{}{:03}_meat.png",
+        if is_large { "em" } else { "ems" },
+        monster.id
+    );
+    let parts_group_figure = format!(
+        "/resources/{}{:03}_parts_group.png",
+        if is_large { "em" } else { "ems" },
+        monster.id
+    );
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -470,6 +480,7 @@ pub fn gen_monster(
 
                 <section class="section">
                 <h2 class="subtitle">"Hitzone data"</h2>
+                <img src=meat_figure />
                 <div>
                     <input type="checkbox" onclick="onCheckDisplay(this, 'mh-invalid-meat', null)" id="mh-invalid-meat-check"/>
                     <label for="mh-invalid-meat-check">"Display invalid parts"</label>
@@ -500,9 +511,14 @@ pub fn gen_monster(
                                 format!("{}", part)
                             };
 
+                            let part_color = format!("mh-part-{}", part);
+
                             let span = meats.meat_group_info.len();
                             let mut part_common: Option<Vec<Box<td<String>>>> = Some(vec![
-                                html!(<td rowspan={span}>{ text!("{}", part_name) }</td>),
+                                html!(<td rowspan={span}>
+                                    <span class=part_color.as_str()>"■"</span>
+                                    { text!("{}", part_name) }
+                                </td>),
                             ]);
 
                             let invalid = &meats.meat_group_info == &[
@@ -519,11 +535,11 @@ pub fn gen_monster(
                                 }
                             ];
 
-                            let hidden: SpacedSet<Class> = if invalid {
+                            let hidden = if invalid {
                                 "mh-invalid-meat mh-hidden"
                             } else {
                                 ""
-                            }.try_into().unwrap();
+                            };
 
                             meats.meat_group_info.into_iter().enumerate()
                                 .map(move |(phase, group_info)| {
@@ -550,6 +566,7 @@ pub fn gen_monster(
                 <h2 class="subtitle">
                     "Parts"
                 </h2>
+                <img src=parts_group_figure />
                 <div>
                     <input type="checkbox" onclick="onCheckDisplay(this, 'mh-invalid-part', null)" id="mh-invalid-part-check"/>
                     <label for="mh-invalid-part-check">"Display invalid parts"</label>
@@ -570,13 +587,15 @@ pub fn gen_monster(
                                 format!("{}", index)
                             };
 
-                            let hidden: SpacedSet<Class> = if part.extractive_type == ExtractiveType::None {
+                            let part_color = format!("mh-part-{}", index);
+
+                            let hidden = if part.extractive_type == ExtractiveType::None {
                                 "mh-invalid-part mh-hidden"
                             } else {
                                 ""
-                            }.try_into().unwrap();
+                            };
                             html!(<tr class=hidden>
-                                <td>{ text!("{}", part_name) }</td>
+                                <td><span class=part_color.as_str()>"■"</span>{ text!("{}", part_name) }</td>
                                 <td>{ text!("{}", part.vital) }</td>
                                 <td>{ gen_extractive_type(part.extractive_type) }</td>
                             </tr>)

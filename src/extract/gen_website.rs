@@ -1,10 +1,12 @@
 use super::gen_monster::gen_monster;
 use super::pedia::*;
 use crate::msg::*;
+use crate::part_color::*;
 use anyhow::*;
 use chrono::prelude::*;
 use std::convert::TryInto;
-use std::fs::{create_dir, remove_dir_all, write};
+use std::fs::{create_dir, remove_dir_all, write, File};
+use std::io::Write;
 use std::path::*;
 use typed_html::{dom::*, elements::*, html, text, types::*};
 
@@ -49,6 +51,7 @@ pub fn head_common() -> Vec<Box<dyn MetadataContent<String>>> {
         html!(<link rel="icon" type="image/png" href="/favicon.png" />),
         html!(<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css" />),
         html!(<link rel="stylesheet" href="/mhrice.css" />),
+        html!(<link rel="stylesheet" href="/part_color.css" />),
         html!(<script src="https://kit.fontawesome.com/ceb13a2ba1.js" crossorigin="anonymous" />),
         html!(<script src="/mhrice.js" crossorigin="anonymous" />),
     ]
@@ -130,6 +133,11 @@ pub fn gen_monsters(
             <body>
                 { navbar() }
                 <main> <div class="container"> <div class="content">
+                <div class="notification is-info">
+                    "Welcome to MHRice! This website is still under active construction. Sorry if it doesn't include the information you are looking for yet."
+                    <br/>
+                    "Although I do plan to include information for all monsters in the full game, that will not happen in the first week after the game release."
+                </div>
                 <h1 class="title">"Monsters"</h1>
                 <section class="section">
                 <h2 class="subtitle">"Large monsters"</h2>
@@ -249,6 +257,16 @@ pub fn gen_static(root: &Path) -> Result<()> {
     Ok(())
 }
 
+pub fn gen_part_color_css(root: &Path) -> Result<()> {
+    let mut file = File::create(root.to_path_buf().join("part_color.css"))?;
+
+    for (i, color) in PART_COLORS.iter().enumerate() {
+        writeln!(file, ".mh-part-{} {{color: {}}}", i, color)?;
+    }
+
+    Ok(())
+}
+
 pub fn gen_website(pedia: Pedia, output: &str) -> Result<()> {
     let root = PathBuf::from(output);
     if root.exists() {
@@ -265,5 +283,6 @@ pub fn gen_website(pedia: Pedia, output: &str) -> Result<()> {
     )?;
     gen_about(&root)?;
     gen_static(&root)?;
+    gen_part_color_css(&root)?;
     Ok(())
 }

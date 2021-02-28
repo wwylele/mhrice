@@ -26,6 +26,10 @@ tokio-util = { version = "0.6", features = ["codec"] }
 regex = "1.4"
 rayon = "1.5"
 bitflags = "1.2"
+nalgebra-glm = { version = "0.10", features = ["serde-serialize"]}
+glium = "0.29"
+png = "0.16"
+ordered-float = "2.1"
 
 [build-dependencies]
 built = { version = "0.4", features = ["git2"] }

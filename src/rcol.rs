@@ -1,6 +1,9 @@
 use crate::file_ext::*;
+use crate::gpu::ColoredVertex;
+use crate::mesh::*;
 use crate::rsz::*;
 use anyhow::*;
+use nalgebra_glm::*;
 use std::any::Any;
 use std::convert::{TryFrom, TryInto};
 use std::io::{Cursor, Read, Seek, SeekFrom};
@@ -33,15 +36,36 @@ impl UserData {
             panic!();
         }
     }
+
+    pub fn downcast_ref<T: 'static>(&self) -> Option<&T> {
+        if let UserData::Data(data) = self {
+            data.downcast_ref()
+        } else {
+            panic!();
+        }
+    }
 }
 
+#[derive(Debug)]
 pub enum Shape {
-    Capsule {
-        p0: Vec4<f32>,
-        p1: Vec4<f32>,
-        r: f32,
-    },
+    Sphere { p: Vec3, r: f32 },
+    Capsule { p0: Vec3, p1: Vec3, r: f32 },
     Unknown,
+}
+
+impl Shape {
+    pub fn distance(&self, point: &Vec3) -> Result<f32> {
+        match self {
+            Shape::Sphere { p, r } => Ok(distance(&p, &point) / r),
+            Shape::Capsule { p0, p1, r } => {
+                let l2 = distance2(&p0, &p1);
+                let t = RealField::clamp(dot(&(point - p0), &(p1 - p0)) / l2, 0.0, 1.0);
+                let projection = p0 + t * (p1 - p0);
+                Ok(distance(&point, &projection) / r)
+            }
+            Shape::Unknown => bail!("Unknown shape"),
+        }
+    }
 }
 
 pub struct Collider {
@@ -50,6 +74,7 @@ pub struct Collider {
     pub bone_b: String,
     pub shape: Shape,
     pub user_data: UserData,
+    pub attribute_bits: u32,
 }
 pub struct ColliderGroup {
     pub name: String,
@@ -68,7 +93,7 @@ pub struct GroupAttachment {
 pub struct Rcol {
     pub rsz: Rsz,
     pub collider_groups: Vec<ColliderGroup>,
-    pub enablers: Vec<String>,
+    pub attributes: Vec<String>,
     pub group_attachments: Vec<GroupAttachment>,
 }
 
@@ -84,7 +109,7 @@ impl Rcol {
 
         let group_attachment_count = file.read_u32()?;
         file.read_u32()?;
-        let enabler_count = file.read_u32()?;
+        let attribute_count = file.read_u32()?;
         let e_count = file.read_u32()?;
 
         let rsz_len = file.read_u32()?;
@@ -94,7 +119,7 @@ impl Rcol {
         let rsz_offset = file.read_u64()?;
         let group_attachment_offset = file.read_u64()?;
 
-        let enabler_offset = file.read_u64()?;
+        let attribute_offset = file.read_u64()?;
         let e_offset = file.read_u64()?;
         let string_table_offset = e_offset + u64::from(e_count) * 0x40;
 
@@ -129,7 +154,7 @@ impl Rcol {
                 }
                 let m_offset = file.read_u64()?;
                 if !(m_offset >= group_attachment_offset + 0x30 * u64::from(group_attachment_count)
-                    && m_offset <= enabler_offset)
+                    && m_offset <= attribute_offset)
                 {
                     bail!("m offset out of bound")
                 }
@@ -165,7 +190,10 @@ impl Rcol {
                         if x != 0 {
                             bail!("Expected zero");
                         }
-                        let _ = file.read_u32()?;
+                        let attribute_bits = file.read_u32()?;
+                        if attribute_bits >= 1 << attribute_count {
+                            bail!("attribute out of bound")
+                        }
 
                         let bone_a_offset = file.read_u64()?;
                         let bone_b_offset = file.read_u64()?;
@@ -184,7 +212,22 @@ impl Rcol {
                             bail!("Expected zero");
                         }
 
+                        let old = file.tell()?;
+                        file.seek(SeekFrom::Start(name_offset))?;
+                        let name = file.read_u16str()?;
+                        file.seek(SeekFrom::Start(bone_a_offset))?;
+                        let bone_a = file.read_u16str()?;
+                        file.seek(SeekFrom::Start(bone_b_offset))?;
+                        let bone_b = file.read_u16str()?;
+                        file.seek(SeekFrom::Start(old))?;
+
                         let shape = match shape_type {
+                            1 => {
+                                let p = file.read_f32vec4()?;
+                                let mut padding = [0; 0x40];
+                                file.read_exact(&mut padding)?;
+                                Shape::Sphere { p: p.xyz(), r: p.w }
+                            }
                             3 => {
                                 let p0 = file.read_f32vec4()?;
                                 let p1 = file.read_f32vec4()?;
@@ -204,7 +247,11 @@ impl Rcol {
                                 if padding.iter().any(|&p| p != 0) {
                                     bail!("Padding not zero")
                                 }
-                                Shape::Capsule { p0, p1, r: r.x }
+                                Shape::Capsule {
+                                    p0: p0.xyz(),
+                                    p1: p1.xyz(),
+                                    r: r.x,
+                                }
                             }
                             _ => {
                                 file.seek(SeekFrom::Current(0x50))?;
@@ -212,21 +259,13 @@ impl Rcol {
                             }
                         };
 
-                        let old = file.tell()?;
-                        file.seek(SeekFrom::Start(name_offset))?;
-                        let name = file.read_u16str()?;
-                        file.seek(SeekFrom::Start(bone_a_offset))?;
-                        let bone_a = file.read_u16str()?;
-                        file.seek(SeekFrom::Start(bone_b_offset))?;
-                        let bone_b = file.read_u16str()?;
-                        file.seek(SeekFrom::Start(old))?;
-
                         Ok(Collider {
                             name,
                             bone_a,
                             bone_b,
                             shape,
                             user_data: UserData::RszRootIndex(rsz_root_index.try_into()?),
+                            attribute_bits,
                         })
                     })
                     .collect::<Result<Vec<_>>>()?;
@@ -308,8 +347,8 @@ impl Rcol {
 
         // Some data pointed by A is in between here
 
-        file.seek(SeekFrom::Start(enabler_offset))?;
-        let enablers = (0..enabler_count)
+        file.seek(SeekFrom::Start(attribute_offset))?;
+        let attributes = (0..attribute_count)
             .map(|_| {
                 let name_offset = file.read_u64()?;
                 if name_offset < string_table_offset {
@@ -367,33 +406,178 @@ impl Rcol {
         Ok(Rcol {
             rsz,
             collider_groups,
-            enablers,
+            attributes,
             group_attachments,
         })
     }
 
     pub fn dump(&self) -> Result<()> {
+        fn print_user_data(user_data: &Box<dyn Any>) {
+            if let Some(d) = user_data.downcast_ref::<EmHitDamageShapeData>() {
+                println!("{:#?}", d)
+            } else if let Some(d) = user_data.downcast_ref::<EmHitDamageRsData>() {
+                println!("{:#?}", d)
+            } else {
+            }
+        }
         for (i, collider_group) in self.collider_groups.iter().enumerate() {
             println!("[{}] {}", i, collider_group.name);
             for collider in &collider_group.colliders {
                 println!(
-                    " - {}, {}, {}",
-                    collider.name, collider.bone_a, collider.bone_b
+                    " - {}, {}, {}, /** {} **/",
+                    collider.name, collider.bone_a, collider.bone_b, collider.attribute_bits
                 );
+                if let UserData::Data(data) = &collider.user_data {
+                    print_user_data(data);
+                } else {
+                    panic!()
+                }
             }
         }
 
-        for enabler in &self.enablers {
-            println!("* {}", enabler);
+        for attribute in &self.attributes {
+            println!("* {}", attribute);
         }
 
         for c in &self.group_attachments {
             println!(
                 ">>>->[{}] {}, {}, {}, {}",
                 c.collider_group_index, c.name, c.name_b, c.p, c.r
-            )
+            );
+            if let UserData::Data(data) = &c.user_data {
+                print_user_data(data);
+            } else {
+                panic!()
+            }
         }
 
         Ok(())
+    }
+
+    pub fn apply_skeleton(&mut self, mesh: &Mesh) -> Result<()> {
+        for group in &mut self.collider_groups {
+            for collider in &mut group.colliders {
+                let bone_a = &mesh.bones[*mesh
+                    .bone_names
+                    .get(&collider.bone_a)
+                    .context("Unknown bone")?];
+                let bone_b = mesh
+                    .bone_names
+                    .get(&collider.bone_b)
+                    .map(|i| &mesh.bones[*i]);
+
+                collider.shape = match collider.shape {
+                    Shape::Capsule { p0, p1, r } => Shape::Capsule {
+                        p0: (bone_a.absolute_transform * vec4(p0.x, p0.y, p0.z, 1.0)).xyz(),
+                        p1: (bone_b.context("Unknown bone")?.absolute_transform
+                            * vec4(p1.x, p1.y, p1.z, 1.0))
+                        .xyz(),
+                        r,
+                    },
+                    Shape::Sphere { p, r } => Shape::Sphere {
+                        p: (bone_a.absolute_transform * vec4(p.x, p.y, p.z, 1.0)).xyz(),
+                        r,
+                    },
+                    Shape::Unknown => Shape::Unknown,
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub fn get_monster_ride_filter(&self) -> u32 {
+        if let Some((i, _)) = self
+            .attributes
+            .iter()
+            .enumerate()
+            .find(|(_, s)| s.contains('操'))
+        {
+            1 << i
+        } else {
+            0
+        }
+    }
+
+    pub fn color_monster_model(&self, mesh: &Mesh) -> Result<(Vec<ColoredVertex>, Vec<u32>)> {
+        let position = mesh
+            .vertex_layouts
+            .iter()
+            .find(|layout| layout.usage == 0)
+            .context("No position data")?;
+
+        let vertex_count = (mesh.vertex_layouts[1].offset - mesh.vertex_layouts[0].offset)
+            / u32::from(mesh.vertex_layouts[0].width);
+
+        let mut buffer = mesh
+            .vertex_buffer
+            .get(usize::try_from(position.offset)?..)
+            .context("Vertex out of bound")?;
+
+        let attribute_filter = self.get_monster_ride_filter();
+
+        let vertexs = (0..vertex_count)
+            .map(|_| {
+                let position = buffer.read_f32vec3()?;
+
+                let mut meat_dist = f32::MAX;
+                let mut meat = None;
+                let mut parts_group = None;
+                for (i, group) in self.collider_groups.iter().enumerate() {
+                    let mut new_parts_group = None;
+                    for attachment in &self.group_attachments {
+                        if attachment.collider_group_index == i {
+                            if let Some(data) =
+                                attachment.user_data.downcast_ref::<EmHitDamageRsData>()
+                            {
+                                new_parts_group = Some(usize::try_from(data.parts_group)?);
+                            }
+                        }
+                    }
+
+                    for collider in &group.colliders {
+                        if collider.attribute_bits & attribute_filter != 0 {
+                            continue;
+                        }
+                        if let Some(data) =
+                            collider.user_data.downcast_ref::<EmHitDamageShapeData>()
+                        {
+                            let new_dist = collider.shape.distance(&position)?;
+                            if new_dist < meat_dist {
+                                meat_dist = new_dist;
+                                meat = Some(usize::try_from(data.meat)?);
+                                parts_group = new_parts_group;
+                            }
+                        }
+                    }
+                }
+
+                if meat_dist > 1.5 {
+                    meat = None;
+                    parts_group = None;
+                }
+
+                Ok(ColoredVertex {
+                    position,
+                    meat,
+                    parts_group,
+                })
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        let mut indexs = vec![];
+
+        for model_group in &mesh.main_model_lods[0].model_groups {
+            for model in &model_group.models {
+                let mut index_buffer = mesh
+                    .index_buffer
+                    .get(model.index_buffer_start as usize * 2..)
+                    .context("index out of bound")?;
+                for _ in 0..usize::try_from(model.vertex_count)? {
+                    indexs.push(u32::from(index_buffer.read_u16()?) + (model.vertex_buffer_start))
+                }
+            }
+        }
+
+        Ok((vertexs, indexs))
     }
 }

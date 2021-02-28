@@ -1,51 +1,64 @@
 use crate::file_ext::*;
 use anyhow::*;
+use nalgebra_glm::*;
 use std::collections::HashMap;
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use std::io::{Read, Seek, SeekFrom, Write};
 
 #[derive(Clone)]
-struct Model {
-    vertex_count: u32,
-    index_buffer_start: u32,
-    vertex_buffer_start: u32,
+pub struct Model {
+    pub vertex_count: u32,
+    pub index_buffer_start: u32,
+    pub vertex_buffer_start: u32,
 }
 
 #[derive(Clone)]
-struct ModelGroup {
-    models: Vec<Model>,
+pub struct ModelGroup {
+    pub models: Vec<Model>,
 }
 
 #[derive(Clone)]
-struct ModelLod {
-    model_groups: Vec<ModelGroup>,
+pub struct ModelLod {
+    pub model_groups: Vec<ModelGroup>,
 }
 
-struct VertexLayout {
-    usage: u16, // position, normal, uv, uv2, weight
-    width: u16,
-    offset: u32,
+pub struct VertexLayout {
+    pub usage: u16, // position, normal, uv, uv2, weight
+    pub width: u16,
+    pub offset: u32,
 }
 
-struct Point4 {
+pub struct Point4 {
     x: f32,
     y: f32,
     z: f32,
     w: f32,
 }
 
-struct G {
+pub struct G {
     a: Point4,
     b: Point4,
 }
 
+pub struct Bone {
+    pub parent: Option<usize>,
+    pub first_child: Option<usize>,
+    pub sibling: Option<usize>,
+    pub relative_transform: Mat4x4,
+    pub absolute_transform: Mat4x4,
+    pub absolute_reverse: Mat4x4,
+}
+
 pub struct Mesh {
-    main_model_lods: Vec<ModelLod>,
-    aux_model_lods: Vec<ModelLod>,
-    vertex_layouts: Vec<VertexLayout>,
-    vertex_buffer: Vec<u8>,
-    index_buffer: Vec<u8>,
-    gs: Vec<G>,
+    pub main_model_lods: Vec<ModelLod>,
+    pub aux_model_lods: Vec<ModelLod>,
+    pub vertex_layouts: Vec<VertexLayout>,
+    pub vertex_buffer: Vec<u8>,
+    pub index_buffer: Vec<u8>,
+    pub gs: Vec<G>,
+    pub bones: Vec<Bone>,
+    pub bone_names: HashMap<String, usize>,
+    pub bone_remap: Vec<u16>,
 }
 
 impl Mesh {
@@ -253,78 +266,110 @@ impl Mesh {
                 .collect::<Result<Vec<_>>>()?;
         }
 
-        let read_matrix4x4 = |file: &mut F| -> Result<()> {
-            file.read_f32()?;
-            file.read_f32()?;
-            file.read_f32()?;
-            file.read_f32()?;
-
-            file.read_f32()?;
-            file.read_f32()?;
-            file.read_f32()?;
-            file.read_f32()?;
-
-            file.read_f32()?;
-            file.read_f32()?;
-            file.read_f32()?;
-            file.read_f32()?;
-
-            file.read_f32()?;
-            file.read_f32()?;
-            file.read_f32()?;
-            file.read_f32()?;
-            Ok(())
-        };
-
         let bone_count;
+        let bone_remap;
+        let bones;
         if skeleton_offset != 0 {
             file.seek_assert_align_up(skeleton_offset, 8)?;
             bone_count = file.read_u32()?;
             let bone_remap_count = file.read_u32()?;
-            let c = file.read_u32()?;
-            let d = file.read_u32()?;
+            let x = file.read_u64()?;
+            if x != 0 {
+                bail!("Expected zero");
+            }
             let bone_hierarchy_offset = file.read_u64()?;
             let bone_matrix_a_offset = file.read_u64()?;
             let bone_matrix_b_offset = file.read_u64()?;
             let bone_matrix_c_offset = file.read_u64()?;
 
-            let bone_remap = (0..bone_remap_count)
+            bone_remap = (0..bone_remap_count)
                 .map(|_| file.read_u16())
                 .collect::<Result<Vec<_>>>()?;
 
             file.seek_assert_align_up(bone_hierarchy_offset, 16)?;
 
-            (0..bone_count)
-                .map(|_| {
-                    let _ = file.read_u16()?;
-                    let _ = file.read_u16()?;
-                    let _ = file.read_u16()?;
-                    let _ = file.read_u16()?;
+            struct BoneInfo {
+                parent_index: u16,
+                sibling_index: u16,
+                first_child_index: u16,
+            }
+            let bone_infos = (0..bone_count)
+                .map(|i| {
+                    let index = file.read_u16()?;
+                    if i != u32::from(index) {
+                        bail!("Unexpected index")
+                    }
+                    let parent_index = file.read_u16()?;
+                    let sibling_index = file.read_u16()?;
+                    let first_child_index = file.read_u16()?;
                     let _ = file.read_u16()?;
                     file.seek_align_up(16)?;
-                    Ok(())
+                    Ok(BoneInfo {
+                        parent_index,
+                        sibling_index,
+                        first_child_index,
+                    })
                 })
                 .collect::<Result<Vec<_>>>()?;
 
             file.seek_assert_align_up(bone_matrix_a_offset, 16)?;
 
-            (0..bone_count)
-                .map(|_| read_matrix4x4(&mut file))
+            // join to join transform?
+            let bone_rel_transform = (0..bone_count)
+                .map(|_| file.read_f32m4x4())
                 .collect::<Result<Vec<_>>>()?;
 
             file.seek_assert_align_up(bone_matrix_b_offset, 16)?;
 
-            (0..bone_count)
-                .map(|_| read_matrix4x4(&mut file))
+            // base to join transform?
+            let bone_abs_transform = (0..bone_count)
+                .map(|_| file.read_f32m4x4())
                 .collect::<Result<Vec<_>>>()?;
 
             file.seek_assert_align_up(bone_matrix_c_offset, 16)?;
 
-            (0..bone_count)
-                .map(|_| read_matrix4x4(&mut file))
+            // join to base transform?
+            let bone_abs_reverse = (0..bone_count)
+                .map(|_| file.read_f32m4x4())
+                .collect::<Result<Vec<_>>>()?;
+
+            fn convert_index(index: u16) -> Result<Option<usize>> {
+                if index == 0xFFFF {
+                    Ok(None)
+                } else {
+                    Ok(Some(index.try_into()?))
+                }
+            }
+
+            bones = (0..usize::try_from(bone_count)?)
+                .map(|i| {
+                    if !(bone_abs_transform[i] * bone_abs_reverse[i]).is_identity(0.001) {
+                        bail!("Expected identity")
+                    }
+                    let parent = convert_index(bone_infos[i].parent_index)?;
+                    if let Some(parent) = parent {
+                        if !(bone_abs_transform[parent]
+                            * bone_rel_transform[i]
+                            * bone_abs_reverse[i])
+                            .is_identity(0.001)
+                        {
+                            bail!("Expected identity")
+                        }
+                    }
+                    Ok(Bone {
+                        parent,
+                        first_child: convert_index(bone_infos[i].first_child_index)?,
+                        sibling: convert_index(bone_infos[i].sibling_index)?,
+                        relative_transform: bone_rel_transform[i],
+                        absolute_transform: bone_abs_transform[i],
+                        absolute_reverse: bone_abs_reverse[i],
+                    })
+                })
                 .collect::<Result<Vec<_>>>()?;
         } else {
             bone_count = 0;
+            bone_remap = vec![];
+            bones = vec![];
         }
 
         if e_offset != 0 {
@@ -420,12 +465,14 @@ impl Mesh {
                 .collect::<Result<Vec<_>>>()?;
         }
 
-        if bone_names_offset != 0 {
+        let bone_names = if bone_names_offset != 0 {
             file.seek_assert_align_up(bone_names_offset, 16)?;
             (0..bone_count)
                 .map(|_| file.read_u16())
-                .collect::<Result<Vec<_>>>()?;
-        }
+                .collect::<Result<Vec<_>>>()?
+        } else {
+            vec![]
+        };
 
         if f_names_offset != 0 {
             file.seek_assert_align_up(f_names_offset, 16)?;
@@ -459,6 +506,24 @@ impl Mesh {
                 Ok(String::from_utf8(buf)?)
             })
             .collect::<Result<Vec<_>>>()?;
+
+        let bone_names = bone_names
+            .into_iter()
+            .enumerate()
+            .map(|(bone_index, name_index)| {
+                Ok((
+                    strings
+                        .get(usize::try_from(name_index)?)
+                        .context("Name out of bound")?
+                        .clone(),
+                    bone_index,
+                ))
+            })
+            .collect::<Result<HashMap<_, _>>>()?;
+
+        if bone_names.len() != bones.len() {
+            bail!("Bone name collision")
+        }
 
         let gs = if g_offset != 0 {
             file.seek_assert_align_up(g_offset, 16)?;
@@ -532,6 +597,9 @@ impl Mesh {
             vertex_buffer,
             index_buffer,
             gs,
+            bones,
+            bone_names,
+            bone_remap,
         })
     }
 
@@ -556,6 +624,7 @@ impl Mesh {
             bail!("Unexpected width");
         }
 
+        /*
         let mut buffer = &self.vertex_buffer[position.offset as usize..];
         for _ in 0..vertex_count {
             let x = buffer.read_f32()?;
@@ -585,16 +654,20 @@ impl Mesh {
                     writeln!(output, "f {} {} {}", a + 1, b + 1, c + 1)?;
                 }
             }
-        }
-
-        /*for g in &self.gs {
-            writeln!(output, "v {} {} {}", g.a.x, g.a.y, g.a.z)?;
-            writeln!(output, "v {} {} {}", g.b.x, g.b.y, g.b.z)?;
-        }
-
-        for i in 0..self.gs.len() {
-            writeln!(output, "l {} {}", i * 2 + 1, i * 2 + 2)?;
         }*/
+
+        for bone in &self.bones {
+            let parent = &self.bones[bone.parent.unwrap_or(0)];
+            let a = bone.absolute_transform * vec4(0.0, 0.0, 0.0, 1.0);
+            let b = parent.absolute_transform * vec4(0.0, 0.0, 0.0, 1.0);
+
+            writeln!(output, "v {} {} {}", a.x, a.y, a.z)?;
+            writeln!(output, "v {} {} {}", b.x, b.y, b.z)?;
+        }
+
+        for i in 0..self.bones.len() {
+            writeln!(output, "l {} {}", i * 2 + 1, i * 2 + 2)?;
+        }
 
         Ok(())
     }

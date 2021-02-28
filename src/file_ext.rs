@@ -1,15 +1,8 @@
 use crate::align::*;
 use anyhow::*;
+use nalgebra_glm::*;
 use std::convert::TryInto;
 use std::io::{Read, Seek, SeekFrom};
-
-pub struct Vec4<T> {
-    pub x: T,
-    pub y: T,
-    pub z: T,
-    pub w: T,
-}
-
 pub trait ReadExt {
     fn read_u8(&mut self) -> Result<u8>;
     fn read_u16(&mut self) -> Result<u16>;
@@ -22,7 +15,9 @@ pub trait ReadExt {
     fn read_magic(&mut self) -> Result<[u8; 4]>;
     fn read_u16str(&mut self) -> Result<String>;
     fn read_f32(&mut self) -> Result<f32>;
-    fn read_f32vec4(&mut self) -> Result<Vec4<f32>>;
+    fn read_f32vec3(&mut self) -> Result<Vec3>;
+    fn read_f32vec4(&mut self) -> Result<Vec4>;
+    fn read_f32m4x4(&mut self) -> Result<Mat4x4>;
 }
 
 pub trait SeekExt {
@@ -94,13 +89,24 @@ impl<T: Read + ?Sized> ReadExt for T {
         self.read_exact(&mut buf)?;
         Ok(f32::from_le_bytes(buf))
     }
-    fn read_f32vec4(&mut self) -> Result<Vec4<f32>> {
-        Ok(Vec4 {
-            x: self.read_f32()?,
-            y: self.read_f32()?,
-            z: self.read_f32()?,
-            w: self.read_f32()?,
-        })
+    fn read_f32vec4(&mut self) -> Result<Vec4> {
+        Ok(vec4(
+            self.read_f32()?,
+            self.read_f32()?,
+            self.read_f32()?,
+            self.read_f32()?,
+        ))
+    }
+
+    fn read_f32vec3(&mut self) -> Result<Vec3> {
+        Ok(vec3(self.read_f32()?, self.read_f32()?, self.read_f32()?))
+    }
+
+    fn read_f32m4x4(&mut self) -> Result<Mat4x4> {
+        let data: Vec<f32> = std::iter::from_fn(|| Some(self.read_f32()))
+            .take(16)
+            .collect::<Result<_>>()?;
+        Ok(make_mat4x4(&data))
     }
 }
 

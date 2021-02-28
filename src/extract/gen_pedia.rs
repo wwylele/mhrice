@@ -1,4 +1,6 @@
 use super::pedia::*;
+use crate::gpu::*;
+use crate::mesh::*;
 use crate::msg::*;
 use crate::pak::PakReader;
 use crate::pfb::Pfb;
@@ -6,11 +8,13 @@ use crate::rcol::Rcol;
 use crate::rsz::*;
 use crate::user::User;
 use anyhow::*;
+use rayon::prelude::*;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::convert::TryInto;
-use std::fs::File;
+use std::fs::*;
 use std::io::{Cursor, Read, Seek};
+use std::path::*;
 
 fn exactly_one<T>(mut iterator: impl Iterator<Item = T>) -> Result<T> {
     let next = iterator.next().context("No element found")?;
@@ -20,11 +24,31 @@ fn exactly_one<T>(mut iterator: impl Iterator<Item = T>) -> Result<T> {
     Ok(next)
 }
 
+fn gen_em_collider_path(id: u32) -> String {
+    format!("enemy/em{0:03}/00/collision/em{0:03}_00_colliders.rcol", id)
+}
+
+fn gen_ems_collider_path(id: u32) -> String {
+    format!(
+        "enemy/ems{0:03}/00/collision/ems{0:03}_00_colliders.rcol",
+        id
+    )
+}
+
 pub fn gen_collider_mapping(rcol: Rcol) -> Result<ColliderMapping> {
     let mut meat_map: BTreeMap<usize, BTreeSet<String>> = BTreeMap::new();
     let mut part_map: BTreeMap<usize, BTreeSet<String>> = BTreeMap::new();
 
+    let filter = rcol.get_monster_ride_filter();
+
     for attachment in rcol.group_attachments {
+        if rcol.collider_groups[attachment.collider_group_index]
+            .colliders
+            .iter()
+            .all(|collider| collider.attribute_bits & filter != 0)
+        {
+            continue;
+        }
         if let Some(data) = attachment.user_data.downcast::<EmHitDamageRsData>() {
             let entry = part_map.entry(data.parts_group.try_into()?).or_default();
             entry.insert(data.base.name.clone());
@@ -39,6 +63,9 @@ pub fn gen_collider_mapping(rcol: Rcol) -> Result<ColliderMapping> {
 
     for group in rcol.collider_groups {
         for collider in group.colliders {
+            if collider.attribute_bits & filter != 0 {
+                continue;
+            }
             if let Some(data) = collider.user_data.downcast::<EmHitDamageShapeData>() {
                 let entry = meat_map.entry(data.meat.try_into()?).or_default();
                 entry.insert(data.base.name.clone());
@@ -121,11 +148,9 @@ pub fn gen_monsters(
     Ok(monsters)
 }
 
-pub fn gen_pedia(pak: String) -> Result<Pedia> {
-    let mut pak = PakReader::new(File::open(pak)?)?;
-
+pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let monsters = gen_monsters(
-        &mut pak,
+        pak,
         |id| format!("enemy/em{0:03}/00/prefab/em{0:03}_00.pfb", id),
         |id| {
             Some(format!(
@@ -133,20 +158,15 @@ pub fn gen_pedia(pak: String) -> Result<Pedia> {
                 id
             ))
         },
-        |id| format!("enemy/em{0:03}/00/collision/em{0:03}_00_colliders.rcol", id),
+        gen_em_collider_path,
     )
     .context("Generating large monsters")?;
 
     let small_monsters = gen_monsters(
-        &mut pak,
+        pak,
         |id| format!("enemy/ems{0:03}/00/prefab/ems{0:03}_00.pfb", id),
         |_| None,
-        |id| {
-            format!(
-                "enemy/ems{0:03}/00/collision/ems{0:03}_00_colliders.rcol",
-                id
-            )
-        },
+        gen_ems_collider_path,
     )
     .context("Generating small monsters")?;
 
@@ -162,4 +182,76 @@ pub fn gen_pedia(pak: String) -> Result<Pedia> {
         monster_names,
         monster_aliases,
     })
+}
+
+fn gen_monster_hitzones(
+    pak: &mut PakReader<impl Read + Seek>,
+    output: &Path,
+    collider_path_gen: fn(u32) -> String,
+    mesh_path_gen: fn(u32) -> String,
+    meat_file_name_gen: fn(u32) -> String,
+    parts_group_file_name_gen: fn(u32) -> String,
+) -> Result<()> {
+    let mut monsters = vec![];
+    for index in 0..1000 {
+        let mesh_path = mesh_path_gen(index);
+        let collider_path = collider_path_gen(index);
+        let mesh = if let Ok((mesh, _)) = pak.find_file(&mesh_path) {
+            mesh
+        } else {
+            continue;
+        };
+        let (collider, _) = pak
+            .find_file(&collider_path)
+            .context("Found mesh but not collider")?;
+        let mesh = pak.read_file(mesh)?;
+        let collider = pak.read_file(collider)?;
+        monsters.push((index, mesh, collider));
+    }
+
+    monsters
+        .into_par_iter()
+        .map(|(index, mesh, collider)| {
+            let mesh = Mesh::new(Cursor::new(mesh))?;
+            let mut collider = Rcol::new(Cursor::new(collider), true)?;
+            let meat_path = output.to_owned().join(meat_file_name_gen(index));
+            let parts_group_path = output.to_owned().join(parts_group_file_name_gen(index));
+            collider.apply_skeleton(&mesh)?;
+            let (vertexs, indexs) = collider.color_monster_model(&mesh)?;
+            let HitzoneDiagram { meat, parts_group } = gen_hitzone_diagram(vertexs, indexs)?;
+            meat.save_png(&meat_path)?;
+            parts_group.save_png(&parts_group_path)?;
+            Ok(())
+        })
+        .collect::<Result<Vec<()>>>()?;
+
+    Ok(())
+}
+
+pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Result<()> {
+    let root = PathBuf::from(output);
+    if root.exists() {
+        remove_dir_all(&root)?;
+    }
+    create_dir(&root)?;
+
+    gen_monster_hitzones(
+        pak,
+        &root,
+        gen_em_collider_path,
+        |id| format!("enemy/em{0:03}/00/mod/em{0:03}_00.mesh", id),
+        |id| format!("em{0:03}_meat.png", id),
+        |id| format!("em{0:03}_parts_group.png", id),
+    )?;
+
+    gen_monster_hitzones(
+        pak,
+        &root,
+        gen_ems_collider_path,
+        |id| format!("enemy/ems{0:03}/00/mod/ems{0:03}_00.mesh", id),
+        |id| format!("ems{0:03}_meat.png", id),
+        |id| format!("ems{0:03}_parts_group.png", id),
+    )?;
+
+    Ok(())
 }

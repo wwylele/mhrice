@@ -18,9 +18,11 @@ mod align;
 mod bitfield;
 mod extract;
 mod file_ext;
+mod gpu;
 mod mesh;
 mod msg;
 mod pak;
+mod part_color;
 mod pfb;
 mod rcol;
 mod rsz;
@@ -140,6 +142,31 @@ enum Mhrice {
     DumpRcol {
         #[structopt(short, long)]
         rcol: String,
+    },
+
+    DumpMeat {
+        #[structopt(short, long)]
+        mesh: String,
+        #[structopt(short, long)]
+        rcol: String,
+        #[structopt(short, long)]
+        output: String,
+    },
+
+    GenMeat {
+        #[structopt(short, long)]
+        pak: String,
+        #[structopt(short, long)]
+        index: u32,
+        #[structopt(short, long)]
+        output: String,
+    },
+
+    GenResources {
+        #[structopt(short, long)]
+        pak: String,
+        #[structopt(short, long)]
+        output: String,
     },
 }
 
@@ -305,7 +332,8 @@ fn scan(pak: String) -> Result<()> {
 }
 
 fn gen_json(pak: String) -> Result<()> {
-    let pedia = extract::gen_pedia(pak)?;
+    let mut pak = PakReader::new(File::open(pak)?)?;
+    let pedia = extract::gen_pedia(&mut pak)?;
     let json = serde_json::to_string_pretty(&pedia)?;
     println!("{}", json);
     Ok(())
@@ -383,8 +411,10 @@ fn upload_s3_folder(path: &Path, bucket: String, client: &S3Client) -> Result<()
 }
 
 fn gen_website(pak: String, output: String, s3: Option<String>) -> Result<()> {
-    let pedia = extract::gen_pedia(pak)?;
+    let mut pak = PakReader::new(File::open(pak)?)?;
+    let pedia = extract::gen_pedia(&mut pak)?;
     extract::gen_website(pedia, &output)?;
+    extract::gen_resources(&mut pak, &Path::new(&output).to_owned().join("resources"))?;
     if let Some(bucket) = s3 {
         println!("Uploading to S3...");
         let s3client = S3Client::new(Region::UsEast1);
@@ -564,8 +594,96 @@ fn dump_mesh(mesh: String, output: String) -> Result<()> {
 }
 
 fn dump_rcol(rcol: String) -> Result<()> {
-    let rcol = Rcol::new(File::open(rcol)?, false)?;
+    let rcol = Rcol::new(File::open(rcol)?, true)?;
     rcol.dump()?;
+    Ok(())
+}
+
+fn dump_meat(mesh: String, rcol: String, output: String) -> Result<()> {
+    use std::io::*;
+    let mesh = Mesh::new(File::open(mesh)?)?;
+    let mut rcol = Rcol::new(File::open(rcol)?, true)?;
+
+    rcol.apply_skeleton(&mesh)?;
+    let (vertexs, indexs) = rcol.color_monster_model(&mesh)?;
+
+    let mut output = File::create(output)?;
+
+    writeln!(output, "ply")?;
+    writeln!(output, "format ascii 1.0")?;
+    writeln!(output, "element vertex {}", vertexs.len())?;
+    writeln!(output, "property float x")?;
+    writeln!(output, "property float y")?;
+    writeln!(output, "property float z")?;
+    writeln!(output, "property float red")?;
+    writeln!(output, "property float green")?;
+    writeln!(output, "property float blue")?;
+    writeln!(output, "element face {}", indexs.len() / 3)?;
+    writeln!(output, "property list uchar int vertex_index")?;
+    writeln!(output, "end_header")?;
+
+    let colors = [
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0],
+        [1.0, 1.0, 0.0],
+        [1.0, 0.0, 1.0],
+        [0.0, 1.0, 1.0],
+        [1.0, 0.5, 0.0],
+        [0.5, 1.0, 0.0],
+        [1.0, 0.0, 0.5],
+        [0.5, 0.0, 1.0],
+        [0.0, 1.0, 0.5],
+        [0.0, 0.5, 1.0],
+    ];
+
+    for vertex in vertexs {
+        let color = if let Some(meat) = vertex.meat {
+            colors[meat]
+        } else {
+            [0.5, 0.5, 0.5]
+        };
+        writeln!(
+            output,
+            "{} {} {} {} {} {}",
+            vertex.position.x, -vertex.position.z, vertex.position.y, color[0], color[1], color[2]
+        )?;
+    }
+
+    for index in indexs.chunks(3) {
+        writeln!(output, "3 {} {} {}", index[0], index[1], index[2])?;
+    }
+
+    Ok(())
+}
+
+fn gen_meat(pak: String, index: u32, output: String) -> Result<()> {
+    let mut pak = PakReader::new(File::open(pak)?)?;
+
+    let mesh_path = format!("enemy/em{0:03}/00/mod/em{0:03}_00.mesh", index);
+    let rcol_path = format!(
+        "enemy/em{0:03}/00/collision/em{0:03}_00_colliders.rcol",
+        index
+    );
+    let (mesh, _) = pak.find_file(&mesh_path)?;
+    let (rcol, _) = pak.find_file(&rcol_path)?;
+    let mesh = Mesh::new(Cursor::new(pak.read_file(mesh)?))?;
+    let mut rcol = Rcol::new(Cursor::new(pak.read_file(rcol)?), true)?;
+    rcol.apply_skeleton(&mesh)?;
+    let (vertexs, indexs) = rcol.color_monster_model(&mesh)?;
+
+    let gpu::HitzoneDiagram { meat, .. } = gpu::gen_hitzone_diagram(vertexs, indexs)?;
+
+    meat.save_png(Path::new(&output))?;
+
+    Ok(())
+}
+
+fn gen_resources(pak: String, output: String) -> Result<()> {
+    let mut pak = PakReader::new(File::open(pak)?)?;
+
+    extract::gen_resources(&mut pak, Path::new(&output))?;
+
     Ok(())
 }
 
@@ -586,5 +704,8 @@ fn main() -> Result<()> {
         Mhrice::ScanRcol { pak } => scan_rcol(pak),
         Mhrice::DumpMesh { mesh, output } => dump_mesh(mesh, output),
         Mhrice::DumpRcol { rcol } => dump_rcol(rcol),
+        Mhrice::DumpMeat { mesh, rcol, output } => dump_meat(mesh, rcol, output),
+        Mhrice::GenMeat { pak, index, output } => gen_meat(pak, index, output),
+        Mhrice::GenResources { pak, output } => gen_resources(pak, output),
     }
 }
