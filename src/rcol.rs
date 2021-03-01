@@ -90,11 +90,16 @@ pub struct GroupAttachment {
     pub r: u64,
 }
 
+pub struct E {
+    pub name: String,
+}
+
 pub struct Rcol {
     pub rsz: Rsz,
     pub collider_groups: Vec<ColliderGroup>,
     pub attributes: Vec<String>,
     pub group_attachments: Vec<GroupAttachment>,
+    pub es: Vec<E>,
 }
 
 impl Rcol {
@@ -114,7 +119,7 @@ impl Rcol {
 
         let rsz_len = file.read_u32()?;
         file.read_u32()?;
-        let a_offset = file.read_u64()?;
+        let collider_group_offset = file.read_u64()?;
 
         let rsz_offset = file.read_u64()?;
         let group_attachment_offset = file.read_u64()?;
@@ -123,7 +128,7 @@ impl Rcol {
         let e_offset = file.read_u64()?;
         let string_table_offset = e_offset + u64::from(e_count) * 0x40;
 
-        file.seek_noop(a_offset)?;
+        file.seek_noop(collider_group_offset)?;
 
         let mut collider_groups = (0..collider_group_count)
             .map(|_| {
@@ -142,7 +147,8 @@ impl Rcol {
                 let collider_count = file.read_u32()?;
                 let m_count = file.read_u32()?;
                 let collider_offset = file.read_u64()?;
-                if !(collider_offset >= a_offset + 0x50 * u64::from(collider_group_count)
+                if !(collider_offset
+                    >= collider_group_offset + 0x50 * u64::from(collider_group_count)
                     && collider_offset <= rsz_offset)
                 {
                     bail!("j offset out of bound")
@@ -369,7 +375,7 @@ impl Rcol {
             .collect::<Result<Vec<_>>>()?;
 
         file.seek_noop(e_offset)?;
-        (0..e_count)
+        let es = (0..e_count)
             .map(|_| {
                 let name_offset = file.read_u64()?;
                 if name_offset < string_table_offset {
@@ -377,12 +383,12 @@ impl Rcol {
                 }
                 let old = file.tell()?;
                 file.seek(SeekFrom::Start(name_offset))?;
-                let _name = file.read_u16str()?;
+                let name = file.read_u16str()?;
                 file.seek(SeekFrom::Start(old))?;
 
                 file.seek(SeekFrom::Current(0x38))?;
 
-                Ok(())
+                Ok(E { name })
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -408,6 +414,7 @@ impl Rcol {
             collider_groups,
             attributes,
             group_attachments,
+            es,
         })
     }
 
@@ -432,6 +439,7 @@ impl Rcol {
                 } else {
                     panic!()
                 }
+                println!("{:#?}", collider.shape);
             }
         }
 
@@ -449,6 +457,10 @@ impl Rcol {
             } else {
                 panic!()
             }
+        }
+
+        for e in &self.es {
+            println!("##> {}", e.name);
         }
 
         Ok(())
@@ -490,7 +502,7 @@ impl Rcol {
             .attributes
             .iter()
             .enumerate()
-            .find(|(_, s)| s.contains('操'))
+            .find(|(_, s)| *s == "操獣受付中の追加アタリ")
         {
             1 << i
         } else {
@@ -514,6 +526,9 @@ impl Rcol {
             .context("Vertex out of bound")?;
 
         let attribute_filter = self.get_monster_ride_filter();
+        if attribute_filter == 0 {
+            bail!("Didn't find monster ride filter")
+        }
 
         let vertexs = (0..vertex_count)
             .map(|_| {
