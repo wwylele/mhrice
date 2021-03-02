@@ -29,4 +29,5 @@ pub struct Pedia {
     pub small_monsters: Vec<Monster>,
     pub monster_names: Msg,
     pub monster_aliases: Msg,
+    pub condition_preset: EnemyConditionPresetData,
 }

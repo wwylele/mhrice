@@ -2,6 +2,7 @@ mod anger_data;
 mod boss_init_set_data;
 mod collision;
 mod condition_damage_data;
+mod condition_damage_preset;
 mod data_base;
 mod data_tune;
 mod meat_data;
@@ -11,6 +12,7 @@ pub use anger_data::*;
 pub use boss_init_set_data::*;
 pub use collision::*;
 pub use condition_damage_data::*;
+pub use condition_damage_preset::*;
 pub use data_base::*;
 pub use data_tune::*;
 pub use meat_data::*;
@@ -19,10 +21,12 @@ pub use parts_break_data::*;
 use crate::file_ext::*;
 use anyhow::*;
 use once_cell::sync::Lazy;
+use serde::Serialize;
 use std::any::*;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::io::{Cursor, Read, Seek, SeekFrom};
+use std::ops::Deref;
 
 #[derive(Debug)]
 pub struct SlotString {
@@ -130,7 +134,9 @@ impl Rsz {
         let mut cursor = Cursor::new(&self.data);
         for td in self.type_descriptors.iter().skip(1) {
             let hash = u32::try_from(*td & 0xFFFFFFFF)?;
-            let deserializer = RSZ_TYPE_MAP.get(&hash).context("Unsupported type")?;
+            let deserializer = RSZ_TYPE_MAP
+                .get(&hash)
+                .with_context(|| format!("Unsupported type {:08X}", hash))?;
             let mut rsz_deserializer = RszDeserializer {
                 node_buf: &mut node_buf,
                 cursor: &mut cursor,
@@ -315,6 +321,23 @@ impl FieldFromRsz for String {
             bail!("String not null-terminated");
         }
         Ok(String::from_utf16(&utf16)?)
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct Flatten<T>(pub T);
+
+impl<T: FromRsz> FieldFromRsz for Flatten<T> {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        Ok(Flatten(T::from_rsz(rsz)?))
+    }
+}
+
+impl<T> Deref for Flatten<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -505,6 +528,29 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
         PhysicsUserData,
         EmHitDamageRsData,
         EmHitDamageShapeData,
+    );
+
+    r!(
+        PresetParalyzeData,
+        PresetSleepData,
+        PresetStunData,
+        PresetFlashData,
+        PresetBlastData,
+        PresetStaminaData,
+        PresetPoison,
+        PresetFireData,
+        PresetWater,
+        PresetIceData,
+        PresetThunderData,
+        PresetFallTrapData,
+        PresetFallQuickSandData,
+        PresetFallOtomoTrapData,
+        PresetShockTrapData,
+        PresetShockOtomoTrapData,
+        PresetCaptureData,
+        PresetKoyashiData,
+        PresetSteelFangData,
+        EnemyConditionPresetData,
     );
 
     m

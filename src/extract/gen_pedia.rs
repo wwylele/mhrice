@@ -176,11 +176,18 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let (monster_aliases, _) = pak.find_file("Message/Tag/Tag_EM_Name_Alias.msg")?;
     let monster_aliases = Msg::new(Cursor::new(pak.read_file(monster_aliases)?))?;
 
+    let (index, _) = pak.find_file("enemy/user_data/system_condition_damage_preset_data.user")?;
+    let condition_preset = User::new(Cursor::new(pak.read_file(index)?))?
+        .rsz
+        .deserialize_single()
+        .context("system_condition_damage_preset_data")?;
+
     Ok(Pedia {
         monsters,
         small_monsters,
         monster_names,
         monster_aliases,
+        condition_preset,
     })
 }
 
