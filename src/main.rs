@@ -1,4 +1,4 @@
-#![recursion_limit = "2048"]
+#![recursion_limit = "4096"]
 
 use anyhow::*;
 use rayon::prelude::*;

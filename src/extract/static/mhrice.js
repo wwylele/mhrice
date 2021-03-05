@@ -2,8 +2,42 @@ var language_index = 1;
 
 var navbar_menu_active = false;
 
+var classes_to_hide = new Set();
+
 window.onload = function () {
     switchLanguage();
+    hide_class("mh-ride-cond");
+    hide_class("mh-invalid-meat");
+    hide_class("mh-invalid-part");
+    hide_class("mh-no-preset");
+}
+
+function refresh_visibility(c) {
+    for (element of document.getElementsByClassName(c)) {
+        matched = false;
+        for (let c of classes_to_hide) {
+            if (element.classList.contains(c)) {
+                matched = true;
+                break;
+            }
+        }
+
+        if (matched) {
+            element.classList.add("mh-hidden");
+        } else {
+            element.classList.remove("mh-hidden");
+        }
+    }
+}
+
+function hide_class(c) {
+    classes_to_hide.add(c);
+    refresh_visibility(c);
+}
+
+function show_class(c) {
+    classes_to_hide.delete(c);
+    refresh_visibility(c);
 }
 
 function selectLanguage(language) {
@@ -14,12 +48,10 @@ function selectLanguage(language) {
 function switchLanguage() {
     for (var i = 0; i < 32; ++i) {
         var c = "mh-lang-" + i;
-        for (element of document.getElementsByClassName(c)) {
-            if (i === language_index) {
-                element.classList.remove("mh-hidden")
-            } else {
-                element.classList.add("mh-hidden")
-            }
+        if (i === language_index) {
+            show_class(c);
+        } else {
+            hide_class(c);
         }
 
         var c = "mh-lang-menu-" + i;
@@ -33,20 +65,16 @@ function switchLanguage() {
     }
 }
 
-function onCheckDisplay(checkbox, class_to_display, class_to_hide) {
-    for (element of document.getElementsByClassName(class_to_display)) {
-        if (checkbox.checked) {
-            element.classList.remove("mh-hidden")
-        } else {
-            element.classList.add("mh-hidden")
+function onCheckDisplay(checkbox, class_to_show, class_to_hide) {
+    if (checkbox.checked) {
+        show_class(class_to_show)
+        if (class_to_hide != null) {
+            hide_class(class_to_hide)
         }
-    }
-
-    for (element of document.getElementsByClassName(class_to_hide)) {
-        if (!checkbox.checked) {
-            element.classList.remove("mh-hidden")
-        } else {
-            element.classList.add("mh-hidden")
+    } else {
+        hide_class(class_to_show)
+        if (class_to_hide != null) {
+            show_class(class_to_hide)
         }
     }
 }

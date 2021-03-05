@@ -2,6 +2,7 @@ use super::gen_monster::gen_monster;
 use super::pedia::*;
 use crate::msg::*;
 use crate::part_color::*;
+use crate::rsz::*;
 use anyhow::*;
 use chrono::prelude::*;
 use std::convert::TryInto;
@@ -120,6 +121,7 @@ pub fn gen_monsters(
     small_monsters: Vec<Monster>,
     monster_names: &Msg,
     monster_aliases: &Msg,
+    condition_preset: &EnemyConditionPresetData,
     root: &Path,
 ) -> Result<()> {
     let monsters_path = root.join("monster.html");
@@ -178,13 +180,25 @@ pub fn gen_monsters(
     let monster_path = root.join("monster");
     create_dir(&monster_path)?;
     for monster in monsters {
-        gen_monster(true, monster, &monster_aliases, &monster_path)?;
+        gen_monster(
+            true,
+            monster,
+            &monster_aliases,
+            condition_preset,
+            &monster_path,
+        )?;
     }
 
     let monster_path = root.join("small-monster");
     create_dir(&monster_path)?;
     for monster in small_monsters {
-        gen_monster(false, monster, &monster_aliases, &monster_path)?;
+        gen_monster(
+            false,
+            monster,
+            &monster_aliases,
+            condition_preset,
+            &monster_path,
+        )?;
     }
     Ok(())
 }
@@ -279,6 +293,7 @@ pub fn gen_website(pedia: Pedia, output: &str) -> Result<()> {
         pedia.small_monsters,
         &pedia.monster_names,
         &pedia.monster_aliases,
+        &pedia.condition_preset,
         &root,
     )?;
     gen_about(&root)?;

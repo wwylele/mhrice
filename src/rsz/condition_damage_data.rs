@@ -303,7 +303,7 @@ rsz_struct! {
 
 rsz_enum! {
     #[rsz(u8)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone, Copy)]
     pub enum ConditionDamageDataUsed {
         Use = 0,
         NotUse = 1,

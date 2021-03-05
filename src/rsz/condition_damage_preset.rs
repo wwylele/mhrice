@@ -198,3 +198,79 @@ rsz_struct! {
         pub steel_fang_data: Vec<PresetSteelFangData>,
     }
 }
+
+pub trait ConditionDamage<ConditionPresetType>: Sized {
+    const UNIQUE_INDEX: usize;
+
+    fn preset_get_inner(preset: &ConditionPresetType) -> &Self;
+    fn get_preset_index(&self) -> u32;
+    fn preset_from_package(package: &EnemyConditionPresetData) -> &[ConditionPresetType];
+
+    fn or_preset<'a>(&'a self, package: &'a EnemyConditionPresetData) -> Result<&'a Self>
+    where
+        ConditionPresetType: 'static,
+    {
+        let index = usize::try_from(self.get_preset_index())?;
+        if index > Self::UNIQUE_INDEX {
+            bail!("Unknown index");
+        }
+        Ok(Self::preset_from_package(package)
+            .get(index)
+            .map(|p| Self::preset_get_inner(p))
+            .unwrap_or(self))
+    }
+
+    fn verify(package: &EnemyConditionPresetData) -> Result<()> {
+        if Self::preset_from_package(package).len() != Self::UNIQUE_INDEX {
+            bail!("UNIQUE_INDEX mismatch");
+        }
+        Ok(())
+    }
+}
+
+macro_rules! cond {
+    ($(($damage:ty, $preset:ty, $preset_member:ident, $unique:expr),)*) => {
+        $(impl ConditionDamage<$preset> for $damage {
+            const UNIQUE_INDEX: usize = $unique;
+
+            fn preset_get_inner(preset: &$preset) -> &Self {
+                &preset.base
+            }
+            fn get_preset_index(&self) -> u32 {
+                self.preset_type
+            }
+            fn preset_from_package(package: &EnemyConditionPresetData) -> &[$preset] {
+                &package.$preset_member
+            }
+        })*
+
+        impl EnemyConditionPresetData {
+            pub fn verify(&self) -> Result<()> {
+                $(<$damage as ConditionDamage<$preset>>::verify(self).context(stringify!($damage))?;)*
+                Ok(())
+            }
+        }
+    };
+}
+
+cond! {
+    (ParalyzeDamageData, PresetParalyzeData, paralyze_data, 6),
+    (SleepDamageData, PresetSleepData, sleep_data, 4),
+    (StunDamageData, PresetStunData, stun_data, 6),
+    (FlashDamageData, PresetFlashData, flash_data, 3), // TDB says this should be 2, what?!
+    (BlastDamageData, PresetBlastData, blast_data, 6),
+    (StaminaDamageData, PresetStaminaData, stamina_data, 3),
+    (PoisonDamageData, PresetPoison, poison_data, 7),
+    (FireDamageData, PresetFireData, fire_data, 2),
+    (WaterDamageData, PresetWater, water_data, 2),
+    (IceDamageData, PresetIceData, ice_data, 2),
+    (ThunderDamageData, PresetThunderData, thunder_data, 2),
+    (FallTrapDamageData, PresetFallTrapData, fall_trap_data, 1),
+    (FallQuickSandDamageData, PresetFallQuickSandData, fall_quick_sand_data, 1),
+    (FallOtomoTrapDamageData, PresetFallOtomoTrapData, fall_otomo_trap_data, 1),
+    (ShockTrapDamageData, PresetShockTrapData, shock_trap_data, 1),
+    (ShockTrapDamageData, PresetShockOtomoTrapData, shock_otomo_trap_data, 1),
+    (CaptureDamageData, PresetCaptureData, capture_data, 1),
+    (KoyashiDamageData, PresetKoyashiData, koyashi_data, 1),
+    (SteelFangData, PresetSteelFangData, steel_fang_data, 1),
+}

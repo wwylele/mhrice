@@ -26,20 +26,20 @@ fn safe_float(v: f32) -> String {
     }
 }
 
-fn gen_condition_base(data: ConditionDamageDataBase) -> Vec<Box<dyn TableColumnContent<String>>> {
+fn gen_condition_base(data: &ConditionDamageDataBase) -> Vec<Box<dyn TableColumnContent<String>>> {
     vec![
         html!(<td>
             <span class="mh-default-cond">{text!("{} (+{}) → {}",
                 data.default_stock.default_limit, data.default_stock.add_limit, data.default_stock.max_limit)}
             </span>
-            <span class="mh-ride-cond mh-hidden">{text!("{} (+{}) → {}",
+            <span class="mh-ride-cond">{text!("{} (+{}) → {}",
                 data.ride_stock.default_limit, data.ride_stock.add_limit, data.ride_stock.max_limit)}
             </span>
         </td>),
         html!(<td>
             <span class="mh-default-cond">{text!("{} / {} sec",
                 data.default_stock.sub_value, data.default_stock.sub_interval)}</span>
-            <span class="mh-ride-cond mh-hidden">{text!("{} / {} sec",
+            <span class="mh-ride-cond">{text!("{} / {} sec",
                 data.ride_stock.sub_value, data.ride_stock.sub_interval)}</span>
         </td>),
         html!(<td>{text!("{}", data.max_stock)}</td>),
@@ -50,21 +50,28 @@ fn gen_condition_base(data: ConditionDamageDataBase) -> Vec<Box<dyn TableColumnC
     ]
 }
 
-fn gen_disabled(used: ConditionDamageDataUsed) -> &'static str {
+fn gen_disabled(used: ConditionDamageDataUsed, is_preset: Option<bool>) -> String {
     match used {
         ConditionDamageDataUsed::Use => "",
-        ConditionDamageDataUsed::NotUse => "mh-disabled",
+        ConditionDamageDataUsed::NotUse => "mh-disabled ",
     }
+    .to_string()
+        + match is_preset {
+            None => "",
+            Some(false) => "mh-no-preset",
+            Some(true) => "mh-preset",
+        }
 }
 
 fn gen_condition_paralyze(
-    data: ParalyzeDamageData,
+    is_preset: bool,
+    data: &ParalyzeDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td>"Paralyze"</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td> {text!("Preset={}", data.preset_type)} </td>
         </tr>
     );
@@ -72,13 +79,14 @@ fn gen_condition_paralyze(
 }
 
 fn gen_condition_sleep(
-    data: SleepDamageData,
+    is_preset: bool,
+    data: &SleepDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td>"Sleep"</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td> {text!("Preset = {}", data.preset_type)} </td>
         </tr>
     );
@@ -86,13 +94,14 @@ fn gen_condition_sleep(
 }
 
 fn gen_condition_stun(
-    data: StunDamageData,
+    is_preset: bool,
+    data: &StunDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td>"Stun"</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td> {text!("Preset = {}", data.preset_type)} </td>
         </tr>
     );
@@ -100,13 +109,14 @@ fn gen_condition_stun(
 }
 
 fn gen_condition_stamina(
-    data: StaminaDamageData,
+    is_preset: bool,
+    data: &StaminaDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td>"Exhaust"</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td> {text!("Stamina reduction = {}, Preset={}", data.sub_stamina, data.preset_type)} </td>
         </tr>
     );
@@ -114,7 +124,8 @@ fn gen_condition_stamina(
 }
 
 fn gen_condition_flash(
-    data: FlashDamageData,
+    is_preset: bool,
+    data: &FlashDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let mut ignore_refresh_stance = vec![];
@@ -147,12 +158,18 @@ fn gen_condition_flash(
         ignore_refresh_stance.push("ceiling");
     }
 
+    let caption = if is_preset {
+        "Flash (preset, broken?)"
+    } else {
+        "Flash (not preset)"
+    };
+
     let content = html!(
-        <tr class=gen_disabled(used)>
-            <td>"Flash"</td>
-            { gen_condition_base(data.base) }
+        <tr class={gen_disabled(used, None).as_str()}>
+            <td>{text!("{}", caption)}</td>
+            { gen_condition_base(&data.base) }
             <td>
-            { data.damage_lvs.into_iter().map(|lv| {
+            { data.damage_lvs.iter().map(|lv| {
                 html!(<div> {
                     text!("Activate count = {}, Active time = {}",
                     lv.activate_count, lv.active_time)
@@ -171,13 +188,14 @@ fn gen_condition_flash(
 }
 
 fn gen_condition_poison(
-    data: PoisonDamageData,
+    is_preset: bool,
+    data: &PoisonDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td>"Poison"</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td> {text!("Preset = {}", data.preset_type)} </td>
         </tr>
     );
@@ -185,13 +203,14 @@ fn gen_condition_poison(
 }
 
 fn gen_condition_blast(
-    data: BlastDamageData,
+    is_preset: bool,
+    data: &BlastDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td>"Blast"</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td> {text!("Blast damage = {}, Preset = {}", data.blast_damage, data.preset_type)} </td>
         </tr>
     );
@@ -199,7 +218,7 @@ fn gen_condition_blast(
 }
 
 fn gen_condition_ride(
-    data: MarionetteStartDamageData,
+    data: &MarionetteStartDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let use_data = match data.use_data {
@@ -207,9 +226,9 @@ fn gen_condition_ride(
         UseDataType::Unique => "unique",
     };
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, None).as_str()}>
             <td>"Ride"</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td> {text!("{}, Nora first limit = {}", use_data, data.nora_first_limit)} </td>
         </tr>
     );
@@ -217,13 +236,14 @@ fn gen_condition_ride(
 }
 
 fn gen_condition_water(
-    data: WaterDamageData,
+    is_preset: bool,
+    data: &WaterDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td>"Water"</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td>
             {text!("Melee hzv adjust: hard = {}, soft = {}, judge = {}",
                 data.slash_strike_adjust.hard_meat_adjust_value,
@@ -245,13 +265,14 @@ fn gen_condition_water(
 }
 
 fn gen_condition_fire(
-    data: FireDamageData,
+    is_preset: bool,
+    data: &FireDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td>"Fire"</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td> {text!("Hit-damage rate = {}, Preset = {}", data.hit_damage_rate, data.preset_type)} </td>
         </tr>
     );
@@ -259,13 +280,14 @@ fn gen_condition_fire(
 }
 
 fn gen_condition_ice(
-    data: IceDamageData,
+    is_preset: bool,
+    data: &IceDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td>"Ice"</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td> {text!("Motion speed rate = {}, Preset = {}", data.motion_speed_rate, data.preset_type)} </td>
         </tr>
     );
@@ -273,13 +295,14 @@ fn gen_condition_ice(
 }
 
 fn gen_condition_thunder(
-    data: ThunderDamageData,
+    is_preset: bool,
+    data: &ThunderDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td>"Thunder"</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td>
             {text!("Stun hzv adjust: rate = {}, min = {}, max = {}, default = {}",
                 data.stun_meat_adjust.hit_damage_to_stun_rate,
@@ -304,13 +327,14 @@ fn gen_condition_thunder(
 }
 
 fn gen_condition_fall_trap(
-    data: FallTrapDamageData,
+    is_preset: bool,
+    data: &FallTrapDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td>"Fall trap"</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td> {text!("Preset = {}", data.preset_type)} </td>
         </tr>
     );
@@ -318,13 +342,14 @@ fn gen_condition_fall_trap(
 }
 
 fn gen_condition_fall_quick_sand(
-    data: FallQuickSandDamageData,
+    is_preset: bool,
+    data: &FallQuickSandDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td class="mh-spoiler">"Quick sand"</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td> {text!("Preset = {}", data.preset_type)} </td>
         </tr>
     );
@@ -332,13 +357,14 @@ fn gen_condition_fall_quick_sand(
 }
 
 fn gen_condition_fall_otomo_trap(
-    data: FallOtomoTrapDamageData,
+    is_preset: bool,
+    data: &FallOtomoTrapDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td class="mh-spoiler">"Buddy fall trap"</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td> {text!("Poison stacking = {}, Preset = {}",
                 data.already_poison_stock_value, data.preset_type)} </td>
         </tr>
@@ -347,13 +373,14 @@ fn gen_condition_fall_otomo_trap(
 }
 
 fn gen_condition_shock_trap(
-    data: ShockTrapDamageData,
+    is_preset: bool,
+    data: &ShockTrapDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td>"Shock trap"</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td> {text!("Preset = {}", data.preset_type)} </td>
         </tr>
     );
@@ -361,13 +388,14 @@ fn gen_condition_shock_trap(
 }
 
 fn gen_condition_shock_otomo_trap(
-    data: ShockTrapDamageData,
+    is_preset: bool,
+    data: &ShockTrapDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td class="mh-spoiler">"Buddy shock trap"</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td> {text!("Preset = {}", data.preset_type)} </td>
         </tr>
     );
@@ -375,13 +403,14 @@ fn gen_condition_shock_otomo_trap(
 }
 
 fn gen_condition_capture(
-    data: CaptureDamageData,
+    is_preset: bool,
+    data: &CaptureDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td>"Capture"</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td> {text!("Preset = {}", data.preset_type)} </td>
         </tr>
     );
@@ -389,13 +418,14 @@ fn gen_condition_capture(
 }
 
 fn gen_condition_dung(
-    data: KoyashiDamageData,
+    is_preset: bool,
+    data: &KoyashiDamageData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td>"Dung"</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td> {text!("Preset = {}", data.preset_type)} </td>
         </tr>
     );
@@ -403,13 +433,14 @@ fn gen_condition_dung(
 }
 
 fn gen_condition_steel_fang(
-    data: SteelFangData,
+    is_preset: bool,
+    data: &SteelFangData,
     used: ConditionDamageDataUsed,
 ) -> Result<Box<tr<String>>> {
     let content = html!(
-        <tr class=gen_disabled(used)>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td class="mh-spoiler">"\"Steel fang\""</td>
-            { gen_condition_base(data.base) }
+            { gen_condition_base(&data.base) }
             <td> {text!("Active limit = {}, Preset = {}, Unique target param = {}",
                 data.active_limit_count, data.preset_type, data.is_unique_target_param)}
                 <br />
@@ -425,6 +456,7 @@ pub fn gen_monster(
     is_large: bool,
     monster: Monster,
     monster_aliases: &Msg,
+    condition_preset: &EnemyConditionPresetData,
     folder: &Path,
 ) -> Result<()> {
     let collider_mapping = monster.collider_mapping;
@@ -536,7 +568,7 @@ pub fn gen_monster(
                             ];
 
                             let hidden = if invalid {
-                                "mh-invalid-meat mh-hidden"
+                                "mh-invalid-meat"
                             } else {
                                 ""
                             };
@@ -590,7 +622,7 @@ pub fn gen_monster(
                             let part_color = format!("mh-part-{}", index);
 
                             let hidden = if part.extractive_type == ExtractiveType::None {
-                                "mh-invalid-part mh-hidden"
+                                "mh-invalid-part"
                             } else {
                                 ""
                             };
@@ -612,6 +644,10 @@ pub fn gen_monster(
                     <input type="checkbox" onclick="onCheckDisplay(this, 'mh-ride-cond', 'mh-default-cond')" id="mh-ride-cond-check"/>
                     <label for="mh-ride-cond-check">"Display data for riding"</label>
                 </div>
+                <div>
+                    <input type="checkbox" onclick="onCheckDisplay(this, 'mh-no-preset', 'mh-preset')" id="mh-preset-check"/>
+                    <label for="mh-preset-check">"Don't override with preset data"</label>
+                </div>
                 <table>
                     <thead>
                         <tr>
@@ -626,26 +662,52 @@ pub fn gen_monster(
                         </tr>
                     </thead>
                     <tbody>
-                        {gen_condition_paralyze(monster.condition_damage_data.paralyze_data, monster.condition_damage_data.use_paralyze)}
-                        {gen_condition_sleep(monster.condition_damage_data.sleep_data, monster.condition_damage_data.use_sleep)}
-                        {gen_condition_stun(monster.condition_damage_data.stun_data, monster.condition_damage_data.use_stun)}
-                        {gen_condition_stamina(monster.condition_damage_data.stamina_data, monster.condition_damage_data.use_stamina)}
-                        {gen_condition_flash(monster.condition_damage_data.flash_data, monster.condition_damage_data.use_flash)}
-                        {gen_condition_poison(monster.condition_damage_data.poison_data, monster.condition_damage_data.use_poison)}
-                        {gen_condition_blast(monster.condition_damage_data.blast_data, monster.condition_damage_data.use_blast)}
-                        {gen_condition_ride(monster.condition_damage_data.marionette_data, monster.condition_damage_data.use_ride)}
-                        {gen_condition_water(monster.condition_damage_data.water_data, monster.condition_damage_data.use_water)}
-                        {gen_condition_fire(monster.condition_damage_data.fire_data, monster.condition_damage_data.use_fire)}
-                        {gen_condition_ice(monster.condition_damage_data.ice_data, monster.condition_damage_data.use_ice)}
-                        {gen_condition_thunder(monster.condition_damage_data.thunder_data, monster.condition_damage_data.use_thunder)}
-                        {gen_condition_fall_trap(monster.condition_damage_data.fall_trap_data, monster.condition_damage_data.use_fall_trap)}
-                        {gen_condition_fall_quick_sand(monster.condition_damage_data.fall_quick_sand_data, monster.condition_damage_data.use_fall_quick_sand)}
-                        {gen_condition_fall_otomo_trap(monster.condition_damage_data.fall_otomo_trap_data, monster.condition_damage_data.use_fall_otomo_trap)}
-                        {gen_condition_shock_trap(monster.condition_damage_data.shock_trap_data, monster.condition_damage_data.use_shock_trap)}
-                        {gen_condition_shock_otomo_trap(monster.condition_damage_data.shock_otomo_trap_data, monster.condition_damage_data.use_shock_otomo_trap)}
-                        {gen_condition_capture(monster.condition_damage_data.capture_data, monster.condition_damage_data.use_capture)}
-                        {gen_condition_dung(monster.condition_damage_data.koyashi_data, monster.condition_damage_data.use_dung)}
-                        {gen_condition_steel_fang(monster.condition_damage_data.steel_fang_data, monster.condition_damage_data.use_steel_fang)}
+                        {gen_condition_paralyze(false, &monster.condition_damage_data.paralyze_data, monster.condition_damage_data.use_paralyze)}
+                        {gen_condition_sleep(false, &monster.condition_damage_data.sleep_data, monster.condition_damage_data.use_sleep)}
+                        {gen_condition_stun(false, &monster.condition_damage_data.stun_data, monster.condition_damage_data.use_stun)}
+                        {gen_condition_stamina(false, &monster.condition_damage_data.stamina_data, monster.condition_damage_data.use_stamina)}
+
+                        {gen_condition_paralyze(true, monster.condition_damage_data.paralyze_data.or_preset(condition_preset)?, monster.condition_damage_data.use_paralyze)}
+                        {gen_condition_sleep(true, monster.condition_damage_data.sleep_data.or_preset(condition_preset)?, monster.condition_damage_data.use_sleep)}
+                        {gen_condition_stun(true, monster.condition_damage_data.stun_data.or_preset(condition_preset)?, monster.condition_damage_data.use_stun)}
+                        {gen_condition_stamina(true, monster.condition_damage_data.stamina_data.or_preset(condition_preset)?, monster.condition_damage_data.use_stamina)}
+
+                        {gen_condition_flash(false, &monster.condition_damage_data.flash_data, monster.condition_damage_data.use_flash)}
+                        {gen_condition_flash(true, monster.condition_damage_data.flash_data.or_preset(condition_preset)?, monster.condition_damage_data.use_flash)}
+
+                        {gen_condition_poison(false, &monster.condition_damage_data.poison_data, monster.condition_damage_data.use_poison)}
+                        {gen_condition_blast(false, &monster.condition_damage_data.blast_data, monster.condition_damage_data.use_blast)}
+
+                        {gen_condition_poison(true, monster.condition_damage_data.poison_data.or_preset(condition_preset)?, monster.condition_damage_data.use_poison)}
+                        {gen_condition_blast(true, monster.condition_damage_data.blast_data.or_preset(condition_preset)?, monster.condition_damage_data.use_blast)}
+
+                        {gen_condition_ride(&monster.condition_damage_data.marionette_data, monster.condition_damage_data.use_ride)}
+
+                        {gen_condition_water(false, &monster.condition_damage_data.water_data, monster.condition_damage_data.use_water)}
+                        {gen_condition_fire(false, &monster.condition_damage_data.fire_data, monster.condition_damage_data.use_fire)}
+                        {gen_condition_ice(false, &monster.condition_damage_data.ice_data, monster.condition_damage_data.use_ice)}
+                        {gen_condition_thunder(false, &monster.condition_damage_data.thunder_data, monster.condition_damage_data.use_thunder)}
+                        {gen_condition_fall_trap(false, &monster.condition_damage_data.fall_trap_data, monster.condition_damage_data.use_fall_trap)}
+                        {gen_condition_fall_quick_sand(false, &monster.condition_damage_data.fall_quick_sand_data, monster.condition_damage_data.use_fall_quick_sand)}
+                        {gen_condition_fall_otomo_trap(false, &monster.condition_damage_data.fall_otomo_trap_data, monster.condition_damage_data.use_fall_otomo_trap)}
+                        {gen_condition_shock_trap(false, &monster.condition_damage_data.shock_trap_data, monster.condition_damage_data.use_shock_trap)}
+                        {gen_condition_shock_otomo_trap(false, &monster.condition_damage_data.shock_otomo_trap_data, monster.condition_damage_data.use_shock_otomo_trap)}
+                        {gen_condition_capture(false, &monster.condition_damage_data.capture_data, monster.condition_damage_data.use_capture)}
+                        {gen_condition_dung(false, &monster.condition_damage_data.koyashi_data, monster.condition_damage_data.use_dung)}
+                        {gen_condition_steel_fang(false, &monster.condition_damage_data.steel_fang_data, monster.condition_damage_data.use_steel_fang)}
+
+                        {gen_condition_water(true, monster.condition_damage_data.water_data.or_preset(condition_preset)?, monster.condition_damage_data.use_water)}
+                        {gen_condition_fire(true, monster.condition_damage_data.fire_data.or_preset(condition_preset)?, monster.condition_damage_data.use_fire)}
+                        {gen_condition_ice(true, monster.condition_damage_data.ice_data.or_preset(condition_preset)?, monster.condition_damage_data.use_ice)}
+                        {gen_condition_thunder(true, monster.condition_damage_data.thunder_data.or_preset(condition_preset)?, monster.condition_damage_data.use_thunder)}
+                        {gen_condition_fall_trap(true, monster.condition_damage_data.fall_trap_data.or_preset(condition_preset)?, monster.condition_damage_data.use_fall_trap)}
+                        {gen_condition_fall_quick_sand(true, monster.condition_damage_data.fall_quick_sand_data.or_preset(condition_preset)?, monster.condition_damage_data.use_fall_quick_sand)}
+                        {gen_condition_fall_otomo_trap(true, monster.condition_damage_data.fall_otomo_trap_data.or_preset(condition_preset)?, monster.condition_damage_data.use_fall_otomo_trap)}
+                        {gen_condition_shock_trap(true, <ShockTrapDamageData as ConditionDamage<PresetShockTrapData>>::or_preset(&monster.condition_damage_data.shock_trap_data, condition_preset)?, monster.condition_damage_data.use_shock_trap)}
+                        {gen_condition_shock_otomo_trap(true, <ShockTrapDamageData as ConditionDamage<PresetShockOtomoTrapData>>::or_preset(&monster.condition_damage_data.shock_trap_data, condition_preset)?, monster.condition_damage_data.use_shock_otomo_trap)}
+                        {gen_condition_capture(true, monster.condition_damage_data.capture_data.or_preset(condition_preset)?, monster.condition_damage_data.use_capture)}
+                        {gen_condition_dung(true, monster.condition_damage_data.koyashi_data.or_preset(condition_preset)?, monster.condition_damage_data.use_dung)}
+                        {gen_condition_steel_fang(true, monster.condition_damage_data.steel_fang_data.or_preset(condition_preset)?, monster.condition_damage_data.use_steel_fang)}
                     </tbody>
                 </table>
                 </section>
