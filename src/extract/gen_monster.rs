@@ -3,7 +3,7 @@ use super::pedia::*;
 use crate::msg::*;
 use crate::rsz::*;
 use anyhow::*;
-use std::convert::TryInto;
+use std::convert::TryFrom;
 use std::fs::write;
 use std::path::*;
 use typed_html::{dom::*, elements::*, html, text, types::*};
@@ -460,6 +460,8 @@ pub fn gen_monster(
     folder: &Path,
 ) -> Result<()> {
     let collider_mapping = monster.collider_mapping;
+    let enemy_parts_break_data_list = monster.data_tune.enemy_parts_break_data_list;
+    let enemy_parts_loss_data_list = monster.data_tune.enemy_parts_loss_data_list;
     let meat_figure = format!(
         "/resources/{}{:03}_meat.png",
         if is_large { "em" } else { "ems" },
@@ -608,6 +610,8 @@ pub fn gen_monster(
                         <tr>
                             <th>"Part"</th>
                             <th>"Stagger"</th>
+                            <th>"Break"</th>
+                            <th>"Sever"</th>
                             <th>"Extract"</th>
                         </tr>
                     </thead>
@@ -626,12 +630,46 @@ pub fn gen_monster(
                             } else {
                                 ""
                             };
-                            html!(<tr class=hidden>
+
+                            let index_u16 = u16::try_from(index)?;
+
+                            let mut part_break_iter = enemy_parts_break_data_list.iter()
+                                .filter(|p| p.parts_group == index_u16);
+                            let part_break = if let Some(part_break) = part_break_iter.next() {
+                                if part_break_iter.next().is_some() {
+                                    bail!("Duplicated part break data found");
+                                }
+                                part_break.parts_break_data_list.iter().map(
+                                    |p| format!("({}) {}", p.break_level, p.vital)
+                                ).collect::<Vec<_>>().join(" / ")
+                            } else {
+                                "".to_string()
+                            };
+
+                            let mut part_loss_iter = enemy_parts_loss_data_list.iter()
+                                .filter(|p| p.parts_group == index_u16);
+                            let part_loss = if let Some(part_loss) = part_loss_iter.next() {
+                                if part_loss_iter.next().is_some() {
+                                    bail!("Duplicated part loss data found");
+                                }
+                                let attr = match part_loss.parts_loss_data.permit_damage_attr {
+                                    PermitDamageAttrEnum::Slash => "(Slash) ",
+                                    PermitDamageAttrEnum::Strike => "(Impact) ",
+                                    PermitDamageAttrEnum::All => "",
+                                };
+                                format!("{}{}", attr, part_loss.parts_loss_data.vital)
+                            } else {
+                                "".to_string()
+                            };
+
+                            Ok(html!(<tr class=hidden>
                                 <td><span class=part_color.as_str()>"■"</span>{ text!("{}", part_name) }</td>
                                 <td>{ text!("{}", part.vital) }</td>
+                                <td>{ text!("{}", part_break) }</td>
+                                <td>{ text!("{}", part_loss) }</td>
                                 <td>{ gen_extractive_type(part.extractive_type) }</td>
-                            </tr>)
-                        })
+                            </tr>))
+                        }).collect::<Result<Vec<_>>>()?
                     }</tbody>
                 </table>
                 </section>

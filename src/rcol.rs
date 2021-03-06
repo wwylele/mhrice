@@ -74,7 +74,7 @@ pub struct Collider {
     pub bone_b: String,
     pub shape: Shape,
     pub user_data: UserData,
-    pub attribute_bits: u32,
+    pub ignore_tag_bits: u32,
 }
 pub struct ColliderGroup {
     pub name: String,
@@ -97,7 +97,7 @@ pub struct E {
 pub struct Rcol {
     pub rsz: Rsz,
     pub collider_groups: Vec<ColliderGroup>,
-    pub attributes: Vec<String>,
+    pub ignore_tags: Vec<String>,
     pub group_attachments: Vec<GroupAttachment>,
     pub es: Vec<E>,
 }
@@ -114,7 +114,7 @@ impl Rcol {
 
         let group_attachment_count = file.read_u32()?;
         file.read_u32()?;
-        let attribute_count = file.read_u32()?;
+        let ignore_tag_count = file.read_u32()?;
         let e_count = file.read_u32()?;
 
         let rsz_len = file.read_u32()?;
@@ -124,7 +124,7 @@ impl Rcol {
         let rsz_offset = file.read_u64()?;
         let group_attachment_offset = file.read_u64()?;
 
-        let attribute_offset = file.read_u64()?;
+        let ignore_tag_offset = file.read_u64()?;
         let e_offset = file.read_u64()?;
         let string_table_offset = e_offset + u64::from(e_count) * 0x40;
 
@@ -160,7 +160,7 @@ impl Rcol {
                 }
                 let m_offset = file.read_u64()?;
                 if !(m_offset >= group_attachment_offset + 0x30 * u64::from(group_attachment_count)
-                    && m_offset <= attribute_offset)
+                    && m_offset <= ignore_tag_offset)
                 {
                     bail!("m offset out of bound")
                 }
@@ -196,9 +196,9 @@ impl Rcol {
                         if x != 0 {
                             bail!("Expected zero");
                         }
-                        let attribute_bits = file.read_u32()?;
-                        if attribute_bits >= 1 << attribute_count {
-                            bail!("attribute out of bound")
+                        let ignore_tag_bits = file.read_u32()?;
+                        if ignore_tag_bits >= 1 << ignore_tag_count {
+                            bail!("ignore_tag out of bound")
                         }
 
                         let bone_a_offset = file.read_u64()?;
@@ -271,7 +271,7 @@ impl Rcol {
                             bone_b,
                             shape,
                             user_data: UserData::RszRootIndex(rsz_root_index.try_into()?),
-                            attribute_bits,
+                            ignore_tag_bits,
                         })
                     })
                     .collect::<Result<Vec<_>>>()?;
@@ -353,8 +353,8 @@ impl Rcol {
 
         // Some data pointed by A is in between here
 
-        file.seek(SeekFrom::Start(attribute_offset))?;
-        let attributes = (0..attribute_count)
+        file.seek(SeekFrom::Start(ignore_tag_offset))?;
+        let ignore_tags = (0..ignore_tag_count)
             .map(|_| {
                 let name_offset = file.read_u64()?;
                 if name_offset < string_table_offset {
@@ -412,7 +412,7 @@ impl Rcol {
         Ok(Rcol {
             rsz,
             collider_groups,
-            attributes,
+            ignore_tags,
             group_attachments,
             es,
         })
@@ -432,7 +432,7 @@ impl Rcol {
             for collider in &collider_group.colliders {
                 println!(
                     " - {}, {}, {}, /** {} **/",
-                    collider.name, collider.bone_a, collider.bone_b, collider.attribute_bits
+                    collider.name, collider.bone_a, collider.bone_b, collider.ignore_tag_bits
                 );
                 if let UserData::Data(data) = &collider.user_data {
                     print_user_data(data);
@@ -443,8 +443,8 @@ impl Rcol {
             }
         }
 
-        for attribute in &self.attributes {
-            println!("* {}", attribute);
+        for ignore_tag in &self.ignore_tags {
+            println!("* {}", ignore_tag);
         }
 
         for c in &self.group_attachments {
@@ -499,7 +499,7 @@ impl Rcol {
 
     pub fn get_monster_ride_filter(&self) -> u32 {
         if let Some((i, _)) = self
-            .attributes
+            .ignore_tags
             .iter()
             .enumerate()
             .find(|(_, s)| *s == "操獣受付中の追加アタリ")
@@ -525,8 +525,8 @@ impl Rcol {
             .get(usize::try_from(position.offset)?..)
             .context("Vertex out of bound")?;
 
-        let attribute_filter = self.get_monster_ride_filter();
-        if attribute_filter == 0 {
+        let ignore_tag_filter = self.get_monster_ride_filter();
+        if ignore_tag_filter == 0 {
             bail!("Didn't find monster ride filter")
         }
 
@@ -550,7 +550,7 @@ impl Rcol {
                     }
 
                     for collider in &group.colliders {
-                        if collider.attribute_bits & attribute_filter != 0 {
+                        if collider.ignore_tag_bits & ignore_tag_filter != 0 {
                             continue;
                         }
                         if let Some(data) =

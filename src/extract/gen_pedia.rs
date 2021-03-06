@@ -45,7 +45,7 @@ pub fn gen_collider_mapping(rcol: Rcol) -> Result<ColliderMapping> {
         if rcol.collider_groups[attachment.collider_group_index]
             .colliders
             .iter()
-            .all(|collider| collider.attribute_bits & filter != 0)
+            .all(|collider| collider.ignore_tag_bits & filter != 0)
         {
             continue;
         }
@@ -63,7 +63,7 @@ pub fn gen_collider_mapping(rcol: Rcol) -> Result<ColliderMapping> {
 
     for group in rcol.collider_groups {
         for collider in group.colliders {
-            if collider.attribute_bits & filter != 0 {
+            if collider.ignore_tag_bits & filter != 0 {
                 continue;
             }
             if let Some(data) = collider.user_data.downcast::<EmHitDamageShapeData>() {

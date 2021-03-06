@@ -17,7 +17,7 @@ rsz_struct! {
         pub parts_condition_id: i32,
         pub effect_container_id: i32,
         pub effect_element_id: i32,
-        pub ignore_tag_value: u32,
+        pub ignore_tag_value: u32, // refers to ignore tag name hash in rcol
     }
 }
 
@@ -44,7 +44,7 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyPartsBreakData.PartsLossData")]
     #[derive(Debug, Serialize)]
     pub struct PartsLossData {
-        pub  parts_condition_id: i32,
+        pub parts_condition_id: i32,
         pub ignore_tag_value: u32,
         pub parts_loss_effect_container_id: u32,
         pub parts_loss_effect_element_id: u32,
