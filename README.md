@@ -10,6 +10,12 @@ Yes, you can. I open-sourced this because I want to share it.
 
 Although I don't enforce anything beyond the license conditions, I kindly ask you to give attribution to the mhrice project if you use the code or the output from it in another places. Thank you!
 
+## Platform and dependency
+
+ - Actively tested on linux. Might work on Windows or macOS. (If not please open an issue)
+ - Rust, cargo
+ - OpenGL 3.3 if running any model-related command
+ - C++, CMake, for a ASTC decoding library in C++. RIIR to remove this dependency is still WIP
 
 ## License
 
