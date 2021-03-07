@@ -1,0 +1,3 @@
+[submodule "astc/astc-codec"]
+	path = astc/astc-codec
+	url = https://github.com/google/astc-codec

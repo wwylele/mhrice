@@ -36,6 +36,16 @@ macro_rules! impl_bit {
     };
 }
 
+impl_bit!(u8, a, b);
+impl_bit!(u8, a, b, c);
+impl_bit!(u8, a, b, c, d);
+impl_bit!(u8, a, b, c, d, e);
+
+impl_bit!(u16, a, b);
+impl_bit!(u16, a, b, c);
+impl_bit!(u16, a, b, c, d);
+impl_bit!(u16, a, b, c, d, e);
+
 impl_bit!(u32, a, b);
 impl_bit!(u32, a, b, c);
 impl_bit!(u32, a, b, c, d);

@@ -29,6 +29,7 @@ mod rsz;
 mod scn;
 mod suffix;
 mod tdb;
+mod tex;
 mod user;
 
 use mesh::*;
@@ -38,6 +39,7 @@ use pfb::*;
 use rcol::*;
 use scn::*;
 use tdb::*;
+use tex::*;
 use user::*;
 
 pub mod built_info {
@@ -132,6 +134,11 @@ enum Mhrice {
         pak: String,
     },
 
+    ScanTex {
+        #[structopt(short, long)]
+        pak: String,
+    },
+
     DumpMesh {
         #[structopt(short, long)]
         mesh: String,
@@ -149,6 +156,13 @@ enum Mhrice {
         mesh: String,
         #[structopt(short, long)]
         rcol: String,
+        #[structopt(short, long)]
+        output: String,
+    },
+
+    DumpTex {
+        #[structopt(short, long)]
+        tex: String,
         #[structopt(short, long)]
         output: String,
     },
@@ -480,6 +494,21 @@ fn scan_rcol(pak: String) -> Result<()> {
     Ok(())
 }
 
+fn scan_tex(pak: String) -> Result<()> {
+    let mut pak = PakReader::new(File::open(pak)?)?;
+    let count = pak.get_file_count();
+
+    for i in 0..count {
+        let file = pak.read_file_at(i)?;
+        if file.len() < 4 || file[0..4] != b"TEX\0"[..] {
+            continue;
+        }
+        let _ = Tex::new(Cursor::new(&file)).context(format!("at {}", i))?;
+    }
+
+    Ok(())
+}
+
 fn grep(pak: String, pattern: String) -> Result<()> {
     let mut pak = PakReader::new(File::open(pak)?)?;
     println!("Searching for patterns \"{}\"", &pattern);
@@ -599,6 +628,12 @@ fn dump_rcol(rcol: String) -> Result<()> {
     Ok(())
 }
 
+fn dump_tex(tex: String, output: String) -> Result<()> {
+    let tex = Tex::new(File::open(tex)?)?;
+    tex.save_png(0, 0, Path::new(&output))?;
+    Ok(())
+}
+
 fn dump_meat(mesh: String, rcol: String, output: String) -> Result<()> {
     use std::io::*;
     let mesh = Mesh::new(File::open(mesh)?)?;
@@ -702,9 +737,11 @@ fn main() -> Result<()> {
         Mhrice::DumpTree { pak, list, output } => dump_tree(pak, list, output),
         Mhrice::ScanMesh { pak } => scan_mesh(pak),
         Mhrice::ScanRcol { pak } => scan_rcol(pak),
+        Mhrice::ScanTex { pak } => scan_tex(pak),
         Mhrice::DumpMesh { mesh, output } => dump_mesh(mesh, output),
         Mhrice::DumpRcol { rcol } => dump_rcol(rcol),
         Mhrice::DumpMeat { mesh, rcol, output } => dump_meat(mesh, rcol, output),
+        Mhrice::DumpTex { tex, output } => dump_tex(tex, output),
         Mhrice::GenMeat { pak, index, output } => gen_meat(pak, index, output),
         Mhrice::GenResources { pak, output } => gen_resources(pak, output),
     }

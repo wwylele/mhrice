@@ -1,13 +1,17 @@
 use glium::backend::glutin::headless::Headless;
 use glium::*;
 use once_cell::sync::Lazy;
+use std::convert::TryFrom;
 use std::marker::*;
 use std::path::Path;
 use std::sync::mpsc::*;
 use std::thread::*;
 
+// mod astc;
+mod astc_ffi;
 mod monster_hitzone;
 
+pub use astc_ffi::*;
 pub use monster_hitzone::*;
 
 struct Job {
@@ -73,6 +77,17 @@ pub struct RgbaImage {
 }
 
 impl RgbaImage {
+    pub fn new(data: Vec<u8>, width: u32, height: u32) -> RgbaImage {
+        if data.len() != usize::try_from(width * height * 4).unwrap() {
+            panic!("Wrong size")
+        }
+        RgbaImage {
+            data,
+            width,
+            height,
+        }
+    }
+
     pub fn save_png(&self, output: &Path) -> anyhow::Result<()> {
         let output = std::fs::File::create(output)?;
         let mut encoder = png::Encoder::new(output, self.width, self.height);

@@ -29,15 +29,15 @@ pub struct VertexLayout {
 }
 
 pub struct Point4 {
-    x: f32,
-    y: f32,
-    z: f32,
-    w: f32,
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub w: f32,
 }
 
 pub struct G {
-    a: Point4,
-    b: Point4,
+    pub a: Point4,
+    pub b: Point4,
 }
 
 pub struct Bone {
@@ -71,7 +71,7 @@ impl Mesh {
         }
         let total_len = file.read_u64()?;
 
-        let a_count = file.read_u16()?;
+        let _a_count = file.read_u16()?;
         let string_count = file.read_u16()?;
         let x = file.read_u32()?;
         if x != 0 {
@@ -107,7 +107,7 @@ impl Mesh {
 
             let models = (0..model_count)
                 .map(|_| {
-                    let j = file.read_u32()?;
+                    let _j = file.read_u32()?;
                     let face_count = file.read_u32()?;
                     let index_buffer_start = file.read_u32()?;
                     let vertex_buffer_start = file.read_u32()?;
@@ -160,25 +160,25 @@ impl Mesh {
             file.seek_noop(main_models_offset)?;
             let model_lod_count = file.read_u8()?;
             model_name_count = file.read_u8()?;
-            let a3_count = file.read_u8()?;
-            let a4_count = file.read_u8()?;
-            let a5_count = file.read_u8()?;
+            let _a3_count = file.read_u8()?;
+            let _a4_count = file.read_u8()?;
+            let _a5_count = file.read_u8()?;
             file.seek_align_up(4)?;
 
-            let f0 = file.read_f32()?;
-            let f1 = file.read_f32()?;
-            let f2 = file.read_f32()?;
-            let f3 = file.read_f32()?;
+            let _f0 = file.read_f32()?;
+            let _f1 = file.read_f32()?;
+            let _f2 = file.read_f32()?;
+            let _f3 = file.read_f32()?;
 
-            let g0 = file.read_f32()?;
-            let g1 = file.read_f32()?;
-            let g2 = file.read_f32()?;
-            let g3 = file.read_f32()?;
+            let _g0 = file.read_f32()?;
+            let _g1 = file.read_f32()?;
+            let _g2 = file.read_f32()?;
+            let _g3 = file.read_f32()?;
 
-            let h0 = file.read_f32()?;
-            let h1 = file.read_f32()?;
-            let h2 = file.read_f32()?;
-            let h3 = file.read_f32()?;
+            let _h0 = file.read_f32()?;
+            let _h1 = file.read_f32()?;
+            let _h2 = file.read_f32()?;
+            let _h3 = file.read_f32()?;
 
             let model_lod_list_offset = file.read_u64()?;
             file.seek_noop(model_lod_list_offset)?;
@@ -202,28 +202,28 @@ impl Mesh {
             file.seek_noop(aux_model_offset)?;
 
             let lod_count = file.read_u8()?;
-            let b2_count = file.read_u8()?;
-            let b3_count = file.read_u8()?;
-            let b4_count = file.read_u8()?;
-            let b5_count = file.read_u8()?;
+            let _b2_count = file.read_u8()?;
+            let _b3_count = file.read_u8()?;
+            let _b4_count = file.read_u8()?;
+            let _b5_count = file.read_u8()?;
             file.seek_align_up(4)?;
 
             let lod_list_offset = file.read_u64()?;
 
-            let f0 = file.read_f32()?;
-            let f1 = file.read_f32()?;
-            let f2 = file.read_f32()?;
-            let f3 = file.read_f32()?;
+            let _f0 = file.read_f32()?;
+            let _f1 = file.read_f32()?;
+            let _f2 = file.read_f32()?;
+            let _f3 = file.read_f32()?;
 
-            let g0 = file.read_f32()?;
-            let g1 = file.read_f32()?;
-            let g2 = file.read_f32()?;
-            let g3 = file.read_f32()?;
+            let _g0 = file.read_f32()?;
+            let _g1 = file.read_f32()?;
+            let _g2 = file.read_f32()?;
+            let _g3 = file.read_f32()?;
 
-            let h0 = file.read_f32()?;
-            let h1 = file.read_f32()?;
-            let h2 = file.read_f32()?;
-            let h3 = file.read_f32()?;
+            let _h0 = file.read_f32()?;
+            let _h1 = file.read_f32()?;
+            let _h2 = file.read_f32()?;
+            let _h3 = file.read_f32()?;
 
             file.seek_noop(lod_list_offset)?;
 
@@ -245,10 +245,10 @@ impl Mesh {
             file.seek_noop(c_offset)?;
 
             let c1_count = file.read_u8()?;
-            let c2_count = file.read_u8()?;
-            let c3_count = file.read_u8()?;
-            let c4_count = file.read_u8()?;
-            let f0 = file.read_f32()?;
+            let _c2_count = file.read_u8()?;
+            let _c3_count = file.read_u8()?;
+            let _c4_count = file.read_u8()?;
+            let _f0 = file.read_f32()?;
 
             let ca_offset = file.read_u64()?;
 
@@ -375,7 +375,7 @@ impl Mesh {
         if e_offset != 0 {
             file.seek_assert_align_up(e_offset, 16)?;
             let p_offset = file.read_u64()?;
-            let q_offset = file.read_u64()?;
+            let _q_offset = file.read_u64()?;
             file.seek_noop(p_offset)?;
             //..
             //file.seek_noop(q_offset)?;
@@ -611,13 +611,13 @@ impl Mesh {
             .find(|layout| layout.usage == 0)
             .context("No position data")?;
 
-        let normal = self
+        let _normal = self
             .vertex_layouts
             .iter()
             .find(|layout| layout.usage == 1)
             .context("No position data")?;
 
-        let vertex_count = (self.vertex_layouts[1].offset - self.vertex_layouts[0].offset)
+        let _vertex_count = (self.vertex_layouts[1].offset - self.vertex_layouts[0].offset)
             / self.vertex_layouts[0].width as u32;
 
         if position.width != 12 {

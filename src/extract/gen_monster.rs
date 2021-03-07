@@ -6,7 +6,7 @@ use anyhow::*;
 use std::convert::TryFrom;
 use std::fs::write;
 use std::path::*;
-use typed_html::{dom::*, elements::*, html, text, types::*};
+use typed_html::{dom::*, elements::*, html, text};
 
 fn gen_extractive_type(extractive_type: ExtractiveType) -> Result<Box<span<String>>> {
     match extractive_type {
