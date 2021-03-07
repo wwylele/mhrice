@@ -472,6 +472,12 @@ pub fn gen_monster(
         if is_large { "em" } else { "ems" },
         monster.id
     );
+    let icon = format!(
+        "/resources/{}{:03}_icon.png",
+        if is_large { "em" } else { "ems" },
+        monster.id
+    );
+
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -481,18 +487,21 @@ pub fn gen_monster(
             <body>
                 { navbar() }
                 <main> <div class="container"> <div class="content">
-                <h1 class="title">{
-                    if is_large {
-                        let name_name = format!("Alias_EnemyIndex{:03}",
-                            monster.boss_init_set_data.as_ref()
-                            .context(format!("Cannot found boss_init_set for monster {}", monster.id))?
-                            .enemy_type);
-                        gen_multi_lang(monster_aliases.get_entry(&name_name)
-                            .context(format!("Cannot found name for monster {}", monster.id))?)
-                    } else {
-                        html!(<span>{text!("Monster {:03}", monster.id)}</span>)
-                    }
-                }</h1>
+                <div class="mh-monster-header">
+                    <img src=icon />
+                    <h1 class="title"> {
+                        if is_large {
+                            let name_name = format!("Alias_EnemyIndex{:03}",
+                                monster.boss_init_set_data.as_ref()
+                                .context(format!("Cannot found boss_init_set for monster {}", monster.id))?
+                                .enemy_type);
+                            gen_multi_lang(monster_aliases.get_entry(&name_name)
+                                .context(format!("Cannot found name for monster {}", monster.id))?)
+                        } else {
+                            html!(<span>{text!("Monster {:03}", monster.id)}</span>)
+                        }
+                    }</h1>
+                </div>
                 <section class="section">
                 <h2 class="subtitle">"Basic data"</h2>
                 <p>{ text!("Base HP: {}", monster.data_tune.base_hp_vital) }</p>

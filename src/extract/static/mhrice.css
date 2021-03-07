@@ -38,3 +38,21 @@ span.mh-extract-unknown {
 .mh-ride-cond {
     color: red;
 }
+
+.mh-list-monster-icon {
+    width: 50%;
+}
+
+ul.mh-list-monster {
+    margin: 0 auto;
+    text-align: center;
+}
+
+li.mh-list-monster {
+    display: inline-block;
+    vertical-align: top;
+}
+
+div.mh-monster-header img {
+    float: right;
+}

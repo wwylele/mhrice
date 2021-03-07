@@ -6,6 +6,7 @@ use crate::pak::PakReader;
 use crate::pfb::Pfb;
 use crate::rcol::Rcol;
 use crate::rsz::*;
+use crate::tex::*;
 use crate::user::User;
 use anyhow::*;
 use rayon::prelude::*;
@@ -223,8 +224,8 @@ fn gen_monster_hitzones(
         .map(|(index, mesh, collider)| {
             let mesh = Mesh::new(Cursor::new(mesh))?;
             let mut collider = Rcol::new(Cursor::new(collider), true)?;
-            let meat_path = output.to_owned().join(meat_file_name_gen(index));
-            let parts_group_path = output.to_owned().join(parts_group_file_name_gen(index));
+            let meat_path = output.join(meat_file_name_gen(index));
+            let parts_group_path = output.join(parts_group_file_name_gen(index));
             collider.apply_skeleton(&mesh)?;
             let (vertexs, indexs) = collider.color_monster_model(&mesh)?;
             let HitzoneDiagram { meat, parts_group } = gen_hitzone_diagram(vertexs, indexs)?;
@@ -262,5 +263,26 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
         |id| format!("ems{0:03}_parts_group.png", id),
     )?;
 
+    for index in 0..1000 {
+        let icon_path = format!("gui/80_Texture/boss_icon/em{:03}_00_IAM.tex", index);
+        let icon = if let Ok((icon, _)) = pak.find_file(&icon_path) {
+            icon
+        } else {
+            continue;
+        };
+        let icon = Tex::new(Cursor::new(pak.read_file(icon)?))?;
+        icon.save_png(0, 0, &root.join(format!("em{0:03}_icon.png", index)))?;
+    }
+
+    for index in 0..1000 {
+        let icon_path = format!("gui/80_Texture/boss_icon/ems{:03}_00_IAM.tex", index);
+        let icon = if let Ok((icon, _)) = pak.find_file(&icon_path) {
+            icon
+        } else {
+            continue;
+        };
+        let icon = Tex::new(Cursor::new(pak.read_file(icon)?))?;
+        icon.save_png(0, 0, &root.join(format!("ems{0:03}_icon.png", index)))?;
+    }
     Ok(())
 }

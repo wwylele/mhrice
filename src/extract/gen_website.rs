@@ -143,29 +143,37 @@ pub fn gen_monsters(
                 <h1 class="title">"Monsters"</h1>
                 <section class="section">
                 <h2 class="subtitle">"Large monsters"</h2>
-                <ul>{
+                <ul class="mh-list-monster">{
                     monsters.iter().map(|monster| {
-                        Ok(html!{<li>
-                            <a href={format!("/monster/{:03}.html", monster.id)}>{
+                        let icon_path = format!("/resources/em{0:03}_icon.png", monster.id);
+                        Ok(html!{<li class="mh-list-monster">
+                            <a href={format!("/monster/{:03}.html", monster.id)}>
+                                <img class="mh-list-monster-icon" src=icon_path />
+                                <div>{
                                 let name_name = format!("EnemyIndex{:03}",
                                     monster.boss_init_set_data.as_ref()
                                     .context(format!("Cannot found boss_init_set for monster {}", monster.id))?
                                     .enemy_type);
                                 gen_multi_lang(monster_names.get_entry(&name_name)
                                     .context(format!("Cannot found name for monster {}", monster.id))?)
-                            }</a>
+                                }</div>
+                            </a>
                         </li>})
                     }).collect::<Result<Vec<_>>>()?
                 }</ul>
                 </section>
                 <section class="section">
                 <h2 class="subtitle">"Small monsters"</h2>
-                <ul>{
+                <ul class="mh-list-monster">{
                     small_monsters.iter().map(|monster| {
-                        html!{<li>
-                            <a href={format!("/small-monster/{:03}.html", monster.id)}>{
-                                text!("Small monster {:03}", monster.id)
-                            }</a>
+                        let icon_path = format!("/resources/ems{0:03}_icon.png", monster.id);
+                        html!{<li class="mh-list-monster">
+                            <a href={format!("/small-monster/{:03}.html", monster.id)}>
+                                <img class="mh-list-monster-icon" src=icon_path />
+                                <div>{
+                                    text!("Small monster {:03}", monster.id)
+                                }</div>
+                            </a>
                         </li>}
                     })
                 }</ul>
