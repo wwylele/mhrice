@@ -133,7 +133,7 @@ impl TexCodec for Atsc6x6 {
         writer: F,
     ) {
         let mut in_buf = [0; 16];
-        in_buf.copy_from_slice(packet);
+        in_buf[0..packet.len()].copy_from_slice(packet);
         atsc_decompress_block(&in_buf, 6, 6, writer);
     }
 }
