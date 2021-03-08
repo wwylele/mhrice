@@ -2,7 +2,7 @@ use crate::bitfield::*;
 use crate::file_ext::*;
 use crate::gpu::*;
 use anyhow::*;
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
 
@@ -60,10 +60,7 @@ trait TexCodec {
     const PACKET_HEIGHT: usize;
     type T;
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(
-        packet: &[u8], /* PACKET_LEN or less */
-        writer: F,
-    );
+    fn decode<F: FnMut(usize, usize, Self::T)>(packet: &[u8; 16], writer: F);
 
     fn decode_block<F: FnMut(usize, usize, Self::T)>(
         mut block: &[u8], /* BLOCK_LEN or less */
@@ -74,9 +71,11 @@ trait TexCodec {
                 return;
             }
             let packet = step(&mut block, PACKET_LEN);
+            let mut packet_buf = [0; 16];
+            packet_buf[0..packet.len()].copy_from_slice(packet);
             let bx = ((i & 2) >> 1) | ((i & 16) >> 3);
             let by = (i & 1) | ((i & 4) >> 1) | ((i & 8) >> 1);
-            Self::decode(packet, |x, y, v| {
+            Self::decode(&packet_buf, |x, y, v| {
                 writer(x + bx * Self::PACKET_WIDTH, y + by * Self::PACKET_HEIGHT, v)
             })
         }
@@ -126,15 +125,81 @@ struct Atsc6x6;
 impl TexCodec for Atsc6x6 {
     const PACKET_WIDTH: usize = 6;
     const PACKET_HEIGHT: usize = 6;
-    type T = (u8, u8, u8, u8);
+    type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(
-        packet: &[u8], /* PACKET_LEN or less */
-        writer: F,
-    ) {
-        let mut in_buf = [0; 16];
-        in_buf[0..packet.len()].copy_from_slice(packet);
-        atsc_decompress_block(&in_buf, 6, 6, writer);
+    fn decode<F: FnMut(usize, usize, Self::T)>(packet: &[u8; 16], writer: F) {
+        atsc_decompress_block(packet, 6, 6, writer);
+    }
+}
+
+fn color5to8(value: u8) -> u8 {
+    (value << 3) | (value >> 2)
+}
+
+fn color6to8(value: u8) -> u8 {
+    (value << 2) | (value >> 4)
+}
+
+struct Bc1UnormSrgb;
+
+impl Bc1UnormSrgb {
+    fn decode_half<F: FnMut(usize, usize, [u8; 4])>(packet: &[u8; 8], mut writer: F) {
+        let c0 = u16::from_le_bytes(packet[0..2].try_into().unwrap());
+        let c1 = u16::from_le_bytes(packet[2..4].try_into().unwrap());
+        let mut colors = [[0; 4]; 4];
+        fn decode_color(c: u16) -> [u8; 4] {
+            let (b, g, r) = c.bit_split((5, 6, 5));
+            [
+                color5to8(r as u8),
+                color6to8(g as u8),
+                color5to8(b as u8),
+                0xFF,
+            ]
+        }
+        colors[0] = decode_color(c0);
+        colors[1] = decode_color(c1);
+        if c0 > c1 {
+            colors[2] = [
+                ((2 * colors[0][0] as u32 + colors[1][0] as u32) / 3) as u8,
+                ((2 * colors[0][1] as u32 + colors[1][1] as u32) / 3) as u8,
+                ((2 * colors[0][2] as u32 + colors[1][2] as u32) / 3) as u8,
+                0xFF,
+            ];
+            colors[3] = [
+                ((2 * colors[1][0] as u32 + colors[0][0] as u32) / 3) as u8,
+                ((2 * colors[1][1] as u32 + colors[0][1] as u32) / 3) as u8,
+                ((2 * colors[1][2] as u32 + colors[0][2] as u32) / 3) as u8,
+                0xFF,
+            ];
+        } else {
+            colors[2] = [
+                ((colors[0][0] as u32 + colors[1][0] as u32) / 2) as u8,
+                ((colors[0][1] as u32 + colors[1][1] as u32) / 2) as u8,
+                ((colors[0][2] as u32 + colors[1][2] as u32) / 2) as u8,
+                0xFF,
+            ];
+            colors[3] = [0, 0, 0, 0];
+        }
+        for (y, &b) in packet[4..8].iter().enumerate() {
+            let (b0, b1, b2, b3) = b.bit_split((2, 2, 2, 2));
+            writer(0, y, colors[b0 as usize]);
+            writer(1, y, colors[b1 as usize]);
+            writer(2, y, colors[b2 as usize]);
+            writer(3, y, colors[b3 as usize]);
+        }
+    }
+}
+
+impl TexCodec for Bc1UnormSrgb {
+    const PACKET_WIDTH: usize = 8;
+    const PACKET_HEIGHT: usize = 4;
+    type T = [u8; 4];
+
+    fn decode<F: FnMut(usize, usize, Self::T)>(packet: &[u8; 16], mut writer: F) {
+        Self::decode_half(packet[0..8].try_into().unwrap(), &mut writer);
+        Self::decode_half(packet[8..16].try_into().unwrap(), |x, y, v| {
+            writer(x + 4, y, v)
+        });
     }
 }
 
@@ -186,7 +251,7 @@ impl Tex {
         struct TextureInfo {
             offset: u64,
             len: u32,
-            _len_padded: u32,
+            len_padded: u32,
         }
 
         let texture_infos = (0..texture_count)
@@ -196,7 +261,7 @@ impl Tex {
                         Ok(TextureInfo {
                             offset: file.read_u64()?,
                             len: file.read_u32()?,
-                            _len_padded: file.read_u32()?,
+                            len_padded: file.read_u32()?,
                         })
                     })
                     .collect::<Result<Vec<_>>>()
@@ -210,9 +275,12 @@ impl Tex {
             .map(|v| {
                 v.into_iter()
                     .map(|t| {
-                        let mut buffer = vec![0; usize::try_from(t.len)?];
+                        if t.len_padded < t.len {
+                            bail!("Padded len should be larger than len");
+                        }
+                        let mut buffer = vec![0; usize::try_from(t.len_padded)?];
                         file.seek(SeekFrom::Start(t.offset))?;
-                        file.read_exact(&mut buffer)?;
+                        file.read_exact(&mut buffer[0..usize::try_from(t.len)?])?;
                         Ok(buffer)
                     })
                     .collect::<Result<Vec<_>>>()
@@ -235,33 +303,22 @@ impl Tex {
             bail!("Volume texture")
         }
         let texture = &self.textures[index][mipmap];
-        let width = self.width >> mipmap;
-        let height = self.height >> mipmap;
+        let width = usize::try_from(self.width >> mipmap)?;
+        let height = usize::try_from(self.height >> mipmap)?;
+        let super_height = 1 << self.log_super_height;
 
-        match self.format {
-            // Astc6x6UnormSrgb
-            0x40F => {
-                let mut data = vec![0; width as usize * height as usize * 4];
-                let writer = |x, y, v: (u8, u8, u8, u8)| {
-                    let i = (x + y * (width as usize)) * 4;
-                    data[i] = v.0;
-                    data[i + 1] = v.1;
-                    data[i + 2] = v.2;
-                    data[i + 3] = v.3;
-                };
-                Atsc6x6::decode_image(
-                    &texture,
-                    width as usize,
-                    height as usize,
-                    1 << self.log_super_height,
-                    writer,
-                );
-
-                RgbaImage::new(data, width as u32, height as u32).save_png(output)?
-            }
-
+        let mut data = vec![0; width * height * 4];
+        let writer = |x, y, v: [u8; 4]| {
+            let i = (x + y * (width)) * 4;
+            data[i..][..4].copy_from_slice(&v);
+        };
+        let decoder = match self.format {
+            0x48 => Bc1UnormSrgb::decode_image,
+            0x40F => Atsc6x6::decode_image,
             x => bail!("unsupported format {:08X}", x),
-        }
+        };
+        decoder(&texture, width, height, super_height, writer);
+        RgbaImage::new(data, u32::try_from(width)?, u32::try_from(height)?).save_png(output)?;
 
         Ok(())
     }

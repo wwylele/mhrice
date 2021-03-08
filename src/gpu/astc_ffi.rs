@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 
 #[link(name = "astc-shim")]
 extern "C" {
@@ -10,7 +10,7 @@ extern "C" {
     );
 }
 
-pub fn atsc_decompress_block<F: FnMut(usize, usize, (u8, u8, u8, u8))>(
+pub fn atsc_decompress_block<F: FnMut(usize, usize, [u8; 4])>(
     in_buf: &[u8; 16],
     block_width: usize,
     block_height: usize,
@@ -28,11 +28,7 @@ pub fn atsc_decompress_block<F: FnMut(usize, usize, (u8, u8, u8, u8))>(
     for y in 0..block_height {
         for x in 0..block_width {
             let i = (x + y * block_width) * 4;
-            writer(
-                x,
-                y,
-                (buffer[i], buffer[i + 1], buffer[i + 2], buffer[i + 3]),
-            )
+            writer(x, y, buffer[i..][..4].try_into().unwrap())
         }
     }
 }
