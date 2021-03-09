@@ -17,6 +17,8 @@ Although I don't enforce anything beyond the license conditions, I kindly ask yo
  - OpenGL 3.3 if running any model-related command
  - C++, CMake, for a ASTC decoding library in C++. RIIR to remove this dependency is still WIP
 
+*Note: this repo contain git submodule. Either clone with `git clone --recursive` or do `git submodule update --init --recursive` after cloning.
+
 ## License
 
 Licensed under either of
