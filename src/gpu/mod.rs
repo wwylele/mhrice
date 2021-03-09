@@ -8,10 +8,10 @@ use std::sync::mpsc::*;
 use std::thread::*;
 
 // mod astc;
-mod astc_ffi;
+mod ffi;
 mod monster_hitzone;
 
-pub use astc_ffi::*;
+pub use ffi::*;
 pub use monster_hitzone::*;
 
 struct Job {

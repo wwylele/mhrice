@@ -203,6 +203,18 @@ impl TexCodec for Bc1UnormSrgb {
     }
 }
 
+struct Bc7UnormSrgb;
+
+impl TexCodec for Bc7UnormSrgb {
+    const PACKET_WIDTH: usize = 4;
+    const PACKET_HEIGHT: usize = 4;
+    type T = [u8; 4];
+
+    fn decode<F: FnMut(usize, usize, Self::T)>(packet: &[u8; 16], writer: F) {
+        bc7_decompress_block(packet, writer);
+    }
+}
+
 pub struct Tex {
     format: u32,
     width: u16,
@@ -314,6 +326,7 @@ impl Tex {
         };
         let decoder = match self.format {
             0x48 => Bc1UnormSrgb::decode_image,
+            0x63 => Bc7UnormSrgb::decode_image,
             0x40F => Atsc6x6::decode_image,
             x => bail!("unsupported format {:08X}", x),
         };

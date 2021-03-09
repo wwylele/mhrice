@@ -9,14 +9,13 @@ fn get_cpp_link_stdlib() -> Option<String> {
     }
 }
 
-
 fn main() {
     built::write_built_file().expect("Failed to acquire build-time information");
 
-    let dst = cmake::build("astc").join("lib");
+    let dst = cmake::build("ffi").join("lib");
 
     println!("cargo:rustc-link-search=native={}", dst.display());
-    println!("cargo:rustc-link-lib=static=astc-shim");
+    println!("cargo:rustc-link-lib=static=ffi-shim");
     println!("cargo:rustc-link-lib=static=footprint");
     println!("cargo:rustc-link-lib=static=astc_utils");
     println!("cargo:rustc-link-lib=static=astc-codec");
