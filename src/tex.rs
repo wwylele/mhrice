@@ -140,9 +140,9 @@ fn color6to8(value: u8) -> u8 {
     (value << 2) | (value >> 4)
 }
 
-struct Bc1UnormSrgb;
+struct Bc1Unorm;
 
-impl Bc1UnormSrgb {
+impl Bc1Unorm {
     fn decode_half<F: FnMut(usize, usize, [u8; 4])>(packet: &[u8; 8], mut writer: F) {
         let c0 = u16::from_le_bytes(packet[0..2].try_into().unwrap());
         let c1 = u16::from_le_bytes(packet[2..4].try_into().unwrap());
@@ -190,7 +190,7 @@ impl Bc1UnormSrgb {
     }
 }
 
-impl TexCodec for Bc1UnormSrgb {
+impl TexCodec for Bc1Unorm {
     const PACKET_WIDTH: usize = 8;
     const PACKET_HEIGHT: usize = 4;
     type T = [u8; 4];
@@ -203,9 +203,61 @@ impl TexCodec for Bc1UnormSrgb {
     }
 }
 
-struct Bc7UnormSrgb;
+struct Bc4Unorm;
 
-impl TexCodec for Bc7UnormSrgb {
+impl Bc4Unorm {
+    fn decode_half<F: FnMut(usize, usize, [u8; 4])>(packet: &[u8; 8], mut writer: F) {
+        let mut c = [0; 8];
+        let c0 = packet[0];
+        let c1 = packet[1];
+        c[0] = c0;
+        c[1] = c1;
+        if c[0] > c[1] {
+            for (i, cc) in c[2..8].iter_mut().enumerate() {
+                let f0 = 6 - i as u32;
+                let f1 = i as u32 + 1;
+                *cc = ((f0 * c0 as u32 + f1 * c1 as u32) / 7) as u8;
+            }
+        } else {
+            for (i, cc) in c[2..6].iter_mut().enumerate() {
+                let f0 = 4 - i as u32;
+                let f1 = i as u32 + 1;
+                *cc = ((f0 * c0 as u32 + f1 * c1 as u32) / 5) as u8;
+            }
+            c[6] = 0;
+            c[7] = 255;
+        }
+        let mut buf = [0; 4];
+        for super_y in 0..2 {
+            buf[0..3].copy_from_slice(&packet[2 + super_y * 3..][..3]);
+            let mut a = u32::from_le_bytes(buf);
+            for y in 0..2 {
+                for x in 0..4 {
+                    let color = c[(a & 7) as usize];
+                    writer(x, y + super_y * 2, [color, color, color, 255]);
+                    a >>= 3;
+                }
+            }
+        }
+    }
+}
+
+impl TexCodec for Bc4Unorm {
+    const PACKET_WIDTH: usize = 8;
+    const PACKET_HEIGHT: usize = 4;
+    type T = [u8; 4];
+
+    fn decode<F: FnMut(usize, usize, Self::T)>(packet: &[u8; 16], mut writer: F) {
+        Self::decode_half(packet[0..8].try_into().unwrap(), &mut writer);
+        Self::decode_half(packet[8..16].try_into().unwrap(), |x, y, v| {
+            writer(x + 4, y, v)
+        });
+    }
+}
+
+struct Bc7Unorm;
+
+impl TexCodec for Bc7Unorm {
     const PACKET_WIDTH: usize = 4;
     const PACKET_HEIGHT: usize = 4;
     type T = [u8; 4];
@@ -216,7 +268,7 @@ impl TexCodec for Bc7UnormSrgb {
 }
 
 pub struct Tex {
-    format: u32,
+    pub format: u32,
     width: u16,
     height: u16,
     depth: u16,
@@ -325,8 +377,9 @@ impl Tex {
             data[i..][..4].copy_from_slice(&v);
         };
         let decoder = match self.format {
-            0x48 => Bc1UnormSrgb::decode_image,
-            0x63 => Bc7UnormSrgb::decode_image,
+            0x47 | 0x48 => Bc1Unorm::decode_image,
+            0x50 => Bc4Unorm::decode_image,
+            0x62 | 0x63 => Bc7Unorm::decode_image,
             0x40F => Atsc6x6::decode_image,
             x => bail!("unsupported format {:08X}", x),
         };
