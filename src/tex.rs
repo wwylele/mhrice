@@ -268,7 +268,7 @@ impl TexCodec for Bc7Unorm {
 }
 
 pub struct Tex {
-    pub format: u32,
+    format: u32,
     width: u16,
     height: u16,
     depth: u16,
@@ -380,7 +380,7 @@ impl Tex {
             0x47 | 0x48 => Bc1Unorm::decode_image,
             0x50 => Bc4Unorm::decode_image,
             0x62 | 0x63 => Bc7Unorm::decode_image,
-            0x40F => Atsc6x6::decode_image,
+            0x40E | 0x40F => Atsc6x6::decode_image,
             x => bail!("unsupported format {:08X}", x),
         };
         decoder(&texture, width, height, super_height, writer);

@@ -611,20 +611,25 @@ impl Mesh {
             .find(|layout| layout.usage == 0)
             .context("No position data")?;
 
-        let _normal = self
+        let normal = self
             .vertex_layouts
             .iter()
             .find(|layout| layout.usage == 1)
             .context("No position data")?;
 
-        let _vertex_count = (self.vertex_layouts[1].offset - self.vertex_layouts[0].offset)
+        let texcoord = self
+            .vertex_layouts
+            .iter()
+            .find(|layout| layout.usage == 2)
+            .context("No position data")?;
+
+        let vertex_count = (self.vertex_layouts[1].offset - self.vertex_layouts[0].offset)
             / self.vertex_layouts[0].width as u32;
 
         if position.width != 12 {
             bail!("Unexpected width");
         }
 
-        /*
         let mut buffer = &self.vertex_buffer[position.offset as usize..];
         for _ in 0..vertex_count {
             let x = buffer.read_f32()?;
@@ -642,6 +647,13 @@ impl Mesh {
             writeln!(output, "vn {} {} {}", x, y, z)?;
         }
 
+        let mut buffer = &self.vertex_buffer[texcoord.offset as usize..];
+        for _ in 0..vertex_count {
+            let u = half::f16::from_bits(buffer.read_u16()?);
+            let v = half::f16::from_bits(buffer.read_u16()?);
+            writeln!(output, "vt {} {}", u, 1.0 - v.to_f32())?;
+        }
+
         let lod = &self.main_model_lods[0];
 
         for group in &lod.model_groups {
@@ -651,11 +663,18 @@ impl Mesh {
                     let a = index_buffer.read_u16()? as u32 + model.vertex_buffer_start;
                     let b = index_buffer.read_u16()? as u32 + model.vertex_buffer_start;
                     let c = index_buffer.read_u16()? as u32 + model.vertex_buffer_start;
-                    writeln!(output, "f {} {} {}", a + 1, b + 1, c + 1)?;
+                    writeln!(
+                        output,
+                        "f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}",
+                        a + 1,
+                        b + 1,
+                        c + 1
+                    )?;
                 }
             }
-        }*/
+        }
 
+        /*
         for bone in &self.bones {
             let parent = &self.bones[bone.parent.unwrap_or(0)];
             let a = bone.absolute_transform * vec4(0.0, 0.0, 0.0, 1.0);
@@ -667,7 +686,7 @@ impl Mesh {
 
         for i in 0..self.bones.len() {
             writeln!(output, "l {} {}", i * 2 + 1, i * 2 + 2)?;
-        }
+        }*/
 
         Ok(())
     }
