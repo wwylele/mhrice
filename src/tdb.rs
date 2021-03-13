@@ -885,7 +885,7 @@ impl Tdb {
 
         for i in order {
             let type_instance = &type_instances[i];
-            println!("/// $TI[{}]", i);
+            // println!("/// $TI[{}]", i);
             let full_name = &symbols[i].as_ref().unwrap();
             let calc_hash = murmur3::murmur3_32(&mut full_name.as_bytes(), 0xFFFF_FFFF)?;
             if i != 0 && calc_hash != type_instance.hash {
@@ -922,8 +922,8 @@ impl Tdb {
             println!("    // size: {}", ty.len);
 
             println!(
-                "    // s2={}, n4={}, n5={}, n6={}, n7={}",
-                ty.s2, ty.n4, ty.n5, ty.n6, ty.n7
+                "    // s2={}, n4={}, n5={}, n7={}",
+                ty.s2, ty.n4, ty.n5, /*ty.n6,*/ ty.n7
             );
 
             if type_instance.template_argument_list_offset != 0 {
