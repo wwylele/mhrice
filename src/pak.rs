@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::io::{Read, Seek, SeekFrom};
 
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct PakFileIndex {
     version: usize,
     index: u32,

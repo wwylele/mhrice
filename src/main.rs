@@ -491,6 +491,7 @@ fn search_path(pak: Vec<String>) -> Result<()> {
 fn dump_tree(pak: Vec<String>, list: String, output: String) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
     let list = File::open(list)?;
+    let mut unvisited: std::collections::HashSet<_> = pak.all_file_indexs().into_iter().collect();
     for line in BufReader::new(list).lines() {
         let line = line?;
         let path = line.split(' ').next().context("Empty line")?;
@@ -502,20 +503,16 @@ fn dump_tree(pak: Vec<String>, list: String, output: String) -> Result<()> {
         let path = PathBuf::from(&output).join(path);
         std::fs::create_dir_all(path.parent().context("no parent")?)?;
         std::fs::write(path, &pak.read_file(index)?)?;
+        unvisited.remove(&index);
     }
 
-    /*
-    for (index, visited) in visited.into_iter().enumerate() {
-        if visited {
-            continue;
-        }
+    for index in unvisited {
         let path = PathBuf::from(&output)
             .join("_unknown")
-            .join(format!("{}", index));
+            .join(format!("{:?}", index));
         std::fs::create_dir_all(path.parent().context("no parent")?)?;
-        std::fs::write(path, &pak.read_file_at(u32::try_from(index)?)?)?;
+        std::fs::write(path, &pak.read_file(index)?)?;
     }
-    */
 
     Ok(())
 }
