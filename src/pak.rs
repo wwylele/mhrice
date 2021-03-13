@@ -6,44 +6,48 @@ use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::io::{Read, Seek, SeekFrom};
 
-#[derive(Debug, Copy, Clone)]
-pub struct PakFileIndex(u32);
-
-impl PakFileIndex {
-    pub fn raw(&self) -> u32 {
-        self.0
-    }
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord)]
+pub struct PakFileIndex {
+    version: usize,
+    index: u32,
 }
 
 #[derive(Debug)]
 pub struct PakReader<F> {
-    file: F,
+    files: Vec<F>,
+    counts: Vec<u32>,
     hash_map: HashMap<u64, PakFileIndex>,
 }
 
 impl<F: Read + Seek> PakReader<F> {
-    pub fn new(mut file: F) -> Result<PakReader<F>> {
-        let magic = file.read_magic()?;
-        if &magic != b"KPKA" {
-            bail!("Wrong magic for PAK file");
-        }
-        let version = file.read_u32()?;
-        if version != 4 {
-            bail!("Wrong version for PAK file");
-        }
-        let count = file.read_u32()?;
-        file.seek(SeekFrom::Current(4))?;
-
+    pub fn new(mut files: Vec<F>) -> Result<PakReader<F>> {
         let mut hash_map = HashMap::new();
-        for index in 0..count {
-            let hash = file.read_u64()?;
-            file.seek(SeekFrom::Current(0x28))?;
-            if hash_map.insert(hash, PakFileIndex(index)).is_some() {
-                bail!("Duplicate hash");
+        let mut counts = vec![];
+        for (version, file) in files.iter_mut().enumerate() {
+            let magic = file.read_magic()?;
+            if &magic != b"KPKA" {
+                bail!("Wrong magic for PAK file");
+            }
+            let pak_version = file.read_u32()?;
+            if pak_version != 4 {
+                bail!("Wrong version for PAK file");
+            }
+            let count = file.read_u32()?;
+            counts.push(count);
+            file.seek(SeekFrom::Current(4))?;
+
+            for index in 0..count {
+                let hash = file.read_u64()?;
+                file.seek(SeekFrom::Current(0x28))?;
+                hash_map.insert(hash, PakFileIndex { version, index });
             }
         }
 
-        Ok(PakReader { file, hash_map })
+        Ok(PakReader {
+            files,
+            counts,
+            hash_map,
+        })
     }
 
     fn find_file_internal(&mut self, full_path: String) -> Option<(PakFileIndex, String)> {
@@ -99,27 +103,28 @@ impl<F: Read + Seek> PakReader<F> {
         Err(anyhow!("No matching hash"))
     }
 
-    pub fn read_file(&mut self, PakFileIndex(index): PakFileIndex) -> Result<Vec<u8>> {
-        let info_offset = 0x10 + 0x30 * u64::from(index) + 8;
-        self.file.seek(SeekFrom::Start(info_offset))?;
-        let offset = self.file.read_u64()?;
-        let len_compressed = self.file.read_u64()?;
-        let len = self.file.read_u64()?;
-        let format = self.file.read_u8()?;
-        let _ /*? */ = self.file.read_u8()?;
+    pub fn read_file(&mut self, file_index: PakFileIndex) -> Result<Vec<u8>> {
+        let info_offset = 0x10 + 0x30 * u64::from(file_index.index) + 8;
+        let file = &mut self.files[file_index.version];
+        file.seek(SeekFrom::Start(info_offset))?;
+        let offset = file.read_u64()?;
+        let len_compressed = file.read_u64()?;
+        let len = file.read_u64()?;
+        let format = file.read_u8()?;
+        let _ /*? */ = file.read_u8()?;
 
-        self.file.seek(SeekFrom::Start(offset))?;
+        file.seek(SeekFrom::Start(offset))?;
         match format {
             0 => {
                 if len != len_compressed {
                     bail!("Uncompressed file should have len == len_compressed")
                 }
                 let mut data = vec![0; len.try_into()?];
-                self.file.read_exact(&mut data)?;
+                file.read_exact(&mut data)?;
                 Ok(data)
             }
             2 => {
-                let decoded = zstd::decode_all(self.file.by_ref().take(len_compressed))?;
+                let decoded = zstd::decode_all(file.by_ref().take(len_compressed))?;
                 if u64::try_from(decoded.len()).unwrap() != len {
                     bail!("Expected size {}, actual size {}", len, decoded.len());
                 }
@@ -129,14 +134,19 @@ impl<F: Read + Seek> PakReader<F> {
         }
     }
 
-    pub fn get_file_count(&self) -> u32 {
-        self.hash_map.len().try_into().unwrap()
-    }
-
-    pub fn read_file_at(&mut self, index: u32) -> Result<Vec<u8>> {
-        if index >= self.get_file_count() {
+    pub fn read_file_at(&mut self, version: usize, index: u32) -> Result<Vec<u8>> {
+        if version > self.files.len() {
+            bail!("Version out of bound")
+        }
+        if index >= self.counts[version] {
             bail!("Index out of bound");
         }
-        self.read_file(PakFileIndex(index))
+        self.read_file(PakFileIndex { version, index })
+    }
+
+    pub fn all_file_indexs(&self) -> Vec<PakFileIndex> {
+        let mut v: Vec<_> = self.hash_map.values().cloned().collect();
+        v.sort();
+        v
     }
 }

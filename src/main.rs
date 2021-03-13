@@ -6,7 +6,6 @@ use regex::bytes::*;
 use rusoto_core::{ByteStream, Region};
 use rusoto_s3::*;
 use std::convert::TryFrom;
-use std::convert::TryInto;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Cursor};
 use std::path::*;
@@ -51,7 +50,7 @@ pub mod built_info {
 enum Mhrice {
     Dump {
         #[structopt(short, long)]
-        pak: String,
+        pak: Vec<String>,
         #[structopt(short, long)]
         name: String,
         #[structopt(short, long)]
@@ -60,7 +59,9 @@ enum Mhrice {
 
     DumpIndex {
         #[structopt(short, long)]
-        pak: String,
+        pak: Vec<String>,
+        #[structopt(short, long)]
+        version: usize,
         #[structopt(short, long)]
         index: u32,
         #[structopt(short, long)]
@@ -69,17 +70,17 @@ enum Mhrice {
 
     Scan {
         #[structopt(short, long)]
-        pak: String,
+        pak: Vec<String>,
     },
 
     GenJson {
         #[structopt(short, long)]
-        pak: String,
+        pak: Vec<String>,
     },
 
     GenWebsite {
         #[structopt(short, long)]
-        pak: String,
+        pak: Vec<String>,
         #[structopt(short, long)]
         output: String,
         #[structopt(long)]
@@ -98,26 +99,26 @@ enum Mhrice {
 
     ScanMsg {
         #[structopt(short, long)]
-        pak: String,
+        pak: Vec<String>,
         #[structopt(short, long)]
         output: String,
     },
 
     Grep {
         #[structopt(short, long)]
-        pak: String,
+        pak: Vec<String>,
 
         pattern: String,
     },
 
     SearchPath {
         #[structopt(short, long)]
-        pak: String,
+        pak: Vec<String>,
     },
 
     DumpTree {
         #[structopt(short, long)]
-        pak: String,
+        pak: Vec<String>,
         #[structopt(short, long)]
         list: String,
         #[structopt(short, long)]
@@ -126,17 +127,17 @@ enum Mhrice {
 
     ScanMesh {
         #[structopt(short, long)]
-        pak: String,
+        pak: Vec<String>,
     },
 
     ScanRcol {
         #[structopt(short, long)]
-        pak: String,
+        pak: Vec<String>,
     },
 
     ScanTex {
         #[structopt(short, long)]
-        pak: String,
+        pak: Vec<String>,
     },
 
     DumpMesh {
@@ -169,7 +170,7 @@ enum Mhrice {
 
     GenMeat {
         #[structopt(short, long)]
-        pak: String,
+        pak: Vec<String>,
         #[structopt(short, long)]
         index: u32,
         #[structopt(short, long)]
@@ -178,25 +179,29 @@ enum Mhrice {
 
     GenResources {
         #[structopt(short, long)]
-        pak: String,
+        pak: Vec<String>,
         #[structopt(short, long)]
         output: String,
     },
 }
 
-fn dump(pak: String, name: String, output: String) -> Result<()> {
-    let mut pak = PakReader::new(File::open(pak)?)?;
+fn open_pak_files(pak: Vec<String>) -> Result<Vec<File>> {
+    pak.into_iter().map(|path| Ok(File::open(path)?)).collect()
+}
+
+fn dump(pak: Vec<String>, name: String, output: String) -> Result<()> {
+    let mut pak = PakReader::new(open_pak_files(pak)?)?;
     let (index, full_path) = pak.find_file(&name).context("Cannot find subfile")?;
     println!("Full path: {}", full_path);
-    println!("Index {}", index.raw());
+    println!("Index {:?}", index);
     let content = pak.read_file(index)?;
     std::fs::write(output, content)?;
     Ok(())
 }
 
-fn dump_index(pak: String, index: u32, output: String) -> Result<()> {
-    let mut pak = PakReader::new(File::open(pak)?)?;
-    let content = pak.read_file_at(index)?;
+fn dump_index(pak: Vec<String>, version: usize, index: u32, output: String) -> Result<()> {
+    let mut pak = PakReader::new(open_pak_files(pak)?)?;
+    let content = pak.read_file_at(version, index)?;
     std::fs::write(output, content)?;
     Ok(())
 }
@@ -210,7 +215,7 @@ struct TreeNode {
     visited: bool,
 }
 
-fn visit_tree(nodes: &mut [TreeNode], current: usize, depth: i32) {
+/*fn visit_tree(nodes: &mut [TreeNode], current: usize, depth: i32) {
     for _ in 0..depth {
         print!("    ")
     }
@@ -224,129 +229,35 @@ fn visit_tree(nodes: &mut [TreeNode], current: usize, depth: i32) {
         visit_tree(nodes, child, depth + 1);
     }
     nodes[current].visited = true;
-}
+}*/
 
-fn scan(pak: String) -> Result<()> {
-    let mut pak = PakReader::new(File::open(pak)?)?;
+fn scan(pak: Vec<String>) -> Result<()> {
+    let mut pak = PakReader::new(open_pak_files(pak)?)?;
 
-    let mut nodes = vec![
-        TreeNode {
-            parsed: false,
-            children: vec![],
-            name: None,
-            has_parent: false,
-            visited: false,
-        };
-        pak.get_file_count().try_into().unwrap()
-    ];
-
-    for index in 0..pak.get_file_count() {
+    for index in pak.all_file_indexs() {
         let content = pak
-            .read_file_at(index)
-            .context(format!("Failed to open file at {}", index))?;
+            .read_file(index)
+            .context(format!("Failed to open file at {:?}", index))?;
         if content.len() < 3 {
             continue;
         }
 
         if &content[0..3] == b"USR" {
-            let user = User::new(Cursor::new(&content))
-                .context(format!("Failed to open USER at {}", index))?;
-            let index: usize = index.try_into()?;
-            nodes[index].parsed = true;
-
-            let children = user
-                .children
-                .into_iter()
-                .map(|c| c.name)
-                .chain(user.resource_names);
-
-            for child in children {
-                let (cindex, _) = if let Ok(found) = pak.find_file(&child) {
-                    found
-                } else {
-                    println!("missing {}", child);
-                    continue;
-                };
-                let cindex: usize = cindex.raw().try_into()?;
-                nodes[cindex].name = Some(child);
-                nodes[cindex].has_parent = true;
-                nodes[index].children.push(cindex);
-            }
+            let _ = User::new(Cursor::new(&content))
+                .context(format!("Failed to open USER at {:?}", index))?;
         } else if &content[0..3] == b"PFB" {
-            let pfb = Pfb::new(Cursor::new(&content))
-                .context(format!("Failed to open PFB at {}", index))?;
-            let index: usize = index.try_into()?;
-            nodes[index].parsed = true;
-
-            let children = pfb
-                .children
-                .into_iter()
-                .map(|c| c.name)
-                .chain(pfb.resource_names);
-
-            for child in children {
-                let (cindex, _) = if let Ok(found) = pak.find_file(&child) {
-                    found
-                } else {
-                    println!("missing {}", child);
-                    continue;
-                };
-                let cindex: usize = cindex.raw().try_into()?;
-                nodes[cindex].name = Some(child);
-                nodes[cindex].has_parent = true;
-                nodes[index].children.push(cindex);
-            }
+            let _ = Pfb::new(Cursor::new(&content))
+                .context(format!("Failed to open PFB at {:?}", index))?;
         } else if &content[0..3] == b"SCN" {
-            let scn = Scn::new(Cursor::new(&content))
-                .context(format!("Failed to open SCN at {}", index))?;
-            let index: usize = index.try_into()?;
-            nodes[index].parsed = true;
-
-            let children = scn
-                .children
-                .into_iter()
-                .map(|c| c.name)
-                .chain(scn.resource_a_names)
-                .chain(scn.resource_b_names);
-
-            for child in children {
-                let (cindex, _) = if let Ok(found) = pak.find_file(&child) {
-                    found
-                } else {
-                    println!("missing {}", child);
-                    continue;
-                };
-                let cindex: usize = cindex.raw().try_into()?;
-                nodes[cindex].name = Some(child);
-                nodes[cindex].has_parent = true;
-                nodes[index].children.push(cindex);
-            }
+            let _ = Scn::new(Cursor::new(&content))
+                .context(format!("Failed to open SCN at {:?}", index))?;
         }
     }
-
-    for index in 0..nodes.len() {
-        if !nodes[index].parsed || nodes[index].has_parent {
-            continue;
-        }
-
-        visit_tree(&mut nodes, index, 0);
-    }
-
-    let named = nodes.iter().filter(|p| p.name.is_some()).count();
-    println!("Named file ratio = {}", named as f64 / nodes.len() as f64);
-
-    for user in nodes {
-        if user.parsed && !user.visited {
-            bail!("Cycle detected")
-        }
-    }
-
-    println!("Done");
     Ok(())
 }
 
-fn gen_json(pak: String) -> Result<()> {
-    let mut pak = PakReader::new(File::open(pak)?)?;
+fn gen_json(pak: Vec<String>) -> Result<()> {
+    let mut pak = PakReader::new(open_pak_files(pak)?)?;
     let pedia = extract::gen_pedia(&mut pak)?;
     let json = serde_json::to_string_pretty(&pedia)?;
     println!("{}", json);
@@ -424,8 +335,8 @@ fn upload_s3_folder(path: &Path, bucket: String, client: &S3Client) -> Result<()
     Ok(())
 }
 
-fn gen_website(pak: String, output: String, s3: Option<String>) -> Result<()> {
-    let mut pak = PakReader::new(File::open(pak)?)?;
+fn gen_website(pak: Vec<String>, output: String, s3: Option<String>) -> Result<()> {
+    let mut pak = PakReader::new(open_pak_files(pak)?)?;
     let pedia = extract::gen_pedia(&mut pak)?;
     extract::gen_website(pedia, &output)?;
     extract::gen_resources(&mut pak, &Path::new(&output).to_owned().join("resources"))?;
@@ -449,88 +360,81 @@ fn read_msg(msg: String) -> Result<()> {
     Ok(())
 }
 
-fn scan_msg(pak: String, output: String) -> Result<()> {
-    let mut pak = PakReader::new(File::open(pak)?)?;
-    let count = pak.get_file_count();
-    for i in 0..count {
-        let file = pak.read_file_at(i)?;
+fn scan_msg(pak: Vec<String>, output: String) -> Result<()> {
+    let mut pak = PakReader::new(open_pak_files(pak)?)?;
+    for i in pak.all_file_indexs() {
+        let file = pak.read_file(i)?;
         if file.len() < 8 || file[4..8] != b"GMSG"[..] {
             continue;
         }
-        let msg = Msg::new(Cursor::new(&file)).context(format!("at {}", i))?;
+        let msg = Msg::new(Cursor::new(&file)).context(format!("at {:?}", i))?;
         std::fs::write(
-            PathBuf::from(&output).join(format!("{}.txt", i)),
+            PathBuf::from(&output).join(format!("{:?}.txt", i)),
             serde_json::to_string_pretty(&msg)?,
         )?;
     }
     Ok(())
 }
 
-fn scan_mesh(pak: String) -> Result<()> {
-    let mut pak = PakReader::new(File::open(pak)?)?;
-    let count = pak.get_file_count();
-    for i in 0..count {
-        let file = pak.read_file_at(i)?;
+fn scan_mesh(pak: Vec<String>) -> Result<()> {
+    let mut pak = PakReader::new(open_pak_files(pak)?)?;
+    for i in pak.all_file_indexs() {
+        let file = pak.read_file(i)?;
         if file.len() < 4 || file[0..4] != b"MESH"[..] {
             continue;
         }
-        let _ = Mesh::new(Cursor::new(&file)).context(format!("at {}", i))?;
+        let _ = Mesh::new(Cursor::new(&file)).context(format!("at {:?}", i))?;
     }
     Ok(())
 }
 
-fn scan_rcol(pak: String) -> Result<()> {
-    let mut pak = PakReader::new(File::open(pak)?)?;
-    let count = pak.get_file_count();
-
-    for i in 0..count {
-        let file = pak.read_file_at(i)?;
+fn scan_rcol(pak: Vec<String>) -> Result<()> {
+    let mut pak = PakReader::new(open_pak_files(pak)?)?;
+    for i in pak.all_file_indexs() {
+        let file = pak.read_file(i)?;
         if file.len() < 4 || file[0..4] != b"RCOL"[..] {
             continue;
         }
-        let _ = Rcol::new(Cursor::new(&file), false).context(format!("at {}", i))?;
+        let _ = Rcol::new(Cursor::new(&file), false).context(format!("at {:?}", i))?;
     }
 
     Ok(())
 }
 
-fn scan_tex(pak: String) -> Result<()> {
-    let mut pak = PakReader::new(File::open(pak)?)?;
-    let count = pak.get_file_count();
-
-    for i in 0..count {
-        let file = pak.read_file_at(i)?;
+fn scan_tex(pak: Vec<String>) -> Result<()> {
+    let mut pak = PakReader::new(open_pak_files(pak)?)?;
+    for i in pak.all_file_indexs() {
+        let file = pak.read_file(i)?;
         if file.len() < 4 || file[0..4] != b"TEX\0"[..] {
             continue;
         }
-        let _ = Tex::new(Cursor::new(&file)).context(format!("at {}", i))?;
+        let _ = Tex::new(Cursor::new(&file)).context(format!("at {:?}", i))?;
     }
 
     Ok(())
 }
 
-fn grep(pak: String, pattern: String) -> Result<()> {
-    let mut pak = PakReader::new(File::open(pak)?)?;
+fn grep(pak: Vec<String>, pattern: String) -> Result<()> {
+    let mut pak = PakReader::new(open_pak_files(pak)?)?;
     println!("Searching for patterns \"{}\"", &pattern);
-    let count = pak.get_file_count();
     let re = RegexBuilder::new(&pattern).unicode(false).build()?;
-    for i in 0..count {
-        let file = pak.read_file_at(i)?;
+    for i in pak.all_file_indexs() {
+        let file = pak.read_file(i)?;
         if re.is_match(&file) {
-            println!("Matched @ {}", i);
+            println!("Matched @ {:?}", i);
         }
     }
     Ok(())
 }
 
-fn search_path(pak: String) -> Result<()> {
-    let pak = Mutex::new(PakReader::new(File::open(pak)?)?);
-    let count = pak.lock().unwrap().get_file_count();
+fn search_path(pak: Vec<String>) -> Result<()> {
+    let pak = Mutex::new(PakReader::new(open_pak_files(pak)?)?);
+    let indexs = pak.lock().unwrap().all_file_indexs();
     let counter = std::sync::atomic::AtomicU32::new(0);
-    let paths: std::collections::BTreeMap<String, Option<u32>> = (0..count)
+    let paths: std::collections::BTreeMap<String, Option<PakFileIndex>> = indexs
         .into_par_iter()
         .map(|index| {
-            let file = pak.lock().unwrap().read_file_at(index)?;
+            let file = pak.lock().unwrap().read_file(index)?;
             let mut paths = vec![];
             for &suffix in suffix::SUFFIX_MAP.keys() {
                 let mut full_suffix = vec![0; (suffix.len() + 2) * 2];
@@ -562,7 +466,7 @@ fn search_path(pak: String) -> Result<()> {
                     for pos in (begin..end).step_by(2) {
                         path.push(char::from(file[pos]));
                     }
-                    let index = pak.lock().unwrap().find_file(&path).ok().map(|x| x.0.raw());
+                    let index = pak.lock().unwrap().find_file(&path).ok().map(|x| x.0);
                     paths.push((path, index));
                 }
             }
@@ -584,9 +488,8 @@ fn search_path(pak: String) -> Result<()> {
     Ok(())
 }
 
-fn dump_tree(pak: String, list: String, output: String) -> Result<()> {
-    let mut pak = PakReader::new(File::open(pak)?)?;
-    let mut visited = vec![false; usize::try_from(pak.get_file_count())?];
+fn dump_tree(pak: Vec<String>, list: String, output: String) -> Result<()> {
+    let mut pak = PakReader::new(open_pak_files(pak)?)?;
     let list = File::open(list)?;
     for line in BufReader::new(list).lines() {
         let line = line?;
@@ -599,9 +502,9 @@ fn dump_tree(pak: String, list: String, output: String) -> Result<()> {
         let path = PathBuf::from(&output).join(path);
         std::fs::create_dir_all(path.parent().context("no parent")?)?;
         std::fs::write(path, &pak.read_file(index)?)?;
-        visited[usize::try_from(index.raw())?] = true;
     }
 
+    /*
     for (index, visited) in visited.into_iter().enumerate() {
         if visited {
             continue;
@@ -612,6 +515,7 @@ fn dump_tree(pak: String, list: String, output: String) -> Result<()> {
         std::fs::create_dir_all(path.parent().context("no parent")?)?;
         std::fs::write(path, &pak.read_file_at(u32::try_from(index)?)?)?;
     }
+    */
 
     Ok(())
 }
@@ -692,8 +596,8 @@ fn dump_meat(mesh: String, rcol: String, output: String) -> Result<()> {
     Ok(())
 }
 
-fn gen_meat(pak: String, index: u32, output: String) -> Result<()> {
-    let mut pak = PakReader::new(File::open(pak)?)?;
+fn gen_meat(pak: Vec<String>, index: u32, output: String) -> Result<()> {
+    let mut pak = PakReader::new(open_pak_files(pak)?)?;
 
     let mesh_path = format!("enemy/em{0:03}/00/mod/em{0:03}_00.mesh", index);
     let rcol_path = format!(
@@ -714,8 +618,8 @@ fn gen_meat(pak: String, index: u32, output: String) -> Result<()> {
     Ok(())
 }
 
-fn gen_resources(pak: String, output: String) -> Result<()> {
-    let mut pak = PakReader::new(File::open(pak)?)?;
+fn gen_resources(pak: Vec<String>, output: String) -> Result<()> {
+    let mut pak = PakReader::new(open_pak_files(pak)?)?;
 
     extract::gen_resources(&mut pak, Path::new(&output))?;
 
@@ -725,7 +629,12 @@ fn gen_resources(pak: String, output: String) -> Result<()> {
 fn main() -> Result<()> {
     match Mhrice::from_args() {
         Mhrice::Dump { pak, name, output } => dump(pak, name, output),
-        Mhrice::DumpIndex { pak, index, output } => dump_index(pak, index, output),
+        Mhrice::DumpIndex {
+            pak,
+            version,
+            index,
+            output,
+        } => dump_index(pak, version, index, output),
         Mhrice::Scan { pak } => scan(pak),
         Mhrice::GenJson { pak } => gen_json(pak),
         Mhrice::GenWebsite { pak, output, s3 } => gen_website(pak, output, s3),
