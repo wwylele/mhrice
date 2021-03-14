@@ -67,7 +67,7 @@ impl Rsz {
         let data_offset = file.read_u64()?;
         let string_table_offset = file.read_u64()?;
 
-        let nargacugas = (0..root_count)
+        let roots = (0..root_count)
             .map(|_| file.read_u32())
             .collect::<Result<Vec<_>>>()?;
 
@@ -122,7 +122,7 @@ impl Rsz {
         file.read_to_end(&mut data)?;
 
         Ok(Rsz {
-            roots: nargacugas,
+            roots,
             slot_strings,
             type_descriptors,
             data,
