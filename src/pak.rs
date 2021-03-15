@@ -12,6 +12,12 @@ pub struct PakFileIndex {
     index: u32,
 }
 
+impl PakFileIndex {
+    pub fn short_string(&self) -> String {
+        format!("{:02}-{:06}", self.version, self.index)
+    }
+}
+
 #[derive(Debug)]
 pub struct PakReader<F> {
     files: Vec<F>,

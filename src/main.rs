@@ -362,6 +362,7 @@ fn read_msg(msg: String) -> Result<()> {
 
 fn scan_msg(pak: Vec<String>, output: String) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
+    std::fs::create_dir_all(&output)?;
     for i in pak.all_file_indexs() {
         let file = pak.read_file(i)?;
         if file.len() < 8 || file[4..8] != b"GMSG"[..] {
@@ -369,7 +370,7 @@ fn scan_msg(pak: Vec<String>, output: String) -> Result<()> {
         }
         let msg = Msg::new(Cursor::new(&file)).context(format!("at {:?}", i))?;
         std::fs::write(
-            PathBuf::from(&output).join(format!("{:?}.txt", i)),
+            PathBuf::from(&output).join(format!("{}.txt", i.short_string())),
             serde_json::to_string_pretty(&msg)?,
         )?;
     }
@@ -509,7 +510,7 @@ fn dump_tree(pak: Vec<String>, list: String, output: String) -> Result<()> {
     for index in unvisited {
         let path = PathBuf::from(&output)
             .join("_unknown")
-            .join(format!("{:?}", index));
+            .join(index.short_string());
         std::fs::create_dir_all(path.parent().context("no parent")?)?;
         std::fs::write(path, &pak.read_file(index)?)?;
     }
