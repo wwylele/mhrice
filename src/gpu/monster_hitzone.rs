@@ -121,28 +121,43 @@ pub fn gen_hitzone_diagram(
 
         let transform = up_a_bit * rotate_to_side * upside_down * scale_to_fit * move_to_center;
 
+        let mut color_list_data: Vec<_> = PART_COLORS
+            .iter()
+            .map(|color_code| {
+                [
+                    u8::from_str_radix(&color_code[1..3], 16).unwrap() as f32 / 255.0,
+                    u8::from_str_radix(&color_code[3..5], 16).unwrap() as f32 / 255.0,
+                    u8::from_str_radix(&color_code[5..7], 16).unwrap() as f32 / 255.0,
+                ]
+            })
+            .collect();
+        color_list_data.push([0.0, 0.0, 0.0]);
+        color_list_data.push([1.0, 1.0, 1.0]);
+
+        let color_list = texture::buffer_texture::BufferTexture::new(
+            &gl.display,
+            &color_list_data,
+            texture::buffer_texture::BufferTextureType::Float,
+        )?;
+
         #[derive(Copy, Clone)]
         struct Vertex {
             position: [f32; 3],
-            color_meat: [f32; 3],
-            color_parts_group: [f32; 3],
+            color_meat: u32,
+            color_parts_group: u32,
         }
 
         implement_vertex!(Vertex, position, color_meat, color_parts_group);
 
-        fn get_color(number: Option<usize>) -> [f32; 3] {
+        fn get_color_attr(number: Option<usize>) -> u32 {
             if let Some(number) = number {
-                if let Some(color_code) = PART_COLORS.get(number) {
-                    [
-                        u8::from_str_radix(&color_code[1..3], 16).unwrap() as f32 / 255.0,
-                        u8::from_str_radix(&color_code[3..5], 16).unwrap() as f32 / 255.0,
-                        u8::from_str_radix(&color_code[5..7], 16).unwrap() as f32 / 255.0,
-                    ]
+                if number >= PART_COLORS.len() {
+                    1 << PART_COLORS.len()
                 } else {
-                    [0.0, 0.0, 0.0]
+                    1 << number
                 }
             } else {
-                [0.5, 0.5, 0.5]
+                1 << (PART_COLORS.len() + 1)
             }
         }
 
@@ -151,8 +166,8 @@ pub fn gen_hitzone_diagram(
             .map(|v| {
                 Ok(Vertex {
                     position: [v.position.x, v.position.y, v.position.z],
-                    color_meat: get_color(v.meat),
-                    color_parts_group: get_color(v.parts_group),
+                    color_meat: get_color_attr(v.meat),
+                    color_parts_group: get_color_attr(v.parts_group),
                 })
             })
             .collect::<anyhow::Result<Vec<_>>>()?;
@@ -171,28 +186,67 @@ pub fn gen_hitzone_diagram(
             uniform bool parts_group;
 
             in vec3 position;
-            in vec3 color_meat;
-            in vec3 color_parts_group;
+            in uint color_meat;
+            in uint color_parts_group;
 
-            out vec3 color;
+            out uint color_attr;
 
             void main() {
                 gl_Position = matrix * vec4(position, 1.0);
                 if (parts_group) {
-                    color = color_parts_group;
+                    color_attr = color_parts_group;
                 } else {
-                    color = color_meat;
+                    color_attr = color_meat;
                 }
             }
         ",
             "#version 330 core
-            in vec3 color;
+
+            uniform samplerBuffer color_list;
+
+            flat in uint color_attr_composed;
+
             layout(location = 0) out vec4 out_color;
+
             void main() {
-                out_color = vec4(color, 1.0);
+                int color_count = 0;
+                int color_indexs[32];
+                for (int i = 0; i < 32; ++i) {
+                    if (((color_attr_composed >> i) & 1U) != 0U) {
+                        color_indexs[color_count++] = i;
+                    }
+                }
+
+                ivec2 coord = ivec2(gl_FragCoord.xy);
+
+                out_color = vec4(texelFetch(color_list, color_indexs[
+                    ((coord.x + coord.y) / 2) % color_count]
+                ).xyz, 1.0);
             }
         ",
-            None,
+            Some(
+                "#version 330 core
+                layout(triangles) in;
+                layout(triangle_strip, max_vertices=3) out;
+                in uint color_attr[];
+                flat out uint color_attr_composed;
+
+                void main() {
+                    uint composed = color_attr[0] | color_attr[1] | color_attr[2];
+                    gl_Position = gl_in[0].gl_Position;
+                    color_attr_composed = composed;
+                    EmitVertex();
+                    gl_Position = gl_in[1].gl_Position;
+                    color_attr_composed = composed;
+                    EmitVertex();
+                    gl_Position = gl_in[2].gl_Position;
+                    color_attr_composed = composed;
+                    EmitVertex();
+
+                    EndPrimitive();
+                }
+            ",
+            ),
         )?;
 
         let rec_program = Program::from_source(
@@ -278,6 +332,7 @@ pub fn gen_hitzone_diagram(
             let uniforms = uniform! {
                 matrix: *transform.as_ref(),
                 parts_group: parts_group,
+                color_list: &color_list,
             };
 
             let param = glium::DrawParameters {
