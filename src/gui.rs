@@ -1,7 +1,7 @@
 use crate::file_ext::*;
 use anyhow::*;
 use serde::*;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::convert::{TryFrom, TryInto};
 use std::io::{Cursor, Read, Seek, SeekFrom};
 
@@ -24,60 +24,58 @@ enum FieldValue {
 }
 
 #[derive(Debug, Serialize)]
-struct Nargacuga {
+struct Field {
     b: u32,
     name: String,
     value: FieldValue,
 }
 
 #[derive(Debug, Serialize)]
-struct Zinogre {
+struct PlayObject {
     #[serde(serialize_with = "ser_hash")]
-    hash0: [u8; 0x10],
+    hash: [u8; 0x10],
     #[serde(serialize_with = "ser_hash")]
-    hash1: [u8; 0x10],
+    child_control_hash: [u8; 0x10],
     #[serde(serialize_with = "ser_hash")]
     hash2: [u8; 0x10],
     name: String,
     type_name: String,
-    ms: Vec<Nargacuga>,
-    ns: Vec<Nargacuga>,
+    properties: Vec<Field>,
+    variables: Vec<Field>,
 }
 
 #[derive(Debug, Serialize)]
-struct X3 {
+struct Rathalos {
+    name: String,
+}
+
+#[derive(Debug, Serialize)]
+struct Rathian {
+    name: String,
+}
+
+#[derive(Debug, Serialize)]
+struct Clip {
+    name: String,
+    rathalos: Vec<Rathalos>,
+    rathian: Vec<Rathian>,
+}
+
+#[derive(Debug, Serialize)]
+struct Control {
     #[serde(serialize_with = "ser_hash")]
     hash: [u8; 0x10],
     name: String,
     type_name: String,
-    ps: Vec<Zinogre>,
-    q_offsets: Vec<u64>,
+    play_objects: Vec<PlayObject>,
+    clips: Vec<Clip>,
     q_what: u32,
-}
-
-#[derive(Debug, Serialize)]
-struct PlayObjectExt {
-    name: String,
-    children: Vec<PlayObject>,
-    q_offsets: Vec<u64>,
-    q_what: u32,
-}
-
-#[derive(Debug, Serialize)]
-struct PlayObject {
-    hash0: [u8; 0x10],
-    hash1: [u8; 0x10],
-    hash2: [u8; 0x10],
-    name: String,
-    type_name: String,
-    ms: Vec<Nargacuga>,
-    ns: Vec<Nargacuga>,
-    ext: Option<PlayObjectExt>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct Gui {
     root: PlayObject,
+    controls: Vec<Control>,
 }
 
 impl Gui {
@@ -98,24 +96,24 @@ impl Gui {
 
         file.seek_noop(a_offset)?;
 
-        let aa_offset = file.read_u64()?;
-        let ab_offset = file.read_u64()?;
-        let x_count = file.read_u64()?;
-        let x_offsets = (0..x_count)
+        let control_start_offset = file.read_u64()?;
+        let root_offset = file.read_u64()?;
+        let control_count = file.read_u64()?;
+        let control_offset_list = (0..control_count)
             .map(|_| file.read_u64())
             .collect::<Result<Vec<_>>>()?;
 
-        file.seek_noop(aa_offset)?;
+        file.seek_noop(control_start_offset)?;
 
-        struct X {
+        struct ControlInfo {
             hash: [u8; 0x10],
             name: String,
             type_name: String,
-            p_offset: u64,
-            q_offset: u64,
+            play_object_list_offset: u64,
+            clip_list_offset: u64,
         }
 
-        let xs = x_offsets
+        let controls = control_offset_list
             .into_iter()
             .map(|x_offset| {
                 file.seek_noop(x_offset)?;
@@ -123,8 +121,8 @@ impl Gui {
                 file.read_exact(&mut hash)?;
                 let name = file.read_u64()?;
                 let type_name = file.read_u64()?;
-                let p_offset = file.read_u64()?;
-                let q_offset = file.read_u64()?;
+                let play_object_list_offset = file.read_u64()?;
+                let clip_list_offset = file.read_u64()?;
 
                 let old = file.tell()?;
                 file.seek(SeekFrom::Start(name))?;
@@ -133,17 +131,17 @@ impl Gui {
                 let type_name = file.read_u8str()?;
                 file.seek(SeekFrom::Start(old))?;
 
-                Ok(X {
+                Ok(ControlInfo {
                     hash,
                     name,
                     type_name,
-                    p_offset,
-                    q_offset,
+                    play_object_list_offset,
+                    clip_list_offset,
                 })
             })
             .collect::<Result<Vec<_>>>()?;
 
-        let read_nargacuga = |file: &mut F| -> Result<Nargacuga> {
+        let read_field = |file: &mut F| -> Result<Field> {
             let value_type = file.read_u32()?;
             let b = file.read_u32()?;
             let name = file.read_u64()?;
@@ -174,31 +172,31 @@ impl Gui {
 
             file.seek(SeekFrom::Start(old))?;
 
-            Ok(Nargacuga { b, name, value })
+            Ok(Field { b, name, value })
         };
-        let read_zinogre = |file: &mut F| -> Result<Zinogre> {
-            let mut hash0 = [0; 0x10];
-            file.read_exact(&mut hash0)?;
-            let mut hash1 = [0; 0x10];
-            file.read_exact(&mut hash1)?;
+        let read_play_object = |file: &mut F| -> Result<PlayObject> {
+            let mut hash = [0; 0x10];
+            file.read_exact(&mut hash)?;
+            let mut child_control_hash = [0; 0x10];
+            file.read_exact(&mut child_control_hash)?;
             let mut hash2 = [0; 0x10];
             file.read_exact(&mut hash2)?;
 
             let name = file.read_u64()?;
             let type_name = file.read_u64()?;
-            let m_offset = file.read_u64()?;
-            let n_offset = file.read_u64()?;
+            let property_offset = file.read_u64()?;
+            let variable_offset = file.read_u64()?;
             let mtx_offset = file.read_u64()?;
 
-            file.seek_noop(m_offset)?;
-            let m_count = file.read_u64()?;
-            let ms = (0..m_count)
-                .map(|_| read_nargacuga(file))
+            file.seek_noop(property_offset)?;
+            let property_count = file.read_u64()?;
+            let properties = (0..property_count)
+                .map(|_| read_field(file))
                 .collect::<Result<Vec<_>>>()?;
-            file.seek_noop(n_offset)?;
-            let n_count = file.read_u64()?;
-            let ns = (0..n_count)
-                .map(|_| read_nargacuga(file))
+            file.seek_noop(variable_offset)?;
+            let variable_count = file.read_u64()?;
+            let variables = (0..variable_count)
+                .map(|_| read_field(file))
                 .collect::<Result<Vec<_>>>()?;
 
             let old = file.tell()?;
@@ -208,143 +206,173 @@ impl Gui {
             let type_name = file.read_u8str()?;
             file.seek(SeekFrom::Start(old))?;
 
-            Ok(Zinogre {
-                hash0,
-                hash1,
+            Ok(PlayObject {
+                hash,
+                child_control_hash,
                 hash2,
                 name,
                 type_name,
-                ms,
-                ns,
+                properties,
+                variables,
             })
         };
 
-        #[derive(Debug)]
-        struct X2 {
-            name: String,
-            type_name: String,
-            p_offsets: Vec<u64>,
-            q_offsets: Vec<u64>,
-            q_what: u32,
-        }
-
-        let mut p_sorted = BTreeMap::new();
-
-        let mut xs = xs
+        let controls = controls
             .into_iter()
-            .map(|x| {
-                file.seek_noop(x.p_offset)?;
-                let p_count = file.read_u64()?;
-                let p_offsets = (0..p_count)
+            .map(|control| {
+                file.seek_noop(control.play_object_list_offset)?;
+                let play_object_count = file.read_u64()?;
+                let play_object_offsets = (0..play_object_count)
                     .map(|_| file.read_u64())
                     .collect::<Result<Vec<_>>>()?;
-                file.seek_noop(x.q_offset)?;
-                let q_count = file.read_u32()?;
+                file.seek_noop(control.clip_list_offset)?;
+                let clip_count = file.read_u32()?;
                 let q_what = file.read_u32()?; //?
-                let q_offsets = (0..q_count)
+                let clip_offsets = (0..clip_count)
                     .map(|_| file.read_u64())
                     .collect::<Result<Vec<_>>>()?;
 
-                for &p_offset in &p_offsets {
-                    if p_sorted.insert(p_offset, None).is_some() {
-                        bail!("Reusing P");
-                    }
-                }
+                let old = file.tell()?;
 
-                Ok((
-                    x.hash,
-                    X2 {
-                        name: x.name,
-                        type_name: x.type_name,
-                        p_offsets,
-                        q_offsets,
-                        q_what,
-                    },
-                ))
-            })
-            .collect::<Result<HashMap<_, _>>>()?;
-
-        file.seek_noop(ab_offset)?;
-        let root = read_zinogre(&mut file)?;
-
-        for (&p_offset, p) in &mut p_sorted {
-            file.seek_noop(p_offset)?;
-            *p = Some(read_zinogre(&mut file)?);
-        }
-
-        fn build_play_object(
-            node: Zinogre,
-            p_sorted: &mut BTreeMap<u64, Option<Zinogre>>,
-            xs: &mut HashMap<[u8; 16], X2>,
-        ) -> Result<PlayObject> {
-            let ext = if let Some(x2) = xs.remove(&node.hash1) {
-                if x2.type_name != node.type_name {
-                    bail!(
-                        "name or type_name mismatch, {}, {}, {}, {}",
-                        x2.name,
-                        node.name,
-                        x2.type_name,
-                        node.type_name
-                    )
-                }
-                let children = x2
-                    .p_offsets
+                let play_objects = play_object_offsets
                     .into_iter()
-                    .map(|p_offset| {
-                        let p = p_sorted.remove(&p_offset).context("p not found")?.unwrap();
-                        build_play_object(p, p_sorted, xs)
+                    .map(|offset| {
+                        file.seek(SeekFrom::Start(offset))?;
+                        read_play_object(&mut file)
                     })
                     .collect::<Result<Vec<_>>>()?;
-                Some(PlayObjectExt {
-                    name: x2.name,
-                    children,
-                    q_offsets: x2.q_offsets,
-                    q_what: x2.q_what,
-                })
-            } else {
-                None
-            };
 
-            Ok(PlayObject {
-                hash0: node.hash0,
-                hash1: node.hash1,
-                hash2: node.hash2,
-                name: node.name,
-                type_name: node.type_name,
-                ms: node.ms,
-                ns: node.ns,
-                ext,
-            })
-        }
-
-        /*let xs = xs
-        .into_iter()
-        .map(|x| {
-            Ok(X3 {
-                hash: x.hash,
-                name: x.name,
-                type_name: x.type_name,
-                ps: x
-                    .p_offsets
+                let clips = clip_offsets
                     .into_iter()
-                    .map(|p_offset| p_sorted.remove(&p_offset).unwrap().unwrap())
-                    .collect(),
-                q_offsets: x.q_offsets,
-                q_what: x.q_what,
+                    .map(|clip_offset| {
+                        file.seek(SeekFrom::Start(clip_offset))?;
+                        let mut hash = [0; 0x10];
+                        file.read_exact(&mut hash)?;
+
+                        let x = file.read_u64()?;
+                        let name = file.read_u64()?;
+                        let y = file.read_u64()?; // ref to other CLIP if not zero?!
+
+                        let base_offset = clip_offset + 0x28;
+                        if file.read_magic()? != *b"CLIP" {
+                            bail!("Wrong magic for CLIP")
+                        }
+
+                        if file.read_u32()? != 0x28 {
+                            bail!("Wrong version for CLIP")
+                        }
+
+                        let k = file.read_f32()?;
+                        let u_count = file.read_u32()?;
+                        let v_count = file.read_u32()?;
+                        let w_count = file.read_u32()?;
+
+                        let r0_offset = file.read_u64()?;
+                        let r1_offset = file.read_u64()?;
+                        let r2_offset = file.read_u64()?;
+                        let r3_offset = file.read_u64()?;
+                        let r4_offset = file.read_u64()?;
+                        let r5_offset = file.read_u64()?;
+                        let r6_offset = file.read_u64()?;
+                        let str8_offset = file.read_u64()?;
+                        let str16_offset = file.read_u64()?;
+                        let r9_offset = file.read_u64()?;
+
+                        let z = file.read_u64()?;
+                        if z != 0 {
+                            bail!("Expected 0")
+                        }
+
+                        file.seek_noop(base_offset + r0_offset)?;
+
+                        let us = (0..u_count)
+                            .map(|_| {
+                                let alatreon = file.read_u64()?;
+                                let hash = file.read_u64()?;
+                                let name_offset = file.read_u64()?;
+                                let _ = file.read_u64()?;
+                                let _ = file.read_u64()?;
+
+                                let old = file.tell()?;
+                                file.seek(SeekFrom::Start(
+                                    name_offset * 2 + str16_offset + base_offset,
+                                ))?;
+                                let name = file.read_u16str()?;
+                                file.seek(SeekFrom::Start(old))?;
+
+                                Ok(Rathalos { name })
+                            })
+                            .collect::<Result<Vec<_>>>()?;
+
+                        file.seek_noop(base_offset + r1_offset)?;
+
+                        let vs = (0..v_count)
+                            .map(|_| {
+                                let _ = file.read_u64()?;
+                                let hash = file.read_u64()?;
+                                let name_offset = file.read_u64()?;
+                                let _ = file.read_u64()?;
+                                let _ = file.read_u64()?;
+                                let _ = file.read_u64()?;
+                                let _ = file.read_u64()?;
+                                let _ = file.read_u64()?;
+                                let _ = file.read_u64()?;
+
+                                let old = file.tell()?;
+                                file.seek(SeekFrom::Start(
+                                    name_offset + str8_offset + base_offset,
+                                ))?;
+                                let name = file.read_u8str()?;
+                                file.seek(SeekFrom::Start(old))?;
+
+                                Ok(Rathian { name })
+                            })
+                            .collect::<Result<Vec<_>>>()?;
+
+                        file.seek_noop(base_offset + r2_offset)?;
+
+                        let ws = (0..w_count)
+                            .map(|_| {
+                                let _ = file.read_u64()?;
+                                let _ = file.read_u64()?;
+                                let _ = file.read_u64()?;
+                                let _ = file.read_u64()?;
+                                Ok(())
+                            })
+                            .collect::<Result<Vec<_>>>()?;
+
+                        file.seek_noop(base_offset + r3_offset)?;
+                        //..
+
+                        let old = file.tell()?;
+                        file.seek(SeekFrom::Start(name))?;
+                        let name = file.read_u16str()?;
+                        file.seek(SeekFrom::Start(old))?;
+
+                        Ok(Clip {
+                            name,
+                            rathalos: us,
+                            rathian: vs,
+                        })
+                    })
+                    .collect::<Result<Vec<_>>>()?;
+
+                file.seek(SeekFrom::Start(old))?;
+
+                Ok(Control {
+                    hash: control.hash,
+                    name: control.name,
+                    type_name: control.type_name,
+                    play_objects,
+                    clips,
+                    q_what,
+                })
             })
-        })
-        .collect::<Result<Vec<_>>>()?;*/
+            .collect::<Result<Vec<_>>>()?;
 
-        let root = build_play_object(root, &mut p_sorted, &mut xs)?;
+        file.seek_noop(root_offset)?;
+        let root = read_play_object(&mut file)?;
 
-        if !xs.is_empty() {
-            bail!("xs not empty, {:?}", xs)
-        }
-
-        if !p_sorted.is_empty() {
-            bail!("p_sorted not empty")
-        }
-
-        Ok(Gui { root })
+        Ok(Gui { root, controls })
     }
 }

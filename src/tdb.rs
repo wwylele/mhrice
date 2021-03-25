@@ -357,8 +357,12 @@ impl Tdb {
                     bail!("Unexpected index");
                 }
 
-                let (arrayize_type_instance_index, dearrayize_type_instance_index, type_index, bf) =
-                    file.read_u64()?.bit_split((18, 18, 18, 10));
+                let (
+                    arrayize_type_instance_index,
+                    dearrayize_type_instance_index,
+                    type_index,
+                    special_type_id,
+                ) = file.read_u64()?.bit_split((18, 18, 18, 10));
 
                 let j = file.read_u32()?;
                 let x = file.read_u32()?;
@@ -394,7 +398,7 @@ impl Tdb {
                     arrayize_type_instance_index: arrayize_type_instance_index.try_into()?,
                     dearrayize_type_instance_index: dearrayize_type_instance_index.try_into()?,
                     type_index: type_index.try_into()?,
-                    special_type_id: bf,
+                    special_type_id,
                     b,
                     interface_list_offset: interface_list_offset.try_into()?,
                     method_membership_start_index: method_membership_start_index.try_into()?,
@@ -914,6 +918,8 @@ impl Tdb {
             }
 
             println!("{{");
+
+            println!("    // Special = {}", type_instance.special_type_id);
 
             let ty = types
                 .get(type_instance.type_index)

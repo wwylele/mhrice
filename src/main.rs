@@ -18,6 +18,7 @@ mod bitfield;
 mod extract;
 mod file_ext;
 mod gpu;
+mod gui;
 mod mesh;
 mod msg;
 mod pak;
@@ -31,6 +32,7 @@ mod tdb;
 mod tex;
 mod user;
 
+use gui::*;
 use mesh::*;
 use msg::*;
 use pak::*;
@@ -140,6 +142,11 @@ enum Mhrice {
         pak: Vec<String>,
     },
 
+    ScanGui {
+        #[structopt(short, long)]
+        pak: Vec<String>,
+    },
+
     DumpMesh {
         #[structopt(short, long)]
         mesh: String,
@@ -166,6 +173,11 @@ enum Mhrice {
         tex: String,
         #[structopt(short, long)]
         output: String,
+    },
+
+    DumpGui {
+        #[structopt(short, long)]
+        gui: String,
     },
 
     GenMeat {
@@ -415,6 +427,19 @@ fn scan_tex(pak: Vec<String>) -> Result<()> {
     Ok(())
 }
 
+fn scan_gui(pak: Vec<String>) -> Result<()> {
+    let mut pak = PakReader::new(open_pak_files(pak)?)?;
+    for i in pak.all_file_indexs() {
+        let file = pak.read_file(i)?;
+        if file.len() < 8 || file[4..8] != b"GUIR"[..] {
+            continue;
+        }
+        let _ = Gui::new(Cursor::new(&file)).context(format!("at {:?}", i))?;
+    }
+
+    Ok(())
+}
+
 fn grep(pak: Vec<String>, pattern: String) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
     println!("Searching for patterns \"{}\"", &pattern);
@@ -536,6 +561,12 @@ fn dump_tex(tex: String, output: String) -> Result<()> {
     Ok(())
 }
 
+fn dump_gui(gui: String) -> Result<()> {
+    let gui = Gui::new(File::open(gui)?)?;
+    println!("{}", serde_json::to_string_pretty(&gui)?);
+    Ok(())
+}
+
 fn dump_meat(mesh: String, rcol: String, output: String) -> Result<()> {
     use std::io::*;
     let mesh = Mesh::new(File::open(mesh)?)?;
@@ -645,10 +676,12 @@ fn main() -> Result<()> {
         Mhrice::ScanMesh { pak } => scan_mesh(pak),
         Mhrice::ScanRcol { pak } => scan_rcol(pak),
         Mhrice::ScanTex { pak } => scan_tex(pak),
+        Mhrice::ScanGui { pak } => scan_gui(pak),
         Mhrice::DumpMesh { mesh, output } => dump_mesh(mesh, output),
         Mhrice::DumpRcol { rcol } => dump_rcol(rcol),
         Mhrice::DumpMeat { mesh, rcol, output } => dump_meat(mesh, rcol, output),
         Mhrice::DumpTex { tex, output } => dump_tex(tex, output),
+        Mhrice::DumpGui { gui } => dump_gui(gui),
         Mhrice::GenMeat { pak, index, output } => gen_meat(pak, index, output),
         Mhrice::GenResources { pak, output } => gen_resources(pak, output),
     }

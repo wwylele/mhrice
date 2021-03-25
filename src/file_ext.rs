@@ -14,6 +14,7 @@ pub trait ReadExt {
     fn read_i64(&mut self) -> Result<i64>;
     fn read_magic(&mut self) -> Result<[u8; 4]>;
     fn read_u16str(&mut self) -> Result<String>;
+    fn read_u8str(&mut self) -> Result<String>;
     fn read_f32(&mut self) -> Result<f32>;
     fn read_f32vec3(&mut self) -> Result<Vec3>;
     fn read_f32vec4(&mut self) -> Result<Vec4>;
@@ -84,6 +85,17 @@ impl<T: Read + ?Sized> ReadExt for T {
         }
         Ok(String::from_utf16(&u16str)?)
     }
+    fn read_u8str(&mut self) -> Result<String> {
+        let mut u8str = vec![];
+        loop {
+            let c = self.read_u8()?;
+            if c == 0 {
+                break;
+            }
+            u8str.push(c);
+        }
+        Ok(String::from_utf8(u8str)?)
+    }
     fn read_f32(&mut self) -> Result<f32> {
         let mut buf = [0; 4];
         self.read_exact(&mut buf)?;
@@ -114,7 +126,11 @@ impl<T: Seek + Read + ?Sized> SeekExt for T {
     fn seek_noop(&mut self, from_start: u64) -> Result<u64> {
         let pos = self.seek(SeekFrom::Current(0))?;
         if pos != from_start {
-            bail!("This seek is expected to be no-op");
+            bail!(
+                "This seek is expected to be no-op. At 0x{:08X}, seeking to 0x{:08X}",
+                pos,
+                from_start
+            );
         }
         Ok(pos)
     }
@@ -122,7 +138,12 @@ impl<T: Seek + Read + ?Sized> SeekExt for T {
     fn seek_assert_align_up(&mut self, from_start: u64, align: u64) -> Result<u64> {
         let pos = self.seek(SeekFrom::Current(0))?;
         if align_up(pos, align) != from_start {
-            bail!("This seek is expected to only align up {}", align);
+            bail!(
+                "This seek is expected to only align up {}. At 0x{:08X}, seeking to 0x{:08X}",
+                align,
+                pos,
+                from_start
+            );
         }
         if pos != from_start {
             let mut buf = vec![0; (from_start - pos).try_into()?];
