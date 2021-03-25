@@ -1,5 +1,6 @@
 use crate::file_ext::*;
 use crate::gpu::ColoredVertex;
+use crate::hash::hash_as_utf16;
 use crate::mesh::*;
 use crate::rsz::*;
 use anyhow::*;
@@ -138,7 +139,7 @@ impl Rcol {
                     bail!("name offset out of bound");
                 }
 
-                let _hash = file.read_u32()?;
+                let hash = file.read_u32()?;
                 let x = file.read_u32()?;
                 if x != 0 {
                     bail!("Expected zero");
@@ -172,6 +173,11 @@ impl Rcol {
                 file.seek(SeekFrom::Start(name_offset))?;
                 let name = file.read_u16str()?;
 
+                let hash_calc = hash_as_utf16(&name);
+                if hash_calc != hash {
+                    bail!("hash mismatch")
+                }
+
                 file.seek(SeekFrom::Start(collider_offset))?;
                 let colliders = (0..collider_count)
                     .map(|_| {
@@ -181,7 +187,7 @@ impl Rcol {
                         if name_offset < string_table_offset {
                             bail!("name offset out of bound");
                         }
-                        let _hash = file.read_u32()?;
+                        let hash = file.read_u32()?;
                         let rsz_root_index = file.read_u32()?;
 
                         let x = file.read_u32()?;
@@ -210,8 +216,8 @@ impl Rcol {
                             bail!("name offset out of bound");
                         }
 
-                        let _bone_a_hash = file.read_u32()?;
-                        let _bone_b_hash = file.read_u32()?;
+                        let bone_a_hash = file.read_u32()?;
+                        let bone_b_hash = file.read_u32()?;
                         let shape_type = file.read_u32()?;
                         let x = file.read_u32()?;
                         if x != 0 {
@@ -226,6 +232,21 @@ impl Rcol {
                         file.seek(SeekFrom::Start(bone_b_offset))?;
                         let bone_b = file.read_u16str()?;
                         file.seek(SeekFrom::Start(old))?;
+
+                        let hash_calc = hash_as_utf16(&name);
+                        if hash_calc != hash {
+                            bail!("hash mismatch")
+                        }
+
+                        let bone_a_hash_calc = hash_as_utf16(&bone_a);
+                        if bone_a_hash_calc != bone_a_hash {
+                            bail!("bone_a_hash mismatch")
+                        }
+
+                        let bone_b_hash_calc = hash_as_utf16(&bone_b);
+                        if bone_b_hash_calc != bone_b_hash {
+                            bail!("bone_b_hash mismatch")
+                        }
 
                         let shape = match shape_type {
                             1 => {
@@ -317,7 +338,7 @@ impl Rcol {
                 if name_offset < string_table_offset {
                     bail!("name offset out of bound");
                 }
-                let _name_hash = file.read_u32()?;
+                let name_hash = file.read_u32()?;
                 let x = file.read_u32()?;
                 if x != 0 {
                     bail!("Expected zero");
@@ -327,7 +348,7 @@ impl Rcol {
                 if name_b_offset < string_table_offset {
                     bail!("name offset out of bound");
                 }
-                let _name_b_hash = file.read_u32()?;
+                let name_b_hash = file.read_u32()?;
                 let x = file.read_u32()?;
                 if x != 0 {
                     bail!("Expected zero");
@@ -339,6 +360,16 @@ impl Rcol {
                 file.seek(SeekFrom::Start(name_b_offset))?;
                 let name_b = file.read_u16str()?;
                 file.seek(SeekFrom::Start(old))?;
+
+                let hash_calc = hash_as_utf16(&name);
+                if hash_calc != name_hash {
+                    bail!("hash mismatch")
+                }
+
+                let hash_b_calc = hash_as_utf16(&name_b);
+                if hash_b_calc != name_b_hash {
+                    bail!("hash_b mismatch")
+                }
 
                 Ok(GroupAttachment {
                     user_data: UserData::RszRootIndex(i.try_into()?),
@@ -364,10 +395,15 @@ impl Rcol {
                 file.seek(SeekFrom::Start(name_offset))?;
                 let name = file.read_u16str()?;
                 file.seek(SeekFrom::Start(old))?;
-                let _hash = file.read_u32()?;
+                let hash = file.read_u32()?;
                 let x = file.read_u32()?;
                 if x != 0 {
                     bail!("Expected zero");
+                }
+
+                let hash_calc = hash_as_utf16(&name);
+                if hash_calc != hash {
+                    bail!("hash mismatch")
                 }
 
                 Ok(name)

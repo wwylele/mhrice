@@ -1,7 +1,7 @@
 use crate::file_ext::*;
+use crate::hash::hash_as_utf16;
 use crate::suffix::SUFFIX_MAP;
 use anyhow::*;
-use murmur3::murmur3_32;
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::io::{Read, Seek, SeekFrom};
@@ -57,22 +57,8 @@ impl<F: Read + Seek> PakReader<F> {
     }
 
     fn find_file_internal(&mut self, full_path: String) -> Option<(PakFileIndex, String)> {
-        fn iter(a: [u8; 2]) -> impl Iterator<Item = u8> {
-            std::iter::once(a[0]).chain(std::iter::once(a[1]))
-        }
-        let upper: Vec<u8> = full_path
-            .to_uppercase()
-            .encode_utf16()
-            .flat_map(|u| iter(u16::to_le_bytes(u)))
-            .collect();
-        let lower: Vec<u8> = full_path
-            .to_lowercase()
-            .encode_utf16()
-            .flat_map(|u| iter(u16::to_le_bytes(u)))
-            .collect();
-        let seed = 0xFFFF_FFFF;
-        let hash: u64 = u64::from(murmur3_32(&mut &lower[..], seed).unwrap())
-            | (u64::from(murmur3_32(&mut &upper[..], seed).unwrap()) << 32);
+        let hash: u64 = u64::from(hash_as_utf16(&full_path.to_lowercase()))
+            | (u64::from(hash_as_utf16(&full_path.to_uppercase())) << 32);
         let index = *self.hash_map.get(&hash)?;
         Some((index, full_path))
     }

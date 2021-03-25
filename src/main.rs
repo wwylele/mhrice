@@ -19,6 +19,7 @@ mod extract;
 mod file_ext;
 mod gpu;
 mod gui;
+mod hash;
 mod mesh;
 mod msg;
 mod pak;
