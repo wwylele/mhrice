@@ -569,7 +569,7 @@ fn dump_gui(gui: String) -> Result<()> {
 }
 
 fn dump_meat(mesh: String, rcol: String, output: String) -> Result<()> {
-    use std::io::*;
+    /*use std::io::*;
     let mesh = Mesh::new(File::open(mesh)?)?;
     let mut rcol = Rcol::new(File::open(rcol)?, true)?;
 
@@ -623,7 +623,8 @@ fn dump_meat(mesh: String, rcol: String, output: String) -> Result<()> {
         writeln!(output, "3 {} {} {}", index[0], index[1], index[2])?;
     }
 
-    Ok(())
+    Ok(())*/
+    unimplemented!()
 }
 
 fn gen_meat(pak: Vec<String>, index: u32, output: String) -> Result<()> {

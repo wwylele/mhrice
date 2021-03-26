@@ -6,6 +6,7 @@ use crate::rsz::*;
 use anyhow::*;
 use nalgebra_glm::*;
 use std::any::Any;
+use std::collections::HashSet;
 use std::convert::{TryFrom, TryInto};
 use std::io::{Cursor, Read, Seek, SeekFrom};
 
@@ -573,6 +574,8 @@ impl Rcol {
                 let mut meat_dist = f32::MAX;
                 let mut meat = None;
                 let mut parts_group = None;
+                let mut meat_set = HashSet::new();
+                let mut parts_group_set = HashSet::new();
                 for (i, group) in self.collider_groups.iter().enumerate() {
                     let mut new_parts_group = None;
                     for attachment in &self.group_attachments {
@@ -593,24 +596,41 @@ impl Rcol {
                             collider.user_data.downcast_ref::<EmHitDamageShapeData>()
                         {
                             let new_dist = collider.shape.distance(&position)?;
+                            let new_meat = Some(usize::try_from(data.meat)?);
                             if new_dist < meat_dist {
                                 meat_dist = new_dist;
-                                meat = Some(usize::try_from(data.meat)?);
+                                meat = new_meat;
                                 parts_group = new_parts_group;
+                            }
+                            if new_dist < 1.0 {
+                                if let Some(new_meat) = new_meat {
+                                    meat_set.insert(new_meat);
+                                }
+                                if let Some(new_parts_group) = new_parts_group {
+                                    parts_group_set.insert(new_parts_group);
+                                }
                             }
                         }
                     }
                 }
 
-                if meat_dist > 1.5 {
-                    meat = None;
-                    parts_group = None;
+                if meat_dist < 1.5 {
+                    if meat_set.is_empty() {
+                        if let Some(new_meat) = meat {
+                            meat_set.insert(new_meat);
+                        }
+                    }
+                    if parts_group_set.is_empty() {
+                        if let Some(new_parts_group) = parts_group {
+                            parts_group_set.insert(new_parts_group);
+                        }
+                    }
                 }
 
                 Ok(ColoredVertex {
                     position,
-                    meat,
-                    parts_group,
+                    meat: meat_set,
+                    parts_group: parts_group_set,
                 })
             })
             .collect::<Result<Vec<_>>>()?;

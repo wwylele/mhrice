@@ -3,6 +3,7 @@ use crate::part_color::PART_COLORS;
 use anyhow::Context;
 use nalgebra_glm::*;
 use ordered_float::*;
+use std::collections::HashSet;
 use std::convert::TryFrom;
 
 pub struct HitzoneDiagram {
@@ -12,8 +13,8 @@ pub struct HitzoneDiagram {
 
 pub struct ColoredVertex {
     pub position: Vec3,
-    pub meat: Option<usize>,
-    pub parts_group: Option<usize>,
+    pub meat: HashSet<usize>,
+    pub parts_group: HashSet<usize>,
 }
 
 fn crop_image(image: texture::RawImage2d<u8>) -> anyhow::Result<RgbaImage> {
@@ -149,16 +150,20 @@ pub fn gen_hitzone_diagram(
 
         implement_vertex!(Vertex, position, color_meat, color_parts_group);
 
-        fn get_color_attr(number: Option<usize>) -> u32 {
-            if let Some(number) = number {
-                if number >= PART_COLORS.len() {
-                    1 << PART_COLORS.len()
-                } else {
-                    1 << number
-                }
-            } else {
-                1 << (PART_COLORS.len() + 1)
+        fn get_color_attr(numbers: HashSet<usize>) -> u32 {
+            if numbers.is_empty() {
+                return 1 << (PART_COLORS.len() + 1);
             }
+            let mut code = 0;
+            for number in numbers {
+                if number >= PART_COLORS.len() {
+                    code |= 1 << PART_COLORS.len()
+                } else {
+                    code |= 1 << number
+                }
+            }
+
+            code
         }
 
         let vertex_buffer_raw: Vec<Vertex> = vertexs
