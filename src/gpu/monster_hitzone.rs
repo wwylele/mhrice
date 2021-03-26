@@ -204,15 +204,25 @@ pub fn gen_hitzone_diagram(
 
             uniform samplerBuffer color_list;
 
-            flat in uint color_attr_composed;
+            flat in uvec3 color_attr_composed;
+            in vec3 triangle_coord;
 
             layout(location = 0) out vec4 out_color;
 
             void main() {
+                uint color_attr;
+                if (triangle_coord.x > triangle_coord.y && triangle_coord.x > triangle_coord.z) {
+                    color_attr = color_attr_composed[0];
+                } else if (triangle_coord.y > triangle_coord.z) {
+                    color_attr = color_attr_composed[1];
+                } else {
+                    color_attr = color_attr_composed[2];
+                }
+
                 int color_count = 0;
                 int color_indexs[32];
                 for (int i = 0; i < 32; ++i) {
-                    if (((color_attr_composed >> i) & 1U) != 0U) {
+                    if (((color_attr >> i) & 1U) != 0U) {
                         color_indexs[color_count++] = i;
                     }
                 }
@@ -229,18 +239,22 @@ pub fn gen_hitzone_diagram(
                 layout(triangles) in;
                 layout(triangle_strip, max_vertices=3) out;
                 in uint color_attr[];
-                flat out uint color_attr_composed;
+                flat out uvec3 color_attr_composed;
+                out vec3 triangle_coord;
 
                 void main() {
-                    uint composed = color_attr[0] | color_attr[1] | color_attr[2];
+                    uvec3 composed = uvec3(color_attr[0],  color_attr[1], color_attr[2]);
                     gl_Position = gl_in[0].gl_Position;
                     color_attr_composed = composed;
+                    triangle_coord = vec3(1.0, 0.0, 0.0);
                     EmitVertex();
                     gl_Position = gl_in[1].gl_Position;
                     color_attr_composed = composed;
+                    triangle_coord = vec3(0.0, 1.0, 0.0);
                     EmitVertex();
                     gl_Position = gl_in[2].gl_Position;
                     color_attr_composed = composed;
+                    triangle_coord = vec3(0.0, 0.0, 1.0);
                     EmitVertex();
 
                     EndPrimitive();
