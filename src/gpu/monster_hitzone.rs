@@ -106,21 +106,31 @@ pub fn gen_hitzone_diagram(
             (z_min + z_max) * 0.5,
         );
 
-        let rr = 1.0
-            / vertexs
-                .iter()
-                .filter_map(|v| NotNan::new(distance(&v.position, &center)).ok())
-                .max()
-                .context("null mesh")?
-                .into_inner();
-
         let move_to_center = translate(&identity(), &-center);
-        let scale_to_fit = scale(&identity(), &vec3(rr, rr, rr));
         let upside_down = rotate_z(&identity(), std::f32::consts::PI);
         let rotate_to_side = rotate_y(&identity(), std::f32::consts::PI * 0.7);
         let up_a_bit = rotate_x(&identity(), std::f32::consts::PI * 0.05);
 
-        let transform = up_a_bit * rotate_to_side * upside_down * scale_to_fit * move_to_center;
+        let transform_pre_scale = up_a_bit * rotate_to_side * upside_down * move_to_center;
+
+        let mut max_xy = 0.0;
+        let mut max_z = 0.0;
+        for v in &vertexs {
+            let transformed =
+                transform_pre_scale * vec4(v.position.x, v.position.y, v.position.z, 1.0);
+            if max_xy < transformed.x.abs() {
+                max_xy = transformed.x.abs();
+            }
+            if max_xy < transformed.y.abs() {
+                max_xy = transformed.y.abs();
+            }
+            if max_z < transformed.z.abs() {
+                max_z = transformed.z.abs();
+            }
+        }
+
+        let scale_to_fit = scale(&identity(), &vec3(1.0 / max_xy, 1.0 / max_xy, 1.0 / max_z));
+        let transform = scale_to_fit * transform_pre_scale;
 
         let mut color_list_data: Vec<_> = PART_COLORS
             .iter()
