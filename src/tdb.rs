@@ -238,11 +238,11 @@ impl Tdb {
     #[allow(unused_variables, dead_code)]
     pub fn new<F: Read + Seek>(mut file: F) -> Result<Tdb> {
         if &file.read_magic()? != b"TDB\0" {
-            bail!("Wrong magic forTDB file");
+            bail!("Wrong magic for TDB file");
         }
 
-        if file.read_u32()? != 0x45 {
-            bail!("Wrong version for RSZ block");
+        if file.read_u32()? != 0x46 {
+            bail!("Wrong version for TDB file");
         }
 
         if file.read_u32()? != 0 {
@@ -261,7 +261,7 @@ impl Tdb {
         let param_count = file.read_u32()?;
         let attribute_count = file.read_u32()?;
         let constant_count = file.read_u32()?;
-        let attribute_list_count = file.read_u32()?;
+        let (constant2_count, attribute_list_count) = file.read_u32()?.bit_split((16, 16));
         let q_count = file.read_u32()?;
         let assembly_count = file.read_u32()?;
 
@@ -286,10 +286,12 @@ impl Tdb {
         let param_offset = file.read_u64()?;
         let attribute_offset = file.read_u64()?;
         let constant_offset = file.read_u64()?;
+        let constant2_offset = file.read_u64()?;
         let attribute_list_offset = file.read_u64()?;
         let string_table_offset = file.read_u64()?;
         let heap_offset = file.read_u64()?;
         let q_offset = file.read_u64()?;
+        let _ = file.read_u64()?;
 
         struct Assembly {
             name_offset: u32,
@@ -678,16 +680,23 @@ impl Tdb {
             String(u32),
         }
 
+        let read_constant = |file: &mut F| -> Result<Constant> {
+            let raw = file.read_i32()?;
+            Ok(if raw >= 0 {
+                Constant::Integral(usize::try_from(raw)?)
+            } else {
+                Constant::String(u32::try_from(-raw)?)
+            })
+        };
+
         file.seek_assert_align_up(constant_offset, 16)?;
         let constants = (0..constant_count)
-            .map(|_| {
-                let raw = file.read_i32()?;
-                Ok(if raw >= 0 {
-                    Constant::Integral(usize::try_from(raw)?)
-                } else {
-                    Constant::String(u32::try_from(-raw)?)
-                })
-            })
+            .map(|_| read_constant(&mut file))
+            .collect::<Result<Vec<_>>>()?;
+
+        file.seek_assert_align_up(constant2_offset, 16)?;
+        let constants_2 = (0..constant2_count)
+            .map(|_| read_constant(&mut file))
             .collect::<Result<Vec<_>>>()?;
 
         file.seek_assert_align_up(attribute_list_offset, 16)?;
