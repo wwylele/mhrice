@@ -10,7 +10,7 @@ use std::path::Path;
 
 Let's talk about Switch's texture layout (only covers 2D texture here)
 
-On top of pixels, the smalliest unit is a packet.
+On top of pixels, the smallest unit is a packet.
 A packet is always 16 bytes, and represents a small rectangle area of pixels.
 The size of this rectangle depends on the texture format.
 For example:
@@ -29,26 +29,19 @@ and the packet layout in one block is like this:
 12 14 28 30
 13 15 29 31
 
-Blocks fill the texture in y direction first until hitting "super_height" (H),
-and then move on to the next x and fill in y direction again...
-till hitting "super_width" (W) in x direction, and reset x,
-filling in y direction starting below the previous super row,... . The layout would be
+On top of blocks, the next unit is a super block, which contains W*H blocks,
+where W (super_width) and H (super_height) are configurable and stored in the .tex file
+(as log of 2). In a super block, blocks fill in the y direction first, then in x direction.
+So the layout in a super block would be like
 
 B[0]         B[H]        ...       B[(W-1)*H]
 B[1]         B[H+1]      ...       B[(W-1)*H+1]
 B[2]         B[H+2]      ...       B[(W-1)*H+2]
 ...          ...         ...       ...
 B[H-1]       B[2*H-1]    ...       B[W*H-1]
-B[W*H]       B[(W+1)*H]  ...
-B[W*H+1]     ...
-...          ...
-B[(W+1)*H-1] ...
-...
 
-super_height is configurable in the texture file.
-super_width is chosen as the smallest power of two such that the layout above can cover
-the texture in x direction.
-
+Finally, super blocks fill the texture.
+Super blocks fill in the x direction first, then in y direction.
 */
 
 const PACKET_LEN: usize = 16;
@@ -91,6 +84,7 @@ trait TexCodec {
         mut data: &[u8],
         width: usize,
         height: usize,
+        super_width: usize,
         super_height: usize,
         mut writer: F,
     ) {
@@ -103,23 +97,27 @@ trait TexCodec {
 
         let block_width = Self::PACKET_WIDTH * 4;
         let block_height = Self::PACKET_HEIGHT * 8;
-        let super_width = ((width + block_width - 1) / block_width).next_power_of_two();
-        let hyper_height = super_height * block_height;
+        let super_block_width = block_width * super_width;
+        let super_block_height = block_height * super_height;
+        let hyper_width = (width + super_block_width - 1) / super_block_width;
+        let hyper_height = (height + super_block_height - 1) / super_block_height;
 
-        for hyper_y in 0.. {
-            for super_x in 0..super_width {
-                for super_y in 0..super_height {
-                    if data.is_empty() {
-                        return;
+        for hyper_y in 0..hyper_height {
+            for hyper_x in 0..hyper_width {
+                for super_x in 0..super_width {
+                    for super_y in 0..super_height {
+                        if data.is_empty() {
+                            return;
+                        }
+                        let block = step(&mut data, BLOCK_LEN);
+                        Self::decode_block(block, |x, y, v| {
+                            writer(
+                                x + block_width * super_x + super_block_width * hyper_x,
+                                y + block_height * super_y + super_block_height * hyper_y,
+                                v,
+                            )
+                        })
                     }
-                    let block = step(&mut data, BLOCK_LEN);
-                    Self::decode_block(block, |x, y, v| {
-                        writer(
-                            x + block_width * super_x,
-                            y + block_height * super_y + hyper_height * hyper_y,
-                            v,
-                        )
-                    })
                 }
             }
         }
@@ -279,6 +277,7 @@ pub struct Tex {
     height: u16,
     depth: u16,
     textures: Vec<Vec<Vec<u8>>>,
+    log_super_width: u8,
     log_super_height: u8,
     log_super_depth: u8,
 }
@@ -304,7 +303,7 @@ impl Tex {
         let _b = file.read_u32()?;
         let _c = file.read_u32()?;
         let (log_super_height, log_super_depth) = file.read_u8()?.bit_split((4, 4));
-        let _d = file.read_u8()?;
+        let log_super_width = file.read_u8()?;
         let x = file.read_u16()?;
         if x != 0 {
             bail!("Expected 0")
@@ -363,6 +362,7 @@ impl Tex {
             height,
             depth,
             textures,
+            log_super_width,
             log_super_height,
             log_super_depth,
         })
@@ -375,6 +375,7 @@ impl Tex {
         let texture = &self.textures[index][mipmap];
         let width = usize::try_from(self.width >> mipmap)?;
         let height = usize::try_from(self.height >> mipmap)?;
+        let super_width = 1 << self.log_super_width;
         let super_height = 1 << self.log_super_height;
 
         let mut data = vec![0; width * height * 4];
@@ -389,7 +390,7 @@ impl Tex {
             0x40E | 0x40F => Atsc6x6::decode_image,
             x => bail!("unsupported format {:08X}", x),
         };
-        decoder(&texture, width, height, super_height, writer);
+        decoder(&texture, width, height, super_width, super_height, writer);
         RgbaImage::new(data, u32::try_from(width)?, u32::try_from(height)?).save_png(output)?;
 
         Ok(())
