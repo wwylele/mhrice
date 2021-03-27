@@ -349,7 +349,13 @@ impl Tex {
                         }
                         let mut buffer = vec![0; usize::try_from(t.len_padded)?];
                         file.seek(SeekFrom::Start(t.offset))?;
-                        file.read_exact(&mut buffer[0..usize::try_from(t.len)?])?;
+                        if file
+                            .read_exact(&mut buffer[0..usize::try_from(t.len)?])
+                            .is_err()
+                        {
+                            // Some texture is seen with a few bytes missing. Don't know why
+                            eprintln!("Incomplete texture data")
+                        }
                         Ok(buffer)
                     })
                     .collect::<Result<Vec<_>>>()

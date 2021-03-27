@@ -199,10 +199,7 @@ impl Rcol {
                         if x != 0xFFFFFFFF {
                             bail!("Expected FFFFFFFF");
                         }
-                        let x = file.read_u32()?;
-                        if x != 0 {
-                            bail!("Expected zero");
-                        }
+                        let _y = file.read_u32()?;
                         let ignore_tag_bits = file.read_u32()?;
                         if ignore_tag_bits >= 1 << ignore_tag_count {
                             bail!("ignore_tag out of bound")

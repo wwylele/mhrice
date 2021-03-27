@@ -69,7 +69,8 @@ impl Mesh {
         if file.read_u32()? != 0x77a2d00d {
             bail!("Wrong version for MESH");
         }
-        let total_len = file.read_u64()?;
+        let total_len = file.read_u32()?.into();
+        let _what = file.read_u32()?;
 
         let _a_count = file.read_u16()?;
         let string_count = file.read_u16()?;
@@ -344,7 +345,7 @@ impl Mesh {
             bones = (0..usize::try_from(bone_count)?)
                 .map(|i| {
                     if !(bone_abs_transform[i] * bone_abs_reverse[i]).is_identity(0.001) {
-                        bail!("Expected identity")
+                        eprintln!("bone_abs_transform * bone_abs_reverse verfication failed: expected identity")
                     }
                     let parent = convert_index(bone_infos[i].parent_index)?;
                     if let Some(parent) = parent {
@@ -353,7 +354,7 @@ impl Mesh {
                             * bone_abs_reverse[i])
                             .is_identity(0.001)
                         {
-                            bail!("Expected identity")
+                            eprintln!("bone_rel_transform verfication failed: expected identity")
                         }
                     }
                     Ok(Bone {
