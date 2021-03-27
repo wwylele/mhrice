@@ -251,5 +251,6 @@ rsz_struct! {
         // "group shell"?
         pub max_num_for_normal_quest: i32,
         pub max_num_for_hyakuryu_quest: i32,
+        pub max_sound_damage_count: i32,
     }
 }

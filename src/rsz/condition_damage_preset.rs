@@ -257,7 +257,7 @@ cond! {
     (ParalyzeDamageData, PresetParalyzeData, paralyze_data, 6),
     (SleepDamageData, PresetSleepData, sleep_data, 4),
     (StunDamageData, PresetStunData, stun_data, 6),
-    (FlashDamageData, PresetFlashData, flash_data, 3), // TDB says this should be 2, what?!
+    (FlashDamageData, PresetFlashData, flash_data, 4),
     (BlastDamageData, PresetBlastData, blast_data, 6),
     (StaminaDamageData, PresetStaminaData, stamina_data, 3),
     (PoisonDamageData, PresetPoison, poison_data, 7),
@@ -272,5 +272,5 @@ cond! {
     (ShockTrapDamageData, PresetShockOtomoTrapData, shock_otomo_trap_data, 1),
     (CaptureDamageData, PresetCaptureData, capture_data, 1),
     (KoyashiDamageData, PresetKoyashiData, koyashi_data, 1),
-    (SteelFangData, PresetSteelFangData, steel_fang_data, 1),
+    (SteelFangData, PresetSteelFangData, steel_fang_data, 2),
 }

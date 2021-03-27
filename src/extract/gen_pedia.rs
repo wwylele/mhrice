@@ -82,6 +82,7 @@ pub fn gen_monsters(
     pfb_path_gen: fn(u32) -> String,
     boss_init_path_gen: fn(u32) -> Option<String>,
     collider_path_gen: fn(u32) -> String,
+    data_tune_path_gen: fn(u32) -> String,
 ) -> Result<Vec<Monster>> {
     let mut monsters = vec![];
 
@@ -109,12 +110,20 @@ pub fn gen_monsters(
         };
         let main_pfb = Pfb::new(Cursor::new(pak.read_file(main_pfb_index)?))?;
 
-        let data_base = sub_file(pak, &main_pfb)?;
-        let data_tune = sub_file(pak, &main_pfb)?;
-        let meat_data = sub_file(pak, &main_pfb)?;
-        let condition_damage_data = sub_file(pak, &main_pfb)?;
-        let anger_data = sub_file(pak, &main_pfb)?;
-        let parts_break_data = sub_file(pak, &main_pfb)?;
+        let data_base = sub_file(pak, &main_pfb).context("data_base")?;
+        let data_tune = {
+            // not using sub_file here because some pfb also somehow reference the variantion file
+            let path = data_tune_path_gen(id);
+            let (index, _) = pak.find_file(&path)?;
+            User::new(Cursor::new(pak.read_file(index)?))?
+                .rsz
+                .deserialize_single()
+                .context("data_tune")?
+        };
+        let meat_data = sub_file(pak, &main_pfb).context("meat_data")?;
+        let condition_damage_data = sub_file(pak, &main_pfb).context("condition_damage_data")?;
+        let anger_data = sub_file(pak, &main_pfb).context("anger_data")?;
+        let parts_break_data = sub_file(pak, &main_pfb).context("parts_break_data")?;
 
         let boss_init_set_data = if let Some(path) = boss_init_path_gen(id) {
             let (index, _) = pak.find_file(&path)?;
@@ -160,6 +169,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
             ))
         },
         gen_em_collider_path,
+        |id| format!("enemy/em{0:03}/00/user_data/em{0:03}_00_datatune.user", id),
     )
     .context("Generating large monsters")?;
 
@@ -168,6 +178,12 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         |id| format!("enemy/ems{0:03}/00/prefab/ems{0:03}_00.pfb", id),
         |_| None,
         gen_ems_collider_path,
+        |id| {
+            format!(
+                "enemy/ems{0:03}/00/user_data/ems{0:03}_00_datatune.user",
+                id
+            )
+        },
     )
     .context("Generating small monsters")?;
 
