@@ -30,18 +30,24 @@ and the packet layout in one block is like this:
 13 15 29 31
 
 Blocks fill the texture in y direction first until hitting "super_height" (H),
-and then move on to the next x and fill in y direction again... till filling all x, and reset x,
+and then move on to the next x and fill in y direction again...
+till hitting "super_width" (W) in x direction, and reset x,
 filling in y direction starting below the previous super row,... . The layout would be
 
-B[0]    B[H]    ...   B[(k-1)H]
-B[1]    B[H+1]        B[(k-1)H+1]
-B[2]    B[H+2]        B[(k-1)H+2]
-...                  ...
-B[H-1]  B[2H-1] ...   B[kH-1]
-B[kH]   ...
-B[kH+1]
+B[0]         B[H]        ...       B[(W-1)*H]
+B[1]         B[H+1]      ...       B[(W-1)*H+1]
+B[2]         B[H+2]      ...       B[(W-1)*H+2]
+...          ...         ...       ...
+B[H-1]       B[2*H-1]    ...       B[W*H-1]
+B[W*H]       B[(W+1)*H]  ...
+B[W*H+1]     ...
+...          ...
+B[(W+1)*H-1] ...
 ...
-B[(k+1)H-1]
+
+super_height is configurable in the texture file.
+super_width is chosen as the smallest power of two such that the layout above can cover
+the texture in x direction.
 
 */
 
@@ -97,7 +103,7 @@ trait TexCodec {
 
         let block_width = Self::PACKET_WIDTH * 4;
         let block_height = Self::PACKET_HEIGHT * 8;
-        let super_width = (width + block_width - 1) / block_width;
+        let super_width = ((width + block_width - 1) / block_width).next_power_of_two();
         let hyper_height = super_height * block_height;
 
         for hyper_y in 0.. {
