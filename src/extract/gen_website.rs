@@ -135,31 +135,22 @@ pub fn gen_monsters(
             <body>
                 { navbar() }
                 <main> <div class="container"> <div class="content">
-                <div class="notification is-info">
-                    "Welcome to MHRice! This website is still under active construction. Sorry if it doesn't include the information you are looking for yet."
-                    <br/>
-                    "Although I do plan to include information for all monsters in the full game, that will not happen in the first week after the game release."
-                </div>
                 <h1 class="title">"Monsters"</h1>
                 <section class="section">
                 <h2 class="subtitle">"Large monsters"</h2>
                 <ul class="mh-list-monster">{
-                    monsters.iter().map(|monster| {
+                    monsters.iter().filter_map(|monster| {
                         let icon_path = format!("/resources/em{0:03}_icon.png", monster.id);
-                        Ok(html!{<li class="mh-list-monster">
+                        let name_name = format!("EnemyIndex{:03}",
+                            monster.boss_init_set_data.as_ref()?.enemy_type);
+                        let name_entry = monster_names.get_entry(&name_name)?;
+                        Some(html!{<li class="mh-list-monster">
                             <a href={format!("/monster/{:03}.html", monster.id)}>
                                 <img class="mh-list-monster-icon" src=icon_path />
-                                <div>{
-                                let name_name = format!("EnemyIndex{:03}",
-                                    monster.boss_init_set_data.as_ref()
-                                    .context(format!("Cannot found boss_init_set for monster {}", monster.id))?
-                                    .enemy_type);
-                                gen_multi_lang(monster_names.get_entry(&name_name)
-                                    .context(format!("Cannot found name for monster {}", monster.id))?)
-                                }</div>
+                                <div>{gen_multi_lang(name_entry)}</div>
                             </a>
                         </li>})
-                    }).collect::<Result<Vec<_>>>()?
+                    }).collect::<Vec<_>>()
                 }</ul>
                 </section>
                 <section class="section">

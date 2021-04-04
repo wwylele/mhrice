@@ -348,7 +348,7 @@ fn gen_condition_fall_quick_sand(
 ) -> Result<Box<tr<String>>> {
     let content = html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td class="mh-spoiler">"Quick sand"</td>
+            <td>"Quick sand"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Preset = {}", data.preset_type)} </td>
         </tr>
@@ -363,7 +363,7 @@ fn gen_condition_fall_otomo_trap(
 ) -> Result<Box<tr<String>>> {
     let content = html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td class="mh-spoiler">"Buddy fall trap"</td>
+            <td>"Buddy fall trap"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Poison stacking = {}, Preset = {}",
                 data.already_poison_stock_value, data.preset_type)} </td>
@@ -394,7 +394,7 @@ fn gen_condition_shock_otomo_trap(
 ) -> Result<Box<tr<String>>> {
     let content = html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td class="mh-spoiler">"Buddy shock trap"</td>
+            <td>"Buddy shock trap"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Preset = {}", data.preset_type)} </td>
         </tr>
@@ -439,7 +439,7 @@ fn gen_condition_steel_fang(
 ) -> Result<Box<tr<String>>> {
     let content = html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td class="mh-spoiler">"\"Steel fang\""</td>
+            <td>"\"Steel fang\""</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Active limit = {}, Preset = {}, Unique target param = {}",
                 data.active_limit_count, data.preset_type, data.is_unique_target_param)}
@@ -495,8 +495,10 @@ pub fn gen_monster(
                                 monster.boss_init_set_data.as_ref()
                                 .context(format!("Cannot found boss_init_set for monster {}", monster.id))?
                                 .enemy_type);
-                            gen_multi_lang(monster_aliases.get_entry(&name_name)
-                                .context(format!("Cannot found name for monster {}", monster.id))?)
+                            monster_aliases.get_entry(&name_name).map_or(
+                                html!(<span>{text!("Monster {:03}", monster.id)}</span>),
+                                gen_multi_lang
+                            )
                         } else {
                             html!(<span>{text!("Monster {:03}", monster.id)}</span>)
                         }

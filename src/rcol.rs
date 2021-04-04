@@ -503,23 +503,36 @@ impl Rcol {
     pub fn apply_skeleton(&mut self, mesh: &Mesh) -> Result<()> {
         for group in &mut self.collider_groups {
             for collider in &mut group.colliders {
-                let bone_a = &mesh.bones[*mesh
+                let bone_a = mesh
                     .bone_names
                     .get(&collider.bone_a)
-                    .context("Unknown bone")?];
+                    .map(|i| &mesh.bones[*i]);
                 let bone_b = mesh
                     .bone_names
                     .get(&collider.bone_b)
                     .map(|i| &mesh.bones[*i]);
 
+                let bone_a = if let Some(bone_a) = bone_a {
+                    bone_a
+                } else {
+                    eprintln!("Unknown bone a {}", collider.bone_a);
+                    continue;
+                };
+
                 collider.shape = match collider.shape {
-                    Shape::Capsule { p0, p1, r } => Shape::Capsule {
-                        p0: (bone_a.absolute_transform * vec4(p0.x, p0.y, p0.z, 1.0)).xyz(),
-                        p1: (bone_b.context("Unknown bone")?.absolute_transform
-                            * vec4(p1.x, p1.y, p1.z, 1.0))
-                        .xyz(),
-                        r,
-                    },
+                    Shape::Capsule { p0, p1, r } => {
+                        let bone_b = if let Some(bone_b) = bone_b {
+                            bone_b
+                        } else {
+                            eprintln!("Unknown bone b {}", collider.bone_b);
+                            continue;
+                        };
+                        Shape::Capsule {
+                            p0: (bone_a.absolute_transform * vec4(p0.x, p0.y, p0.z, 1.0)).xyz(),
+                            p1: (bone_b.absolute_transform * vec4(p1.x, p1.y, p1.z, 1.0)).xyz(),
+                            r,
+                        }
+                    }
                     Shape::Sphere { p, r } => Shape::Sphere {
                         p: (bone_a.absolute_transform * vec4(p.x, p.y, p.z, 1.0)).xyz(),
                         r,
