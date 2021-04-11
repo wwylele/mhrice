@@ -201,12 +201,42 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
 
     condition_preset.verify()?;
 
+    let (index, _) = pak.find_file("Quest/QuestData/NormalQuestData.user")?;
+    let normal_quest_data = User::new(Cursor::new(pak.read_file(index)?))?
+        .rsz
+        .deserialize_single()
+        .context("normal_quest_data")?;
+
+    let (index, _) = pak.find_file("Quest/QuestData/NormalQuestDataForEnemy.user")?;
+    let normal_quest_data_for_enemy = User::new(Cursor::new(pak.read_file(index)?))?
+        .rsz
+        .deserialize_single()
+        .context("normal_quest_data_for_enemy")?;
+
+    let (index, _) = pak.find_file("Message/Quest/QuestData_Hall.msg")?;
+    let quest_hall_msg = Msg::new(Cursor::new(pak.read_file(index)?))?;
+
+    let (index, _) = pak.find_file("Message/Quest/QuestData_Village.msg")?;
+    let quest_village_msg = Msg::new(Cursor::new(pak.read_file(index)?))?;
+
+    let (index, _) = pak.find_file("Message/Quest/QuestData_Tutorial.msg")?;
+    let quest_tutorial_msg = Msg::new(Cursor::new(pak.read_file(index)?))?;
+
+    let (index, _) = pak.find_file("Message/Quest/QuestData_Arena.msg")?;
+    let quest_arena_msg = Msg::new(Cursor::new(pak.read_file(index)?))?;
+
     Ok(Pedia {
         monsters,
         small_monsters,
         monster_names,
         monster_aliases,
         condition_preset,
+        normal_quest_data,
+        normal_quest_data_for_enemy,
+        quest_hall_msg,
+        quest_village_msg,
+        quest_tutorial_msg,
+        quest_arena_msg,
     })
 }
 

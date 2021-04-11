@@ -1,3 +1,4 @@
+use super::gen_quest::*;
 use super::gen_website::{gen_multi_lang, head_common, navbar};
 use super::pedia::*;
 use crate::msg::*;
@@ -439,7 +440,7 @@ fn gen_condition_steel_fang(
 ) -> Result<Box<tr<String>>> {
     let content = html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"\"Steel fang\""</td>
+            <td>"Steel fang"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Active limit = {}, Preset = {}, Unique target param = {}",
                 data.active_limit_count, data.preset_type, data.is_unique_target_param)}
@@ -457,6 +458,7 @@ pub fn gen_monster(
     monster: Monster,
     monster_aliases: &Msg,
     condition_preset: &EnemyConditionPresetData,
+    quests: &[Quest],
     folder: &Path,
 ) -> Result<()> {
     let collider_mapping = monster.collider_mapping;
@@ -476,6 +478,68 @@ pub fn gen_monster(
         "/resources/{}{:03}_icon.png",
         if is_large { "em" } else { "ems" },
         monster.id
+    );
+
+    let monster_id = monster.id;
+
+    let quest_list = html!(
+        <section class="section">
+        <h2 class="subtitle">"Quests"</h2>
+        <table>
+            <thead><tr>
+                <th>"Quest"</th>
+                <th>"HP"</th>
+                <th>"Attack"</th>
+                <th>"Parts"</th>
+                <th>"Other"</th>
+                <th>"Stamina"</th>
+            </tr></thead>
+            <tbody> {
+                quests.iter().flat_map(|quest| {
+                    // TODO: id should be split into main ID (first byte) and sub ID (second byte)
+                    quest.param.boss_em_type.iter().copied().enumerate().filter(|&(i, id)|id == monster_id)
+                    .map(move |(i, _)|{
+
+                        let hp = quest.enemy_param.as_ref().and_then(|ep|ep.vital_tbl.get(i))
+                            .map_or_else(||"-".to_owned(), |v|format!("~ {}", v));
+                        let attack = quest.enemy_param.as_ref().and_then(|ep|ep.attack_tbl.get(i))
+                            .map_or_else(||"-".to_owned(), |v|format!("~ {}", v));
+                        let parts = quest.enemy_param.as_ref().and_then(|ep|ep.parts_tbl.get(i))
+                            .map_or_else(||"-".to_owned(), |v|format!("~ {}", v));
+                        let other = quest.enemy_param.as_ref().and_then(|ep|ep.other_tbl.get(i))
+                            .map_or_else(||"-".to_owned(), |v|format!("~ {}", v));
+                        let stamina = quest.enemy_param.as_ref().and_then(|ep|ep.stamina_tbl.get(i))
+                            .map_or_else(||"-".to_owned(), |v|format!("{}", v));
+
+                        // TODO: id should be split into main ID (first byte) and sub ID (second byte)
+                        let target_tag = if quest.param.tgt_em_type.contains(&monster_id) {
+                            html!(<span class="tag is-primary">"Target"</span>)
+                        } else {
+                            html!(<span />)
+                        };
+
+                        html!(<tr>
+                            <td>
+                                <span class="tag">{text!("{:?}-{:?}", quest.param.enemy_level, quest.param.quest_level)}</span>
+                                <a href={format!("/quest/{:06}.html", quest.param.quest_no)}>
+                                {quest.name.as_ref().map_or(
+                                    html!(<span>{text!("Quest {:06}", quest.param.quest_no)}</span>),
+                                    gen_multi_lang
+                                )}
+                                </a>
+                                {target_tag}
+                            </td>
+                            <td>{text!("{}", hp)}</td>
+                            <td>{text!("{}", attack)}</td>
+                            <td>{text!("{}", parts)}</td>
+                            <td>{text!("{}", other)}</td>
+                            <td>{text!("{}", stamina)}</td>
+                        </tr>)
+                    })
+                })
+            } </tbody>
+        </table>
+        </section>
     );
 
     let doc: DOMTree<String> = html!(
@@ -522,6 +586,8 @@ pub fn gen_monster(
                     monster.data_tune.self_sleep_recover_hp_vital_rate
                 ) }</p>
                 </section>
+
+                { quest_list }
 
                 <section class="section">
                 <h2 class="subtitle">"Hitzone data"</h2>

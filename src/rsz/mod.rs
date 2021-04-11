@@ -7,6 +7,7 @@ mod data_base;
 mod data_tune;
 mod meat_data;
 mod parts_break_data;
+mod quest_data;
 
 pub use anger_data::*;
 pub use boss_init_set_data::*;
@@ -17,6 +18,7 @@ pub use data_base::*;
 pub use data_tune::*;
 pub use meat_data::*;
 pub use parts_break_data::*;
+pub use quest_data::*;
 
 use crate::file_ext::*;
 use anyhow::*;
@@ -551,6 +553,13 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
         PresetKoyashiData,
         PresetSteelFangData,
         EnemyConditionPresetData,
+    );
+
+    r!(
+        NormalQuestDataParam,
+        NormalQuestData,
+        NormalQuestDataForEnemyParam,
+        NormalQuestDataForEnemy
     );
 
     m

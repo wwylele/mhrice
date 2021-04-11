@@ -43,12 +43,28 @@ span.mh-extract-unknown {
     width: 50%;
 }
 
+.mh-quest-list-monster-icon {
+    width: 10%;
+    float:left;
+}
+
+
 ul.mh-list-monster {
     margin: 0 auto;
     text-align: center;
 }
 
 li.mh-list-monster {
+    display: inline-block;
+    vertical-align: top;
+}
+
+ul.mh-list-quest {
+    margin: 0 auto;
+    text-align: center;
+}
+
+li.mh-list-quest {
     display: inline-block;
     vertical-align: top;
 }

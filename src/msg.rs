@@ -10,7 +10,7 @@ pub struct MsgAttributeHeader {
     pub name: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct MsgEntry {
     pub name: String,
     pub guid: String,

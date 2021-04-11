@@ -1,4 +1,5 @@
 use super::gen_monster::gen_monster;
+use super::gen_quest::*;
 use super::pedia::*;
 use crate::msg::*;
 use crate::part_color::*;
@@ -78,6 +79,9 @@ pub fn navbar() -> Box<div<String>> {
                     <a class="navbar-item" href="/monster.html">
                         "Monsters"
                     </a>
+                    <a class="navbar-item" href="/quest.html">
+                        "Quests"
+                    </a>
                     <a class="navbar-item" href="/about.html">
                         "About"
                     </a>
@@ -122,6 +126,7 @@ pub fn gen_monsters(
     monster_names: &Msg,
     monster_aliases: &Msg,
     condition_preset: &EnemyConditionPresetData,
+    quests: &[Quest],
     root: &Path,
 ) -> Result<()> {
     let monsters_path = root.join("monster.html");
@@ -184,6 +189,7 @@ pub fn gen_monsters(
             monster,
             &monster_aliases,
             condition_preset,
+            quests,
             &monster_path,
         )?;
     }
@@ -196,6 +202,7 @@ pub fn gen_monsters(
             monster,
             &monster_aliases,
             condition_preset,
+            quests,
             &monster_path,
         )?;
     }
@@ -287,14 +294,19 @@ pub fn gen_website(pedia: Pedia, output: &str) -> Result<()> {
     }
     create_dir(&root)?;
 
+    let quests = prepare_quests(&pedia)?;
+
+    gen_quests(&quests, &pedia, &root)?;
     gen_monsters(
         pedia.monsters,
         pedia.small_monsters,
         &pedia.monster_names,
         &pedia.monster_aliases,
         &pedia.condition_preset,
+        &quests,
         &root,
     )?;
+    gen_quest_list(&quests, &root)?;
     gen_about(&root)?;
     gen_static(&root)?;
     gen_part_color_css(&root)?;
