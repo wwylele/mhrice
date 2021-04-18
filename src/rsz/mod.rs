@@ -1,4 +1,5 @@
 mod anger_data;
+mod armor;
 mod boss_init_set_data;
 mod collision;
 mod condition_damage_data;
@@ -8,8 +9,10 @@ mod data_tune;
 mod meat_data;
 mod parts_break_data;
 mod quest_data;
+mod skill;
 
 pub use anger_data::*;
+pub use armor::*;
 pub use boss_init_set_data::*;
 pub use collision::*;
 pub use condition_damage_data::*;
@@ -19,6 +22,7 @@ pub use data_tune::*;
 pub use meat_data::*;
 pub use parts_break_data::*;
 pub use quest_data::*;
+pub use skill::*;
 
 use crate::file_ext::*;
 use anyhow::*;
@@ -561,6 +565,10 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
         NormalQuestDataForEnemyParam,
         NormalQuestDataForEnemy
     );
+
+    r!(ArmorBaseUserDataParam, ArmorBaseUserData);
+
+    r!(PlEquipSkillBaseUserData, PlEquipSkillBaseUserDataParam);
 
     m
 });

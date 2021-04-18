@@ -30,10 +30,18 @@ pub struct Pedia {
     pub monster_names: Msg,
     pub monster_aliases: Msg,
     pub condition_preset: EnemyConditionPresetData,
+
     pub normal_quest_data: NormalQuestData,
     pub normal_quest_data_for_enemy: NormalQuestDataForEnemy,
     pub quest_hall_msg: Msg,
     pub quest_village_msg: Msg,
     pub quest_tutorial_msg: Msg,
     pub quest_arena_msg: Msg,
+
+    pub armor: ArmorBaseUserData,
+
+    pub equip_skill: PlEquipSkillBaseUserData,
+    pub player_skill_detail_msg: Msg,
+    pub player_skill_explain_msg: Msg,
+    pub player_skill_name_msg: Msg,
 }

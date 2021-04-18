@@ -1,5 +1,6 @@
 use super::gen_monster::gen_monster;
 use super::gen_quest::*;
+use super::gen_skill::*;
 use super::pedia::*;
 use crate::msg::*;
 use crate::part_color::*;
@@ -81,6 +82,9 @@ pub fn navbar() -> Box<div<String>> {
                     </a>
                     <a class="navbar-item" href="/quest.html">
                         "Quests"
+                    </a>
+                    <a class="navbar-item" href="/skill.html">
+                        "Skills"
                     </a>
                     <a class="navbar-item" href="/about.html">
                         "About"
@@ -295,8 +299,11 @@ pub fn gen_website(pedia: Pedia, output: &str) -> Result<()> {
     create_dir(&root)?;
 
     let quests = prepare_quests(&pedia)?;
+    let skills = prepare_skills(&pedia)?;
 
     gen_quests(&quests, &pedia, &root)?;
+    gen_skills(&skills, &root)?;
+    gen_skill_list(&skills, &root)?;
     gen_monsters(
         pedia.monsters,
         pedia.small_monsters,

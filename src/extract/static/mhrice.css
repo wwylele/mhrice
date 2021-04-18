@@ -72,3 +72,8 @@ li.mh-list-quest {
 div.mh-monster-header img {
     float: right;
 }
+
+ul.mh-list-skill {
+    display: grid;
+    grid-template-columns: repeat( auto-fit, minmax(250px, 1fr) );
+}

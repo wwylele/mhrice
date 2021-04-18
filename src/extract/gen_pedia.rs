@@ -158,6 +158,19 @@ pub fn gen_monsters(
     Ok(monsters)
 }
 
+fn get_msg(pak: &mut PakReader<impl Read + Seek>, path: &str) -> Result<Msg> {
+    let (index, _) = pak.find_file(path)?;
+    Msg::new(Cursor::new(pak.read_file(index)?))
+}
+
+fn get_user<T: 'static>(pak: &mut PakReader<impl Read + Seek>, path: &'static str) -> Result<T> {
+    let (index, _) = pak.find_file(path)?;
+    User::new(Cursor::new(pak.read_file(index)?))?
+        .rsz
+        .deserialize_single()
+        .context(path)
+}
+
 pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let monsters = gen_monsters(
         pak,
@@ -187,43 +200,41 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     )
     .context("Generating small monsters")?;
 
-    let (monster_names, _) = pak.find_file("Message/Tag/Tag_EM_Name.msg")?;
-    let monster_names = Msg::new(Cursor::new(pak.read_file(monster_names)?))?;
+    let monster_names = get_msg(pak, "Message/Tag/Tag_EM_Name.msg")?;
+    let monster_aliases = get_msg(pak, "Message/Tag/Tag_EM_Name_Alias.msg")?;
 
-    let (monster_aliases, _) = pak.find_file("Message/Tag/Tag_EM_Name_Alias.msg")?;
-    let monster_aliases = Msg::new(Cursor::new(pak.read_file(monster_aliases)?))?;
-
-    let (index, _) = pak.find_file("enemy/user_data/system_condition_damage_preset_data.user")?;
-    let condition_preset: EnemyConditionPresetData = User::new(Cursor::new(pak.read_file(index)?))?
-        .rsz
-        .deserialize_single()
-        .context("system_condition_damage_preset_data")?;
-
+    let condition_preset: EnemyConditionPresetData = get_user(
+        pak,
+        "enemy/user_data/system_condition_damage_preset_data.user",
+    )?;
     condition_preset.verify()?;
 
-    let (index, _) = pak.find_file("Quest/QuestData/NormalQuestData.user")?;
-    let normal_quest_data = User::new(Cursor::new(pak.read_file(index)?))?
-        .rsz
-        .deserialize_single()
-        .context("normal_quest_data")?;
+    let normal_quest_data = get_user(pak, "Quest/QuestData/NormalQuestData.user")?;
+    let normal_quest_data_for_enemy =
+        get_user(pak, "Quest/QuestData/NormalQuestDataForEnemy.user")?;
+    let quest_hall_msg = get_msg(pak, "Message/Quest/QuestData_Hall.msg")?;
+    let quest_village_msg = get_msg(pak, "Message/Quest/QuestData_Village.msg")?;
+    let quest_tutorial_msg = get_msg(pak, "Message/Quest/QuestData_Tutorial.msg")?;
+    let quest_arena_msg = get_msg(pak, "Message/Quest/QuestData_Arena.msg")?;
 
-    let (index, _) = pak.find_file("Quest/QuestData/NormalQuestDataForEnemy.user")?;
-    let normal_quest_data_for_enemy = User::new(Cursor::new(pak.read_file(index)?))?
-        .rsz
-        .deserialize_single()
-        .context("normal_quest_data_for_enemy")?;
+    let armor = get_user(pak, "data/Define/Player/Armor/ArmorBaseData.user")?;
 
-    let (index, _) = pak.find_file("Message/Quest/QuestData_Hall.msg")?;
-    let quest_hall_msg = Msg::new(Cursor::new(pak.read_file(index)?))?;
-
-    let (index, _) = pak.find_file("Message/Quest/QuestData_Village.msg")?;
-    let quest_village_msg = Msg::new(Cursor::new(pak.read_file(index)?))?;
-
-    let (index, _) = pak.find_file("Message/Quest/QuestData_Tutorial.msg")?;
-    let quest_tutorial_msg = Msg::new(Cursor::new(pak.read_file(index)?))?;
-
-    let (index, _) = pak.find_file("Message/Quest/QuestData_Arena.msg")?;
-    let quest_arena_msg = Msg::new(Cursor::new(pak.read_file(index)?))?;
+    let equip_skill = get_user(
+        pak,
+        "data/Define/Player/Skill/PlEquipSkill/PlEquipSkillBaseData.user",
+    )?;
+    let player_skill_detail_msg = get_msg(
+        pak,
+        "data/Define/Player/Skill/PlEquipSkill/PlayerSkill_Detail.msg",
+    )?;
+    let player_skill_explain_msg = get_msg(
+        pak,
+        "data/Define/Player/Skill/PlEquipSkill/PlayerSkill_Explain.msg",
+    )?;
+    let player_skill_name_msg = get_msg(
+        pak,
+        "data/Define/Player/Skill/PlEquipSkill/PlayerSkill_Name.msg",
+    )?;
 
     Ok(Pedia {
         monsters,
@@ -237,6 +248,11 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         quest_village_msg,
         quest_tutorial_msg,
         quest_arena_msg,
+        armor,
+        equip_skill,
+        player_skill_detail_msg,
+        player_skill_explain_msg,
+        player_skill_name_msg,
     })
 }
 
