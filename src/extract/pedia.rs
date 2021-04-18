@@ -13,6 +13,7 @@ pub struct ColliderMapping {
 #[derive(Debug, Serialize)]
 pub struct Monster {
     pub id: u32,
+    pub sub_id: u32,
     pub data_base: EnemyDataBase,
     pub data_tune: EnemyDataTune,
     pub meat_data: EnemyMeatData,

@@ -25,14 +25,17 @@ fn exactly_one<T>(mut iterator: impl Iterator<Item = T>) -> Result<T> {
     Ok(next)
 }
 
-fn gen_em_collider_path(id: u32) -> String {
-    format!("enemy/em{0:03}/00/collision/em{0:03}_00_colliders.rcol", id)
+fn gen_em_collider_path(id: u32, sub_id: u32) -> String {
+    format!(
+        "enemy/em{0:03}/{1:02}/collision/em{0:03}_{1:02}_colliders.rcol",
+        id, sub_id
+    )
 }
 
-fn gen_ems_collider_path(id: u32) -> String {
+fn gen_ems_collider_path(id: u32, sub_id: u32) -> String {
     format!(
-        "enemy/ems{0:03}/00/collision/ems{0:03}_00_colliders.rcol",
-        id
+        "enemy/ems{0:03}/{1:02}/collision/ems{0:03}_{1:02}_colliders.rcol",
+        id, sub_id
     )
 }
 
@@ -79,10 +82,10 @@ pub fn gen_collider_mapping(rcol: Rcol) -> Result<ColliderMapping> {
 
 pub fn gen_monsters(
     pak: &mut PakReader<impl Read + Seek>,
-    pfb_path_gen: fn(u32) -> String,
-    boss_init_path_gen: fn(u32) -> Option<String>,
-    collider_path_gen: fn(u32) -> String,
-    data_tune_path_gen: fn(u32) -> String,
+    pfb_path_gen: fn(u32, u32) -> String,
+    boss_init_path_gen: fn(u32, u32) -> Option<String>,
+    collider_path_gen: fn(u32, u32) -> String,
+    data_tune_path_gen: fn(u32, u32) -> String,
 ) -> Result<Vec<Monster>> {
     let mut monsters = vec![];
 
@@ -102,57 +105,62 @@ pub fn gen_monsters(
     }
 
     for id in 0..1000 {
-        let main_pfb_path = pfb_path_gen(id);
-        let main_pfb_index = if let Ok((index, _)) = pak.find_file(&main_pfb_path) {
-            index
-        } else {
-            continue;
-        };
-        let main_pfb = Pfb::new(Cursor::new(pak.read_file(main_pfb_index)?))?;
+        for sub_id in 0..10 {
+            let main_pfb_path = pfb_path_gen(id, sub_id);
+            let main_pfb_index = if let Ok((index, _)) = pak.find_file(&main_pfb_path) {
+                index
+            } else {
+                continue;
+            };
+            let main_pfb = Pfb::new(Cursor::new(pak.read_file(main_pfb_index)?))?;
 
-        let data_base = sub_file(pak, &main_pfb).context("data_base")?;
-        let data_tune = {
-            // not using sub_file here because some pfb also somehow reference the variantion file
-            let path = data_tune_path_gen(id);
-            let (index, _) = pak.find_file(&path)?;
-            User::new(Cursor::new(pak.read_file(index)?))?
-                .rsz
-                .deserialize_single()
-                .context("data_tune")?
-        };
-        let meat_data = sub_file(pak, &main_pfb).context("meat_data")?;
-        let condition_damage_data = sub_file(pak, &main_pfb).context("condition_damage_data")?;
-        let anger_data = sub_file(pak, &main_pfb).context("anger_data")?;
-        let parts_break_data = sub_file(pak, &main_pfb).context("parts_break_data")?;
-
-        let boss_init_set_data = if let Some(path) = boss_init_path_gen(id) {
-            let (index, _) = pak.find_file(&path)?;
-            let data = User::new(Cursor::new(pak.read_file(index)?))?;
-            Some(
-                data.rsz
+            let data_base = sub_file(pak, &main_pfb).context("data_base")?;
+            let data_tune = {
+                // not using sub_file here because some pfb also somehow reference the variantion file
+                let path = data_tune_path_gen(id, sub_id);
+                let (index, _) = pak.find_file(&path)?;
+                User::new(Cursor::new(pak.read_file(index)?))?
+                    .rsz
                     .deserialize_single()
-                    .context("boss_init_set_data")?,
-            )
-        } else {
-            None
-        };
+                    .context("data_tune")?
+            };
+            let meat_data = sub_file(pak, &main_pfb).context("meat_data")?;
+            let condition_damage_data =
+                sub_file(pak, &main_pfb).context("condition_damage_data")?;
+            let anger_data = sub_file(pak, &main_pfb).context("anger_data")?;
+            let parts_break_data = sub_file(pak, &main_pfb).context("parts_break_data")?;
 
-        let rcol_path = collider_path_gen(id);
-        let (rcol_index, _) = pak.find_file(&rcol_path)?;
-        let rcol = Rcol::new(Cursor::new(pak.read_file(rcol_index)?), true).context(rcol_path)?;
-        let collider_mapping = gen_collider_mapping(rcol)?;
+            let boss_init_set_data = if let Some(path) = boss_init_path_gen(id, sub_id) {
+                let (index, _) = pak.find_file(&path)?;
+                let data = User::new(Cursor::new(pak.read_file(index)?))?;
+                Some(
+                    data.rsz
+                        .deserialize_single()
+                        .context("boss_init_set_data")?,
+                )
+            } else {
+                None
+            };
 
-        monsters.push(Monster {
-            id,
-            data_base,
-            data_tune,
-            meat_data,
-            condition_damage_data,
-            anger_data,
-            parts_break_data,
-            boss_init_set_data,
-            collider_mapping,
-        })
+            let rcol_path = collider_path_gen(id, sub_id);
+            let (rcol_index, _) = pak.find_file(&rcol_path)?;
+            let rcol =
+                Rcol::new(Cursor::new(pak.read_file(rcol_index)?), true).context(rcol_path)?;
+            let collider_mapping = gen_collider_mapping(rcol)?;
+
+            monsters.push(Monster {
+                id,
+                sub_id,
+                data_base,
+                data_tune,
+                meat_data,
+                condition_damage_data,
+                anger_data,
+                parts_break_data,
+                boss_init_set_data,
+                collider_mapping,
+            })
+        }
     }
 
     Ok(monsters)
@@ -174,27 +182,42 @@ fn get_user<T: 'static>(pak: &mut PakReader<impl Read + Seek>, path: &'static st
 pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let monsters = gen_monsters(
         pak,
-        |id| format!("enemy/em{0:03}/00/prefab/em{0:03}_00.pfb", id),
-        |id| {
+        |id, sub_id| {
+            format!(
+                "enemy/em{0:03}/{1:02}/prefab/em{0:03}_{1:02}.pfb",
+                id, sub_id
+            )
+        },
+        |id, sub_id| {
             Some(format!(
-                "enemy/em{0:03}/00/user_data/em{0:03}_00_boss_init_set_data.user",
-                id
+                "enemy/em{0:03}/{1:02}/user_data/em{0:03}_{1:02}_boss_init_set_data.user",
+                id, sub_id
             ))
         },
         gen_em_collider_path,
-        |id| format!("enemy/em{0:03}/00/user_data/em{0:03}_00_datatune.user", id),
+        |id, sub_id| {
+            format!(
+                "enemy/em{0:03}/{1:02}/user_data/em{0:03}_{1:02}_datatune.user",
+                id, sub_id
+            )
+        },
     )
     .context("Generating large monsters")?;
 
     let small_monsters = gen_monsters(
         pak,
-        |id| format!("enemy/ems{0:03}/00/prefab/ems{0:03}_00.pfb", id),
-        |_| None,
-        gen_ems_collider_path,
-        |id| {
+        |id, sub_id| {
             format!(
-                "enemy/ems{0:03}/00/user_data/ems{0:03}_00_datatune.user",
-                id
+                "enemy/ems{0:03}/{1:02}/prefab/ems{0:03}_{1:02}.pfb",
+                id, sub_id
+            )
+        },
+        |_, _| None,
+        gen_ems_collider_path,
+        |id, sub_id| {
+            format!(
+                "enemy/ems{0:03}/{1:02}/user_data/ems{0:03}_{1:02}_datatune.user",
+                id, sub_id
             )
         },
     )
@@ -259,35 +282,37 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
 fn gen_monster_hitzones(
     pak: &mut PakReader<impl Read + Seek>,
     output: &Path,
-    collider_path_gen: fn(u32) -> String,
-    mesh_path_gen: fn(u32) -> String,
-    meat_file_name_gen: fn(u32) -> String,
-    parts_group_file_name_gen: fn(u32) -> String,
+    collider_path_gen: fn(u32, u32) -> String,
+    mesh_path_gen: fn(u32, u32) -> String,
+    meat_file_name_gen: fn(u32, u32) -> String,
+    parts_group_file_name_gen: fn(u32, u32) -> String,
 ) -> Result<()> {
     let mut monsters = vec![];
     for index in 0..1000 {
-        let mesh_path = mesh_path_gen(index);
-        let collider_path = collider_path_gen(index);
-        let mesh = if let Ok((mesh, _)) = pak.find_file(&mesh_path) {
-            mesh
-        } else {
-            continue;
-        };
-        let (collider, _) = pak
-            .find_file(&collider_path)
-            .context("Found mesh but not collider")?;
-        let mesh = pak.read_file(mesh)?;
-        let collider = pak.read_file(collider)?;
-        monsters.push((index, mesh, collider));
+        for sub_id in 0..10 {
+            let mesh_path = mesh_path_gen(index, sub_id);
+            let collider_path = collider_path_gen(index, sub_id);
+            let mesh = if let Ok((mesh, _)) = pak.find_file(&mesh_path) {
+                mesh
+            } else {
+                continue;
+            };
+            let (collider, _) = pak
+                .find_file(&collider_path)
+                .context("Found mesh but not collider")?;
+            let mesh = pak.read_file(mesh)?;
+            let collider = pak.read_file(collider)?;
+            monsters.push((index, sub_id, mesh, collider));
+        }
     }
 
     monsters
         .into_par_iter()
-        .map(|(index, mesh, collider)| {
+        .map(|(index, sub_id, mesh, collider)| {
             let mesh = Mesh::new(Cursor::new(mesh))?;
             let mut collider = Rcol::new(Cursor::new(collider), true)?;
-            let meat_path = output.join(meat_file_name_gen(index));
-            let parts_group_path = output.join(parts_group_file_name_gen(index));
+            let meat_path = output.join(meat_file_name_gen(index, sub_id));
+            let parts_group_path = output.join(parts_group_file_name_gen(index, sub_id));
             collider.apply_skeleton(&mesh)?;
             let (vertexs, indexs) = collider.color_monster_model(&mesh)?;
             let HitzoneDiagram { meat, parts_group } = gen_hitzone_diagram(vertexs, indexs)?;
@@ -311,40 +336,63 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
         pak,
         &root,
         gen_em_collider_path,
-        |id| format!("enemy/em{0:03}/00/mod/em{0:03}_00.mesh", id),
-        |id| format!("em{0:03}_meat.png", id),
-        |id| format!("em{0:03}_parts_group.png", id),
+        |id, sub_id| format!("enemy/em{0:03}/{1:02}/mod/em{0:03}_{1:02}.mesh", id, sub_id),
+        |id, sub_id| format!("em{0:03}_{1:02}_meat.png", id, sub_id),
+        |id, sub_id| format!("em{0:03}_{1:02}_parts_group.png", id, sub_id),
     )?;
 
     gen_monster_hitzones(
         pak,
         &root,
         gen_ems_collider_path,
-        |id| format!("enemy/ems{0:03}/00/mod/ems{0:03}_00.mesh", id),
-        |id| format!("ems{0:03}_meat.png", id),
-        |id| format!("ems{0:03}_parts_group.png", id),
+        |id, sub_id| {
+            format!(
+                "enemy/ems{0:03}/{1:02}/mod/ems{0:03}_{1:02}.mesh",
+                id, sub_id
+            )
+        },
+        |id, sub_id| format!("ems{0:03}_{1:02}_meat.png", id, sub_id),
+        |id, sub_id| format!("ems{0:03}_{1:02}_parts_group.png", id, sub_id),
     )?;
 
     for index in 0..1000 {
-        let icon_path = format!("gui/80_Texture/boss_icon/em{:03}_00_IAM.tex", index);
-        let icon = if let Ok((icon, _)) = pak.find_file(&icon_path) {
-            icon
-        } else {
-            continue;
-        };
-        let icon = Tex::new(Cursor::new(pak.read_file(icon)?))?;
-        icon.save_png(0, 0, &root.join(format!("em{0:03}_icon.png", index)))?;
+        for sub_id in 0..10 {
+            let icon_path = format!(
+                "gui/80_Texture/boss_icon/em{:03}_{1:02}_IAM.tex",
+                index, sub_id
+            );
+            let icon = if let Ok((icon, _)) = pak.find_file(&icon_path) {
+                icon
+            } else {
+                continue;
+            };
+            let icon = Tex::new(Cursor::new(pak.read_file(icon)?))?;
+            icon.save_png(
+                0,
+                0,
+                &root.join(format!("em{0:03}_{1:02}_icon.png", index, sub_id)),
+            )?;
+        }
     }
 
     for index in 0..1000 {
-        let icon_path = format!("gui/80_Texture/boss_icon/ems{:03}_00_IAM.tex", index);
-        let icon = if let Ok((icon, _)) = pak.find_file(&icon_path) {
-            icon
-        } else {
-            continue;
-        };
-        let icon = Tex::new(Cursor::new(pak.read_file(icon)?))?;
-        icon.save_png(0, 0, &root.join(format!("ems{0:03}_icon.png", index)))?;
+        for sub_id in 0..10 {
+            let icon_path = format!(
+                "gui/80_Texture/boss_icon/ems{:03}_{1:02}_IAM.tex",
+                index, sub_id
+            );
+            let icon = if let Ok((icon, _)) = pak.find_file(&icon_path) {
+                icon
+            } else {
+                continue;
+            };
+            let icon = Tex::new(Cursor::new(pak.read_file(icon)?))?;
+            icon.save_png(
+                0,
+                0,
+                &root.join(format!("ems{0:03}_{1:02}_icon.png", index, sub_id)),
+            )?;
+        }
     }
     Ok(())
 }

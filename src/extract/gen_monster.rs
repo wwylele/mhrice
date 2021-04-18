@@ -465,22 +465,26 @@ pub fn gen_monster(
     let enemy_parts_break_data_list = monster.data_tune.enemy_parts_break_data_list;
     let enemy_parts_loss_data_list = monster.data_tune.enemy_parts_loss_data_list;
     let meat_figure = format!(
-        "/resources/{}{:03}_meat.png",
+        "/resources/{}{:03}_{:02}_meat.png",
         if is_large { "em" } else { "ems" },
-        monster.id
+        monster.id,
+        monster.sub_id,
     );
     let parts_group_figure = format!(
-        "/resources/{}{:03}_parts_group.png",
+        "/resources/{}{:03}_{:02}_parts_group.png",
         if is_large { "em" } else { "ems" },
-        monster.id
+        monster.id,
+        monster.sub_id,
     );
     let icon = format!(
-        "/resources/{}{:03}_icon.png",
+        "/resources/{}{:03}_{:02}_icon.png",
         if is_large { "em" } else { "ems" },
-        monster.id
+        monster.id,
+        monster.sub_id,
     );
 
     let monster_id = monster.id;
+    let monster_sub_id = monster.sub_id;
 
     let quest_list = html!(
         <section class="section">
@@ -496,8 +500,9 @@ pub fn gen_monster(
             </tr></thead>
             <tbody> {
                 quests.iter().flat_map(|quest| {
-                    // TODO: id should be split into main ID (first byte) and sub ID (second byte)
-                    quest.param.boss_em_type.iter().copied().enumerate().filter(|&(i, id)|id == monster_id)
+                    quest.param.boss_em_type.iter().copied().enumerate().filter(
+                        |&(i, id)|id == monster_id | (monster_sub_id << 8)
+                    )
                     .map(move |(i, _)|{
 
                         let hp = quest.enemy_param.as_ref().and_then(|ep|ep.vital_tbl.get(i))
@@ -511,8 +516,7 @@ pub fn gen_monster(
                         let stamina = quest.enemy_param.as_ref().and_then(|ep|ep.stamina_tbl.get(i))
                             .map_or_else(||"-".to_owned(), |v|format!("{}", v));
 
-                        // TODO: id should be split into main ID (first byte) and sub ID (second byte)
-                        let target_tag = if quest.param.tgt_em_type.contains(&monster_id) {
+                        let target_tag = if quest.param.tgt_em_type.contains(&(monster_id | (monster_sub_id << 8))) {
                             html!(<span class="tag is-primary">"Target"</span>)
                         } else {
                             html!(<span />)
@@ -545,7 +549,7 @@ pub fn gen_monster(
     let doc: DOMTree<String> = html!(
         <html>
             <head>
-                <title>{text!("Monster {:03} - MHRice", monster.id)}</title>
+                <title>{text!("Monster {:03}_{:02} - MHRice", monster.id, monster.sub_id)}</title>
                 { head_common() }
             </head>
             <body>
@@ -557,14 +561,15 @@ pub fn gen_monster(
                         if is_large {
                             let name_name = format!("Alias_EnemyIndex{:03}",
                                 monster.boss_init_set_data.as_ref()
-                                .context(format!("Cannot found boss_init_set for monster {}", monster.id))?
+                                .context(format!("Cannot found boss_init_set for monster {}_{}",
+                                    monster.id, monster.sub_id))?
                                 .enemy_type);
                             monster_aliases.get_entry(&name_name).map_or(
-                                html!(<span>{text!("Monster {:03}", monster.id)}</span>),
+                                html!(<span>{text!("Monster {:03}_{:02}", monster.id, monster.sub_id)}</span>),
                                 gen_multi_lang
                             )
                         } else {
-                            html!(<span>{text!("Monster {:03}", monster.id)}</span>)
+                            html!(<span>{text!("Monster {:03}_{:02}", monster.id, monster.sub_id)}</span>)
                         }
                     }</h1>
                 </div>
@@ -832,7 +837,7 @@ pub fn gen_monster(
         </html>: String
     );
 
-    let file = PathBuf::from(folder).join(format!("{:03}.html", monster.id));
+    let file = PathBuf::from(folder).join(format!("{:03}_{:02}.html", monster.id, monster.sub_id));
     write(file, doc.to_string())?;
     Ok(())
 }

@@ -168,15 +168,15 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, path: &Path) -> Result<()> {
                     <tbody> {
                         quest.param.boss_em_type.iter().copied().enumerate().filter(|&(i, id)|id != 0)
                         .map(|(i, id)|{
-                            // TODO: id should be split into main ID (first byte) and sub ID (second byte)
-                            let monster = pedia.monsters.iter().find(|m|m.id == id);
+                            let monster = pedia.monsters.iter().find(|m|(m.id | m.sub_id << 8) == id);
                             let monster_name = (||{
                                 let name_name = format!("EnemyIndex{:03}",
                                     monster?.boss_init_set_data.as_ref()?.enemy_type);
                                 Some(gen_multi_lang(pedia.monster_names.get_entry(&name_name)?))
-                            })().unwrap_or(html!(<span>{text!("Monster {:03}", id)}</span>));
+                            })().unwrap_or(html!(<span>{text!("Monster {:03}_{:02}",
+                                id & 0xFF, id >> 8)}</span>));
 
-                            let icon_path = format!("/resources/em{0:03}_icon.png", id);
+                            let icon_path = format!("/resources/em{0:03}_{1:02}_icon.png", id & 0xFF, id >> 8);
 
                             let hp = quest.enemy_param.as_ref().and_then(|ep|ep.vital_tbl.get(i))
                                 .map_or_else(||"-".to_owned(), |v|format!("~ {}", v));
@@ -189,7 +189,6 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, path: &Path) -> Result<()> {
                             let stamina = quest.enemy_param.as_ref().and_then(|ep|ep.stamina_tbl.get(i))
                                 .map_or_else(||"-".to_owned(), |v|format!("{}", v));
 
-                            // TODO: id should be split into main ID (first byte) and sub ID (second byte)
                             let target_tag = if quest.param.tgt_em_type.contains(&id) {
                                 html!(<span class="tag is-primary">"Target"</span>)
                             } else {
@@ -198,7 +197,7 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, path: &Path) -> Result<()> {
 
                             html!(<tr>
                                 <td>
-                                    <a href={format!("/monster/{:03}.html", id)}>
+                                    <a href={format!("/monster/{:03}_{1:02}.html", id & 0xFF, id >> 8)}>
                                         <img class="mh-quest-list-monster-icon" src=icon_path />
                                         <span  class="mh-quest-list-monster-name">
                                             {monster_name}

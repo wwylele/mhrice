@@ -302,6 +302,63 @@ async fn upload_s3(
     Ok(())
 }
 
+async fn cleanup_s3_old_files(path: &Path, bucket: String, client: &S3Client) -> Result<()> {
+    let mut objects = vec![];
+    let mut continuation_token = None;
+    loop {
+        let request = ListObjectsV2Request {
+            bucket: bucket.clone(),
+            continuation_token: continuation_token.take(),
+            delimiter: None,
+            encoding_type: None,
+            expected_bucket_owner: None,
+            fetch_owner: None,
+            max_keys: None,
+            prefix: None,
+            request_payer: None,
+            start_after: None,
+        };
+        let result = client.list_objects_v2(request).await?;
+
+        for object in result.contents.into_iter().flatten() {
+            let key = if let Some(key) = object.key {
+                key
+            } else {
+                continue;
+            };
+            if !path.join(&key).is_file() {
+                println!("Deleting {}...", key);
+                objects.push(ObjectIdentifier {
+                    key,
+                    version_id: None,
+                });
+            }
+        }
+
+        if result.is_truncated.unwrap_or(false) {
+            continuation_token = result.continuation_token;
+        } else {
+            break;
+        }
+    }
+
+    let request = DeleteObjectsRequest {
+        bucket,
+        bypass_governance_retention: None,
+        delete: Delete {
+            objects,
+            quiet: Some(true),
+        },
+        expected_bucket_owner: None,
+        mfa: None,
+        request_payer: None,
+    };
+
+    client.delete_objects(request).await?;
+
+    Ok(())
+}
+
 fn upload_s3_folder(path: &Path, bucket: String, client: &S3Client) -> Result<()> {
     use futures::future::try_join_all;
     use tokio::runtime::Runtime;
@@ -333,6 +390,8 @@ fn upload_s3_folder(path: &Path, bucket: String, client: &S3Client) -> Result<()
             .context("Path contain non UTF-8 character")?
             .to_owned();
 
+        println!("Uploading {}...", key);
+
         futures.push(upload_s3(
             entry.into_path(),
             len,
@@ -343,7 +402,9 @@ fn upload_s3_folder(path: &Path, bucket: String, client: &S3Client) -> Result<()
         ));
     }
 
-    Runtime::new()?.block_on(try_join_all(futures))?;
+    let rt = Runtime::new()?;
+    rt.block_on(try_join_all(futures))?;
+    rt.block_on(cleanup_s3_old_files(path, bucket, client))?;
 
     Ok(())
 }

@@ -149,12 +149,12 @@ pub fn gen_monsters(
                 <h2 class="subtitle">"Large monsters"</h2>
                 <ul class="mh-list-monster">{
                     monsters.iter().filter_map(|monster| {
-                        let icon_path = format!("/resources/em{0:03}_icon.png", monster.id);
+                        let icon_path = format!("/resources/em{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
                         let name_name = format!("EnemyIndex{:03}",
                             monster.boss_init_set_data.as_ref()?.enemy_type);
                         let name_entry = monster_names.get_entry(&name_name)?;
                         Some(html!{<li class="mh-list-monster">
-                            <a href={format!("/monster/{:03}.html", monster.id)}>
+                            <a href={format!("/monster/{:03}_{:02}.html", monster.id, monster.sub_id)}>
                                 <img class="mh-list-monster-icon" src=icon_path />
                                 <div>{gen_multi_lang(name_entry)}</div>
                             </a>
@@ -165,13 +165,14 @@ pub fn gen_monsters(
                 <section class="section">
                 <h2 class="subtitle">"Small monsters"</h2>
                 <ul class="mh-list-monster">{
-                    small_monsters.iter().map(|monster| {
-                        let icon_path = format!("/resources/ems{0:03}_icon.png", monster.id);
+                    small_monsters.iter().filter(|monster|monster.sub_id == 0) // sub small monsters are b0rked
+                    .map(|monster| {
+                        let icon_path = format!("/resources/ems{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
                         html!{<li class="mh-list-monster">
-                            <a href={format!("/small-monster/{:03}.html", monster.id)}>
+                            <a href={format!("/small-monster/{:03}_{:02}.html", monster.id, monster.sub_id)}>
                                 <img class="mh-list-monster-icon" src=icon_path />
                                 <div>{
-                                    text!("Small monster {:03}", monster.id)
+                                    text!("Small monster {:03}_{:02}", monster.id, monster.sub_id)
                                 }</div>
                             </a>
                         </li>}
