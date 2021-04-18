@@ -729,7 +729,7 @@ impl Tdb {
 
         file.seek_assert_align_up(q_offset, 16)?;
         let qs = (0..q_count)
-            .map(|_| Ok(file.read_u32()?))
+            .map(|_| file.read_u32())
             .collect::<Result<Vec<_>>>()?;
 
         let mut symbols: Vec<Option<String>> = vec![None; type_instances.len()];

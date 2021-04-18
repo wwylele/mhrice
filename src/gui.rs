@@ -1,9 +1,9 @@
+#![allow(unused_variables)]
+
 use crate::file_ext::*;
 use anyhow::*;
 use serde::*;
-use std::collections::BTreeMap;
-use std::convert::{TryFrom, TryInto};
-use std::io::{Cursor, Read, Seek, SeekFrom};
+use std::io::{Read, Seek, SeekFrom};
 
 use serde::Serializer;
 

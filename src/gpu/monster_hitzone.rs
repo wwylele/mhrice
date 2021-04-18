@@ -398,7 +398,7 @@ pub fn gen_hitzone_diagram(
 
             let image: texture::RawImage2d<u8> = color.read();
 
-            Ok(crop_image(image)?)
+            crop_image(image)
         };
 
         Ok(HitzoneDiagram {

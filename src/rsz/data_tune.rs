@@ -205,6 +205,7 @@ rsz_struct! {
 
 rsz_enum! {
     #[rsz(u8)]
+    #[allow(clippy::upper_case_acronyms)]
     #[derive(Debug, Serialize)]
     pub enum HitWeight {
         PushedOnly = 0,
@@ -212,7 +213,7 @@ rsz_enum! {
         SSS = 2,
         SS = 3,
         S = 4,
-        Normal =5,
+        Normal = 5,
         L = 6,
         LL = 7,
         LLL = 8,

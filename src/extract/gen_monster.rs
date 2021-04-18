@@ -1,3 +1,5 @@
+#![allow(clippy::unnecessary_wraps)]
+
 use super::gen_quest::*;
 use super::gen_website::{gen_multi_lang, head_common, navbar};
 use super::pedia::*;

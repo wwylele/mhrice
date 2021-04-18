@@ -1,7 +1,6 @@
 use super::gen_website::*;
 use super::pedia::*;
 use crate::msg::*;
-use crate::rsz::*;
 use anyhow::*;
 use std::collections::BTreeMap;
 use std::collections::HashMap;

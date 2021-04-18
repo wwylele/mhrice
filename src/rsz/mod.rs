@@ -156,11 +156,11 @@ impl Rsz {
             .roots
             .iter()
             .map(|&root| {
-                Ok(node_buf
+                node_buf
                     .get_mut(usize::try_from(root)?)
                     .context("Root index out of bound")?
                     .take()
-                    .context("Empty root")?)
+                    .context("Empty root")
             })
             .collect::<Result<Vec<_>>>()?;
 

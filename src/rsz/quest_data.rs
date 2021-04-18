@@ -25,6 +25,7 @@ rsz_bitflags!(QuestType: u32);
 
 rsz_enum! {
     #[rsz(i32)]
+    #[allow(clippy::upper_case_acronyms)]
     #[derive(Debug, Serialize, PartialOrd, Ord, PartialEq, Eq, Clone, Copy)]
     pub enum QuestLevel {
         QL1 = 0,

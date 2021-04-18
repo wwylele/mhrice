@@ -631,7 +631,7 @@ fn dump_gui(gui: String) -> Result<()> {
     Ok(())
 }
 
-fn dump_meat(mesh: String, rcol: String, output: String) -> Result<()> {
+fn dump_meat(_mesh: String, _rcol: String, _output: String) -> Result<()> {
     /*use std::io::*;
     let mesh = Mesh::new(File::open(mesh)?)?;
     let mut rcol = Rcol::new(File::open(rcol)?, true)?;

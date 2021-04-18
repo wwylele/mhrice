@@ -279,6 +279,7 @@ pub struct Tex {
     textures: Vec<Vec<Vec<u8>>>,
     log_super_width: u8,
     log_super_height: u8,
+    #[allow(dead_code)]
     log_super_depth: u8,
 }
 
