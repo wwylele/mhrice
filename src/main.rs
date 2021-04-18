@@ -342,19 +342,21 @@ async fn cleanup_s3_old_files(path: &Path, bucket: String, client: &S3Client) ->
         }
     }
 
-    let request = DeleteObjectsRequest {
-        bucket,
-        bypass_governance_retention: None,
-        delete: Delete {
-            objects,
-            quiet: Some(true),
-        },
-        expected_bucket_owner: None,
-        mfa: None,
-        request_payer: None,
-    };
+    if !objects.is_empty() {
+        let request = DeleteObjectsRequest {
+            bucket,
+            bypass_governance_retention: None,
+            delete: Delete {
+                objects,
+                quiet: Some(true),
+            },
+            expected_bucket_owner: None,
+            mfa: None,
+            request_payer: None,
+        };
 
-    client.delete_objects(request).await?;
+        client.delete_objects(request).await?;
+    }
 
     Ok(())
 }
