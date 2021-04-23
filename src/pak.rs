@@ -2,6 +2,7 @@ use crate::file_ext::*;
 use crate::hash::hash_as_utf16;
 use crate::suffix::SUFFIX_MAP;
 use anyhow::*;
+use compress::flate;
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::io::{Read, Seek, SeekFrom};
@@ -114,6 +115,15 @@ impl<F: Read + Seek> PakReader<F> {
                 let mut data = vec![0; len.try_into()?];
                 file.read_exact(&mut data)?;
                 Ok(data)
+            }
+            1 => {
+                let stream = file.by_ref().take(len_compressed);
+                let mut decompressed = Vec::new();
+                flate::Decoder::new(stream).read_to_end(&mut decompressed)?;
+                if u64::try_from(decompressed.len()).unwrap() != len {
+                    bail!("Expected size {}, actual size {}", len, decompressed.len());
+                }
+                Ok(decompressed)
             }
             2 => {
                 let decoded = zstd::decode_all(file.by_ref().take(len_compressed))?;
