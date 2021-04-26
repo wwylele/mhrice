@@ -4,7 +4,7 @@ use serde::*;
 
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub enum SexualEquipableFlag {
         MaleOnly = 0,
         FemaleOnly = 1,
@@ -14,7 +14,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.ArmorBaseUserData.Param")]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct ArmorBaseUserDataParam {
         pub pl_armor_id: u32,
         pub is_valid: bool,
@@ -47,5 +47,35 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct ArmorBaseUserData {
         pub param: Vec<ArmorBaseUserDataParam>
+    }
+}
+
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Clone)]
+    pub enum EquipDifficultyGroup {
+        Lower = 0,
+        Higher = 1,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.ArmorSeriesUserData.Param")]
+    #[derive(Debug, Serialize, Clone)]
+    pub struct ArmorSeriesUserDataParam {
+        pub armor_series: i32,
+        pub difficulty_group: EquipDifficultyGroup,
+        pub is_collabo: bool,
+        pub index: u32,
+        pub overwear_sort_index: u32,
+        pub sexual_enable: SexualEquipableFlag,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.ArmorSeriesUserData")]
+    #[derive(Debug, Serialize)]
+    pub struct ArmorSeriesUserData {
+        pub param: Vec<ArmorSeriesUserDataParam>
     }
 }

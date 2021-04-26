@@ -40,6 +40,13 @@ pub struct Pedia {
     pub quest_arena_msg: Msg,
 
     pub armor: ArmorBaseUserData,
+    pub armor_series: ArmorSeriesUserData,
+    pub armor_head_name_msg: Msg,
+    pub armor_chest_name_msg: Msg,
+    pub armor_arm_name_msg: Msg,
+    pub armor_waist_name_msg: Msg,
+    pub armor_leg_name_msg: Msg,
+    pub armor_series_name_msg: Msg,
 
     pub equip_skill: PlEquipSkillBaseUserData,
     pub player_skill_detail_msg: Msg,

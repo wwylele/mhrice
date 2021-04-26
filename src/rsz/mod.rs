@@ -566,7 +566,12 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
         NormalQuestDataForEnemy
     );
 
-    r!(ArmorBaseUserDataParam, ArmorBaseUserData);
+    r!(
+        ArmorBaseUserDataParam,
+        ArmorBaseUserData,
+        ArmorSeriesUserDataParam,
+        ArmorSeriesUserData
+    );
 
     r!(PlEquipSkillBaseUserData, PlEquipSkillBaseUserDataParam);
 

@@ -1,3 +1,4 @@
+use super::gen_armor::*;
 use super::gen_monster::gen_monster;
 use super::gen_quest::*;
 use super::gen_skill::*;
@@ -85,6 +86,9 @@ pub fn navbar() -> Box<div<String>> {
                     </a>
                     <a class="navbar-item" href="/skill.html">
                         "Skills"
+                    </a>
+                    <a class="navbar-item" href="/armor.html">
+                        "Armors"
                     </a>
                     <a class="navbar-item" href="/about.html">
                         "About"
@@ -301,10 +305,13 @@ pub fn gen_website(pedia: Pedia, output: &str) -> Result<()> {
 
     let quests = prepare_quests(&pedia)?;
     let skills = prepare_skills(&pedia)?;
+    let armors = prepare_armors(&pedia)?;
 
     gen_quests(&quests, &pedia, &root)?;
     gen_skills(&skills, &root)?;
     gen_skill_list(&skills, &root)?;
+    gen_armors(&armors, &skills, &root)?;
+    gen_armor_list(&armors, &root)?;
     gen_monsters(
         pedia.monsters,
         pedia.small_monsters,

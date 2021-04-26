@@ -77,3 +77,19 @@ ul.mh-list-skill {
     display: grid;
     grid-template-columns: repeat( auto-fit, minmax(250px, 1fr) );
 }
+
+ul.mh-armor-series-list {
+    display: grid;
+    grid-template-columns: repeat( auto-fit, minmax(250px, 1fr) );
+}
+
+li.mh-armor-series-list {
+    display: inline-block;
+    vertical-align: top;
+}
+
+ul.mh-armor-skill-list {
+    list-style: none;
+    margin-left: 0;
+    margin-top: 0;
+}

@@ -241,6 +241,14 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let quest_arena_msg = get_msg(pak, "Message/Quest/QuestData_Arena.msg")?;
 
     let armor = get_user(pak, "data/Define/Player/Armor/ArmorBaseData.user")?;
+    let armor_series = get_user(pak, "data/Define/Player/Armor/ArmorSeriesData.user")?;
+    let armor_head_name_msg = get_msg(pak, "data/Define/Player/Armor/Head/A_Head_Name.msg")?;
+    let armor_chest_name_msg = get_msg(pak, "data/Define/Player/Armor/Chest/A_Chest_Name.msg")?;
+    let armor_arm_name_msg = get_msg(pak, "data/Define/Player/Armor/Arm/A_Arm_Name.msg")?;
+    let armor_waist_name_msg = get_msg(pak, "data/Define/Player/Armor/Waist/A_Waist_Name.msg")?;
+    let armor_leg_name_msg = get_msg(pak, "data/Define/Player/Armor/Leg/A_Leg_Name.msg")?;
+    let armor_series_name_msg =
+        get_msg(pak, "data/Define/Player/Armor/ArmorSeries_Hunter_Name.msg")?;
 
     let equip_skill = get_user(
         pak,
@@ -272,6 +280,13 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         quest_tutorial_msg,
         quest_arena_msg,
         armor,
+        armor_series,
+        armor_head_name_msg,
+        armor_chest_name_msg,
+        armor_arm_name_msg,
+        armor_waist_name_msg,
+        armor_leg_name_msg,
+        armor_series_name_msg,
         equip_skill,
         player_skill_detail_msg,
         player_skill_explain_msg,
