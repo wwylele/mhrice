@@ -928,18 +928,14 @@ impl Tdb {
 
             println!("{{");
 
+            if type_instance.dearrayize_type_instance_index != 0 || full_name.contains('!') {
+                println!("    // Omitted ");
+                println!("}}");
+                println!();
+                continue;
+            }
+
             println!("    // Special = {}", type_instance.special_type_id);
-
-            let ty = types
-                .get(type_instance.type_index)
-                .context("Type index out of bound")?;
-
-            println!("    // size: {}", ty.len);
-
-            println!(
-                "    // s2={}, n4={}, n5={}, n7={}",
-                ty.s2, ty.n4, ty.n5, /*ty.n6,*/ ty.n7
-            );
 
             if type_instance.template_argument_list_offset != 0 {
                 let mut template_argument_list =
@@ -969,19 +965,16 @@ impl Tdb {
                 }
             }
 
-            if type_instance.dearrayize_type_instance_index != 0 {
-                println!("    // Omitted ");
-                println!("}}");
-                println!();
-                continue;
-            }
+            let ty = types
+                .get(type_instance.type_index)
+                .context("Type index out of bound")?;
 
-            if full_name.contains('!') {
-                println!("    // Omitted ");
-                println!("}}");
-                println!();
-                continue;
-            }
+            // println!("    // size: {}", ty.len);
+
+            println!(
+                "    // s2={}, n4={}, n5={}, n7={}",
+                ty.s2, ty.n4, ty.n5, /*ty.n6,*/ ty.n7
+            );
 
             println!();
             println!("    /*** Method ***/");
@@ -1018,8 +1011,7 @@ impl Tdb {
                 }
 
                 println!(
-                    "    /* ^{} , {}, {}*/ {} {} {} (",
-                    method.vtable_slot,
+                    "    /*{}, {}*/ {} {} {} (",
                     method.b2,
                     return_value.no_high,
                     display_method_attributes(method.attributes),
@@ -1087,8 +1079,7 @@ impl Tdb {
                 }
 
                 print!(
-                    "    /* +{} */ {} {} {}",
-                    field_membership.position,
+                    "    {} {} {}",
                     display_field_attributes(field.attributes),
                     &symbols[field.type_instance_index].as_ref().unwrap(),
                     read_string(field.name_offset)?
