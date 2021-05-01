@@ -9,9 +9,11 @@ use crate::rsz::*;
 use crate::tex::*;
 use crate::user::User;
 use anyhow::*;
+use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::collections::HashMap;
 use std::convert::TryInto;
 use std::fs::*;
 use std::io::{Cursor, Read, Seek};
@@ -340,6 +342,24 @@ fn gen_monster_hitzones(
     Ok(())
 }
 
+// Monsters in title updates have icon files with special names. It is hard to
+// get the name mapping without hard-coding it here.
+// Icon file names, including normal ones and special ones, are referred in
+// gui/01_Common/boss_icon.gui, but they have their own order in the frame
+// sequence there. The mapping from EM ID to frame ID is probably done by
+// snow.gui.SnowGuiCommonUtility.Icon.getEnemyIconFrame, which would be
+// hard-coded in game code.
+static EM_ICON_MAP: Lazy<HashMap<(i32, i32), &'static str>> = Lazy::new(|| {
+    let mut m = HashMap::new();
+    m.insert((24, 0), "A0");
+    m.insert((25, 0), "B1");
+    m.insert((27, 0), "C2");
+    m.insert((118, 0), "E4");
+    m.insert((2, 7), "G6");
+    m.insert((7, 7), "H7");
+    m
+});
+
 pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Result<()> {
     let root = PathBuf::from(output);
     if root.exists() {
@@ -372,10 +392,14 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
 
     for index in 0..1000 {
         for sub_id in 0..10 {
-            let icon_path = format!(
-                "gui/80_Texture/boss_icon/em{:03}_{1:02}_IAM.tex",
-                index, sub_id
-            );
+            let icon_path = if let Some(name) = EM_ICON_MAP.get(&(index, sub_id)) {
+                format!("gui/80_Texture/boss_icon/{}_IAM.tex", name)
+            } else {
+                format!(
+                    "gui/80_Texture/boss_icon/em{:03}_{1:02}_IAM.tex",
+                    index, sub_id
+                )
+            };
             let icon = if let Ok((icon, _)) = pak.find_file(&icon_path) {
                 icon
             } else {
