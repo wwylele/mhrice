@@ -45,20 +45,20 @@ struct PlayObject {
 }
 
 #[derive(Debug, Serialize)]
-struct Rathalos {
+struct ObjectPathComponent {
     name: String,
 }
 
 #[derive(Debug, Serialize)]
-struct Rathian {
+struct VariableRef {
     name: String,
 }
 
 #[derive(Debug, Serialize)]
 struct Clip {
     name: String,
-    rathalos: Vec<Rathalos>,
-    rathian: Vec<Rathian>,
+    object_path: Vec<ObjectPathComponent>,
+    variable_refs: Vec<VariableRef>,
 }
 
 #[derive(Debug, Serialize)]
@@ -285,7 +285,7 @@ impl Gui {
 
                         file.seek_noop(base_offset + r0_offset)?;
 
-                        let us = (0..u_count)
+                        let object_path = (0..u_count)
                             .map(|_| {
                                 let alatreon = file.read_u64()?;
                                 let hash = file.read_u64()?;
@@ -300,13 +300,13 @@ impl Gui {
                                 let name = file.read_u16str()?;
                                 file.seek(SeekFrom::Start(old))?;
 
-                                Ok(Rathalos { name })
+                                Ok(ObjectPathComponent { name })
                             })
                             .collect::<Result<Vec<_>>>()?;
 
                         file.seek_noop(base_offset + r1_offset)?;
 
-                        let vs = (0..v_count)
+                        let variable_refs = (0..v_count)
                             .map(|_| {
                                 let _ = file.read_u64()?;
                                 let hash = file.read_u64()?;
@@ -325,7 +325,7 @@ impl Gui {
                                 let name = file.read_u8str()?;
                                 file.seek(SeekFrom::Start(old))?;
 
-                                Ok(Rathian { name })
+                                Ok(VariableRef { name })
                             })
                             .collect::<Result<Vec<_>>>()?;
 
@@ -351,8 +351,8 @@ impl Gui {
 
                         Ok(Clip {
                             name,
-                            rathalos: us,
-                            rathian: vs,
+                            object_path,
+                            variable_refs,
                         })
                     })
                     .collect::<Result<Vec<_>>>()?;
