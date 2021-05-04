@@ -563,7 +563,17 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
         NormalQuestDataParam,
         NormalQuestData,
         NormalQuestDataForEnemyParam,
-        NormalQuestDataForEnemy
+        NormalQuestDataForEnemy,
+        VitalRateTableData,
+        AttackRateTableData,
+        PartsRateTableData,
+        OtherRateTableData,
+        MultiData,
+        MultiRateTableData,
+        SystemDifficultyRateData,
+        ScaleAndRateData,
+        RandomScaleTableData,
+        EnemyBossRandomScaleData
     );
 
     r!(

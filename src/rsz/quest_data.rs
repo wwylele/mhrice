@@ -306,3 +306,96 @@ rsz_struct! {
         pub param: Vec<NormalQuestDataForEnemyParam>,
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemDifficultyRateData.VitalRateTableData")]
+    #[derive(Debug, Serialize)]
+    pub struct VitalRateTableData {
+        pub vital_rate: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemDifficultyRateData.AttackRateTableData")]
+    #[derive(Debug, Serialize)]
+    pub struct AttackRateTableData {
+        pub attack_rate: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemDifficultyRateData.PartsRateTableData")]
+    #[derive(Debug, Serialize)]
+    pub struct PartsRateTableData {
+        pub parts_vital_rate: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemDifficultyRateData.OtherRateTableData")]
+    #[derive(Debug, Serialize)]
+    pub struct OtherRateTableData {
+        pub defense_rate: f32,
+        pub damage_element_rate_a: f32,
+        pub damage_element_rate_b: f32,
+        pub stun_rate: f32,
+        pub tired_rate: f32,
+        pub marionette_rate: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemDifficultyRateData.MultiRateTableData.MultiData")]
+    #[derive(Debug, Serialize)]
+    pub struct MultiData {
+        pub two: f32,
+        pub three: f32,
+        pub four: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemDifficultyRateData.MultiRateTableData")]
+    #[derive(Debug, Serialize)]
+    pub struct MultiRateTableData {
+        pub multi_data_list: Vec<MultiData>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemDifficultyRateData")]
+    #[derive(Debug, Serialize)]
+    pub struct SystemDifficultyRateData {
+        pub vital_rate_table_list: Vec<VitalRateTableData>,
+        pub attack_rate_table_list: Vec<AttackRateTableData>,
+        pub parts_rate_table_list: Vec<PartsRateTableData>,
+        pub other_rate_table_list: Vec<OtherRateTableData>,
+        pub multi_rate_table_list: Vec<MultiRateTableData>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.EnemyBossRandomScaleData.ScaleAndRateData")]
+    #[derive(Debug, Serialize)]
+    pub struct ScaleAndRateData {
+        pub scale: f32,
+        pub rate: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.EnemyBossRandomScaleData.RandomScaleTableData")]
+    #[derive(Debug, Serialize)]
+    pub struct RandomScaleTableData {
+        pub type_: i32, // snow.enemy.EnemyDef.BossScaleTblType
+        pub scale_and_rate_data: Vec<ScaleAndRateData>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.EnemyBossRandomScaleData")]
+    #[derive(Debug, Serialize)]
+    pub struct EnemyBossRandomScaleData {
+        pub random_scale_table_data_list: Vec<RandomScaleTableData>,
+    }
+}

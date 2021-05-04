@@ -237,6 +237,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let normal_quest_data = get_user(pak, "Quest/QuestData/NormalQuestData.user")?;
     let normal_quest_data_for_enemy =
         get_user(pak, "Quest/QuestData/NormalQuestDataForEnemy.user")?;
+    let difficulty_rate = get_user(pak, "enemy/user_data/system_difficulty_rate_data.user")?;
+    let random_scale = get_user(pak, "enemy/user_data/system_boss_random_scale_data.user")?;
     let quest_hall_msg = get_msg(pak, "Message/Quest/QuestData_Hall.msg")?;
     let quest_village_msg = get_msg(pak, "Message/Quest/QuestData_Village.msg")?;
     let quest_tutorial_msg = get_msg(pak, "Message/Quest/QuestData_Tutorial.msg")?;
@@ -277,6 +279,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         condition_preset,
         normal_quest_data,
         normal_quest_data_for_enemy,
+        difficulty_rate,
+        random_scale,
         quest_hall_msg,
         quest_village_msg,
         quest_tutorial_msg,
@@ -354,9 +358,15 @@ static EM_ICON_MAP: Lazy<HashMap<(i32, i32), &'static str>> = Lazy::new(|| {
     m.insert((24, 0), "A0");
     m.insert((25, 0), "B1");
     m.insert((27, 0), "C2");
+    // D3 = (86, 0)?
     m.insert((118, 0), "E4");
+    // F5?
     m.insert((2, 7), "G6");
     m.insert((7, 7), "H7");
+    // I8 = (57， 7)?
+    // J9?
+    // KA?
+    // LB?
     m
 });
 
