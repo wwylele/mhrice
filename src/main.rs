@@ -2,7 +2,6 @@
 
 use anyhow::*;
 use rayon::prelude::*;
-use regex::bytes::*;
 use rusoto_core::{ByteStream, Region};
 use rusoto_s3::*;
 use std::convert::TryFrom;
@@ -105,6 +104,13 @@ enum Mhrice {
         pak: Vec<String>,
         #[structopt(short, long)]
         output: String,
+    },
+
+    GrepMsg {
+        #[structopt(short, long)]
+        pak: Vec<String>,
+
+        pattern: String,
     },
 
     Grep {
@@ -453,6 +459,27 @@ fn scan_msg(pak: Vec<String>, output: String) -> Result<()> {
     Ok(())
 }
 
+fn grep_msg(pak: Vec<String>, pattern: String) -> Result<()> {
+    let mut pak = PakReader::new(open_pak_files(pak)?)?;
+    use regex::*;
+    let regex = RegexBuilder::new(&pattern).build()?;
+    for i in pak.all_file_indexs() {
+        let file = pak.read_file(i)?;
+        if file.len() < 8 || file[4..8] != b"GMSG"[..] {
+            continue;
+        }
+        let msg = Msg::new(Cursor::new(&file)).context(format!("at {:?}", i))?;
+        for entry in &msg.entries {
+            for text in &entry.content {
+                if regex.is_match(text) {
+                    println!("Found @ {:?}", i);
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
 fn scan_mesh(pak: Vec<String>) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
     for i in pak.all_file_indexs() {
@@ -505,6 +532,7 @@ fn scan_gui(pak: Vec<String>) -> Result<()> {
 }
 
 fn grep(pak: Vec<String>, pattern: String) -> Result<()> {
+    use regex::bytes::*;
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
     println!("Searching for patterns \"{}\"", &pattern);
     let re = RegexBuilder::new(&pattern).unicode(false).build()?;
@@ -735,6 +763,7 @@ fn main() -> Result<()> {
         Mhrice::ReadTdb { tdb } => read_tdb(tdb),
         Mhrice::ReadMsg { msg } => read_msg(msg),
         Mhrice::ScanMsg { pak, output } => scan_msg(pak, output),
+        Mhrice::GrepMsg { pak, pattern } => grep_msg(pak, pattern),
         Mhrice::Grep { pak, pattern } => grep(pak, pattern),
         Mhrice::SearchPath { pak } => search_path(pak),
         Mhrice::DumpTree { pak, list, output } => dump_tree(pak, list, output),
