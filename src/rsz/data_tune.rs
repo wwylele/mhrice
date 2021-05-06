@@ -7,7 +7,7 @@ use serde::*;
 
 rsz_enum! {
     #[rsz(u32)]
-    #[derive(Debug, Serialize, PartialEq, Eq)]
+    #[derive(Debug, Serialize, PartialEq, Eq, Clone, Copy)]
     pub enum ExtractiveType {
         Red = 0,
         White = 1,

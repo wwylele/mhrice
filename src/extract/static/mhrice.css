@@ -93,3 +93,10 @@ ul.mh-armor-skill-list {
     margin-left: 0;
     margin-top: 0;
 }
+
+ul.mh-multi-factor {
+    list-style: none;
+    margin-left: 0;
+    margin-top: 0;
+    white-space: nowrap;
+}

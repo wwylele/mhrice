@@ -5,7 +5,6 @@ use super::gen_skill::*;
 use super::pedia::*;
 use crate::msg::*;
 use crate::part_color::*;
-use crate::rsz::*;
 use anyhow::*;
 use chrono::prelude::*;
 use std::convert::TryInto;
@@ -128,15 +127,7 @@ pub fn gen_multi_lang(msg: &MsgEntry) -> Box<span<String>> {
     } </span>)
 }
 
-pub fn gen_monsters(
-    monsters: Vec<Monster>,
-    small_monsters: Vec<Monster>,
-    monster_names: &Msg,
-    monster_aliases: &Msg,
-    condition_preset: &EnemyConditionPresetData,
-    quests: &[Quest],
-    root: &Path,
-) -> Result<()> {
+pub fn gen_monsters(pedia: &Pedia, quests: &[Quest], root: &Path) -> Result<()> {
     let monsters_path = root.join("monster.html");
 
     let doc: DOMTree<String> = html!(
@@ -152,11 +143,11 @@ pub fn gen_monsters(
                 <section class="section">
                 <h2 class="subtitle">"Large monsters"</h2>
                 <ul class="mh-list-monster">{
-                    monsters.iter().filter_map(|monster| {
+                    pedia.monsters.iter().filter_map(|monster| {
                         let icon_path = format!("/resources/em{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
                         let name_name = format!("EnemyIndex{:03}",
                             monster.boss_init_set_data.as_ref()?.enemy_type);
-                        let name_entry = monster_names.get_entry(&name_name)?;
+                        let name_entry = pedia.monster_names.get_entry(&name_name)?;
                         Some(html!{<li class="mh-list-monster">
                             <a href={format!("/monster/{:03}_{:02}.html", monster.id, monster.sub_id)}>
                                 <img class="mh-list-monster-icon" src=icon_path />
@@ -169,7 +160,7 @@ pub fn gen_monsters(
                 <section class="section">
                 <h2 class="subtitle">"Small monsters"</h2>
                 <ul class="mh-list-monster">{
-                    small_monsters.iter().filter(|monster|monster.sub_id == 0) // sub small monsters are b0rked
+                    pedia.small_monsters.iter().filter(|monster|monster.sub_id == 0) // sub small monsters are b0rked
                     .map(|monster| {
                         let icon_path = format!("/resources/ems{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
                         html!{<li class="mh-list-monster">
@@ -192,26 +183,28 @@ pub fn gen_monsters(
 
     let monster_path = root.join("monster");
     create_dir(&monster_path)?;
-    for monster in monsters {
+    for monster in &pedia.monsters {
         gen_monster(
             true,
             monster,
-            &monster_aliases,
-            condition_preset,
+            &pedia.monster_aliases,
+            &pedia.condition_preset,
             quests,
+            pedia,
             &monster_path,
         )?;
     }
 
     let monster_path = root.join("small-monster");
     create_dir(&monster_path)?;
-    for monster in small_monsters {
+    for monster in &pedia.small_monsters {
         gen_monster(
             false,
             monster,
-            &monster_aliases,
-            condition_preset,
+            &pedia.monster_aliases,
+            &pedia.condition_preset,
             quests,
+            pedia,
             &monster_path,
         )?;
     }
@@ -312,15 +305,7 @@ pub fn gen_website(pedia: Pedia, output: &str) -> Result<()> {
     gen_skill_list(&skills, &root)?;
     gen_armors(&armors, &skills, &root)?;
     gen_armor_list(&armors, &root)?;
-    gen_monsters(
-        pedia.monsters,
-        pedia.small_monsters,
-        &pedia.monster_names,
-        &pedia.monster_aliases,
-        &pedia.condition_preset,
-        &quests,
-        &root,
-    )?;
+    gen_monsters(&pedia, &quests, &root)?;
     gen_quest_list(&quests, &root)?;
     gen_about(&root)?;
     gen_static(&root)?;

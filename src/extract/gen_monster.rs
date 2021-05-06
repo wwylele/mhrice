@@ -457,15 +457,16 @@ fn gen_condition_steel_fang(
 
 pub fn gen_monster(
     is_large: bool,
-    monster: Monster,
+    monster: &Monster,
     monster_aliases: &Msg,
     condition_preset: &EnemyConditionPresetData,
     quests: &[Quest],
+    pedia: &Pedia,
     folder: &Path,
 ) -> Result<()> {
-    let collider_mapping = monster.collider_mapping;
-    let enemy_parts_break_data_list = monster.data_tune.enemy_parts_break_data_list;
-    let enemy_parts_loss_data_list = monster.data_tune.enemy_parts_loss_data_list;
+    let collider_mapping = &monster.collider_mapping;
+    let enemy_parts_break_data_list = &monster.data_tune.enemy_parts_break_data_list;
+    let enemy_parts_loss_data_list = &monster.data_tune.enemy_parts_loss_data_list;
     let meat_figure = format!(
         "/resources/{}{:03}_{:02}_meat.png",
         if is_large { "em" } else { "ems" },
@@ -497,7 +498,12 @@ pub fn gen_monster(
                 <th>"HP"</th>
                 <th>"Attack"</th>
                 <th>"Parts"</th>
-                <th>"Other"</th>
+                <th>"Defense"</th>
+                <th>"Element A"</th>
+                <th>"Element B"</th>
+                <th>"Stun"</th>
+                <th>"Exhaust"</th>
+                <th>"Ride"</th>
                 <th>"Stamina"</th>
             </tr></thead>
             <tbody> {
@@ -506,17 +512,6 @@ pub fn gen_monster(
                         |&(i, id)|id == monster_id | (monster_sub_id << 8)
                     )
                     .map(move |(i, _)|{
-
-                        let hp = quest.enemy_param.as_ref().and_then(|ep|ep.vital_tbl.get(i))
-                            .map_or_else(||"-".to_owned(), |v|format!("~ {}", v));
-                        let attack = quest.enemy_param.as_ref().and_then(|ep|ep.attack_tbl.get(i))
-                            .map_or_else(||"-".to_owned(), |v|format!("~ {}", v));
-                        let parts = quest.enemy_param.as_ref().and_then(|ep|ep.parts_tbl.get(i))
-                            .map_or_else(||"-".to_owned(), |v|format!("~ {}", v));
-                        let other = quest.enemy_param.as_ref().and_then(|ep|ep.other_tbl.get(i))
-                            .map_or_else(||"-".to_owned(), |v|format!("~ {}", v));
-                        let stamina = quest.enemy_param.as_ref().and_then(|ep|ep.stamina_tbl.get(i))
-                            .map_or_else(||"-".to_owned(), |v|format!("{}", v));
 
                         let target_tag = if quest.param.tgt_em_type.contains(&(monster_id | (monster_sub_id << 8))) {
                             html!(<span class="tag is-primary">"Target"</span>)
@@ -535,11 +530,7 @@ pub fn gen_monster(
                                 </a>
                                 {target_tag}
                             </td>
-                            <td>{text!("{}", hp)}</td>
-                            <td>{text!("{}", attack)}</td>
-                            <td>{text!("{}", parts)}</td>
-                            <td>{text!("{}", other)}</td>
-                            <td>{text!("{}", stamina)}</td>
+                            { gen_quest_monster_data(&quest.enemy_param, i, pedia) }
                         </tr>)
                     })
                 })
@@ -620,7 +611,7 @@ pub fn gen_monster(
                     </tr>
                     </thead>
                     <tbody>{
-                        monster.meat_data.meat_container.into_iter()
+                        monster.meat_data.meat_container.iter()
                             .enumerate().flat_map(|(part, meats)| {
 
                             let part_name = if let Some(names) = collider_mapping.meat_map.get(&part) {
@@ -659,7 +650,7 @@ pub fn gen_monster(
                                 ""
                             };
 
-                            meats.meat_group_info.into_iter().enumerate()
+                            meats.meat_group_info.iter().enumerate()
                                 .map(move |(phase, group_info)| {
                                     let mut tds = part_common.take().unwrap_or_else(||vec![]);
                                     tds.extend(vec![
@@ -700,7 +691,7 @@ pub fn gen_monster(
                         </tr>
                     </thead>
                     <tbody>{
-                        monster.data_tune.enemy_parts_data.into_iter().enumerate().map(|(index, part)| {
+                        monster.data_tune.enemy_parts_data.iter().enumerate().map(|(index, part)| {
                             let part_name = if let Some(names) = collider_mapping.part_map.get(&index) {
                                 names.iter().map(|s|s.as_str()).collect::<Vec<&str>>().join(", ")
                             } else {
