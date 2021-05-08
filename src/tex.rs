@@ -375,7 +375,7 @@ impl Tex {
         })
     }
 
-    pub fn save_png(&self, index: usize, mipmap: usize, output: &Path) -> anyhow::Result<()> {
+    pub fn to_rgba(&self, index: usize, mipmap: usize) -> anyhow::Result<RgbaImage> {
         if self.depth != 1 {
             bail!("Volume texture")
         }
@@ -398,7 +398,15 @@ impl Tex {
             x => bail!("unsupported format {:08X}", x),
         };
         decoder(&texture, width, height, super_width, super_height, writer);
-        RgbaImage::new(data, u32::try_from(width)?, u32::try_from(height)?).save_png(output)?;
+        Ok(RgbaImage::new(
+            data,
+            u32::try_from(width)?,
+            u32::try_from(height)?,
+        ))
+    }
+
+    pub fn save_png(&self, index: usize, mipmap: usize, output: &Path) -> anyhow::Result<()> {
+        self.to_rgba(index, mipmap)?.save_png(output)?;
 
         Ok(())
     }

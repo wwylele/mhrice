@@ -36,6 +36,7 @@ pub struct Pedia {
     pub normal_quest_data_for_enemy: NormalQuestDataForEnemy,
     pub difficulty_rate: SystemDifficultyRateData,
     pub random_scale: EnemyBossRandomScaleData,
+    pub size_list: EnemySizeListData,
     pub quest_hall_msg: Msg,
     pub quest_village_msg: Msg,
     pub quest_tutorial_msg: Msg,

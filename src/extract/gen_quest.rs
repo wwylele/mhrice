@@ -9,6 +9,41 @@ use std::fs::{create_dir, write};
 use std::path::*;
 use typed_html::{dom::*, elements::*, html, text};
 
+pub fn prepare_size_map(size_data: &EnemySizeListData) -> Result<HashMap<u32, &SizeInfo>> {
+    let mut result = HashMap::new();
+    for size_info in &size_data.size_info_list {
+        if result.insert(size_info.em_type, size_info).is_some() {
+            bail!("Duplicate size info for {}", size_info.em_type);
+        }
+    }
+    Ok(result)
+}
+
+pub fn prepare_size_dist_map(
+    size_dist_data: &EnemyBossRandomScaleData,
+) -> Result<HashMap<i32, &[ScaleAndRateData]>> {
+    let mut result = HashMap::new();
+    for size_info in &size_dist_data.random_scale_table_data_list {
+        if result
+            .insert(size_info.type_, &size_info.scale_and_rate_data[..])
+            .is_some()
+        {
+            bail!("Duplicate size dist for {}", size_info.type_);
+        }
+    }
+    if result.contains_key(&0) {
+        bail!("Defined size dist for 0");
+    }
+    result.insert(
+        0,
+        &[ScaleAndRateData {
+            scale: 1.0,
+            rate: 100,
+        }],
+    );
+    Ok(result)
+}
+
 pub struct Quest {
     pub param: NormalQuestDataParam,
     pub enemy_param: Option<NormalQuestDataForEnemyParam>,
@@ -134,13 +169,55 @@ pub fn gen_quest_list(quests: &[Quest], root: &Path) -> Result<()> {
 
 pub fn gen_quest_monster_data(
     enemy_param: &Option<NormalQuestDataForEnemyParam>,
+    em_type: u32,
     index: usize,
+    sizes: &HashMap<u32, &SizeInfo>,
+    size_dists: &HashMap<i32, &[ScaleAndRateData]>,
     pedia: &Pedia,
 ) -> impl IntoIterator<Item = Box<td<String>>> {
     let enemy_param = if let Some(enemy_param) = enemy_param.as_ref() {
         enemy_param
     } else {
-        return vec![html!(<td colspan=10>"[NO DATA]"</td>)];
+        return vec![html!(<td colspan=11>"[NO DATA]"</td>)];
+    };
+
+    let size = if let (Some(scale_tbl_i), Some(base_scale)) = (
+        enemy_param.scale_tbl.get(index),
+        enemy_param.scale.get(index),
+    ) {
+        if let (Some(size), Some(size_dist)) = (sizes.get(&em_type), size_dists.get(scale_tbl_i)) {
+            let mut small_chance = 0;
+            let mut large_chance = 0;
+            for sample in *size_dist {
+                let scale = sample.scale * (*base_scale as f32) / 100.0;
+                if scale <= size.small_boarder {
+                    small_chance += sample.rate;
+                }
+                if scale >= size.king_boarder {
+                    large_chance += sample.rate;
+                }
+            }
+
+            let small = (small_chance != 0).then(|| {
+                html!(<span class="tag">
+                    <img src="/resources/small_crown.png" />
+                    {text!("{}%", small_chance)}
+                </span>)
+            });
+
+            let large = (large_chance != 0).then(|| {
+                html!(<span class="tag">
+                    <img src="/resources/king_crown.png" />
+                    {text!("{}%", large_chance)}
+                </span>)
+            });
+
+            html!(<span>{small}{large}</span>)
+        } else {
+            html!(<span>"-"</span>)
+        }
+    } else {
+        html!(<span>"-"</span>)
     };
 
     let hp = enemy_param.vital_tbl.get(index).map_or_else(
@@ -220,6 +297,7 @@ pub fn gen_quest_monster_data(
         .map_or_else(|| "-".to_owned(), |v| format!("{}", v));
 
     vec![
+        html!(<td>{size}</td>),
         html!(<td>{text!("{}", hp)}</td>),
         html!(<td>{text!("{}", attack)}</td>),
         html!(<td>{text!("{}", parts)}</td>),
@@ -233,7 +311,7 @@ pub fn gen_quest_monster_data(
     ]
 }
 
-pub fn gen_multi_factor(data: Option<&MultiData>) -> Box<div<String>> {
+fn gen_multi_factor(data: Option<&MultiData>) -> Box<div<String>> {
     if let Some(data) = data {
         html!(<div><ul class="mh-multi-factor">
             <li><span>"2: "</span><span>{text!("x{}", data.two)}</span></li>
@@ -245,7 +323,7 @@ pub fn gen_multi_factor(data: Option<&MultiData>) -> Box<div<String>> {
     }
 }
 
-pub fn gen_quest_monster_multi_player_data(
+fn gen_quest_monster_multi_player_data(
     enemy_param: &Option<NormalQuestDataForEnemyParam>,
     index: usize,
     pedia: &Pedia,
@@ -309,7 +387,13 @@ fn gen_monster_tag(quest: &Quest, pedia: &Pedia, id: u32) -> Box<td<String>> {
     </td>)
 }
 
-fn gen_quest(quest: &Quest, pedia: &Pedia, path: &Path) -> Result<()> {
+fn gen_quest(
+    quest: &Quest,
+    sizes: &HashMap<u32, &SizeInfo>,
+    size_dists: &HashMap<i32, &[ScaleAndRateData]>,
+    pedia: &Pedia,
+    path: &Path,
+) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -338,6 +422,7 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, path: &Path) -> Result<()> {
                 <table>
                     <thead><tr>
                         <th>"Monster"</th>
+                        <th>"Size (?)"</th>
                         <th>"HP"</th>
                         <th>"Attack"</th>
                         <th>"Parts"</th>
@@ -350,11 +435,11 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, path: &Path) -> Result<()> {
                         <th>"Stamina"</th>
                     </tr></thead>
                     <tbody> {
-                        quest.param.boss_em_type.iter().copied().enumerate().filter(|&(i, id)|id != 0)
-                        .map(|(i, id)|{
+                        quest.param.boss_em_type.iter().copied().enumerate().filter(|&(i, em_type)|em_type != 0)
+                        .map(|(i, em_type)|{
                             html!(<tr>
-                                { gen_monster_tag(quest, pedia, id) }
-                                { gen_quest_monster_data(&quest.enemy_param, i, pedia) }
+                                { gen_monster_tag(quest, pedia, em_type) }
+                                { gen_quest_monster_data(&quest.enemy_param, em_type, i, sizes,size_dists, pedia) }
                             </tr>)
                         })
                     } </tbody>
@@ -400,12 +485,18 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, path: &Path) -> Result<()> {
     Ok(())
 }
 
-pub fn gen_quests(quests: &[Quest], pedia: &Pedia, root: &Path) -> Result<()> {
+pub fn gen_quests(
+    quests: &[Quest],
+    sizes: &HashMap<u32, &SizeInfo>,
+    size_dists: &HashMap<i32, &[ScaleAndRateData]>,
+    pedia: &Pedia,
+    root: &Path,
+) -> Result<()> {
     let quest_path = root.join("quest");
     create_dir(&quest_path)?;
     for quest in quests {
         let path = quest_path.join(format!("{:06}.html", quest.param.quest_no));
-        gen_quest(quest, pedia, &path)?
+        gen_quest(quest, sizes, size_dists, pedia, &path)?
     }
     Ok(())
 }

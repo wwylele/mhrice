@@ -100,3 +100,8 @@ ul.mh-multi-factor {
     margin-top: 0;
     white-space: nowrap;
 }
+
+div.mh-logo-text {
+    font-weight: bold;
+    margin-left: 1em;
+}

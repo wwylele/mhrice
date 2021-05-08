@@ -1,4 +1,4 @@
-# mhrice
+# ![](src/extract/static/favicon.png) mhrice
 
 ## What?
 

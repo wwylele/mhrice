@@ -6,6 +6,7 @@ use super::pedia::*;
 use crate::msg::*;
 use crate::rsz::*;
 use anyhow::*;
+use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fs::write;
 use std::path::*;
@@ -460,6 +461,8 @@ pub fn gen_monster(
     monster: &Monster,
     monster_aliases: &Msg,
     condition_preset: &EnemyConditionPresetData,
+    sizes: &HashMap<u32, &SizeInfo>,
+    size_dists: &HashMap<i32, &[ScaleAndRateData]>,
     quests: &[Quest],
     pedia: &Pedia,
     folder: &Path,
@@ -495,6 +498,7 @@ pub fn gen_monster(
         <table>
             <thead><tr>
                 <th>"Quest"</th>
+                <th>"Size (?)"</th>
                 <th>"HP"</th>
                 <th>"Attack"</th>
                 <th>"Parts"</th>
@@ -509,11 +513,11 @@ pub fn gen_monster(
             <tbody> {
                 quests.iter().flat_map(|quest| {
                     quest.param.boss_em_type.iter().copied().enumerate().filter(
-                        |&(i, id)|id == monster_id | (monster_sub_id << 8)
+                        |&(i, em_type)|em_type == monster_id | (monster_sub_id << 8)
                     )
-                    .map(move |(i, _)|{
+                    .map(move |(i, em_type)|{
 
-                        let target_tag = if quest.param.tgt_em_type.contains(&(monster_id | (monster_sub_id << 8))) {
+                        let target_tag = if quest.param.tgt_em_type.contains(&em_type) {
                             html!(<span class="tag is-primary">"Target"</span>)
                         } else {
                             html!(<span />)
@@ -530,7 +534,7 @@ pub fn gen_monster(
                                 </a>
                                 {target_tag}
                             </td>
-                            { gen_quest_monster_data(&quest.enemy_param, i, pedia) }
+                            { gen_quest_monster_data(&quest.enemy_param, em_type, i, sizes,size_dists, pedia) }
                         </tr>)
                     })
                 })

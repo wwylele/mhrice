@@ -5,8 +5,10 @@ use super::gen_skill::*;
 use super::pedia::*;
 use crate::msg::*;
 use crate::part_color::*;
+use crate::rsz::*;
 use anyhow::*;
 use chrono::prelude::*;
+use std::collections::HashMap;
 use std::convert::TryInto;
 use std::fs::{create_dir, remove_dir_all, write, File};
 use std::io::Write;
@@ -65,7 +67,8 @@ pub fn navbar() -> Box<div<String>> {
         <nav class="navbar is-primary" role="navigation"> <div class="container">
             <div class="navbar-brand">
                 <a class="navbar-item" href="/">
-                    "MHRice 🍚"
+                    <img src="/favicon.png"/>
+                    <div class="mh-logo-text">"MHRice"</div>
                 </a>
 
                 <a id="navbarBurger" class="navbar-burger" data-target="navbarMenu" onclick="onToggleNavbarMenu()">
@@ -127,7 +130,13 @@ pub fn gen_multi_lang(msg: &MsgEntry) -> Box<span<String>> {
     } </span>)
 }
 
-pub fn gen_monsters(pedia: &Pedia, quests: &[Quest], root: &Path) -> Result<()> {
+pub fn gen_monsters(
+    pedia: &Pedia,
+    quests: &[Quest],
+    sizes: &HashMap<u32, &SizeInfo>,
+    size_dists: &HashMap<i32, &[ScaleAndRateData]>,
+    root: &Path,
+) -> Result<()> {
     let monsters_path = root.join("monster.html");
 
     let doc: DOMTree<String> = html!(
@@ -189,6 +198,8 @@ pub fn gen_monsters(pedia: &Pedia, quests: &[Quest], root: &Path) -> Result<()> 
             monster,
             &pedia.monster_aliases,
             &pedia.condition_preset,
+            sizes,
+            size_dists,
             quests,
             pedia,
             &monster_path,
@@ -203,6 +214,8 @@ pub fn gen_monsters(pedia: &Pedia, quests: &[Quest], root: &Path) -> Result<()> 
             monster,
             &pedia.monster_aliases,
             &pedia.condition_preset,
+            sizes,
+            size_dists,
             quests,
             pedia,
             &monster_path,
@@ -299,13 +312,15 @@ pub fn gen_website(pedia: Pedia, output: &str) -> Result<()> {
     let quests = prepare_quests(&pedia)?;
     let skills = prepare_skills(&pedia)?;
     let armors = prepare_armors(&pedia)?;
+    let sizes = prepare_size_map(&pedia.size_list)?;
+    let size_dists = prepare_size_dist_map(&pedia.random_scale)?;
 
-    gen_quests(&quests, &pedia, &root)?;
+    gen_quests(&quests, &sizes, &size_dists, &pedia, &root)?;
     gen_skills(&skills, &root)?;
     gen_skill_list(&skills, &root)?;
     gen_armors(&armors, &skills, &root)?;
     gen_armor_list(&armors, &root)?;
-    gen_monsters(&pedia, &quests, &root)?;
+    gen_monsters(&pedia, &quests, &sizes, &size_dists, &root)?;
     gen_quest_list(&quests, &root)?;
     gen_about(&root)?;
     gen_static(&root)?;

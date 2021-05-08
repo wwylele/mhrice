@@ -1,3 +1,4 @@
+use anyhow::bail;
 use glium::backend::glutin::headless::Headless;
 use glium::*;
 use once_cell::sync::Lazy;
@@ -96,5 +97,31 @@ impl RgbaImage {
         let mut writer = encoder.write_header()?;
         writer.write_image_data(&self.data)?;
         Ok(())
+    }
+
+    pub fn sub_image(
+        &self,
+        start_x: u32,
+        start_y: u32,
+        width: u32,
+        height: u32,
+    ) -> anyhow::Result<RgbaImage> {
+        if start_x + width > self.width || start_y + height > self.height {
+            bail!("Location out of bound")
+        }
+
+        let mut data = vec![0; usize::try_from(width * height * 4)?];
+        for x in 0..width {
+            for y in 0..height {
+                let src = usize::try_from(x + start_x + self.width * (y + start_y))? * 4;
+                let dst = usize::try_from(x + y * width)? * 4;
+                data[dst..dst + 4].copy_from_slice(&self.data[src..src + 4]);
+            }
+        }
+        Ok(RgbaImage {
+            width,
+            height,
+            data,
+        })
     }
 }

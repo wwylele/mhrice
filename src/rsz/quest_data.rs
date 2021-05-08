@@ -376,7 +376,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyBossRandomScaleData.ScaleAndRateData")]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct ScaleAndRateData {
         pub scale: f32,
         pub rate: u32,
@@ -397,5 +397,26 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct EnemyBossRandomScaleData {
         pub random_scale_table_data_list: Vec<RandomScaleTableData>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemEnemySizeListData.SizeInfo")]
+    #[derive(Debug, Serialize)]
+    pub struct SizeInfo {
+        pub em_type: u32,
+        pub base_size: f32,
+        pub small_boarder: f32,
+        pub big_boarder: f32,
+        pub king_boarder: f32,
+        pub no_size_scale: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemEnemySizeListData")]
+    #[derive(Debug, Serialize)]
+    pub struct EnemySizeListData {
+        pub size_info_list: Vec<SizeInfo>,
     }
 }

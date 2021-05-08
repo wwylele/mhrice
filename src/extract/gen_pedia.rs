@@ -239,6 +239,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         get_user(pak, "Quest/QuestData/NormalQuestDataForEnemy.user")?;
     let difficulty_rate = get_user(pak, "enemy/user_data/system_difficulty_rate_data.user")?;
     let random_scale = get_user(pak, "enemy/user_data/system_boss_random_scale_data.user")?;
+    let size_list = get_user(pak, "enemy/user_data/system_enemy_sizelist_data.user")?;
     let quest_hall_msg = get_msg(pak, "Message/Quest/QuestData_Hall.msg")?;
     let quest_village_msg = get_msg(pak, "Message/Quest/QuestData_Village.msg")?;
     let quest_tutorial_msg = get_msg(pak, "Message/Quest/QuestData_Tutorial.msg")?;
@@ -281,6 +282,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         normal_quest_data_for_enemy,
         difficulty_rate,
         random_scale,
+        size_list,
         quest_hall_msg,
         quest_village_msg,
         quest_tutorial_msg,
@@ -443,5 +445,17 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
             )?;
         }
     }
+
+    let (guild_card, _) = pak.find_file("gui/80_Texture/GuildCard_IAM.tex")?;
+    let guild_card = Tex::new(Cursor::new(pak.read_file(guild_card)?))?.to_rgba(0, 0)?;
+
+    guild_card
+        .sub_image(302, 397, 24, 24)?
+        .save_png(&root.join("king_crown.png"))?;
+
+    guild_card
+        .sub_image(302, 453, 24, 24)?
+        .save_png(&root.join("small_crown.png"))?;
+
     Ok(())
 }
