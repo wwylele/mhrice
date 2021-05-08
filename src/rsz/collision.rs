@@ -3,14 +3,6 @@ use crate::{rsz_bitflags, rsz_enum, rsz_struct};
 use bitflags::*;
 use serde::*;
 
-rsz_enum! {
-    #[rsz(i32)]
-    #[derive(Debug, Serialize)]
-    pub enum Zero {
-        Zero = 0
-    }
-}
-
 rsz_struct! {
     #[rsz("via.physics.RequestSetColliderUserData")]
     #[derive(Debug, Serialize)]

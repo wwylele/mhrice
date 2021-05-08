@@ -8,9 +8,65 @@ use crate::rsz::*;
 use anyhow::*;
 use std::collections::HashMap;
 use std::convert::TryFrom;
+use std::convert::TryInto;
 use std::fs::write;
 use std::path::*;
 use typed_html::{dom::*, elements::*, html, text};
+
+#[derive(Hash, PartialEq, Eq)]
+pub struct MeatKey {
+    id: u32,
+    sub_id: u32,
+    part: usize,
+    phase: usize,
+}
+
+pub fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, MsgEntry>> {
+    let msg_map: HashMap<_, _> = pedia
+        .hunter_note_msg
+        .entries
+        .iter()
+        .map(|entry| (entry.name.clone(), entry.clone()))
+        .collect();
+
+    let mut result = HashMap::new();
+
+    for boss_monster in &pedia.monster_list.data_list {
+        let id = boss_monster.em_type & 0xFF;
+        let sub_id = boss_monster.em_type >> 8;
+        for part_data in &boss_monster.part_table_data {
+            let part = part_data.em_meat.try_into()?;
+            let phase = part_data.em_meat_group_index.try_into()?;
+            let key = MeatKey {
+                id,
+                sub_id,
+                part,
+                phase,
+            };
+
+            let name = if let Some(name) = msg_map.get(&format!(
+                "HN_Hunternote_ML_Tab_02_Parts{:02}",
+                part_data.part
+            )) {
+                name.clone()
+            } else {
+                continue;
+            };
+
+            if result.insert(key, name).is_some() {
+                bail!(
+                    "Duplicate definition for meat {}-{}-{}-{}",
+                    id,
+                    sub_id,
+                    part,
+                    phase
+                );
+            }
+        }
+    }
+
+    Ok(result)
+}
 
 fn gen_extractive_type(extractive_type: ExtractiveType) -> Result<Box<span<String>>> {
     match extractive_type {
@@ -465,6 +521,7 @@ pub fn gen_monster(
     size_dists: &HashMap<i32, &[ScaleAndRateData]>,
     quests: &[Quest],
     pedia: &Pedia,
+    meat_names: &HashMap<MeatKey, MsgEntry>,
     folder: &Path,
 ) -> Result<()> {
     let collider_mapping = &monster.collider_mapping;
@@ -603,6 +660,7 @@ pub fn gen_monster(
                     <tr>
                         <th>"Part"</th>
                         <th>"Phase"</th>
+                        <th>"Name"</th>
                         <th>"Slash"</th>
                         <th>"Impact"</th>
                         <th>"Shot"</th>
@@ -656,9 +714,17 @@ pub fn gen_monster(
 
                             meats.meat_group_info.iter().enumerate()
                                 .map(move |(phase, group_info)| {
+                                    let name = meat_names.get(&MeatKey {
+                                        id: monster_id,
+                                        sub_id: monster_sub_id,
+                                        part,
+                                        phase
+                                    }).map_or(html!(<span></span>), gen_multi_lang);
+
                                     let mut tds = part_common.take().unwrap_or_else(||vec![]);
                                     tds.extend(vec![
                                         html!(<td>{text!("{}", phase)}</td>),
+                                        html!(<td>{name}</td>),
                                         html!(<td>{text!("{}", group_info.slash)}</td>),
                                         html!(<td>{text!("{}", group_info.strike)}</td>),
                                         html!(<td>{text!("{}", group_info.shell)}</td>),

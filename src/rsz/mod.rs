@@ -7,6 +7,7 @@ mod condition_damage_preset;
 mod data_base;
 mod data_tune;
 mod meat_data;
+mod monster_list;
 mod parts_break_data;
 mod quest_data;
 mod skill;
@@ -20,6 +21,7 @@ pub use condition_damage_preset::*;
 pub use data_base::*;
 pub use data_tune::*;
 pub use meat_data::*;
+pub use monster_list::*;
 pub use parts_break_data::*;
 pub use quest_data::*;
 pub use skill::*;
@@ -143,12 +145,14 @@ impl Rsz {
             let deserializer = RSZ_TYPE_MAP
                 .get(&hash)
                 .with_context(|| format!("Unsupported type {:08X}", hash))?;
+            let pos = cursor.tell().unwrap();
             let mut rsz_deserializer = RszDeserializer {
                 node_buf: &mut node_buf,
                 cursor: &mut cursor,
             };
-            let node = deserializer(&mut rsz_deserializer)
-                .context(format!("Error deserializing for type {:016X}", td))?;
+            let node = deserializer(&mut rsz_deserializer).with_context(|| {
+                format!("Error deserializing for type {:016X} at {:08X}", td, pos)
+            })?;
             node_buf.push(Some(node));
         }
 
@@ -296,6 +300,16 @@ impl FieldFromRsz for f32 {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
         rsz.cursor.seek_align_up(4)?;
         rsz.read_f32()
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct Aligner<const ALIGN: u64>;
+
+impl<const ALIGN: u64> FieldFromRsz for Aligner<ALIGN> {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.cursor.seek_align_up(ALIGN)?;
+        Ok(Aligner)
     }
 }
 
@@ -448,6 +462,14 @@ macro_rules! rsz_bitflags {
     };
 }
 
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize)]
+    pub enum Zero {
+        Zero = 0
+    }
+}
+
 type RszDeserializerFn = fn(&mut RszDeserializer) -> Result<Box<dyn Any>>;
 
 static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
@@ -573,7 +595,9 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
         SystemDifficultyRateData,
         ScaleAndRateData,
         RandomScaleTableData,
-        EnemyBossRandomScaleData
+        EnemyBossRandomScaleData,
+        SizeInfo,
+        EnemySizeListData
     );
 
     r!(
@@ -584,6 +608,13 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
     );
 
     r!(PlEquipSkillBaseUserData, PlEquipSkillBaseUserDataParam);
+
+    r!(
+        PartData,
+        BitSetFlagHabitatType,
+        BossMonsterData,
+        MonsterListBossData
+    );
 
     m
 });

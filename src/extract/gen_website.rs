@@ -1,5 +1,5 @@
 use super::gen_armor::*;
-use super::gen_monster::gen_monster;
+use super::gen_monster::*;
 use super::gen_quest::*;
 use super::gen_skill::*;
 use super::pedia::*;
@@ -137,6 +137,8 @@ pub fn gen_monsters(
     size_dists: &HashMap<i32, &[ScaleAndRateData]>,
     root: &Path,
 ) -> Result<()> {
+    let meat_names = prepare_meat_names(pedia)?;
+
     let monsters_path = root.join("monster.html");
 
     let doc: DOMTree<String> = html!(
@@ -202,6 +204,7 @@ pub fn gen_monsters(
             size_dists,
             quests,
             pedia,
+            &meat_names,
             &monster_path,
         )?;
     }
@@ -218,6 +221,7 @@ pub fn gen_monsters(
             size_dists,
             quests,
             pedia,
+            &meat_names,
             &monster_path,
         )?;
     }

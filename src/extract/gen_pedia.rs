@@ -234,6 +234,12 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     )?;
     condition_preset.verify()?;
 
+    let monster_list = get_user(
+        pak,
+        "data/Define/Common/HunterNote/MonsterListBossData.user",
+    )?;
+    let hunter_note_msg = get_msg(pak, "Message/HunterNote/HN_Hunternote_Menu.msg")?;
+
     let normal_quest_data = get_user(pak, "Quest/QuestData/NormalQuestData.user")?;
     let normal_quest_data_for_enemy =
         get_user(pak, "Quest/QuestData/NormalQuestDataForEnemy.user")?;
@@ -278,6 +284,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         monster_names,
         monster_aliases,
         condition_preset,
+        monster_list,
+        hunter_note_msg,
         normal_quest_data,
         normal_quest_data_for_enemy,
         difficulty_rate,

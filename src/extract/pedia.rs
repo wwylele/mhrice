@@ -31,6 +31,8 @@ pub struct Pedia {
     pub monster_names: Msg,
     pub monster_aliases: Msg,
     pub condition_preset: EnemyConditionPresetData,
+    pub monster_list: MonsterListBossData,
+    pub hunter_note_msg: Msg,
 
     pub normal_quest_data: NormalQuestData,
     pub normal_quest_data_for_enemy: NormalQuestDataForEnemy,
