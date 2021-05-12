@@ -2,7 +2,6 @@ use super::*;
 use crate::rsz_bitflags;
 use crate::rsz_enum;
 use crate::rsz_struct;
-use bitflags::*;
 use serde::*;
 
 rsz_enum! {
@@ -100,7 +99,7 @@ rsz_struct! {
     }
 }
 
-bitflags! {
+rsz_bitflags! {
     #[derive(Serialize)]
     pub struct DamageCategoryFlag: u32 {
         const MARIONETTE_FRIENDLY_FIRE = 0x00000001;
@@ -133,7 +132,6 @@ bitflags! {
         const STEEL_FANG               = 0x08000000;
     }
 }
-rsz_bitflags!(DamageCategoryFlag: u32);
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyMultiPartsSystemVitalData")]

@@ -28,6 +28,7 @@ pub use skill::*;
 
 use crate::file_ext::*;
 use anyhow::*;
+use bitflags::*;
 use once_cell::sync::Lazy;
 use serde::Serialize;
 use std::any::*;
@@ -450,16 +451,38 @@ macro_rules! rsz_enum {
 
 #[macro_export]
 macro_rules! rsz_bitflags {
-    ($ident:ty : $base:ty) => {
-        impl crate::rsz::FieldFromRsz for $ident {
+    (
+        $(#[$outer_meta:meta])*
+        pub struct $name:ident : $base:ty {
+            $( const $field_name:ident = $field_value:literal; )*
+        }
+    ) => {
+        bitflags! {
+            #[serde(into = "Vec<&'static str>")]
+            $(#[$outer_meta])*
+            pub struct $name : $base {
+                $( const $field_name = $field_value; )*
+            }
+        }
+        impl crate::rsz::FieldFromRsz for $name {
             fn field_from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
                 let value = <$base>::field_from_rsz(rsz)?;
-                <$ident>::from_bits(value).with_context(|| {
-                    format!("Unknown bit flag {:08X} for {}", value, stringify!($ident))
+                <$name>::from_bits(value).with_context(|| {
+                    format!("Unknown bit flag {:08X} for {}", value, stringify!($name))
                 })
             }
         }
-    };
+
+        impl From<$name> for Vec<&'static str> {
+            fn from(v: $name) -> Vec<&'static str> {
+                let mut result = vec![];
+                $( if v.contains($name::$field_name) {
+                    result.push(stringify!($field_name))
+                } )*
+                result
+            }
+        }
+    }
 }
 
 rsz_enum! {

@@ -1,6 +1,5 @@
 use super::*;
 use crate::{rsz_bitflags, rsz_enum, rsz_struct};
-use bitflags::*;
 use serde::*;
 
 rsz_struct! {
@@ -72,7 +71,7 @@ rsz_enum! {
     }
 }
 
-bitflags! {
+rsz_bitflags! {
     #[derive(Serialize)]
     pub struct DamageAttr: u16 {
         const ALLOW_DISABLE = 1;
@@ -80,7 +79,6 @@ bitflags! {
         const NO_BREAK_CONST_OBJECT_UNIQUE = 4;
     }
 }
-rsz_bitflags!(DamageAttr: u16);
 
 rsz_enum! {
     #[rsz(i32)]

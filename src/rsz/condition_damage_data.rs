@@ -2,7 +2,6 @@ use super::*;
 use crate::rsz_bitflags;
 use crate::rsz_enum;
 use crate::rsz_struct;
-use bitflags::*;
 use serde::*;
 
 rsz_struct! {
@@ -83,7 +82,7 @@ rsz_struct! {
     }
 }
 
-bitflags! {
+rsz_bitflags! {
     #[derive(Serialize)]
     pub struct StanceStatusFlags: u32 {
         const STAND = 1;
@@ -93,7 +92,6 @@ bitflags! {
         const CEILING = 16;
     }
 }
-rsz_bitflags!(StanceStatusFlags: u32);
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionDamageData.FlashDamageData")]

@@ -2,10 +2,9 @@ use super::*;
 use crate::rsz_bitflags;
 use crate::rsz_enum;
 use crate::rsz_struct;
-use bitflags::*;
 use serde::*;
 
-bitflags! {
+rsz_bitflags! {
     #[derive(Serialize)]
     pub struct QuestType: u32 {
         const HUNTING  = 0x00000001;
@@ -20,8 +19,6 @@ bitflags! {
         const TRAINING = 0x00000200;
     }
 }
-
-rsz_bitflags!(QuestType: u32);
 
 rsz_enum! {
     #[rsz(i32)]
