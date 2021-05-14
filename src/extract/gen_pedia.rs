@@ -101,7 +101,7 @@ pub fn gen_monsters(
                 .filter(|child| child.hash == T::type_hash()),
         )?
         .name;
-        let (index, _) = pak.find_file(path)?;
+        let index = pak.find_file(path)?;
         let data = User::new(Cursor::new(pak.read_file(index)?))?;
         data.rsz.deserialize_single().context(path.clone())
     }
@@ -109,7 +109,7 @@ pub fn gen_monsters(
     for id in 0..1000 {
         for sub_id in 0..10 {
             let main_pfb_path = pfb_path_gen(id, sub_id);
-            let main_pfb_index = if let Ok((index, _)) = pak.find_file(&main_pfb_path) {
+            let main_pfb_index = if let Ok(index) = pak.find_file(&main_pfb_path) {
                 index
             } else {
                 continue;
@@ -120,7 +120,7 @@ pub fn gen_monsters(
             let data_tune = {
                 // not using sub_file here because some pfb also somehow reference the variantion file
                 let path = data_tune_path_gen(id, sub_id);
-                let (index, _) = pak.find_file(&path)?;
+                let index = pak.find_file(&path)?;
                 User::new(Cursor::new(pak.read_file(index)?))?
                     .rsz
                     .deserialize_single()
@@ -133,7 +133,7 @@ pub fn gen_monsters(
             let parts_break_data = sub_file(pak, &main_pfb).context("parts_break_data")?;
 
             let boss_init_set_data = if let Some(path) = boss_init_path_gen(id, sub_id) {
-                let (index, _) = pak.find_file(&path)?;
+                let index = pak.find_file(&path)?;
                 let data = User::new(Cursor::new(pak.read_file(index)?))?;
                 Some(
                     data.rsz
@@ -145,7 +145,7 @@ pub fn gen_monsters(
             };
 
             let rcol_path = collider_path_gen(id, sub_id);
-            let (rcol_index, _) = pak.find_file(&rcol_path)?;
+            let rcol_index = pak.find_file(&rcol_path)?;
             let rcol =
                 Rcol::new(Cursor::new(pak.read_file(rcol_index)?), true).context(rcol_path)?;
             let collider_mapping = gen_collider_mapping(rcol)?;
@@ -169,12 +169,12 @@ pub fn gen_monsters(
 }
 
 fn get_msg(pak: &mut PakReader<impl Read + Seek>, path: &str) -> Result<Msg> {
-    let (index, _) = pak.find_file(path)?;
+    let index = pak.find_file(path)?;
     Msg::new(Cursor::new(pak.read_file(index)?))
 }
 
 fn get_user<T: 'static>(pak: &mut PakReader<impl Read + Seek>, path: &'static str) -> Result<T> {
-    let (index, _) = pak.find_file(path)?;
+    let index = pak.find_file(path)?;
     User::new(Cursor::new(pak.read_file(index)?))?
         .rsz
         .deserialize_single()
@@ -323,12 +323,12 @@ fn gen_monster_hitzones(
         for sub_id in 0..10 {
             let mesh_path = mesh_path_gen(index, sub_id);
             let collider_path = collider_path_gen(index, sub_id);
-            let mesh = if let Ok((mesh, _)) = pak.find_file(&mesh_path) {
+            let mesh = if let Ok(mesh) = pak.find_file(&mesh_path) {
                 mesh
             } else {
                 continue;
             };
-            let (collider, _) = pak
+            let collider = pak
                 .find_file(&collider_path)
                 .context("Found mesh but not collider")?;
             let mesh = pak.read_file(mesh)?;
@@ -420,7 +420,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
                     index, sub_id
                 )
             };
-            let icon = if let Ok((icon, _)) = pak.find_file(&icon_path) {
+            let icon = if let Ok(icon) = pak.find_file(&icon_path) {
                 icon
             } else {
                 continue;
@@ -440,7 +440,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
                 "gui/80_Texture/boss_icon/ems{:03}_{1:02}_IAM.tex",
                 index, sub_id
             );
-            let icon = if let Ok((icon, _)) = pak.find_file(&icon_path) {
+            let icon = if let Ok(icon) = pak.find_file(&icon_path) {
                 icon
             } else {
                 continue;
@@ -454,7 +454,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
         }
     }
 
-    let (guild_card, _) = pak.find_file("gui/80_Texture/GuildCard_IAM.tex")?;
+    let guild_card = pak.find_file("gui/80_Texture/GuildCard_IAM.tex")?;
     let guild_card = Tex::new(Cursor::new(pak.read_file(guild_card)?))?.to_rgba(0, 0)?;
 
     guild_card

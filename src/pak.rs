@@ -7,10 +7,22 @@ use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::io::{Read, Seek, SeekFrom};
 
+const LANGUAGE_LIST: &[&str] = &[
+    "", "Ja", "En", "Fr", "It", "De", "Es", "Ru", "Pl", "Nl", "Pt", "PtBR", "Ko", "ZhTW", "ZhCN",
+    "Fi", "Sv", "Da", "No", "Cs", "Hu", "Sk", "Ar", "Tr", "Bu", "Gr", "Ro", "Th", "Uk", "Vi", "Id",
+    "Fc", "Hi",
+];
+
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct PakFileIndex {
     version: usize,
     index: u32,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct I18nPakFileIndex {
+    pub language: &'static str,
+    pub index: PakFileIndex,
 }
 
 impl PakFileIndex {
@@ -57,14 +69,13 @@ impl<F: Read + Seek> PakReader<F> {
         })
     }
 
-    fn find_file_internal(&mut self, full_path: String) -> Option<(PakFileIndex, String)> {
+    fn find_file_internal(&mut self, full_path: String) -> Option<PakFileIndex> {
         let hash: u64 = u64::from(hash_as_utf16(&full_path.to_lowercase()))
             | (u64::from(hash_as_utf16(&full_path.to_uppercase())) << 32);
-        let index = *self.hash_map.get(&hash)?;
-        Some((index, full_path))
+        self.hash_map.get(&hash).cloned()
     }
 
-    pub fn find_file(&mut self, mut path: &str) -> Result<(PakFileIndex, String)> {
+    pub fn find_file_i18n(&mut self, mut path: &str) -> Result<Vec<I18nPakFileIndex>> {
         if path.starts_with('@') {
             path = &path[1..];
         }
@@ -74,26 +85,36 @@ impl<F: Read + Seek> PakReader<F> {
             .context("Unknown extension")?;
         let full_path = format!("natives/NSW/{}.{}", path, suffix);
         let full_path_nsw = format!("{}.NSW", &full_path);
-        let full_path_nsw_l = format!("{}.NSW.Ja", &full_path);
-        let full_path_l = format!("{}.Ja", &full_path);
 
-        if let Some(result) = self.find_file_internal(full_path) {
-            return Ok(result);
+        let mut result = vec![];
+
+        for &language in LANGUAGE_LIST {
+            let (path_l, path_nsw_l) = if language.is_empty() {
+                (full_path.clone(), full_path_nsw.clone())
+            } else {
+                let path_l = format!("{}.{}", &full_path, language);
+                let path_nsw_l = format!("{}.{}", &full_path_nsw, language);
+                (path_l, path_nsw_l)
+            };
+            if let Some(index) = self.find_file_internal(path_l) {
+                result.push(I18nPakFileIndex { language, index });
+                continue;
+            }
+
+            if let Some(index) = self.find_file_internal(path_nsw_l) {
+                result.push(I18nPakFileIndex { language, index });
+            }
         }
 
-        if let Some(result) = self.find_file_internal(full_path_nsw) {
-            return Ok(result);
-        }
+        Ok(result)
+    }
 
-        if let Some(result) = self.find_file_internal(full_path_nsw_l) {
-            return Ok(result);
-        }
-
-        if let Some(result) = self.find_file_internal(full_path_l) {
-            return Ok(result);
-        }
-
-        Err(anyhow!("No matching hash"))
+    pub fn find_file(&mut self, path: &str) -> Result<PakFileIndex> {
+        Ok(self
+            .find_file_i18n(path)?
+            .first()
+            .context("No matching hash")?
+            .index)
     }
 
     pub fn read_file(&mut self, file_index: PakFileIndex) -> Result<Vec<u8>> {

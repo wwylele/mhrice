@@ -210,8 +210,7 @@ fn open_pak_files(pak: Vec<String>) -> Result<Vec<File>> {
 
 fn dump(pak: Vec<String>, name: String, output: String) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
-    let (index, full_path) = pak.find_file(&name).context("Cannot find subfile")?;
-    println!("Full path: {}", full_path);
+    let index = pak.find_file(&name).context("Cannot find subfile")?;
     println!("Index {:?}", index);
     let content = pak.read_file(index)?;
     std::fs::write(output, content)?;
@@ -549,7 +548,7 @@ fn search_path(pak: Vec<String>) -> Result<()> {
     let pak = Mutex::new(PakReader::new(open_pak_files(pak)?)?);
     let indexs = pak.lock().unwrap().all_file_indexs();
     let counter = std::sync::atomic::AtomicU32::new(0);
-    let paths: std::collections::BTreeMap<String, Option<PakFileIndex>> = indexs
+    let paths: std::collections::BTreeMap<String, Vec<I18nPakFileIndex>> = indexs
         .into_par_iter()
         .map(|index| {
             let file = pak.lock().unwrap().read_file(index)?;
@@ -584,7 +583,7 @@ fn search_path(pak: Vec<String>) -> Result<()> {
                     for pos in (begin..end).step_by(2) {
                         path.push(char::from(file[pos]));
                     }
-                    let index = pak.lock().unwrap().find_file(&path).ok().map(|x| x.0);
+                    let index = pak.lock().unwrap().find_file_i18n(&path)?;
                     paths.push((path, index));
                 }
             }
@@ -613,15 +612,20 @@ fn dump_tree(pak: Vec<String>, list: String, output: String) -> Result<()> {
     for line in BufReader::new(list).lines() {
         let line = line?;
         let path = line.split(' ').next().context("Empty line")?;
-        let index = if let Ok((index, _)) = pak.find_file(path) {
-            index
-        } else {
-            continue;
-        };
-        let path = PathBuf::from(&output).join(path);
-        std::fs::create_dir_all(path.parent().context("no parent")?)?;
-        std::fs::write(path, &pak.read_file(index)?)?;
-        unvisited.remove(&index);
+
+        for i18n_index in pak.find_file_i18n(path)? {
+            let index = i18n_index.index;
+            let path_i18n = if i18n_index.language.is_empty() {
+                path.to_owned()
+            } else {
+                format!("{}.{}", path, i18n_index.language)
+            };
+            let path = PathBuf::from(&output).join(path_i18n);
+
+            std::fs::create_dir_all(path.parent().context("no parent")?)?;
+            std::fs::write(path, &pak.read_file(index)?)?;
+            unvisited.remove(&index);
+        }
     }
 
     for index in unvisited {
@@ -726,8 +730,8 @@ fn gen_meat(pak: Vec<String>, index: u32, output: String) -> Result<()> {
         "enemy/em{0:03}/00/collision/em{0:03}_00_colliders.rcol",
         index
     );
-    let (mesh, _) = pak.find_file(&mesh_path)?;
-    let (rcol, _) = pak.find_file(&rcol_path)?;
+    let mesh = pak.find_file(&mesh_path)?;
+    let rcol = pak.find_file(&rcol_path)?;
     let mesh = Mesh::new(Cursor::new(pak.read_file(mesh)?))?;
     let mut rcol = Rcol::new(Cursor::new(pak.read_file(rcol)?), true)?;
     rcol.apply_skeleton(&mesh)?;
