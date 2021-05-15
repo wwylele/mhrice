@@ -37,7 +37,7 @@ const LANGUAGE_MAP: [Option<&str>; 32] = [
     None,
     None,
     None,
-    None,
+    Some("Arabic"),
     None,
     None,
     None,
@@ -120,7 +120,7 @@ pub fn navbar() -> Box<div<String>> {
 
 pub fn gen_multi_lang(msg: &MsgEntry) -> Box<span<String>> {
     html!(<span> {
-        (0..32).map(|i|{
+        (0..32).filter(|&i|LANGUAGE_MAP[i].is_some()).map(|i|{
             let class_string = format!("mh-lang-{}", i);
             let c: SpacedSet<Class> = class_string.as_str().try_into().unwrap();
             html! (<span class=c>
