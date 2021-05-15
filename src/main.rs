@@ -646,7 +646,11 @@ fn dump_mesh(mesh: String, output: String) -> Result<()> {
 }
 
 fn dump_rcol(rcol: String) -> Result<()> {
-    let rcol = Rcol::new(File::open(rcol)?, true)?;
+    let rcol = if let Ok(rcol) = Rcol::new(File::open(&rcol)?, true) {
+        rcol
+    } else {
+        Rcol::new(File::open(&rcol)?, false)?
+    };
     rcol.dump()?;
     Ok(())
 }

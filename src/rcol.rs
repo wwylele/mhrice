@@ -470,8 +470,6 @@ impl Rcol {
                 );
                 if let UserData::Data(data) = &collider.user_data {
                     print_user_data(data);
-                } else {
-                    panic!()
                 }
                 println!("{:#?}", collider.shape);
             }
@@ -488,8 +486,6 @@ impl Rcol {
             );
             if let UserData::Data(data) = &c.user_data {
                 print_user_data(data);
-            } else {
-                panic!()
             }
         }
 
