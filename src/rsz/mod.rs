@@ -33,7 +33,7 @@ use once_cell::sync::Lazy;
 use serde::Serialize;
 use std::any::*;
 use std::collections::HashMap;
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use std::io::{Cursor, Read, Seek, SeekFrom};
 use std::ops::Deref;
 
@@ -331,6 +331,14 @@ impl<T: FieldFromRsz + 'static> FieldFromRsz for Vec<T> {
     }
 }
 
+impl<T: FieldFromRsz + 'static, const N: usize> FieldFromRsz for [T; N] {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        Vec::<T>::field_from_rsz(rsz)?
+            .try_into()
+            .map_err(|v: Vec<T>| anyhow!("Expected array size {}, found {}", N, v.len()))
+    }
+}
+
 impl FieldFromRsz for String {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
         rsz.cursor.seek_align_up(4)?;
@@ -620,7 +628,9 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
         RandomScaleTableData,
         EnemyBossRandomScaleData,
         SizeInfo,
-        EnemySizeListData
+        EnemySizeListData,
+        DiscoverEmSetDataParam,
+        DiscoverEmSetData,
     );
 
     r!(
@@ -630,7 +640,14 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
         ArmorSeriesUserData
     );
 
-    r!(PlEquipSkillBaseUserData, PlEquipSkillBaseUserDataParam);
+    r!(
+        PlEquipSkillBaseUserData,
+        PlEquipSkillBaseUserDataParam,
+        PlHyakuryuSkillBaseUserData,
+        PlHyakuryuSkillBaseUserDataParam,
+        PlHyakuryuSkillRecipeUserData,
+        PlHyakuryuSkillRecipeUserDataParam,
+    );
 
     r!(
         PartData,

@@ -35,7 +35,7 @@ rsz_struct! {
         pub dragon_reg_val: i32,
         pub buildup_table: i32, // snow.data.ArmorBuildupData.TableTypes
         pub buff_formula: i32, // snow.data.GameItemEnum.SeriesBufType
-        pub decorations_num_list: Vec<u32>,
+        pub decorations_num_list: [u32; 3],
         pub skill_list: Vec<u8>, // snow.data.DataDef.PlEquipSkillId, 1 = ID_0
         pub skill_lv_list: Vec<i32>,
         pub id_after_ex_change: u32,

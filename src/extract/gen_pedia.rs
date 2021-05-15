@@ -246,6 +246,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let difficulty_rate = get_user(pak, "enemy/user_data/system_difficulty_rate_data.user")?;
     let random_scale = get_user(pak, "enemy/user_data/system_boss_random_scale_data.user")?;
     let size_list = get_user(pak, "enemy/user_data/system_enemy_sizelist_data.user")?;
+    let discover_em_set_data = get_user(pak, "Quest/QuestData/DiscoverEmSetData.user")?;
     let quest_hall_msg = get_msg(pak, "Message/Quest/QuestData_Hall.msg")?;
     let quest_village_msg = get_msg(pak, "Message/Quest/QuestData_Village.msg")?;
     let quest_tutorial_msg = get_msg(pak, "Message/Quest/QuestData_Tutorial.msg")?;
@@ -278,6 +279,15 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         "data/Define/Player/Skill/PlEquipSkill/PlayerSkill_Name.msg",
     )?;
 
+    let hyakuryu_skill = get_user(
+        pak,
+        "data/Define/Player/Skill/PlHyakuryuSkill/PlHyakuryuSkillBaseData.user",
+    )?;
+    let hyakuryu_skill_recipe = get_user(
+        pak,
+        "data/Define/Player/Skill/PlHyakuryuSkill/HyakuryuSkillRecipeData.user",
+    )?;
+
     Ok(Pedia {
         monsters,
         small_monsters,
@@ -291,6 +301,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         difficulty_rate,
         random_scale,
         size_list,
+        discover_em_set_data,
         quest_hall_msg,
         quest_village_msg,
         quest_tutorial_msg,
@@ -307,6 +318,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         player_skill_detail_msg,
         player_skill_explain_msg,
         player_skill_name_msg,
+        hyakuryu_skill,
+        hyakuryu_skill_recipe,
     })
 }
 

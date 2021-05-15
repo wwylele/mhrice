@@ -39,6 +39,7 @@ pub struct Pedia {
     pub difficulty_rate: SystemDifficultyRateData,
     pub random_scale: EnemyBossRandomScaleData,
     pub size_list: EnemySizeListData,
+    pub discover_em_set_data: DiscoverEmSetData,
     pub quest_hall_msg: Msg,
     pub quest_village_msg: Msg,
     pub quest_tutorial_msg: Msg,
@@ -57,4 +58,7 @@ pub struct Pedia {
     pub player_skill_detail_msg: Msg,
     pub player_skill_explain_msg: Msg,
     pub player_skill_name_msg: Msg,
+
+    pub hyakuryu_skill: PlHyakuryuSkillBaseUserData,
+    pub hyakuryu_skill_recipe: PlHyakuryuSkillRecipeUserData,
 }

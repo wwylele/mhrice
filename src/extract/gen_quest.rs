@@ -108,6 +108,30 @@ pub fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest>> {
         .collect::<Result<Vec<_>>>()
 }
 
+pub fn prepare_discoveries(pedia: &Pedia) -> Result<HashMap<u32, &DiscoverEmSetDataParam>> {
+    let mut result = HashMap::new();
+    for discovery in &pedia.discover_em_set_data.param {
+        ensure!(discovery.param.route_no.len() == 5);
+        ensure!(discovery.param.init_set_name.len() == 5);
+        ensure!(discovery.param.sub_type.len() == 3);
+        ensure!(discovery.param.vital_tbl.len() == 3);
+        ensure!(discovery.param.attack_tbl.len() == 3);
+        ensure!(discovery.param.parts_tbl.len() == 3);
+        ensure!(discovery.param.other_tbl.len() == 3);
+        ensure!(discovery.param.stamina_tbl.len() == 3);
+        ensure!(discovery.param.scale.len() == 3);
+        ensure!(discovery.param.scale_tbl.len() == 3);
+        ensure!(discovery.param.difficulty.len() == 3);
+        ensure!(discovery.param.boss_multi.len() == 3);
+
+        if result.insert(discovery.em_type, discovery).is_some() {
+            bail!("Duplicated discovery data for {}", discovery.em_type)
+        }
+    }
+
+    Ok(result)
+}
+
 pub fn gen_quest_list(quests: &[Quest], root: &Path) -> Result<()> {
     let mut quests_ordered: BTreeMap<_, BTreeMap<_, Vec<&Quest>>> = BTreeMap::new();
     for quest in quests {
@@ -168,7 +192,7 @@ pub fn gen_quest_list(quests: &[Quest], root: &Path) -> Result<()> {
 }
 
 pub fn gen_quest_monster_data(
-    enemy_param: &Option<NormalQuestDataForEnemyParam>,
+    enemy_param: Option<&SharedEnemyParam>,
     em_type: u32,
     index: usize,
     sizes: &HashMap<u32, &SizeInfo>,
@@ -311,20 +335,16 @@ pub fn gen_quest_monster_data(
     ]
 }
 
-fn gen_multi_factor(data: Option<&MultiData>) -> Box<div<String>> {
-    if let Some(data) = data {
-        html!(<div><ul class="mh-multi-factor">
-            <li><span>"2: "</span><span>{text!("x{}", data.two)}</span></li>
-            <li><span>"3: "</span><span>{text!("x{}", data.three)}</span></li>
-            <li><span>"4: "</span><span>{text!("x{}", data.four)}</span></li>
-        </ul></div>)
-    } else {
-        html!(<div>"-"</div>)
-    }
+fn gen_multi_factor(data: &MultiData) -> Box<div<String>> {
+    html!(<div><ul class="mh-multi-factor">
+        <li><span>"2: "</span><span>{text!("x{}", data.two)}</span></li>
+        <li><span>"3: "</span><span>{text!("x{}", data.three)}</span></li>
+        <li><span>"4: "</span><span>{text!("x{}", data.four)}</span></li>
+    </ul></div>)
 }
 
 fn gen_quest_monster_multi_player_data(
-    enemy_param: &Option<NormalQuestDataForEnemyParam>,
+    enemy_param: Option<&SharedEnemyParam>,
     index: usize,
     pedia: &Pedia,
 ) -> impl IntoIterator<Item = Box<td<String>>> {
@@ -352,8 +372,9 @@ fn gen_quest_monster_multi_player_data(
         return no_data();
     };
 
-    (0..12)
-        .map(|i| html!(<td>{gen_multi_factor(table.get(i))}</td>))
+    table
+        .iter()
+        .map(|d| html!(<td>{gen_multi_factor(d)}</td>))
         .collect()
 }
 
@@ -439,7 +460,8 @@ fn gen_quest(
                         .map(|(i, em_type)|{
                             html!(<tr>
                                 { gen_monster_tag(quest, pedia, em_type) }
-                                { gen_quest_monster_data(&quest.enemy_param, em_type, i, sizes,size_dists, pedia) }
+                                { gen_quest_monster_data(quest.enemy_param.as_ref().map(|p|&p.param),
+                                    em_type, i, sizes,size_dists, pedia) }
                             </tr>)
                         })
                     } </tbody>
@@ -469,7 +491,8 @@ fn gen_quest(
                         .map(|(i, id)|{
                             html!(<tr>
                                 { gen_monster_tag(quest, pedia, id) }
-                                { gen_quest_monster_multi_player_data(&quest.enemy_param, i, pedia) }
+                                { gen_quest_monster_multi_player_data(
+                                    quest.enemy_param.as_ref().map(|p|&p.param), i, pedia) }
                             </tr>)
                         })
                     } </tbody>

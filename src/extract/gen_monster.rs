@@ -520,6 +520,7 @@ pub fn gen_monster(
     sizes: &HashMap<u32, &SizeInfo>,
     size_dists: &HashMap<i32, &[ScaleAndRateData]>,
     quests: &[Quest],
+    discoveries: &HashMap<u32, &DiscoverEmSetDataParam>,
     pedia: &Pedia,
     meat_names: &HashMap<MeatKey, MsgEntry>,
     folder: &Path,
@@ -548,6 +549,7 @@ pub fn gen_monster(
 
     let monster_id = monster.id;
     let monster_sub_id = monster.sub_id;
+    let monster_em_type = monster_id | (monster_sub_id << 8);
 
     let quest_list = html!(
         <section class="section">
@@ -570,7 +572,7 @@ pub fn gen_monster(
             <tbody> {
                 quests.iter().flat_map(|quest| {
                     quest.param.boss_em_type.iter().copied().enumerate().filter(
-                        |&(i, em_type)|em_type == monster_id | (monster_sub_id << 8)
+                        |&(i, em_type)|em_type == monster_em_type
                     )
                     .map(move |(i, em_type)|{
 
@@ -591,11 +593,33 @@ pub fn gen_monster(
                                 </a>
                                 {target_tag}
                             </td>
-                            { gen_quest_monster_data(&quest.enemy_param, em_type, i, sizes,size_dists, pedia) }
+                            { gen_quest_monster_data(quest.enemy_param.as_ref().map(|p|&p.param),
+                                em_type, i, sizes, size_dists, pedia) }
                         </tr>)
                     })
                 })
-            } </tbody>
+            }
+            {
+                if let Some(&discovery) = discoveries.get(&monster_em_type) {
+                    vec![
+                        html!(<tr><td>"Village tour"</td>{
+                            gen_quest_monster_data(Some(&discovery.param),
+                                monster_em_type, 0, sizes, size_dists, pedia)
+                        }</tr>),
+                        html!(<tr><td>"Low rank tour"</td>{
+                            gen_quest_monster_data(Some(&discovery.param),
+                                monster_em_type, 1, sizes, size_dists, pedia)
+                        }</tr>),
+                        html!(<tr><td>"High rank tour"</td>{
+                            gen_quest_monster_data(Some(&discovery.param),
+                                monster_em_type, 2, sizes, size_dists, pedia)
+                        }</tr>)
+                    ]
+                } else {
+                    vec![]
+                }
+            }
+            </tbody>
         </table>
         </section>
     );

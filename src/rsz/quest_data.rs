@@ -271,16 +271,9 @@ rsz_enum! {
 }
 
 rsz_struct! {
-    #[rsz("snow.quest.NormalQuestDataForEnemy.Param")]
+    #[rsz()]
     #[derive(Debug, Serialize, Clone)]
-    pub struct NormalQuestDataForEnemyParam {
-        pub quest_no: i32,
-        pub ems_set_no: i32, //EmsSetNo,
-        pub zako_vital: u8,
-        pub zako_attack: u8,
-        pub zako_parts: u8,
-        pub zako_other: u8,
-        pub zako_multi: u8,
+    pub struct SharedEnemyParam { // non-TDB type
         pub route_no: Vec<u8>,
         pub init_set_name: Vec<String>,
         pub sub_type: Vec<u8>,
@@ -293,6 +286,21 @@ rsz_struct! {
         pub scale_tbl: Vec<i32>, // snow.enemy.EnemyDef.BossScaleTblType
         pub difficulty: Vec<NandoYuragi>,
         pub boss_multi: Vec<u8>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.NormalQuestDataForEnemy.Param")]
+    #[derive(Debug, Serialize, Clone)]
+    pub struct NormalQuestDataForEnemyParam {
+        pub quest_no: i32,
+        pub ems_set_no: i32, //EmsSetNo,
+        pub zako_vital: u8,
+        pub zako_attack: u8,
+        pub zako_parts: u8,
+        pub zako_other: u8,
+        pub zako_multi: u8,
+        pub param: SharedEnemyParam,
     }
 }
 
@@ -355,7 +363,7 @@ rsz_struct! {
     #[rsz("snow.enemy.SystemDifficultyRateData.MultiRateTableData")]
     #[derive(Debug, Serialize)]
     pub struct MultiRateTableData {
-        pub multi_data_list: Vec<MultiData>,
+        pub multi_data_list: [MultiData; 12],
     }
 }
 
@@ -415,5 +423,26 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct EnemySizeListData {
         pub size_info_list: Vec<SizeInfo>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.DiscoverEmSetData.Param")]
+    #[derive(Debug, Serialize)]
+    pub struct DiscoverEmSetDataParam {
+        pub em_type: u32,
+        pub cond_village: i32, // snow.progress.VillageProgress, 1 = Village progress 0
+        pub cond_low: i32,
+        pub cond_high: i32,
+        pub map_flag: [bool; 5],
+        pub param: SharedEnemyParam,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.DiscoverEmSetData")]
+    #[derive(Debug, Serialize)]
+    pub struct DiscoverEmSetData {
+        pub param: Vec<DiscoverEmSetDataParam>,
     }
 }

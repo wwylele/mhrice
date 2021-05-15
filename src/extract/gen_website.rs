@@ -133,6 +133,7 @@ pub fn gen_multi_lang(msg: &MsgEntry) -> Box<span<String>> {
 pub fn gen_monsters(
     pedia: &Pedia,
     quests: &[Quest],
+    discoveries: &HashMap<u32, &DiscoverEmSetDataParam>,
     sizes: &HashMap<u32, &SizeInfo>,
     size_dists: &HashMap<i32, &[ScaleAndRateData]>,
     root: &Path,
@@ -203,6 +204,7 @@ pub fn gen_monsters(
             sizes,
             size_dists,
             quests,
+            discoveries,
             pedia,
             &meat_names,
             &monster_path,
@@ -220,6 +222,7 @@ pub fn gen_monsters(
             sizes,
             size_dists,
             quests,
+            discoveries,
             pedia,
             &meat_names,
             &monster_path,
@@ -318,13 +321,14 @@ pub fn gen_website(pedia: Pedia, output: &str) -> Result<()> {
     let armors = prepare_armors(&pedia)?;
     let sizes = prepare_size_map(&pedia.size_list)?;
     let size_dists = prepare_size_dist_map(&pedia.random_scale)?;
+    let discoveries = prepare_discoveries(&pedia)?;
 
     gen_quests(&quests, &sizes, &size_dists, &pedia, &root)?;
     gen_skills(&skills, &root)?;
     gen_skill_list(&skills, &root)?;
     gen_armors(&armors, &skills, &root)?;
     gen_armor_list(&armors, &root)?;
-    gen_monsters(&pedia, &quests, &sizes, &size_dists, &root)?;
+    gen_monsters(&pedia, &quests, &discoveries, &sizes, &size_dists, &root)?;
     gen_quest_list(&quests, &root)?;
     gen_about(&root)?;
     gen_static(&root)?;
