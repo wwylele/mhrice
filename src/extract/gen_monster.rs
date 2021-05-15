@@ -218,15 +218,9 @@ fn gen_condition_flash(
         ignore_refresh_stance.push("ceiling");
     }
 
-    let caption = if is_preset {
-        "Flash (preset, broken?)"
-    } else {
-        "Flash (not preset)"
-    };
-
     let content = html!(
-        <tr class={gen_disabled(used, None).as_str()}>
-            <td>{text!("{}", caption)}</td>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
+            <td>"Flash"</td>
             { gen_condition_base(&data.base) }
             <td>
             { data.damage_lvs.iter().map(|lv| {
