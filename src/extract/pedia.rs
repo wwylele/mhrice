@@ -61,4 +61,13 @@ pub struct Pedia {
 
     pub hyakuryu_skill: PlHyakuryuSkillBaseUserData,
     pub hyakuryu_skill_recipe: PlHyakuryuSkillRecipeUserData,
+
+    pub alchemy_pattern: AlchemyPatturnUserData,
+    pub alchemy_pl_skill: AlchemyPlSkillTableUserData,
+    pub alchemy_grade_worth: GradeWorthTableUserData,
+    pub alchemy_rare_type: RareTypeTableUserData,
+    pub alchemy_second_skill_lot: SecondSkillLotRateTableUserData,
+    pub alchemy_skill_grade_lot: SkillGradeLotRateTableUserData,
+    pub alchemy_slot_num: SlotNumTableUserData,
+    pub alchemy_slot_worth: SlotWorthTableUserData,
 }

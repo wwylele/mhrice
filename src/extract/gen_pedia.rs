@@ -288,6 +288,33 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         "data/Define/Player/Skill/PlHyakuryuSkill/HyakuryuSkillRecipeData.user",
     )?;
 
+    let alchemy_pattern = get_user(
+        pak,
+        "data/Define/Lobby/Facility/Alchemy/AlchemyPatturnData.user",
+    )?;
+    let alchemy_pl_skill = get_user(
+        pak,
+        "data/Define/Lobby/Facility/Alchemy/AlchemyPlSkillTable.user",
+    )?;
+    let alchemy_grade_worth = get_user(
+        pak,
+        "data/Define/Lobby/Facility/Alchemy/GradeWorthTable.user",
+    )?;
+    let alchemy_rare_type = get_user(pak, "data/Define/Lobby/Facility/Alchemy/RareTypeTable.user")?;
+    let alchemy_second_skill_lot = get_user(
+        pak,
+        "data/Define/Lobby/Facility/Alchemy/SecondSkillLotRateTable.user",
+    )?;
+    let alchemy_skill_grade_lot = get_user(
+        pak,
+        "data/Define/Lobby/Facility/Alchemy/SkillGradeLotRateTable.user",
+    )?;
+    let alchemy_slot_num = get_user(pak, "data/Define/Lobby/Facility/Alchemy/SlotNumTable.user")?;
+    let alchemy_slot_worth = get_user(
+        pak,
+        "data/Define/Lobby/Facility/Alchemy/SlotWorthTable.user",
+    )?;
+
     Ok(Pedia {
         monsters,
         small_monsters,
@@ -320,6 +347,14 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         player_skill_name_msg,
         hyakuryu_skill,
         hyakuryu_skill_recipe,
+        alchemy_pattern,
+        alchemy_pl_skill,
+        alchemy_grade_worth,
+        alchemy_rare_type,
+        alchemy_second_skill_lot,
+        alchemy_skill_grade_lot,
+        alchemy_slot_num,
+        alchemy_slot_worth,
     })
 }
 

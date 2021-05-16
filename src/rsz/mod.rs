@@ -1,3 +1,4 @@
+mod alchemy;
 mod anger_data;
 mod armor;
 mod boss_init_set_data;
@@ -12,6 +13,7 @@ mod parts_break_data;
 mod quest_data;
 mod skill;
 
+pub use alchemy::*;
 pub use anger_data::*;
 pub use armor::*;
 pub use boss_init_set_data::*;
@@ -654,6 +656,26 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
         BitSetFlagHabitatType,
         BossMonsterData,
         MonsterListBossData
+    );
+
+    r!(
+        AlchemyPatturnUserDataParam,
+        AlchemyPatturnUserData,
+        AlchemyPlSkillTableUserDataParam,
+        AlchemyPlSkillTableUserData,
+        GradeWorthTableUserDataParam,
+        GradeWorthTableUserData,
+        RareTypeTableUserDataParam,
+        RareTypeTableUserData,
+        SecondSkillLotRateTableUserDataParam,
+        SecondSkillLotRateTableUserData,
+        SkillGradeLotRateTableUserDataParam,
+        SkillGradeLotRateTableUserData,
+        SlotNumTableUserDataSkillParam,
+        SlotNumTableUserDataSlotParam,
+        SlotNumTableUserData,
+        SlotWorthTableUserDataParam,
+        SlotWorthTableUserData,
     );
 
     m
