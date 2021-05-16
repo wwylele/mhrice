@@ -315,6 +315,12 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         "data/Define/Lobby/Facility/Alchemy/SlotWorthTable.user",
     )?;
 
+    let items = get_user(
+        pak,
+        "data/System/ContentsIdSystem/Item/Normal/ItemData.user",
+    )?;
+    let items_name_msg = get_msg(pak, "data/System/ContentsIdSystem/Item/Normal/ItemName.msg")?;
+
     Ok(Pedia {
         monsters,
         small_monsters,
@@ -355,6 +361,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         alchemy_skill_grade_lot,
         alchemy_slot_num,
         alchemy_slot_worth,
+        items,
+        items_name_msg,
     })
 }
 

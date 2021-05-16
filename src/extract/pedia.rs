@@ -70,4 +70,7 @@ pub struct Pedia {
     pub alchemy_skill_grade_lot: SkillGradeLotRateTableUserData,
     pub alchemy_slot_num: SlotNumTableUserData,
     pub alchemy_slot_worth: SlotWorthTableUserData,
+
+    pub items: ItemUserData,
+    pub items_name_msg: Msg,
 }

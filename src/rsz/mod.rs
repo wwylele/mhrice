@@ -7,6 +7,7 @@ mod condition_damage_data;
 mod condition_damage_preset;
 mod data_base;
 mod data_tune;
+mod item;
 mod meat_data;
 mod monster_list;
 mod parts_break_data;
@@ -22,6 +23,7 @@ pub use condition_damage_data::*;
 pub use condition_damage_preset::*;
 pub use data_base::*;
 pub use data_tune::*;
+pub use item::*;
 pub use meat_data::*;
 pub use monster_list::*;
 pub use parts_break_data::*;
@@ -677,6 +679,8 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
         SlotWorthTableUserDataParam,
         SlotWorthTableUserData,
     );
+
+    r!(ItemUserDataParam, ItemUserData);
 
     m
 });
