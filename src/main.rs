@@ -31,6 +31,7 @@ mod suffix;
 mod tdb;
 mod tex;
 mod user;
+mod uvs;
 
 use gui::*;
 use mesh::*;
@@ -42,6 +43,7 @@ use scn::*;
 use tdb::*;
 use tex::*;
 use user::*;
+use uvs::*;
 
 pub mod built_info {
     // The file has been placed there by the build script.
@@ -150,6 +152,11 @@ enum Mhrice {
     },
 
     ScanGui {
+        #[structopt(short, long)]
+        pak: Vec<String>,
+    },
+
+    ScanUvs {
         #[structopt(short, long)]
         pak: Vec<String>,
     },
@@ -530,6 +537,19 @@ fn scan_gui(pak: Vec<String>) -> Result<()> {
     Ok(())
 }
 
+fn scan_uvs(pak: Vec<String>) -> Result<()> {
+    let mut pak = PakReader::new(open_pak_files(pak)?)?;
+    for i in pak.all_file_indexs() {
+        let file = pak.read_file(i)?;
+        if file.len() < 4 || file[0..4] != b".SVU"[..] {
+            continue;
+        }
+        let _ = Uvs::new(Cursor::new(&file)).context(format!("at {:?}", i))?;
+    }
+
+    Ok(())
+}
+
 fn grep(pak: Vec<String>, pattern: String) -> Result<()> {
     use regex::bytes::*;
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
@@ -779,6 +799,7 @@ fn main() -> Result<()> {
         Mhrice::ScanRcol { pak } => scan_rcol(pak),
         Mhrice::ScanTex { pak } => scan_tex(pak),
         Mhrice::ScanGui { pak } => scan_gui(pak),
+        Mhrice::ScanUvs { pak } => scan_uvs(pak),
         Mhrice::DumpMesh { mesh, output } => dump_mesh(mesh, output),
         Mhrice::DumpRcol { rcol } => dump_rcol(rcol),
         Mhrice::DumpMeat { mesh, rcol, output } => dump_meat(mesh, rcol, output),

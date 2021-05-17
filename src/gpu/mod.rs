@@ -1,6 +1,7 @@
 use anyhow::bail;
 use glium::backend::glutin::headless::Headless;
 use glium::*;
+use nalgebra_glm::*;
 use once_cell::sync::Lazy;
 use std::convert::TryFrom;
 use std::marker::*;
@@ -97,6 +98,14 @@ impl RgbaImage {
         let mut writer = encoder.write_header()?;
         writer.write_image_data(&self.data)?;
         Ok(())
+    }
+
+    pub fn sub_image_f(&self, p0: Vec2, p1: Vec2) -> anyhow::Result<RgbaImage> {
+        let x0 = (p0.x * self.width as f32).round() as u32;
+        let y0 = (p0.y * self.height as f32).round() as u32;
+        let x1 = (p1.x * self.width as f32).round() as u32;
+        let y1 = (p1.y * self.height as f32).round() as u32;
+        self.sub_image(x0, y0, x1 - x0, y1 - y0)
     }
 
     pub fn sub_image(

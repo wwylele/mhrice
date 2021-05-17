@@ -8,6 +8,7 @@ use crate::rcol::Rcol;
 use crate::rsz::*;
 use crate::tex::*;
 use crate::user::User;
+use crate::uvs::*;
 use anyhow::*;
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
@@ -520,6 +521,22 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
     guild_card
         .sub_image(302, 453, 24, 24)?
         .save_png(&root.join("small_crown.png"))?;
+
+    let item_icon_path = root.join("item");
+    create_dir(&item_icon_path)?;
+    let item_icon_uvs = pak.find_file("gui/70_UVSequence/cmn_icon.uvs")?;
+    let item_icon_uvs = Uvs::new(Cursor::new(pak.read_file(item_icon_uvs)?))?;
+    if item_icon_uvs.textures.len() != 1 || item_icon_uvs.spriter_groups.len() != 1 {
+        bail!("Broken cmn_icon.uvs");
+    }
+    let item_icon = pak.find_file(&item_icon_uvs.textures[0].path)?;
+    let item_icon = Tex::new(Cursor::new(pak.read_file(item_icon)?))?.to_rgba(0, 0)?;
+    for (i, spriter) in item_icon_uvs.spriter_groups[0].spriters.iter().enumerate() {
+        let path = item_icon_path.join(format!("{:03}.png", i));
+        item_icon
+            .sub_image_f(spriter.p0, spriter.p1)?
+            .save_png(&path)?;
+    }
 
     Ok(())
 }

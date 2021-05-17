@@ -1,7 +1,6 @@
 use super::*;
 use crate::part_color::PART_COLORS;
 use anyhow::Context;
-use nalgebra_glm::*;
 use ordered_float::*;
 use std::collections::HashSet;
 use std::convert::TryFrom;
