@@ -31,6 +31,7 @@ pub use quest_data::*;
 pub use skill::*;
 
 use crate::file_ext::*;
+use crate::hash::*;
 use anyhow::*;
 use bitflags::*;
 use once_cell::sync::Lazy;
@@ -229,7 +230,7 @@ pub trait FromRsz: Sized {
     fn from_rsz(rsz: &mut RszDeserializer) -> Result<Self>;
     const SYMBOL: &'static str;
     fn type_hash() -> u32 {
-        murmur3::murmur3_32(&mut Self::SYMBOL.as_bytes(), 0xFFFF_FFFF).unwrap()
+        hash_as_utf8(Self::SYMBOL)
     }
 }
 

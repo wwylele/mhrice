@@ -209,6 +209,12 @@ enum Mhrice {
         #[structopt(short, long)]
         output: String,
     },
+
+    Hash {
+        input: String,
+        #[structopt(short, long)]
+        utf16: bool,
+    },
 }
 
 fn open_pak_files(pak: Vec<String>) -> Result<Vec<File>> {
@@ -776,6 +782,14 @@ fn gen_resources(pak: Vec<String>, output: String) -> Result<()> {
     Ok(())
 }
 
+fn hash(input: String, utf16: bool) {
+    if utf16 {
+        println!("{:08X}", hash::hash_as_utf16(&input));
+    } else {
+        println!("{:08X}", hash::hash_as_utf8(&input));
+    }
+}
+
 fn main() -> Result<()> {
     match Mhrice::from_args() {
         Mhrice::Dump { pak, name, output } => dump(pak, name, output),
@@ -807,5 +821,9 @@ fn main() -> Result<()> {
         Mhrice::DumpGui { gui } => dump_gui(gui),
         Mhrice::GenMeat { pak, index, output } => gen_meat(pak, index, output),
         Mhrice::GenResources { pak, output } => gen_resources(pak, output),
+        Mhrice::Hash { input, utf16 } => {
+            hash(input, utf16);
+            Ok(())
+        }
     }
 }

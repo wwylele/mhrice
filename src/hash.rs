@@ -8,3 +8,7 @@ pub fn hash_as_utf16(s: &str) -> u32 {
         .collect();
     murmur3::murmur3_32(&mut &bytes[..], 0xFFFF_FFFF).unwrap()
 }
+
+pub fn hash_as_utf8(s: &str) -> u32 {
+    murmur3::murmur3_32(&mut s.as_bytes(), 0xFFFF_FFFF).unwrap()
+}

@@ -1,5 +1,6 @@
 use crate::bitfield::*;
 use crate::file_ext::*;
+use crate::hash::*;
 use anyhow::*;
 use bitflags::*;
 use std::convert::{TryFrom, TryInto};
@@ -900,7 +901,7 @@ impl Tdb {
             let type_instance = &type_instances[i];
             // println!("/// $TI[{}]", i);
             let full_name = &symbols[i].as_ref().unwrap();
-            let calc_hash = murmur3::murmur3_32(&mut full_name.as_bytes(), 0xFFFF_FFFF)?;
+            let calc_hash = hash_as_utf8(full_name);
             if i != 0 && calc_hash != type_instance.hash {
                 bail!("Mismatched hash for TI[{}]", i)
             }

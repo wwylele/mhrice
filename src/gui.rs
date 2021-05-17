@@ -335,7 +335,7 @@ impl Gui {
                             .map(|_| {
                                 let _ = file.read_u64()?;
                                 let _ = file.read_u64()?;
-                                let _ = file.read_u64()?;
+                                let value = file.read_u64()?;
                                 let _ = file.read_u64()?;
                                 Ok(())
                             })
