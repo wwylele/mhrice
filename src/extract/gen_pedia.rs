@@ -1,5 +1,6 @@
 use super::pedia::*;
 use crate::gpu::*;
+use crate::gui::*;
 use crate::mesh::*;
 use crate::msg::*;
 use crate::pak::PakReader;
@@ -17,7 +18,7 @@ use std::collections::BTreeSet;
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::fs::*;
-use std::io::{Cursor, Read, Seek};
+use std::io::{Cursor, Read, Seek, Write};
 use std::path::*;
 
 fn exactly_one<T>(mut iterator: impl Iterator<Item = T>) -> Result<T> {
@@ -532,11 +533,444 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
     let item_icon = pak.find_file(&item_icon_uvs.textures[0].path)?;
     let item_icon = Tex::new(Cursor::new(pak.read_file(item_icon)?))?.to_rgba(0, 0)?;
     for (i, spriter) in item_icon_uvs.spriter_groups[0].spriters.iter().enumerate() {
-        let path = item_icon_path.join(format!("{:03}.png", i));
-        item_icon
+        let (item_icon_r, item_icon_a) = item_icon
             .sub_image_f(spriter.p0, spriter.p1)?
-            .save_png(&path)?;
+            .gen_double_mask();
+        item_icon_r.save_png(&item_icon_path.join(format!("{:03}.r.png", i)))?;
+        item_icon_a.save_png(&item_icon_path.join(format!("{:03}.a.png", i)))?;
+    }
+
+    let message_window_uvs = pak.find_file("gui/70_UVSequence/message_window.uvs")?;
+    let message_window_uvs = Uvs::new(Cursor::new(pak.read_file(message_window_uvs)?))?;
+    if message_window_uvs.textures.len() != 1 || message_window_uvs.spriter_groups.len() != 1 {
+        bail!("Broken message_window.uvs");
+    }
+    let message_window = pak.find_file(&message_window_uvs.textures[0].path)?;
+    let message_window = Tex::new(Cursor::new(pak.read_file(message_window)?))?.to_rgba(0, 0)?;
+    let skill_icon = message_window_uvs.spriter_groups[0]
+        .spriters
+        .get(170)
+        .context("Skill icon not found")?;
+    let (skill_r, skill_a) = message_window
+        .sub_image_f(skill_icon.p0, skill_icon.p1)?
+        .gen_double_mask();
+    skill_r.save_png(&root.join("skill.r.png"))?;
+    skill_a.save_png(&root.join("skill.a.png"))?;
+
+    let item_colors_path = root.join("item_color.css");
+    gen_item_colors(pak, &item_colors_path)?;
+
+    Ok(())
+}
+
+fn gen_item_colors(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Result<()> {
+    let mut file = File::create(output)?;
+    let item_icon_gui = pak.find_file("gui/01_Common/ItemIcon.gui")?;
+    let item_icon_gui = Gui::new(Cursor::new(pak.read_file(item_icon_gui)?))?;
+    let item_icon_color = item_icon_gui
+        .controls
+        .iter()
+        .find(|control| control.name == "pnl_ItemIcon_Color")
+        .context("pnl_ItemIcon_Color not found")?;
+
+    fn color_tran(value: u64) -> Result<u8> {
+        let value = f64::from_bits(value);
+        if !(0.0..=1.0).contains(&value) {
+            bail!("Bad color value");
+        }
+        Ok((value * 255.0).round() as u8)
+    }
+
+    for clips in &item_icon_color.clips {
+        const NAME_PREFIX: &str = "ITEM_ICON_COLOR_";
+        if !clips.name.starts_with(NAME_PREFIX) {
+            bail!("Unexpected prefix");
+        }
+        let id: u32 = clips.name[NAME_PREFIX.len()..].parse()?;
+        if clips.variable_values.len() != 3 {
+            bail!("Unexpected variable values len");
+        }
+        let r = color_tran(clips.variable_values[0].value)?;
+        let g = color_tran(clips.variable_values[1].value)?;
+        let b = color_tran(clips.variable_values[2].value)?;
+
+        writeln!(
+            file,
+            ".mh-item-color-{} {{background-color: #{:02X}{:02X}{:02X}}}",
+            id, r, g, b
+        )?;
     }
 
     Ok(())
+}
+
+fn prepare_size_map(size_data: &EnemySizeListData) -> Result<HashMap<u32, &SizeInfo>> {
+    let mut result = HashMap::new();
+    for size_info in &size_data.size_info_list {
+        if result.insert(size_info.em_type, size_info).is_some() {
+            bail!("Duplicate size info for {}", size_info.em_type);
+        }
+    }
+    Ok(result)
+}
+
+fn prepare_size_dist_map(
+    size_dist_data: &EnemyBossRandomScaleData,
+) -> Result<HashMap<i32, &[ScaleAndRateData]>> {
+    let mut result = HashMap::new();
+    for size_info in &size_dist_data.random_scale_table_data_list {
+        if result
+            .insert(size_info.type_, &size_info.scale_and_rate_data[..])
+            .is_some()
+        {
+            bail!("Duplicate size dist for {}", size_info.type_);
+        }
+    }
+    if result.contains_key(&0) {
+        bail!("Defined size dist for 0");
+    }
+    result.insert(
+        0,
+        &[ScaleAndRateData {
+            scale: 1.0,
+            rate: 100,
+        }],
+    );
+    Ok(result)
+}
+
+fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest>> {
+    let mut all_msg: HashMap<String, MsgEntry> = pedia
+        .quest_hall_msg
+        .entries
+        .iter()
+        .map(|entry| (entry.name.clone(), entry.clone()))
+        .chain(
+            pedia
+                .quest_village_msg
+                .entries
+                .iter()
+                .map(|entry| (entry.name.clone(), entry.clone())),
+        )
+        .chain(
+            pedia
+                .quest_tutorial_msg
+                .entries
+                .iter()
+                .map(|entry| (entry.name.clone(), entry.clone())),
+        )
+        .chain(
+            pedia
+                .quest_arena_msg
+                .entries
+                .iter()
+                .map(|entry| (entry.name.clone(), entry.clone())),
+        )
+        .collect();
+
+    let mut enemy_params: HashMap<i32, NormalQuestDataForEnemyParam> = pedia
+        .normal_quest_data_for_enemy
+        .param
+        .iter()
+        .map(|param| (param.quest_no, param.clone()))
+        .collect();
+
+    pedia
+        .normal_quest_data
+        .param
+        .iter()
+        .filter(|param| param.quest_no != 0)
+        .map(|param| {
+            let name_msg_name = format!("QN{:06}_01", param.quest_no);
+            let target_msg_name = format!("QN{:06}_04", param.quest_no);
+            let condition_msg_name = format!("QN{:06}_05", param.quest_no);
+            Ok(Quest {
+                param: param.clone(),
+                enemy_param: enemy_params.remove(&param.quest_no),
+                name: all_msg.remove(&name_msg_name),
+                target: all_msg.remove(&target_msg_name),
+                condition: all_msg.remove(&condition_msg_name),
+            })
+        })
+        .collect::<Result<Vec<_>>>()
+}
+
+fn prepare_discoveries(pedia: &Pedia) -> Result<HashMap<u32, &DiscoverEmSetDataParam>> {
+    let mut result = HashMap::new();
+    for discovery in &pedia.discover_em_set_data.param {
+        ensure!(discovery.param.route_no.len() == 5);
+        ensure!(discovery.param.init_set_name.len() == 5);
+        ensure!(discovery.param.sub_type.len() == 3);
+        ensure!(discovery.param.vital_tbl.len() == 3);
+        ensure!(discovery.param.attack_tbl.len() == 3);
+        ensure!(discovery.param.parts_tbl.len() == 3);
+        ensure!(discovery.param.other_tbl.len() == 3);
+        ensure!(discovery.param.stamina_tbl.len() == 3);
+        ensure!(discovery.param.scale.len() == 3);
+        ensure!(discovery.param.scale_tbl.len() == 3);
+        ensure!(discovery.param.difficulty.len() == 3);
+        ensure!(discovery.param.boss_multi.len() == 3);
+
+        if result.insert(discovery.em_type, discovery).is_some() {
+            bail!("Duplicated discovery data for {}", discovery.em_type)
+        }
+    }
+
+    Ok(result)
+}
+
+fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<u8, Skill>> {
+    let mut result = BTreeMap::new();
+
+    let mut name_msg: HashMap<String, MsgEntry> = pedia
+        .player_skill_name_msg
+        .entries
+        .iter()
+        .map(|entry| (entry.name.clone(), entry.clone()))
+        .collect();
+
+    let mut explain_msg: HashMap<String, MsgEntry> = pedia
+        .player_skill_explain_msg
+        .entries
+        .iter()
+        .map(|entry| (entry.name.clone(), entry.clone()))
+        .collect();
+
+    let mut detail_msg: HashMap<String, MsgEntry> = pedia
+        .player_skill_detail_msg
+        .entries
+        .iter()
+        .map(|entry| (entry.name.clone(), entry.clone()))
+        .collect();
+
+    for skill in &pedia.equip_skill.param {
+        if skill.id == 0 {
+            continue;
+        }
+        let id = skill.id - 1;
+        if result.contains_key(&id) {
+            bail!("Multiple definition for skill {}", id);
+        }
+
+        let name = name_msg
+            .remove(&format!("PlayerSkill_{:03}_Name", id))
+            .with_context(|| format!("Name for skill {}", id))?;
+
+        let explain = explain_msg
+            .remove(&format!("PlayerSkill_{:03}_Explain", id))
+            .with_context(|| format!("Explain for skill {}", id))?;
+
+        let levels = (0..(skill.max_level + 1))
+            .map(|level| {
+                detail_msg
+                    .remove(&format!("PlayerSkill_{:03}_{:02}_Detail", id, level))
+                    .with_context(|| format!("Detail for skill {} level {}", id, level))
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        result.insert(
+            id,
+            Skill {
+                name,
+                explain,
+                levels,
+                icon_color: skill.icon_color,
+            },
+        );
+    }
+
+    Ok(result)
+}
+
+fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries>> {
+    /*let mut armor_head_name_msg: HashMap<String, MsgEntry> = pedia
+        .armor_head_name_msg
+        .entries
+        .iter()
+        .map(|entry| (entry.name.clone(), entry.clone()))
+        .collect();
+
+    let mut armor_chest_name_msg: HashMap<String, MsgEntry> = pedia
+        .armor_chest_name_msg
+        .entries
+        .iter()
+        .map(|entry| (entry.name.clone(), entry.clone()))
+        .collect();
+
+    let mut armor_arm_name_msg: HashMap<String, MsgEntry> = pedia
+        .armor_arm_name_msg
+        .entries
+        .iter()
+        .map(|entry| (entry.name.clone(), entry.clone()))
+        .collect();
+
+    let mut armor_waist_name_msg: HashMap<String, MsgEntry> = pedia
+        .armor_waist_name_msg
+        .entries
+        .iter()
+        .map(|entry| (entry.name.clone(), entry.clone()))
+        .collect();
+
+    let mut armor_leg_name_msg: HashMap<String, MsgEntry> = pedia
+        .armor_leg_name_msg
+        .entries
+        .iter()
+        .map(|entry| (entry.name.clone(), entry.clone()))
+        .collect();
+
+
+    let mut armor_series_name_msg: HashMap<String, MsgEntry> = pedia
+        .armor_series_name_msg
+        .entries
+        .iter()
+        .map(|entry| (entry.name.clone(), entry.clone()))
+        .collect();
+    */
+
+    let mut series_map: BTreeMap<i32, ArmorSeries> = BTreeMap::new();
+
+    for armor_series in &pedia.armor_series.param {
+        if series_map.contains_key(&armor_series.armor_series) {
+            bail!(
+                "Duplicate armor series for ID {}",
+                armor_series.armor_series
+            );
+        }
+        let name = /*
+        armor_series_name_msg.remove(&format!(
+            "ArmorSeries_Hunter_{:03}",
+            armor_series.armor_series
+        ));
+        */
+            pedia
+            .armor_series_name_msg
+            .entries.get(armor_series.armor_series as usize).cloned(); // ?!
+        let series = ArmorSeries {
+            name,
+            series: armor_series.clone(),
+            pieces: [None, None, None, None, None],
+        };
+        series_map.insert(armor_series.armor_series, series);
+    }
+
+    for armor in &pedia.armor.param {
+        if !armor.is_valid {
+            continue;
+        }
+
+        /*
+        let (slot, type_name, msg) = match (armor.pl_armor_id >> 20) & 7 {
+            1 => (0, "Head", &mut armor_head_name_msg),
+            2 => (1, "Chest", &mut armor_chest_name_msg),
+            3 => (2, "Arm", &mut armor_arm_name_msg),
+            4 => (3, "Waist", &mut armor_waist_name_msg),
+            5 => (4, "Leg", &mut armor_leg_name_msg),
+            _ => bail!("Unknown armor type for ID {}", armor.pl_armor_id),
+        };
+
+        let name = msg
+            .remove(&format!(
+                "A_{}_{:03}_Name",
+                type_name,
+                armor.pl_armor_id & 0xFF
+            ))
+            .with_context(|| format!("Duplicate armor {}", armor.pl_armor_id))?;
+        */
+
+        let (slot, msg) = match (armor.pl_armor_id >> 20) & 7 {
+            1 => (0, &pedia.armor_head_name_msg),
+            2 => (1, &pedia.armor_chest_name_msg),
+            3 => (2, &pedia.armor_arm_name_msg),
+            4 => (3, &pedia.armor_waist_name_msg),
+            5 => (4, &pedia.armor_leg_name_msg),
+            _ => bail!("Unknown armor type for ID {}", armor.pl_armor_id),
+        };
+
+        let name = msg
+            .entries
+            .get((armor.pl_armor_id & 0xFF) as usize)
+            .with_context(|| format!("Cannot find name for armor {}", armor.pl_armor_id))?
+            .clone(); // ?!
+
+        let series = series_map.get_mut(&armor.series).with_context(|| {
+            format!(
+                "Cannot find series {} for armor {}",
+                armor.series, armor.pl_armor_id
+            )
+        })?;
+
+        if series.pieces[slot].is_some() {
+            bail!(
+                "Duplicated pieces for series {} slot {}",
+                armor.series,
+                slot
+            );
+        }
+
+        series.pieces[slot] = Some(Armor {
+            name,
+            data: armor.clone(),
+        });
+    }
+
+    Ok(series_map.into_iter().map(|(_, v)| v).collect())
+}
+
+fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, MsgEntry>> {
+    let msg_map: HashMap<_, _> = pedia
+        .hunter_note_msg
+        .entries
+        .iter()
+        .map(|entry| (entry.name.clone(), entry.clone()))
+        .collect();
+
+    let mut result = HashMap::new();
+
+    for boss_monster in &pedia.monster_list.data_list {
+        let id = boss_monster.em_type & 0xFF;
+        let sub_id = boss_monster.em_type >> 8;
+        for part_data in &boss_monster.part_table_data {
+            let part = part_data.em_meat.try_into()?;
+            let phase = part_data.em_meat_group_index.try_into()?;
+            let key = MeatKey {
+                id,
+                sub_id,
+                part,
+                phase,
+            };
+
+            let name = if let Some(name) = msg_map.get(&format!(
+                "HN_Hunternote_ML_Tab_02_Parts{:02}",
+                part_data.part
+            )) {
+                name.clone()
+            } else {
+                continue;
+            };
+
+            if result.insert(key, name).is_some() {
+                bail!(
+                    "Duplicate definition for meat {}-{}-{}-{}",
+                    id,
+                    sub_id,
+                    part,
+                    phase
+                );
+            }
+        }
+    }
+
+    Ok(result)
+}
+
+pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
+    Ok(PediaEx {
+        sizes: prepare_size_map(&pedia.size_list)?,
+        size_dists: prepare_size_dist_map(&pedia.random_scale)?,
+        quests: prepare_quests(pedia)?,
+        discoveries: prepare_discoveries(pedia)?,
+        skills: prepare_skills(pedia)?,
+        armors: prepare_armors(pedia)?,
+        meat_names: prepare_meat_names(pedia)?,
+    })
 }

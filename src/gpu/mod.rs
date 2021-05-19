@@ -133,4 +133,27 @@ impl RgbaImage {
             data,
         })
     }
+
+    pub fn gen_double_mask(mut self) -> (RgbaImage, RgbaImage) {
+        let width = self.width;
+        let height = self.height;
+        let mut data = vec![0; usize::try_from(width * height * 4).unwrap()];
+        for x in 0..width {
+            for y in 0..height {
+                let pos = usize::try_from(x + y * width).unwrap() * 4;
+                data[pos + 3] = self.data[pos];
+                self.data[pos] = 0;
+                self.data[pos + 1] = 0;
+                self.data[pos + 2] = 0;
+            }
+        }
+        (
+            RgbaImage {
+                width,
+                height,
+                data,
+            },
+            self,
+        )
+    }
 }

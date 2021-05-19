@@ -432,7 +432,8 @@ fn upload_s3_folder(path: &Path, bucket: String, client: &S3Client) -> Result<()
 fn gen_website(pak: Vec<String>, output: String, s3: Option<String>) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
     let pedia = extract::gen_pedia(&mut pak)?;
-    extract::gen_website(pedia, &output)?;
+    let pedia_ex = extract::gen_pedia_ex(&pedia)?;
+    extract::gen_website(&pedia, &pedia_ex, &output)?;
     extract::gen_resources(&mut pak, &Path::new(&output).to_owned().join("resources"))?;
     if let Some(bucket) = s3 {
         println!("Uploading to S3...");

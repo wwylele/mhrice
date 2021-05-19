@@ -3,6 +3,7 @@ use crate::rsz::*;
 use serde::*;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::collections::HashMap;
 
 #[derive(Debug, Serialize)]
 pub struct ColliderMapping {
@@ -73,4 +74,48 @@ pub struct Pedia {
 
     pub items: ItemUserData,
     pub items_name_msg: Msg,
+}
+
+pub struct Quest {
+    pub param: NormalQuestDataParam,
+    pub enemy_param: Option<NormalQuestDataForEnemyParam>,
+    pub name: Option<MsgEntry>,
+    pub target: Option<MsgEntry>,
+    pub condition: Option<MsgEntry>,
+}
+
+pub struct Skill {
+    pub name: MsgEntry,
+    pub explain: MsgEntry,
+    pub levels: Vec<MsgEntry>,
+    pub icon_color: i32,
+}
+
+pub struct Armor {
+    pub name: MsgEntry,
+    pub data: ArmorBaseUserDataParam,
+}
+
+pub struct ArmorSeries {
+    pub name: Option<MsgEntry>,
+    pub series: ArmorSeriesUserDataParam,
+    pub pieces: [Option<Armor>; 5],
+}
+
+#[derive(Hash, PartialEq, Eq)]
+pub struct MeatKey {
+    pub id: u32,
+    pub sub_id: u32,
+    pub part: usize,
+    pub phase: usize,
+}
+
+pub struct PediaEx<'a> {
+    pub sizes: HashMap<u32, &'a SizeInfo>,
+    pub size_dists: HashMap<i32, &'a [ScaleAndRateData]>,
+    pub quests: Vec<Quest>,
+    pub discoveries: HashMap<u32, &'a DiscoverEmSetDataParam>,
+    pub skills: BTreeMap<u8, Skill>,
+    pub armors: Vec<ArmorSeries>,
+    pub meat_names: HashMap<MeatKey, MsgEntry>,
 }

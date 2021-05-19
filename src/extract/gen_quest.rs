@@ -1,136 +1,11 @@
 use super::gen_website::*;
 use super::pedia::*;
-use crate::msg::*;
 use crate::rsz::*;
 use anyhow::*;
 use std::collections::BTreeMap;
-use std::collections::HashMap;
 use std::fs::{create_dir, write};
 use std::path::*;
 use typed_html::{dom::*, elements::*, html, text};
-
-pub fn prepare_size_map(size_data: &EnemySizeListData) -> Result<HashMap<u32, &SizeInfo>> {
-    let mut result = HashMap::new();
-    for size_info in &size_data.size_info_list {
-        if result.insert(size_info.em_type, size_info).is_some() {
-            bail!("Duplicate size info for {}", size_info.em_type);
-        }
-    }
-    Ok(result)
-}
-
-pub fn prepare_size_dist_map(
-    size_dist_data: &EnemyBossRandomScaleData,
-) -> Result<HashMap<i32, &[ScaleAndRateData]>> {
-    let mut result = HashMap::new();
-    for size_info in &size_dist_data.random_scale_table_data_list {
-        if result
-            .insert(size_info.type_, &size_info.scale_and_rate_data[..])
-            .is_some()
-        {
-            bail!("Duplicate size dist for {}", size_info.type_);
-        }
-    }
-    if result.contains_key(&0) {
-        bail!("Defined size dist for 0");
-    }
-    result.insert(
-        0,
-        &[ScaleAndRateData {
-            scale: 1.0,
-            rate: 100,
-        }],
-    );
-    Ok(result)
-}
-
-pub struct Quest {
-    pub param: NormalQuestDataParam,
-    pub enemy_param: Option<NormalQuestDataForEnemyParam>,
-    pub name: Option<MsgEntry>,
-    pub target: Option<MsgEntry>,
-    pub condition: Option<MsgEntry>,
-}
-
-pub fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest>> {
-    let mut all_msg: HashMap<String, MsgEntry> = pedia
-        .quest_hall_msg
-        .entries
-        .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
-        .chain(
-            pedia
-                .quest_village_msg
-                .entries
-                .iter()
-                .map(|entry| (entry.name.clone(), entry.clone())),
-        )
-        .chain(
-            pedia
-                .quest_tutorial_msg
-                .entries
-                .iter()
-                .map(|entry| (entry.name.clone(), entry.clone())),
-        )
-        .chain(
-            pedia
-                .quest_arena_msg
-                .entries
-                .iter()
-                .map(|entry| (entry.name.clone(), entry.clone())),
-        )
-        .collect();
-
-    let mut enemy_params: HashMap<i32, NormalQuestDataForEnemyParam> = pedia
-        .normal_quest_data_for_enemy
-        .param
-        .iter()
-        .map(|param| (param.quest_no, param.clone()))
-        .collect();
-
-    pedia
-        .normal_quest_data
-        .param
-        .iter()
-        .filter(|param| param.quest_no != 0)
-        .map(|param| {
-            let name_msg_name = format!("QN{:06}_01", param.quest_no);
-            let target_msg_name = format!("QN{:06}_04", param.quest_no);
-            let condition_msg_name = format!("QN{:06}_05", param.quest_no);
-            Ok(Quest {
-                param: param.clone(),
-                enemy_param: enemy_params.remove(&param.quest_no),
-                name: all_msg.remove(&name_msg_name),
-                target: all_msg.remove(&target_msg_name),
-                condition: all_msg.remove(&condition_msg_name),
-            })
-        })
-        .collect::<Result<Vec<_>>>()
-}
-
-pub fn prepare_discoveries(pedia: &Pedia) -> Result<HashMap<u32, &DiscoverEmSetDataParam>> {
-    let mut result = HashMap::new();
-    for discovery in &pedia.discover_em_set_data.param {
-        ensure!(discovery.param.route_no.len() == 5);
-        ensure!(discovery.param.init_set_name.len() == 5);
-        ensure!(discovery.param.sub_type.len() == 3);
-        ensure!(discovery.param.vital_tbl.len() == 3);
-        ensure!(discovery.param.attack_tbl.len() == 3);
-        ensure!(discovery.param.parts_tbl.len() == 3);
-        ensure!(discovery.param.other_tbl.len() == 3);
-        ensure!(discovery.param.stamina_tbl.len() == 3);
-        ensure!(discovery.param.scale.len() == 3);
-        ensure!(discovery.param.scale_tbl.len() == 3);
-        ensure!(discovery.param.difficulty.len() == 3);
-        ensure!(discovery.param.boss_multi.len() == 3);
-
-        if result.insert(discovery.em_type, discovery).is_some() {
-            bail!("Duplicated discovery data for {}", discovery.em_type)
-        }
-    }
-
-    Ok(result)
-}
 
 pub fn gen_quest_list(quests: &[Quest], root: &Path) -> Result<()> {
     let mut quests_ordered: BTreeMap<_, BTreeMap<_, Vec<&Quest>>> = BTreeMap::new();
@@ -195,9 +70,8 @@ pub fn gen_quest_monster_data(
     enemy_param: Option<&SharedEnemyParam>,
     em_type: u32,
     index: usize,
-    sizes: &HashMap<u32, &SizeInfo>,
-    size_dists: &HashMap<i32, &[ScaleAndRateData]>,
     pedia: &Pedia,
+    pedia_ex: &PediaEx<'_>,
 ) -> impl IntoIterator<Item = Box<td<String>>> {
     let enemy_param = if let Some(enemy_param) = enemy_param.as_ref() {
         enemy_param
@@ -209,7 +83,10 @@ pub fn gen_quest_monster_data(
         enemy_param.scale_tbl.get(index),
         enemy_param.scale.get(index),
     ) {
-        if let (Some(size), Some(size_dist)) = (sizes.get(&em_type), size_dists.get(scale_tbl_i)) {
+        if let (Some(size), Some(size_dist)) = (
+            pedia_ex.sizes.get(&em_type),
+            pedia_ex.size_dists.get(scale_tbl_i),
+        ) {
             let mut small_chance = 0;
             let mut large_chance = 0;
             for sample in *size_dist {
@@ -408,13 +285,7 @@ fn gen_monster_tag(quest: &Quest, pedia: &Pedia, id: u32) -> Box<td<String>> {
     </td>)
 }
 
-fn gen_quest(
-    quest: &Quest,
-    sizes: &HashMap<u32, &SizeInfo>,
-    size_dists: &HashMap<i32, &[ScaleAndRateData]>,
-    pedia: &Pedia,
-    path: &Path,
-) -> Result<()> {
+fn gen_quest(quest: &Quest, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -461,7 +332,7 @@ fn gen_quest(
                             html!(<tr>
                                 { gen_monster_tag(quest, pedia, em_type) }
                                 { gen_quest_monster_data(quest.enemy_param.as_ref().map(|p|&p.param),
-                                    em_type, i, sizes,size_dists, pedia) }
+                                    em_type, i, pedia, pedia_ex) }
                             </tr>)
                         })
                     } </tbody>
@@ -508,18 +379,12 @@ fn gen_quest(
     Ok(())
 }
 
-pub fn gen_quests(
-    quests: &[Quest],
-    sizes: &HashMap<u32, &SizeInfo>,
-    size_dists: &HashMap<i32, &[ScaleAndRateData]>,
-    pedia: &Pedia,
-    root: &Path,
-) -> Result<()> {
+pub fn gen_quests(pedia: &Pedia, pedia_ex: &PediaEx<'_>, root: &Path) -> Result<()> {
     let quest_path = root.join("quest");
     create_dir(&quest_path)?;
-    for quest in quests {
+    for quest in &pedia_ex.quests {
         let path = quest_path.join(format!("{:06}.html", quest.param.quest_no));
-        gen_quest(quest, sizes, size_dists, pedia, &path)?
+        gen_quest(quest, pedia, pedia_ex, &path)?
     }
     Ok(())
 }

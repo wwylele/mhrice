@@ -15,7 +15,7 @@ where
 }
 
 #[derive(Debug, Serialize)]
-enum FieldValue {
+pub enum FieldValue {
     Bool(bool),
     F64(f64),
     String(String),
@@ -24,58 +24,64 @@ enum FieldValue {
 }
 
 #[derive(Debug, Serialize)]
-struct Field {
-    b: u32,
-    name: String,
-    value: FieldValue,
+pub struct Field {
+    pub b: u32,
+    pub name: String,
+    pub value: FieldValue,
 }
 
 #[derive(Debug, Serialize)]
-struct PlayObject {
+pub struct PlayObject {
     #[serde(serialize_with = "ser_hash")]
-    hash: [u8; 0x10],
+    pub hash: [u8; 0x10],
     #[serde(serialize_with = "ser_hash")]
-    child_control_hash: [u8; 0x10],
+    pub child_control_hash: [u8; 0x10],
     #[serde(serialize_with = "ser_hash")]
-    hash2: [u8; 0x10],
-    name: String,
-    type_name: String,
-    properties: Vec<Field>,
-    variables: Vec<Field>,
+    pub hash2: [u8; 0x10],
+    pub name: String,
+    pub type_name: String,
+    pub properties: Vec<Field>,
+    pub variables: Vec<Field>,
 }
 
 #[derive(Debug, Serialize)]
-struct ObjectPathComponent {
-    name: String,
+pub struct ObjectPathComponent {
+    pub name: String,
 }
 
 #[derive(Debug, Serialize)]
-struct VariableRef {
-    name: String,
+pub struct VariableRef {
+    pub name: String,
 }
 
 #[derive(Debug, Serialize)]
-struct Clip {
-    name: String,
-    object_path: Vec<ObjectPathComponent>,
-    variable_refs: Vec<VariableRef>,
+pub struct VariableValue {
+    pub value: u64,
 }
 
 #[derive(Debug, Serialize)]
-struct Control {
+pub struct Clip {
+    pub name: String,
+    pub object_path: Vec<ObjectPathComponent>,
+    pub variable_refs: Vec<VariableRef>,
+    pub variable_values: Vec<VariableValue>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct Control {
     #[serde(serialize_with = "ser_hash")]
-    hash: [u8; 0x10],
-    name: String,
-    type_name: String,
-    play_objects: Vec<PlayObject>,
-    clips: Vec<Clip>,
-    q_what: u32,
+    pub hash: [u8; 0x10],
+    pub name: String,
+    pub type_name: String,
+    pub play_objects: Vec<PlayObject>,
+    pub clips: Vec<Clip>,
+    pub q_what: u32,
 }
 
 #[derive(Debug, Serialize)]
 pub struct Gui {
-    root: PlayObject,
-    controls: Vec<Control>,
+    pub root: PlayObject,
+    pub controls: Vec<Control>,
 }
 
 impl Gui {
@@ -331,13 +337,13 @@ impl Gui {
 
                         file.seek_noop(base_offset + r2_offset)?;
 
-                        let ws = (0..w_count)
+                        let variable_values = (0..w_count)
                             .map(|_| {
                                 let _ = file.read_u64()?;
                                 let _ = file.read_u64()?;
                                 let value = file.read_u64()?;
                                 let _ = file.read_u64()?;
-                                Ok(())
+                                Ok(VariableValue { value })
                             })
                             .collect::<Result<Vec<_>>>()?;
 
@@ -353,6 +359,7 @@ impl Gui {
                             name,
                             object_path,
                             variable_refs,
+                            variable_values,
                         })
                     })
                     .collect::<Result<Vec<_>>>()?;

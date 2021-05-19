@@ -1,158 +1,10 @@
-use super::gen_skill::*;
 use super::gen_website::*;
 use super::pedia::*;
-use crate::msg::*;
-use crate::rsz::*;
 use anyhow::*;
 use std::collections::BTreeMap;
 use std::fs::{create_dir, write};
 use std::path::*;
 use typed_html::{dom::*, html, text};
-
-pub struct Armor {
-    name: MsgEntry,
-    data: ArmorBaseUserDataParam,
-}
-
-pub struct ArmorSeries {
-    name: Option<MsgEntry>,
-    series: ArmorSeriesUserDataParam,
-    pieces: [Option<Armor>; 5],
-}
-
-pub fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries>> {
-    /*let mut armor_head_name_msg: HashMap<String, MsgEntry> = pedia
-        .armor_head_name_msg
-        .entries
-        .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
-        .collect();
-
-    let mut armor_chest_name_msg: HashMap<String, MsgEntry> = pedia
-        .armor_chest_name_msg
-        .entries
-        .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
-        .collect();
-
-    let mut armor_arm_name_msg: HashMap<String, MsgEntry> = pedia
-        .armor_arm_name_msg
-        .entries
-        .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
-        .collect();
-
-    let mut armor_waist_name_msg: HashMap<String, MsgEntry> = pedia
-        .armor_waist_name_msg
-        .entries
-        .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
-        .collect();
-
-    let mut armor_leg_name_msg: HashMap<String, MsgEntry> = pedia
-        .armor_leg_name_msg
-        .entries
-        .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
-        .collect();
-
-
-    let mut armor_series_name_msg: HashMap<String, MsgEntry> = pedia
-        .armor_series_name_msg
-        .entries
-        .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
-        .collect();
-    */
-
-    let mut series_map: BTreeMap<i32, ArmorSeries> = BTreeMap::new();
-
-    for armor_series in &pedia.armor_series.param {
-        if series_map.contains_key(&armor_series.armor_series) {
-            bail!(
-                "Duplicate armor series for ID {}",
-                armor_series.armor_series
-            );
-        }
-        let name = /*
-        armor_series_name_msg.remove(&format!(
-            "ArmorSeries_Hunter_{:03}",
-            armor_series.armor_series
-        ));
-        */
-            pedia
-            .armor_series_name_msg
-            .entries.get(armor_series.armor_series as usize).cloned(); // ?!
-        let series = ArmorSeries {
-            name,
-            series: armor_series.clone(),
-            pieces: [None, None, None, None, None],
-        };
-        series_map.insert(armor_series.armor_series, series);
-    }
-
-    for armor in &pedia.armor.param {
-        if !armor.is_valid {
-            continue;
-        }
-
-        /*
-        let (slot, type_name, msg) = match (armor.pl_armor_id >> 20) & 7 {
-            1 => (0, "Head", &mut armor_head_name_msg),
-            2 => (1, "Chest", &mut armor_chest_name_msg),
-            3 => (2, "Arm", &mut armor_arm_name_msg),
-            4 => (3, "Waist", &mut armor_waist_name_msg),
-            5 => (4, "Leg", &mut armor_leg_name_msg),
-            _ => bail!("Unknown armor type for ID {}", armor.pl_armor_id),
-        };
-
-        let name = msg
-            .remove(&format!(
-                "A_{}_{:03}_Name",
-                type_name,
-                armor.pl_armor_id & 0xFF
-            ))
-            .with_context(|| format!("Duplicate armor {}", armor.pl_armor_id))?;
-        */
-
-        let (slot, msg) = match (armor.pl_armor_id >> 20) & 7 {
-            1 => (0, &pedia.armor_head_name_msg),
-            2 => (1, &pedia.armor_chest_name_msg),
-            3 => (2, &pedia.armor_arm_name_msg),
-            4 => (3, &pedia.armor_waist_name_msg),
-            5 => (4, &pedia.armor_leg_name_msg),
-            _ => bail!("Unknown armor type for ID {}", armor.pl_armor_id),
-        };
-
-        let name = msg
-            .entries
-            .get((armor.pl_armor_id & 0xFF) as usize)
-            .with_context(|| format!("Cannot find name for armor {}", armor.pl_armor_id))?
-            .clone(); // ?!
-
-        let series = series_map.get_mut(&armor.series).with_context(|| {
-            format!(
-                "Cannot find series {} for armor {}",
-                armor.series, armor.pl_armor_id
-            )
-        })?;
-
-        if series.pieces[slot].is_some() {
-            bail!(
-                "Duplicated pieces for series {} slot {}",
-                armor.series,
-                slot
-            );
-        }
-
-        series.pieces[slot] = Some(Armor {
-            name,
-            data: armor.clone(),
-        });
-    }
-
-    Ok(series_map.into_iter().map(|(_, v)| v).collect())
-}
 
 pub fn gen_armor_list(serieses: &[ArmorSeries], root: &Path) -> Result<()> {
     let doc: DOMTree<String> = html!(
@@ -261,10 +113,12 @@ fn gen_armor(series: &ArmorSeries, skills: &BTreeMap<u8, Skill>, path: &Path) ->
                                 piece.data.skill_list.iter().zip(piece.data.skill_lv_list.iter())
                                     .filter(|(skill, lv)| **skill != 0)
                                     .map(|(skill, lv)| {
-                                    let name = if let Some(skillz_data) = skills.get(&(skill - 1)) {
-                                        html!(<span><a href={format!("/skill/{:03}.html", skill - 1)}>{
-                                            gen_multi_lang(&skillz_data.name)
-                                        }</a></span>)
+                                    let name = if let Some(skill_data) = skills.get(&(skill - 1)) {
+                                        html!(<span><a href={format!("/skill/{:03}.html", skill - 1)}
+                                            class="mh-icon-text">
+                                            {gen_colored_icon(skill_data.icon_color, "/resources/skill")}
+                                            {gen_multi_lang(&skill_data.name)}
+                                        </a></span>)
                                     } else {
                                         html!(<span>"<UNKNOWN>"</span>)
                                     };
@@ -299,16 +153,12 @@ fn gen_armor(series: &ArmorSeries, skills: &BTreeMap<u8, Skill>, path: &Path) ->
     Ok(())
 }
 
-pub fn gen_armors(
-    serieses: &[ArmorSeries],
-    skills: &BTreeMap<u8, Skill>,
-    root: &Path,
-) -> Result<()> {
+pub fn gen_armors(pedia_ex: &PediaEx<'_>, root: &Path) -> Result<()> {
     let armor_path = root.join("armor");
     create_dir(&armor_path)?;
-    for series in serieses {
+    for series in &pedia_ex.armors {
         let path = armor_path.join(format!("{:03}.html", series.series.armor_series));
-        gen_armor(series, skills, &path)?
+        gen_armor(series, &pedia_ex.skills, &path)?
     }
     Ok(())
 }

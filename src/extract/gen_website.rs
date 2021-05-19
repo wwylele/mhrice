@@ -5,10 +5,8 @@ use super::gen_skill::*;
 use super::pedia::*;
 use crate::msg::*;
 use crate::part_color::*;
-use crate::rsz::*;
 use anyhow::*;
 use chrono::prelude::*;
-use std::collections::HashMap;
 use std::convert::TryInto;
 use std::fs::{create_dir, remove_dir_all, write, File};
 use std::io::Write;
@@ -57,6 +55,7 @@ pub fn head_common() -> Vec<Box<dyn MetadataContent<String>>> {
         html!(<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css" />),
         html!(<link rel="stylesheet" href="/mhrice.css" />),
         html!(<link rel="stylesheet" href="/part_color.css" />),
+        html!(<link rel="stylesheet" href="/resources/item_color.css" />),
         html!(<script src="https://kit.fontawesome.com/ceb13a2ba1.js" crossorigin="anonymous" />),
         html!(<script src="/mhrice.js" crossorigin="anonymous" />),
     ]
@@ -121,25 +120,26 @@ pub fn navbar() -> Box<div<String>> {
 pub fn gen_multi_lang(msg: &MsgEntry) -> Box<span<String>> {
     html!(<span> {
         (0..32).filter(|&i|LANGUAGE_MAP[i].is_some()).map(|i|{
-            let class_string = format!("mh-lang-{}", i);
-            let c: SpacedSet<Class> = class_string.as_str().try_into().unwrap();
-            html! (<span class=c>
+            html! (<span class={format!("mh-lang-{}", i).as_str()}>
                 {text!("{}", msg.content[i])}
             </span>)
         })
     } </span>)
 }
 
-pub fn gen_monsters(
-    pedia: &Pedia,
-    quests: &[Quest],
-    discoveries: &HashMap<u32, &DiscoverEmSetDataParam>,
-    sizes: &HashMap<u32, &SizeInfo>,
-    size_dists: &HashMap<i32, &[ScaleAndRateData]>,
-    root: &Path,
-) -> Result<()> {
-    let meat_names = prepare_meat_names(pedia)?;
+pub fn gen_colored_icon(color: i32, icon: &str) -> Box<div<String>> {
+    let image_r_base = format!("url('{}.r.png')", icon);
+    let image_a_base = format!("url('{}.a.png')", icon);
+    let image_r = format!("mask-image: {0}; -webkit-mask-image: {0};", image_r_base);
+    let image_a = format!("mask-image: {0}; -webkit-mask-image: {0};", image_a_base);
+    html!(<div class="mh-colored-icon">
+        <div data-mh-icon={icon} style={image_r.as_str()}
+            class={format!("mh-item-color-{}", color).as_str()}/>
+        <div data-mh-icon={icon} style={image_a.as_str()}/>
+    </div>)
+}
 
+pub fn gen_monsters(pedia: &Pedia, pedia_ex: &PediaEx<'_>, root: &Path) -> Result<()> {
     let monsters_path = root.join("monster.html");
 
     let doc: DOMTree<String> = html!(
@@ -196,37 +196,13 @@ pub fn gen_monsters(
     let monster_path = root.join("monster");
     create_dir(&monster_path)?;
     for monster in &pedia.monsters {
-        gen_monster(
-            true,
-            monster,
-            &pedia.monster_aliases,
-            &pedia.condition_preset,
-            sizes,
-            size_dists,
-            quests,
-            discoveries,
-            pedia,
-            &meat_names,
-            &monster_path,
-        )?;
+        gen_monster(true, monster, pedia, pedia_ex, &monster_path)?;
     }
 
     let monster_path = root.join("small-monster");
     create_dir(&monster_path)?;
     for monster in &pedia.small_monsters {
-        gen_monster(
-            false,
-            monster,
-            &pedia.monster_aliases,
-            &pedia.condition_preset,
-            sizes,
-            size_dists,
-            quests,
-            discoveries,
-            pedia,
-            &meat_names,
-            &monster_path,
-        )?;
+        gen_monster(false, monster, pedia, pedia_ex, &monster_path)?;
     }
     Ok(())
 }
@@ -309,27 +285,20 @@ pub fn gen_part_color_css(root: &Path) -> Result<()> {
     Ok(())
 }
 
-pub fn gen_website(pedia: Pedia, output: &str) -> Result<()> {
+pub fn gen_website(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &str) -> Result<()> {
     let root = PathBuf::from(output);
     if root.exists() {
         remove_dir_all(&root)?;
     }
     create_dir(&root)?;
 
-    let quests = prepare_quests(&pedia)?;
-    let skills = prepare_skills(&pedia)?;
-    let armors = prepare_armors(&pedia)?;
-    let sizes = prepare_size_map(&pedia.size_list)?;
-    let size_dists = prepare_size_dist_map(&pedia.random_scale)?;
-    let discoveries = prepare_discoveries(&pedia)?;
-
-    gen_quests(&quests, &sizes, &size_dists, &pedia, &root)?;
-    gen_skills(&skills, &root)?;
-    gen_skill_list(&skills, &root)?;
-    gen_armors(&armors, &skills, &root)?;
-    gen_armor_list(&armors, &root)?;
-    gen_monsters(&pedia, &quests, &discoveries, &sizes, &size_dists, &root)?;
-    gen_quest_list(&quests, &root)?;
+    gen_quests(pedia, pedia_ex, &root)?;
+    gen_skills(&pedia_ex.skills, &root)?;
+    gen_skill_list(&pedia_ex.skills, &root)?;
+    gen_armors(pedia_ex, &root)?;
+    gen_armor_list(&pedia_ex.armors, &root)?;
+    gen_monsters(pedia, pedia_ex, &root)?;
+    gen_quest_list(&pedia_ex.quests, &root)?;
     gen_about(&root)?;
     gen_static(&root)?;
     gen_part_color_css(&root)?;

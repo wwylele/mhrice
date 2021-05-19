@@ -73,7 +73,12 @@ div.mh-monster-header img {
     float: right;
 }
 
+div.mh-title-icon {
+    float: left;
+}
+
 ul.mh-list-skill {
+    list-style: none;
     display: grid;
     grid-template-columns: repeat( auto-fit, minmax(250px, 1fr) );
 }
@@ -104,4 +109,32 @@ ul.mh-multi-factor {
 div.mh-logo-text {
     font-weight: bold;
     margin-left: 1em;
+}
+
+.mh-colored-icon {
+    display: inline-grid;
+    grid-template: 1fr / 1fr;
+    place-items: center;
+}
+
+.mh-colored-icon > * {
+    grid-column: 1 / 1;
+    grid-row: 1 / 1;
+    width: 2rem;
+    height: 2rem;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+}
+
+.mh-colored-icon > *:nth-child(1)  {
+    z-index: 2;
+}
+
+.mh-colored-icon > *:nth-child(2) {
+    background-color: black;
+    z-index: 1;
+}
+
+.mh-icon-text > * {
+    vertical-align: middle;
 }

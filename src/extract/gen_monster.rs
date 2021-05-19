@@ -3,70 +3,12 @@
 use super::gen_quest::*;
 use super::gen_website::{gen_multi_lang, head_common, navbar};
 use super::pedia::*;
-use crate::msg::*;
 use crate::rsz::*;
 use anyhow::*;
-use std::collections::HashMap;
 use std::convert::TryFrom;
-use std::convert::TryInto;
 use std::fs::write;
 use std::path::*;
 use typed_html::{dom::*, elements::*, html, text};
-
-#[derive(Hash, PartialEq, Eq)]
-pub struct MeatKey {
-    id: u32,
-    sub_id: u32,
-    part: usize,
-    phase: usize,
-}
-
-pub fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, MsgEntry>> {
-    let msg_map: HashMap<_, _> = pedia
-        .hunter_note_msg
-        .entries
-        .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
-        .collect();
-
-    let mut result = HashMap::new();
-
-    for boss_monster in &pedia.monster_list.data_list {
-        let id = boss_monster.em_type & 0xFF;
-        let sub_id = boss_monster.em_type >> 8;
-        for part_data in &boss_monster.part_table_data {
-            let part = part_data.em_meat.try_into()?;
-            let phase = part_data.em_meat_group_index.try_into()?;
-            let key = MeatKey {
-                id,
-                sub_id,
-                part,
-                phase,
-            };
-
-            let name = if let Some(name) = msg_map.get(&format!(
-                "HN_Hunternote_ML_Tab_02_Parts{:02}",
-                part_data.part
-            )) {
-                name.clone()
-            } else {
-                continue;
-            };
-
-            if result.insert(key, name).is_some() {
-                bail!(
-                    "Duplicate definition for meat {}-{}-{}-{}",
-                    id,
-                    sub_id,
-                    part,
-                    phase
-                );
-            }
-        }
-    }
-
-    Ok(result)
-}
 
 fn gen_extractive_type(extractive_type: ExtractiveType) -> Result<Box<span<String>>> {
     match extractive_type {
@@ -509,14 +451,8 @@ fn gen_condition_steel_fang(
 pub fn gen_monster(
     is_large: bool,
     monster: &Monster,
-    monster_aliases: &Msg,
-    condition_preset: &EnemyConditionPresetData,
-    sizes: &HashMap<u32, &SizeInfo>,
-    size_dists: &HashMap<i32, &[ScaleAndRateData]>,
-    quests: &[Quest],
-    discoveries: &HashMap<u32, &DiscoverEmSetDataParam>,
     pedia: &Pedia,
-    meat_names: &HashMap<MeatKey, MsgEntry>,
+    pedia_ex: &PediaEx<'_>,
     folder: &Path,
 ) -> Result<()> {
     let collider_mapping = &monster.collider_mapping;
@@ -544,6 +480,7 @@ pub fn gen_monster(
     let monster_id = monster.id;
     let monster_sub_id = monster.sub_id;
     let monster_em_type = monster_id | (monster_sub_id << 8);
+    let condition_preset = &pedia.condition_preset;
 
     let quest_list = html!(
         <section class="section">
@@ -564,7 +501,7 @@ pub fn gen_monster(
                 <th>"Stamina"</th>
             </tr></thead>
             <tbody> {
-                quests.iter().flat_map(|quest| {
+                pedia_ex.quests.iter().flat_map(|quest| {
                     quest.param.boss_em_type.iter().copied().enumerate().filter(
                         |&(i, em_type)|em_type == monster_em_type
                     )
@@ -588,25 +525,25 @@ pub fn gen_monster(
                                 {target_tag}
                             </td>
                             { gen_quest_monster_data(quest.enemy_param.as_ref().map(|p|&p.param),
-                                em_type, i, sizes, size_dists, pedia) }
+                                em_type, i, pedia, pedia_ex) }
                         </tr>)
                     })
                 })
             }
             {
-                if let Some(&discovery) = discoveries.get(&monster_em_type) {
+                if let Some(&discovery) = pedia_ex.discoveries.get(&monster_em_type) {
                     vec![
                         html!(<tr><td>"Village tour"</td>{
                             gen_quest_monster_data(Some(&discovery.param),
-                                monster_em_type, 0, sizes, size_dists, pedia)
+                                monster_em_type, 0, pedia, pedia_ex)
                         }</tr>),
                         html!(<tr><td>"Low rank tour"</td>{
                             gen_quest_monster_data(Some(&discovery.param),
-                                monster_em_type, 1, sizes, size_dists, pedia)
+                                monster_em_type, 1, pedia, pedia_ex)
                         }</tr>),
                         html!(<tr><td>"High rank tour"</td>{
                             gen_quest_monster_data(Some(&discovery.param),
-                                monster_em_type, 2, sizes, size_dists, pedia)
+                                monster_em_type, 2, pedia, pedia_ex)
                         }</tr>)
                     ]
                 } else {
@@ -636,7 +573,7 @@ pub fn gen_monster(
                                 .context(format!("Cannot found boss_init_set for monster {}_{}",
                                     monster.id, monster.sub_id))?
                                 .enemy_type);
-                            monster_aliases.get_entry(&name_name).map_or(
+                            pedia.monster_aliases.get_entry(&name_name).map_or(
                                 html!(<span>{text!("Monster {:03}_{:02}", monster.id, monster.sub_id)}</span>),
                                 gen_multi_lang
                             )
@@ -732,7 +669,7 @@ pub fn gen_monster(
 
                             meats.meat_group_info.iter().enumerate()
                                 .map(move |(phase, group_info)| {
-                                    let name = meat_names.get(&MeatKey {
+                                    let name = pedia_ex.meat_names.get(&MeatKey {
                                         id: monster_id,
                                         sub_id: monster_sub_id,
                                         part,
