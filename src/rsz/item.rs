@@ -89,7 +89,7 @@ rsz_struct! {
         pub sell_price: u32,
         pub buy_price: u32,
         pub item_action_type: i32, // snow.data.GameItemEnum.ItemActionType
-        pub rank_types: RankTypes,
+        pub rank_type: RankTypes,
         pub item_group: ItemGroupTypes,
         pub category_worth: u32,
         pub material_category: Vec<i32>, // snow.data.NormalItemData.MaterialCategory, 2 = Category 0

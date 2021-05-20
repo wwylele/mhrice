@@ -110,6 +110,12 @@ pub struct MeatKey {
     pub phase: usize,
 }
 
+pub struct Item<'a> {
+    pub name: MsgEntry,
+    pub param: &'a ItemUserDataParam,
+    pub multiple_def: bool,
+}
+
 pub struct PediaEx<'a> {
     pub sizes: HashMap<u32, &'a SizeInfo>,
     pub size_dists: HashMap<i32, &'a [ScaleAndRateData]>,
@@ -118,4 +124,5 @@ pub struct PediaEx<'a> {
     pub skills: BTreeMap<u8, Skill>,
     pub armors: Vec<ArmorSeries>,
     pub meat_names: HashMap<MeatKey, MsgEntry>,
+    pub items: BTreeMap<u32, Item<'a>>,
 }

@@ -1,4 +1,5 @@
 use super::gen_armor::*;
+use super::gen_item::*;
 use super::gen_monster::*;
 use super::gen_quest::*;
 use super::gen_skill::*;
@@ -91,6 +92,9 @@ pub fn navbar() -> Box<div<String>> {
                     <a class="navbar-item" href="/armor.html">
                         "Armors"
                     </a>
+                    <a class="navbar-item" href="/item.html">
+                        "Items"
+                    </a>
                     <a class="navbar-item" href="/about.html">
                         "About"
                     </a>
@@ -127,15 +131,18 @@ pub fn gen_multi_lang(msg: &MsgEntry) -> Box<span<String>> {
     } </span>)
 }
 
-pub fn gen_colored_icon(color: i32, icon: &str) -> Box<div<String>> {
+pub fn gen_colored_icon(color: i32, icon: &str, addons: &[&str]) -> Box<div<String>> {
     let image_r_base = format!("url('{}.r.png')", icon);
     let image_a_base = format!("url('{}.a.png')", icon);
     let image_r = format!("mask-image: {0}; -webkit-mask-image: {0};", image_r_base);
     let image_a = format!("mask-image: {0}; -webkit-mask-image: {0};", image_a_base);
     html!(<div class="mh-colored-icon">
-        <div data-mh-icon={icon} style={image_r.as_str()}
+        <div style={image_r.as_str()}
             class={format!("mh-item-color-{}", color).as_str()}/>
-        <div data-mh-icon={icon} style={image_a.as_str()}/>
+        <div style={image_a.as_str()}/>
+        <div>{ addons.iter().map(|&addon| html!(
+            <div class=addon/>
+        )) }</div>
     </div>)
 }
 
@@ -299,6 +306,8 @@ pub fn gen_website(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &str) -> Resul
     gen_armor_list(&pedia_ex.armors, &root)?;
     gen_monsters(pedia, pedia_ex, &root)?;
     gen_quest_list(&pedia_ex.quests, &root)?;
+    gen_items(pedia_ex, &root)?;
+    gen_item_list(pedia_ex, &root)?;
     gen_about(&root)?;
     gen_static(&root)?;
     gen_part_color_css(&root)?;

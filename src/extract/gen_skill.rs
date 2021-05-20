@@ -22,7 +22,7 @@ pub fn gen_skill_list(skills: &BTreeMap<u8, Skill>, root: &Path) -> Result<()> {
                     skills.iter().map(|(id, skill)|{
                         html!(<li class="mh-list-skill">
                             <a href={format!("/skill/{:03}.html", id)} class="mh-icon-text">
-                            {gen_colored_icon(skill.icon_color, "/resources/skill")}
+                            {gen_colored_icon(skill.icon_color, "/resources/skill", &[])}
                             <span>{gen_multi_lang(&skill.name)}</span>
                             </a>
                         </li>)
@@ -50,7 +50,7 @@ pub fn gen_skill(id: u8, skill: &Skill, path: &Path) -> Result<()> {
                 { navbar() }
                 <main> <div class="container"> <div class="content">
                 <div class="mh-title-icon">
-                    {gen_colored_icon(skill.icon_color, "/resources/skill")}
+                    {gen_colored_icon(skill.icon_color, "/resources/skill", &[])}
                 </div>
                 <h1 class="title">
                     {gen_multi_lang(&skill.name)}

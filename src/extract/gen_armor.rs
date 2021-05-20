@@ -116,7 +116,7 @@ fn gen_armor(series: &ArmorSeries, skills: &BTreeMap<u8, Skill>, path: &Path) ->
                                     let name = if let Some(skill_data) = skills.get(&(skill - 1)) {
                                         html!(<span><a href={format!("/skill/{:03}.html", skill - 1)}
                                             class="mh-icon-text">
-                                            {gen_colored_icon(skill_data.icon_color, "/resources/skill")}
+                                            {gen_colored_icon(skill_data.icon_color, "/resources/skill", &[])}
                                             {gen_multi_lang(&skill_data.name)}
                                         </a></span>)
                                     } else {

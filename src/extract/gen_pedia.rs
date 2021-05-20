@@ -540,6 +540,19 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
         item_icon_a.save_png(&item_icon_path.join(format!("{:03}.a.png", i)))?;
     }
 
+    let item_addon_uvs = pak.find_file("gui/70_UVSequence/Item_addonicon.uvs")?;
+    let item_addon_uvs = Uvs::new(Cursor::new(pak.read_file(item_addon_uvs)?))?;
+    if item_addon_uvs.textures.len() != 1 || item_addon_uvs.spriter_groups.len() != 1 {
+        bail!("Broken item_addonicon_IAM.uvs");
+    }
+    let item_addon = pak.find_file(&item_addon_uvs.textures[0].path)?;
+    let item_addon = Tex::new(Cursor::new(pak.read_file(item_addon)?))?.to_rgba(0, 0)?;
+    for (i, spriter) in item_addon_uvs.spriter_groups[0].spriters.iter().enumerate() {
+        item_addon
+            .sub_image_f(spriter.p0, spriter.p1)?
+            .save_png(&root.join(format!("item_addon_{}.png", i)))?;
+    }
+
     let message_window_uvs = pak.find_file("gui/70_UVSequence/message_window.uvs")?;
     let message_window_uvs = Uvs::new(Cursor::new(pak.read_file(message_window_uvs)?))?;
     if message_window_uvs.textures.len() != 1 || message_window_uvs.spriter_groups.len() != 1 {
@@ -963,6 +976,34 @@ fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, MsgEntry>> {
     Ok(result)
 }
 
+fn prepare_items<'a>(pedia: &'a Pedia) -> Result<BTreeMap<u32, Item<'a>>> {
+    let mut result: BTreeMap<u32, Item<'a>> = BTreeMap::new();
+    let mut name_map: HashMap<_, _> = pedia
+        .items_name_msg
+        .entries
+        .iter()
+        .map(|entry| (entry.name.clone(), entry.clone()))
+        .collect();
+    for param in &pedia.items.param {
+        if let Some(existing) = result.get_mut(&param.id) {
+            eprintln!("Duplicate definition for item {}", param.id);
+            existing.multiple_def = true;
+            continue;
+        }
+        let name = name_map
+            .remove(&format!("I_{:04}_Name", param.id & 0xFFFF))
+            .with_context(|| format!("Name not found for item {}", param.id))?;
+        let item = Item {
+            name,
+            param,
+            multiple_def: false,
+        };
+        result.insert(param.id, item);
+    }
+
+    Ok(result)
+}
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     Ok(PediaEx {
         sizes: prepare_size_map(&pedia.size_list)?,
@@ -972,5 +1013,6 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         skills: prepare_skills(pedia)?,
         armors: prepare_armors(pedia)?,
         meat_names: prepare_meat_names(pedia)?,
+        items: prepare_items(pedia)?,
     })
 }
