@@ -642,7 +642,9 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
         ArmorBaseUserDataParam,
         ArmorBaseUserData,
         ArmorSeriesUserDataParam,
-        ArmorSeriesUserData
+        ArmorSeriesUserData,
+        ArmorProductUserDataParam,
+        ArmorProductUserData,
     );
 
     r!(

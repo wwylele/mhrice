@@ -75,7 +75,7 @@ pub fn gen_item(item: &Item, pedia_ex: &PediaEx<'_>, path: &Path) -> Result<()> 
                 <span>{text!("{}", item.param.show_action_window)}</span></p>
                 <p class="mh-kv"><span>"Infinite"</span>
                 <span>{text!("{}", item.param.infinite)}</span></p>
-                <p class="mh-kv"><span>"Persistent"</span>
+                <p class="mh-kv"><span>"Fixed item"</span>
                 <span>{text!("{}", item.param.default)}</span></p>
                 /*<p class="mh-kv"><span>"SE type"</span>
                 <span>{text!("{:?}", item.param.se_type)}</span></p>*/

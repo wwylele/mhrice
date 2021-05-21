@@ -48,6 +48,7 @@ pub struct Pedia {
 
     pub armor: ArmorBaseUserData,
     pub armor_series: ArmorSeriesUserData,
+    pub armor_product: ArmorProductUserData,
     pub armor_head_name_msg: Msg,
     pub armor_chest_name_msg: Msg,
     pub armor_arm_name_msg: Msg,
@@ -91,15 +92,16 @@ pub struct Skill {
     pub icon_color: i32,
 }
 
-pub struct Armor {
+pub struct Armor<'a> {
     pub name: MsgEntry,
-    pub data: ArmorBaseUserDataParam,
+    pub data: &'a ArmorBaseUserDataParam,
+    pub product: Option<&'a ArmorProductUserDataParam>,
 }
 
-pub struct ArmorSeries {
+pub struct ArmorSeries<'a> {
     pub name: Option<MsgEntry>,
-    pub series: ArmorSeriesUserDataParam,
-    pub pieces: [Option<Armor>; 5],
+    pub series: &'a ArmorSeriesUserDataParam,
+    pub pieces: [Option<Armor<'a>>; 5],
 }
 
 #[derive(Hash, PartialEq, Eq)]
@@ -122,7 +124,7 @@ pub struct PediaEx<'a> {
     pub quests: Vec<Quest>,
     pub discoveries: HashMap<u32, &'a DiscoverEmSetDataParam>,
     pub skills: BTreeMap<u8, Skill>,
-    pub armors: Vec<ArmorSeries>,
+    pub armors: Vec<ArmorSeries<'a>>,
     pub meat_names: HashMap<MeatKey, MsgEntry>,
     pub items: BTreeMap<u32, Item<'a>>,
 }

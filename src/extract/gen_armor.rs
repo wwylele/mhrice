@@ -1,3 +1,4 @@
+use super::gen_item::*;
 use super::gen_website::*;
 use super::pedia::*;
 use anyhow::*;
@@ -60,7 +61,7 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], root: &Path) -> Result<()> {
     Ok(())
 }
 
-fn gen_armor(series: &ArmorSeries, skills: &BTreeMap<u8, Skill>, path: &Path) -> Result<()> {
+fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, path: &Path) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -77,6 +78,8 @@ fn gen_armor(series: &ArmorSeries, skills: &BTreeMap<u8, Skill>, path: &Path) ->
                         html!(<span>"<Unknown>"</span>)
                     }
                 } </h1>
+                <section class="section">
+                <h2 class="title">"Stat"</h2>
                 <table>
                     <thead><tr>
                         <th>"Name"</th>
@@ -113,7 +116,7 @@ fn gen_armor(series: &ArmorSeries, skills: &BTreeMap<u8, Skill>, path: &Path) ->
                                 piece.data.skill_list.iter().zip(piece.data.skill_lv_list.iter())
                                     .filter(|(skill, lv)| **skill != 0)
                                     .map(|(skill, lv)| {
-                                    let name = if let Some(skill_data) = skills.get(&(skill - 1)) {
+                                    let name = if let Some(skill_data) = pedia_ex.skills.get(&(skill - 1)) {
                                         html!(<span><a href={format!("/skill/{:03}.html", skill - 1)}
                                             class="mh-icon-text">
                                             {gen_colored_icon(skill_data.icon_color, "/resources/skill", &[])}
@@ -144,6 +147,73 @@ fn gen_armor(series: &ArmorSeries, skills: &BTreeMap<u8, Skill>, path: &Path) ->
                         })
                     } </tbody>
                 </table>
+                </section>
+
+                <section class="section">
+                <h2 class="title">"Crafting"</h2>
+                <table>
+                    <thead><tr>
+                        <th>"Name"</th>
+                        <th>"Material"</th>
+                        <th>"Output"</th>
+                    </tr></thead>
+                    <tbody> {
+                        series.pieces.iter().map(|piece| {
+                            let (name, product) =
+                                if let Some(Armor{name, product: Some(product), ..}) = &piece {
+                                (name, product)
+                            } else {
+                                return html!(<tr><td colspan="3">"-"</td></tr>)
+                            };
+
+                            let materials = html!(<ul class="mh-armor-skill-list"> {
+                                product.item.iter().zip(&product.item_num)
+                                    .filter(|&(&item, _)| item != 0x04000000)
+                                    .map(|(&item, num)|{
+                                    let key = if item == product.item_flag {
+                                        Some(html!(<span class="tag is-primary">"Key"</span>))
+                                    } else {
+                                        None
+                                    };
+                                    let item = if let Some(item) = pedia_ex.items.get(&item) {
+                                        html!(<span>{gen_item_label(item)}</span>)
+                                    } else {
+                                        html!(<span>{text!("0x{:08X}", item)}</span>)
+                                    };
+                                    html!(<li>
+                                        {text!("{}x ", num)}
+                                        {item}
+                                        {key}
+                                    </li>)
+                                })
+                            } </ul>);
+
+                            let output = html!(<ul class="mh-armor-skill-list"> {
+                                product.output_item.iter().zip(&product.output_item_num)
+                                    .filter(|&(&item, _)| item != 0x04000000)
+                                    .map(|(&item, num)|{
+                                    let item = if let Some(item) = pedia_ex.items.get(&item) {
+                                        html!(<span>{gen_item_label(item)}</span>)
+                                    } else {
+                                        html!(<span>{text!("0x{:08X}", item)}</span>)
+                                    };
+                                    html!(<li>
+                                        {text!("{}x ", num)}
+                                        {item}
+                                    </li>)
+                                })
+                            } </ul>);
+
+                            html!(<tr>
+                                <td>{gen_multi_lang(&name)}</td>
+                                <td>{materials}</td>
+                                <td>{output}</td>
+                            </tr>)
+                        })
+                    } </tbody>
+                </table>
+
+                </section>
                 </div> </div> </main>
             </body>
         </html>
@@ -158,7 +228,7 @@ pub fn gen_armors(pedia_ex: &PediaEx<'_>, root: &Path) -> Result<()> {
     create_dir(&armor_path)?;
     for series in &pedia_ex.armors {
         let path = armor_path.join(format!("{:03}.html", series.series.armor_series));
-        gen_armor(series, &pedia_ex.skills, &path)?
+        gen_armor(series, &pedia_ex, &path)?
     }
     Ok(())
 }

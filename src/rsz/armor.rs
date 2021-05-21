@@ -79,3 +79,28 @@ rsz_struct! {
         pub param: Vec<ArmorSeriesUserDataParam>
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.data.ArmorProductUserData.Param")]
+    #[derive(Debug, Serialize)]
+    pub struct ArmorProductUserDataParam {
+        pub id: u32, // snow.data.DataDef.PlArmorId
+        pub item_flag: u32, // snow.data.ContentsIdSystem.ItemId
+        pub enemy_flag: u32, // snow.enemy.EnemyDef.EmTypes
+        pub progress_flag: i32, // snow.data.DataDef.UnlockProgressTypes
+        pub item: Vec<u32>, // snow.data.ContentsIdSystem.ItemId
+        pub item_num: Vec<u32>,
+        pub material_category: i32, // snow.data.NormalItemData.MaterialCategory, 2 = Category 0
+        pub material_category_num: u32,
+        pub output_item: Vec<u32>, // snow.data.ContentsIdSystem.ItemId
+        pub output_item_num: Vec<u32>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.ArmorProductUserData")]
+    #[derive(Debug, Serialize)]
+    pub struct ArmorProductUserData {
+        pub param: Vec<ArmorProductUserDataParam>
+    }
+}

@@ -256,6 +256,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
 
     let armor = get_user(pak, "data/Define/Player/Armor/ArmorBaseData.user")?;
     let armor_series = get_user(pak, "data/Define/Player/Armor/ArmorSeriesData.user")?;
+    let armor_product = get_user(pak, "data/Define/Player/Armor/ArmorProductData.user")?;
     let armor_head_name_msg = get_msg(pak, "data/Define/Player/Armor/Head/A_Head_Name.msg")?;
     let armor_chest_name_msg = get_msg(pak, "data/Define/Player/Armor/Chest/A_Chest_Name.msg")?;
     let armor_arm_name_msg = get_msg(pak, "data/Define/Player/Armor/Arm/A_Arm_Name.msg")?;
@@ -343,6 +344,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         quest_arena_msg,
         armor,
         armor_series,
+        armor_product,
         armor_head_name_msg,
         armor_chest_name_msg,
         armor_arm_name_msg,
@@ -795,7 +797,14 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<u8, Skill>> {
     Ok(result)
 }
 
-fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries>> {
+fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
+    let mut product_map: HashMap<u32, &ArmorProductUserDataParam> = HashMap::new();
+    for product in &pedia.armor_product.param {
+        if product_map.insert(product.id, product).is_some() {
+            bail!("Multiple definition for armor product {}", product.id);
+        }
+    }
+
     /*let mut armor_head_name_msg: HashMap<String, MsgEntry> = pedia
         .armor_head_name_msg
         .entries
@@ -860,7 +869,7 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries>> {
             .entries.get(armor_series.armor_series as usize).cloned(); // ?!
         let series = ArmorSeries {
             name,
-            series: armor_series.clone(),
+            series: armor_series,
             pieces: [None, None, None, None, None],
         };
         series_map.insert(armor_series.armor_series, series);
@@ -905,6 +914,8 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries>> {
             .with_context(|| format!("Cannot find name for armor {}", armor.pl_armor_id))?
             .clone(); // ?!
 
+        let product = product_map.remove(&armor.pl_armor_id);
+
         let series = series_map.get_mut(&armor.series).with_context(|| {
             format!(
                 "Cannot find series {} for armor {}",
@@ -922,7 +933,8 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries>> {
 
         series.pieces[slot] = Some(Armor {
             name,
-            data: armor.clone(),
+            data: armor,
+            product,
         });
     }
 
