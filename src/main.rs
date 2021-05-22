@@ -324,6 +324,7 @@ async fn cleanup_s3_old_files(path: &Path, bucket: String, client: &S3Client) ->
     let mut objects = vec![];
     let mut continuation_token = None;
     loop {
+        println!("Continue listing files..");
         let request = ListObjectsV2Request {
             bucket: bucket.clone(),
             continuation_token: continuation_token.take(),
@@ -354,7 +355,7 @@ async fn cleanup_s3_old_files(path: &Path, bucket: String, client: &S3Client) ->
         }
 
         if result.is_truncated.unwrap_or(false) {
-            continuation_token = result.continuation_token;
+            continuation_token = result.next_continuation_token;
         } else {
             break;
         }
@@ -424,6 +425,7 @@ fn upload_s3_folder(path: &Path, bucket: String, client: &S3Client) -> Result<()
 
     let rt = Runtime::new()?;
     rt.block_on(try_join_all(futures))?;
+    println!("Finished uploading. Cleaning deleted files...");
     rt.block_on(cleanup_s3_old_files(path, bucket, client))?;
 
     Ok(())
