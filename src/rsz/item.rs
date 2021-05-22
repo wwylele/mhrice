@@ -69,6 +69,7 @@ rsz_enum! {
     #[rsz(u32)]
     #[derive(Debug, Serialize, PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
     pub enum ItemId {
+        Null = 0, // not defined in TDB, but appears in some overwear data
         None = 0x04000000,
         Normal(u32) = 0x04100000..=0x0410FFFF,
         Ec(u32) = 0x04200000..=0x0420FFFF,
@@ -86,7 +87,7 @@ rsz_newtype! {
     // Despite the enum naming from TDB
     // it seems that the 0-based raw value is used to index messages.
     #[rsz_offset(0)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, PartialEq, Eq, Hash, Copy, Clone)]
     #[serde(transparent)]
     pub struct MaterialCategory(pub i32);
 }

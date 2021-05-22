@@ -49,6 +49,8 @@ pub struct Pedia {
     pub armor: ArmorBaseUserData,
     pub armor_series: ArmorSeriesUserData,
     pub armor_product: ArmorProductUserData,
+    pub overwear: PlOverwearBaseUserData,
+    pub overwear_product: PlOverwearProductUserData,
     pub armor_head_name_msg: Msg,
     pub armor_chest_name_msg: Msg,
     pub armor_arm_name_msg: Msg,
@@ -75,6 +77,7 @@ pub struct Pedia {
 
     pub items: ItemUserData,
     pub items_name_msg: Msg,
+    pub material_category_msg: Msg,
 }
 
 pub struct Quest {
@@ -96,6 +99,8 @@ pub struct Armor<'a> {
     pub name: MsgEntry,
     pub data: &'a ArmorBaseUserDataParam,
     pub product: Option<&'a ArmorProductUserDataParam>,
+    pub overwear: Option<&'a PlOverwearBaseUserDataParam>,
+    pub overwear_product: Option<&'a PlOverwearProductUserDataParam>,
 }
 
 pub struct ArmorSeries<'a> {
@@ -126,4 +131,5 @@ pub struct PediaEx<'a> {
     pub armors: Vec<ArmorSeries<'a>>,
     pub meat_names: HashMap<MeatKey, MsgEntry>,
     pub items: BTreeMap<ItemId, Item<'a>>,
+    pub material_categories: HashMap<MaterialCategory, MsgEntry>,
 }

@@ -1,18 +1,25 @@
 use super::*;
-use crate::{rsz_enum, rsz_struct};
+use crate::{rsz_enum, rsz_newtype, rsz_struct};
 use serde::*;
 
 rsz_enum! {
     #[rsz(u32)]
     #[derive(Debug, Serialize, Copy, Clone, PartialEq, Eq, Hash)]
     pub enum PlArmorId {
-        None = 0,
+        TableNone = 0,
+        None = 0x0C000000,
         Head(u32) = 0x0C100000..=0x0C10FFFF,
         Chest(u32) = 0x0C200000..=0x0C20FFFF,
         Arm(u32) = 0x0C300000..=0x0C30FFFF,
         Waist(u32) = 0x0C400000..=0x0C40FFFF,
         Leg(u32) = 0x0C500000..=0x0C50FFFF,
     }
+}
+
+rsz_newtype! {
+    #[rsz_offset(0)]
+    #[derive(Debug, Serialize, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+    pub struct PlArmorSeriesTypes(pub i32);
 }
 
 rsz_enum! {
@@ -31,7 +38,7 @@ rsz_struct! {
     pub struct ArmorBaseUserDataParam {
         pub pl_armor_id: PlArmorId,
         pub is_valid: bool,
-        pub series: i32,
+        pub series: PlArmorSeriesTypes,
         pub sort_id: u32,
         pub model_id: u32,
         pub rare: RareTypes,
@@ -76,7 +83,7 @@ rsz_struct! {
     #[rsz("snow.data.ArmorSeriesUserData.Param")]
     #[derive(Debug, Serialize)]
     pub struct ArmorSeriesUserDataParam {
-        pub armor_series: i32,
+        pub armor_series: PlArmorSeriesTypes,
         pub difficulty_group: EquipDifficultyGroup,
         pub is_collabo: bool,
         pub index: u32,
@@ -117,3 +124,107 @@ rsz_struct! {
         pub param: Vec<ArmorProductUserDataParam>
     }
 }
+
+rsz_enum! {
+    #[rsz(u32)]
+    #[derive(Debug, Serialize, Copy, Clone, PartialEq, Eq, Hash)]
+    pub enum PlOverwearId {
+        Head(u32) = 0x0000..=0x0FFF,
+        Chest(u32) = 0x1000..=0x1FFF,
+        Arm(u32) = 0x2000..=0x2FFF,
+        Waist(u32) = 0x3000..=0x3FFF,
+        Leg(u32) = 0x4000..=0x4FFF,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.equip.PlOverwearBaseUserData.Param")]
+    #[derive(Debug, Serialize)]
+    pub struct PlOverwearBaseUserDataParam {
+        pub id: PlOverwearId,
+        pub is_valid: bool,
+        pub relative_id: PlArmorId,
+        pub series: PlArmorSeriesTypes,
+        pub sort_id: u32,
+        pub model_id: u32,
+        pub rare_type: RareTypes,
+        pub base_value: u32,
+        pub sexual_equipable: SexualEquipableFlag,
+        pub symbol_color_flg_list: Vec<bool>,
+        pub is_one_set: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.equip.PlOverwearBaseUserData")]
+    #[derive(Debug, Serialize)]
+    pub struct PlOverwearBaseUserData {
+        pub param: Vec<PlOverwearBaseUserDataParam>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.equip.PlOverwearProductUserData.Param")]
+    #[derive(Debug, Serialize)]
+    pub struct PlOverwearProductUserDataParam {
+        pub id: PlOverwearId,
+        pub item_flag: ItemId,
+        pub enemy_flag: EmTypes,
+        pub progress_flag: i32, // snow.data.DataDef.UnlockProgressTypes
+        pub hr_limit_flag: bool,
+        pub item: Vec<ItemId>,
+        pub item_num: Vec<u32>,
+        pub material_category: MaterialCategory,
+        pub material_category_num: u32,
+        pub is_one_set: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.equip.PlOverwearProductUserData")]
+    #[derive(Debug, Serialize)]
+    pub struct PlOverwearProductUserData {
+        pub param: Vec<PlOverwearProductUserDataParam>
+    }
+}
+
+pub trait ArmorProduct {
+    fn item_flag(&self) -> ItemId;
+    fn enemy_flag(&self) -> EmTypes;
+    fn progress_flag(&self) -> i32;
+    fn item(&self) -> &Vec<ItemId>;
+    fn item_num(&self) -> &Vec<u32>;
+    fn material_category(&self) -> MaterialCategory;
+    fn material_category_num(&self) -> u32;
+}
+
+macro_rules! impl_armor_product {
+    ($name:ty) => {
+        impl ArmorProduct for $name {
+            fn item_flag(&self) -> ItemId {
+                self.item_flag
+            }
+            fn enemy_flag(&self) -> EmTypes {
+                self.enemy_flag
+            }
+            fn progress_flag(&self) -> i32 {
+                self.progress_flag
+            }
+            fn item(&self) -> &Vec<ItemId> {
+                &self.item
+            }
+            fn item_num(&self) -> &Vec<u32> {
+                &self.item_num
+            }
+            fn material_category(&self) -> MaterialCategory {
+                self.material_category
+            }
+            fn material_category_num(&self) -> u32 {
+                self.material_category_num
+            }
+        }
+    };
+}
+
+impl_armor_product!(ArmorProductUserDataParam);
+impl_armor_product!(PlOverwearProductUserDataParam);

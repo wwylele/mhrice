@@ -8,6 +8,7 @@ use typed_html::{dom::*, elements::*, html, text};
 
 pub fn item_page(item: ItemId) -> String {
     match item {
+        ItemId::Null => "null.html".to_string(),
         ItemId::None => "none.html".to_string(),
         ItemId::Normal(id) => format!("normal_{:04}.html", id),
         ItemId::Ec(id) => format!("ec_{:04}.html", id),
@@ -44,6 +45,19 @@ pub fn gen_item_label(item: &Item) -> Box<a<String>> {
 }
 
 pub fn gen_item(item: &Item, pedia_ex: &PediaEx<'_>, path: &Path) -> Result<()> {
+    let material_categories = item.param.material_category.iter().filter_map(|&category| {
+        if category == MaterialCategory(0) {
+            return None;
+        }
+        Some(
+            if let Some(name) = pedia_ex.material_categories.get(&category) {
+                html!(<span>{gen_multi_lang(name)}" "</span>)
+            } else {
+                html!(<span>{text!("{:?} ", category)}</span>)
+            },
+        )
+    });
+
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -92,8 +106,10 @@ pub fn gen_item(item: &Item, pedia_ex: &PediaEx<'_>, path: &Path) -> Result<()> 
                 <p class="mh-kv"><span>"Item group"</span>
                 <span>{text!("{:?}", item.param.item_group)}</span></p>
                 <p class="mh-kv"><span>"Material category"</span>
-                <span>{text!("{:?}, {} pt", item.param.material_category,
-                    item.param.category_worth)}</span></p>
+                <span>
+                    {material_categories}
+                    {text!("{} pt", item.param.category_worth)}
+                </span></p>
                 <p class="mh-kv"><span>"Evaluation value"</span>
                 <span>{text!("{}",item.param.evaluation_value)}</span></p>
                 </div>

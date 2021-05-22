@@ -33,7 +33,7 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], root: &Path) -> Result<()> {
                         };
                         html!(
                             <li class="mh-armor-series-list">
-                            <a href={format!("/armor/{:03}.html", series.series.armor_series)}>
+                            <a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
                             <h2 class="title">{
                                 series_name
                             }</h2>
@@ -63,10 +63,46 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], root: &Path) -> Result<()> {
 }
 
 fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, path: &Path) -> Result<()> {
+    let gen_category = |material_category, material_category_num| {
+        let category = if material_category == MaterialCategory(0) {
+            return html!(<td>"-"</td>);
+        } else if let Some(name) = pedia_ex.material_categories.get(&material_category) {
+            html!(<span>{gen_multi_lang(name)}" "</span>)
+        } else {
+            html!(<span>{text!("{:?} ", material_category)}</span>)
+        };
+
+        html!(<td>{category}{text!("{} pt", material_category_num)}</td>)
+    };
+
+    let gen_materials = |item: &Vec<ItemId>, item_num: &Vec<u32>, item_flag| {
+        html!(<td><ul class="mh-armor-skill-list"> {
+            item.iter().zip(item_num)
+                .filter(|&(&item, _)| item != ItemId::None)
+                .map(|(&item, num)|{
+                let key = if item == item_flag {
+                    Some(html!(<span class="tag is-primary">"Key"</span>))
+                } else {
+                    None
+                };
+                let item = if let Some(item) = pedia_ex.items.get(&item) {
+                    html!(<span>{gen_item_label(item)}</span>)
+                } else {
+                    html!(<span>{text!("{:?}", item)}</span>)
+                };
+                html!(<li>
+                    {text!("{}x ", num)}
+                    {item}
+                    {key}
+                </li>)
+            })
+        } </ul></td>)
+    };
+
     let doc: DOMTree<String> = html!(
         <html>
             <head>
-                <title>{text!("Armor {:03}", series.series.armor_series)}</title>
+                <title>{text!("Armor {:03}", series.series.armor_series.0)}</title>
                 { head_common() }
             </head>
             <body>
@@ -155,6 +191,7 @@ fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, path: &Path) -> Result<()
                 <table>
                     <thead><tr>
                         <th>"Name"</th>
+                        <th>"Categorized Material"</th>
                         <th>"Material"</th>
                         <th>"Output"</th>
                     </tr></thead>
@@ -164,32 +201,16 @@ fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, path: &Path) -> Result<()
                                 if let Some(Armor{name, product: Some(product), ..}) = &piece {
                                 (name, product)
                             } else {
-                                return html!(<tr><td colspan="3">"-"</td></tr>)
+                                return html!(<tr><td colspan="4">"-"</td></tr>)
                             };
 
-                            let materials = html!(<ul class="mh-armor-skill-list"> {
-                                product.item.iter().zip(&product.item_num)
-                                    .filter(|&(&item, _)| item != ItemId::None)
-                                    .map(|(&item, num)|{
-                                    let key = if item == product.item_flag {
-                                        Some(html!(<span class="tag is-primary">"Key"</span>))
-                                    } else {
-                                        None
-                                    };
-                                    let item = if let Some(item) = pedia_ex.items.get(&item) {
-                                        html!(<span>{gen_item_label(item)}</span>)
-                                    } else {
-                                        html!(<span>{text!("{:?}", item)}</span>)
-                                    };
-                                    html!(<li>
-                                        {text!("{}x ", num)}
-                                        {item}
-                                        {key}
-                                    </li>)
-                                })
-                            } </ul>);
+                            let category = gen_category(product.material_category,
+                                product.material_category_num);
 
-                            let output = html!(<ul class="mh-armor-skill-list"> {
+                            let materials = gen_materials(&product.item,
+                                &product.item_num, product.item_flag);
+
+                            let output = html!(<td><ul class="mh-armor-skill-list"> {
                                 product.output_item.iter().zip(&product.output_item_num)
                                     .filter(|&(&item, _)| item != ItemId::None)
                                     .map(|(&item, num)|{
@@ -203,18 +224,54 @@ fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, path: &Path) -> Result<()
                                         {item}
                                     </li>)
                                 })
-                            } </ul>);
+                            } </ul></td>);
 
                             html!(<tr>
                                 <td>{gen_multi_lang(&name)}</td>
-                                <td>{materials}</td>
-                                <td>{output}</td>
+                                {category}
+                                {materials}
+                                {output}
                             </tr>)
                         })
                     } </tbody>
                 </table>
 
                 </section>
+
+                <section class="section">
+                <h2 class="title">"Layered crafting"</h2>
+                <table>
+                    <thead><tr>
+                        <th>"Name"</th>
+                        <th>"Categorized Material"</th>
+                        <th>"Material"</th>
+                    </tr></thead>
+                    <tbody> {
+                        series.pieces.iter().map(|piece| {
+                            let (name, product) =
+                                if let Some(Armor{name, overwear_product: Some(product), ..}) = &piece {
+                                (name, product)
+                            } else {
+                                return html!(<tr><td colspan="3">"-"</td></tr>)
+                            };
+
+                            let category = gen_category(product.material_category,
+                                product.material_category_num);
+
+                            let materials = gen_materials(&product.item,
+                                &product.item_num, product.item_flag);
+
+                            html!(<tr>
+                                <td>{gen_multi_lang(&name)}</td>
+                                {category}
+                                {materials}
+                            </tr>)
+                        })
+                    } </tbody>
+                </table>
+
+                </section>
+
                 </div> </div> </main>
             </body>
         </html>
@@ -228,7 +285,7 @@ pub fn gen_armors(pedia_ex: &PediaEx<'_>, root: &Path) -> Result<()> {
     let armor_path = root.join("armor");
     create_dir(&armor_path)?;
     for series in &pedia_ex.armors {
-        let path = armor_path.join(format!("{:03}.html", series.series.armor_series));
+        let path = armor_path.join(format!("{:03}.html", series.series.armor_series.0));
         gen_armor(series, &pedia_ex, &path)?
     }
     Ok(())

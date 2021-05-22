@@ -15,7 +15,7 @@ use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::convert::{TryFrom, TryInto};
 use std::fs::*;
 use std::io::{Cursor, Read, Seek, Write};
@@ -257,6 +257,11 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let armor = get_user(pak, "data/Define/Player/Armor/ArmorBaseData.user")?;
     let armor_series = get_user(pak, "data/Define/Player/Armor/ArmorSeriesData.user")?;
     let armor_product = get_user(pak, "data/Define/Player/Armor/ArmorProductData.user")?;
+    let overwear = get_user(pak, "data/Define/Player/Armor/PlOverwearBaseData.user")?;
+    let overwear_product = get_user(
+        pak,
+        "data/Define/Player/Armor/PlOverwearProductUserData.user",
+    )?;
     let armor_head_name_msg = get_msg(pak, "data/Define/Player/Armor/Head/A_Head_Name.msg")?;
     let armor_chest_name_msg = get_msg(pak, "data/Define/Player/Armor/Chest/A_Chest_Name.msg")?;
     let armor_arm_name_msg = get_msg(pak, "data/Define/Player/Armor/Arm/A_Arm_Name.msg")?;
@@ -323,6 +328,10 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         "data/System/ContentsIdSystem/Item/Normal/ItemData.user",
     )?;
     let items_name_msg = get_msg(pak, "data/System/ContentsIdSystem/Item/Normal/ItemName.msg")?;
+    let material_category_msg = get_msg(
+        pak,
+        "data/System/ContentsIdSystem/Common/ItemCategoryType_Name.msg",
+    )?;
 
     Ok(Pedia {
         monsters,
@@ -345,6 +354,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         armor,
         armor_series,
         armor_product,
+        overwear,
+        overwear_product,
         armor_head_name_msg,
         armor_chest_name_msg,
         armor_arm_name_msg,
@@ -367,6 +378,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         alchemy_slot_worth,
         items,
         items_name_msg,
+        material_category_msg,
     })
 }
 
@@ -849,12 +861,12 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
         .collect();
     */
 
-    let mut series_map: BTreeMap<i32, ArmorSeries> = BTreeMap::new();
+    let mut series_map: BTreeMap<PlArmorSeriesTypes, ArmorSeries> = BTreeMap::new();
 
     for armor_series in &pedia.armor_series.param {
         if series_map.contains_key(&armor_series.armor_series) {
             bail!(
-                "Duplicate armor series for ID {}",
+                "Duplicate armor series for ID {:?}",
                 armor_series.armor_series
             );
         }
@@ -866,7 +878,7 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
         */
             pedia
             .armor_series_name_msg
-            .entries.get(armor_series.armor_series as usize).cloned(); // ?!
+            .entries.get(armor_series.armor_series.0 as usize).cloned(); // ?!
         let series = ArmorSeries {
             name,
             series: armor_series,
@@ -911,14 +923,14 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
 
         let series = series_map.get_mut(&armor.series).with_context(|| {
             format!(
-                "Cannot find series {} for armor {:?}",
+                "Cannot find series {:?} for armor {:?}",
                 armor.series, armor.pl_armor_id
             )
         })?;
 
         if series.pieces[slot].is_some() {
             bail!(
-                "Duplicated pieces for series {} slot {}",
+                "Duplicated pieces for series {:?} slot {}",
                 armor.series,
                 slot
             );
@@ -928,7 +940,68 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
             name,
             data: armor,
             product,
+            overwear: None,
+            overwear_product: None,
         });
+    }
+
+    let mut overwear_product_map = HashMap::new();
+    for overwear_product in &pedia.overwear_product.param {
+        if matches!(
+            overwear_product.id,
+            PlOverwearId::Head(0)
+                | PlOverwearId::Chest(0)
+                | PlOverwearId::Arm(0)
+                | PlOverwearId::Waist(0)
+                | PlOverwearId::Leg(0)
+        ) {
+            continue;
+        }
+
+        if overwear_product_map
+            .insert(overwear_product.id, overwear_product)
+            .is_some()
+        {
+            bail!(
+                "Multiple definition for overwear product for {:?}",
+                overwear_product.id
+            );
+        }
+    }
+
+    let mut overwear_set = HashSet::new();
+    for overwear in &pedia.overwear.param {
+        if !overwear.is_valid {
+            continue;
+        }
+        if overwear_set.contains(&overwear.id) {
+            bail!("Multiple definition for overwear {:?}", overwear.id);
+        }
+        overwear_set.insert(overwear.id);
+        let series = series_map.get_mut(&overwear.series).with_context(|| {
+            format!(
+                "Cannot find series {:?} for overwear {:?}",
+                overwear.series, overwear.id
+            )
+        })?;
+        let slot = match overwear.id {
+            PlOverwearId::Head(_) => 0,
+            PlOverwearId::Chest(_) => 1,
+            PlOverwearId::Arm(_) => 2,
+            PlOverwearId::Waist(_) => 3,
+            PlOverwearId::Leg(_) => 4,
+        };
+        let armor = series.pieces[slot]
+            .as_mut()
+            .with_context(|| format!("No armor slot for for overwear {:?}", overwear.id))?;
+        if armor.data.pl_armor_id != overwear.relative_id {
+            bail!("Mismatch armor ID for overwear {:?}", overwear.id);
+        }
+        if armor.overwear.is_some() {
+            bail!("Multiple definition for overwear {:?}", overwear.id);
+        }
+        armor.overwear = Some(&overwear);
+        armor.overwear_product = overwear_product_map.remove(&overwear.id);
     }
 
     Ok(series_map.into_iter().map(|(_, v)| v).collect())
@@ -1011,6 +1084,34 @@ fn prepare_items<'a>(pedia: &'a Pedia) -> Result<BTreeMap<ItemId, Item<'a>>> {
     Ok(result)
 }
 
+fn prepare_material_categories(pedia: &Pedia) -> HashMap<MaterialCategory, MsgEntry> {
+    const PREFIX: &str = "ICT_Name_";
+    pedia
+        .material_category_msg
+        .entries
+        .iter()
+        .filter_map(|entry| {
+            if !entry.name.starts_with(PREFIX) {
+                return None;
+            }
+
+            Some((
+                MaterialCategory(entry.name[PREFIX.len()..].parse().ok()?),
+                entry.clone(),
+            ))
+        })
+        .chain(std::iter::once((
+            MaterialCategory(86),
+            MsgEntry {
+                name: "".to_string(),
+                guid: "".to_string(),
+                attributes: vec![],
+                content: vec!["Armor sphere".to_string(); 32],
+            },
+        )))
+        .collect()
+}
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     Ok(PediaEx {
         sizes: prepare_size_map(&pedia.size_list)?,
@@ -1021,5 +1122,6 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         armors: prepare_armors(pedia)?,
         meat_names: prepare_meat_names(pedia)?,
         items: prepare_items(pedia)?,
+        material_categories: prepare_material_categories(pedia),
     })
 }
