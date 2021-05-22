@@ -106,8 +106,7 @@ pub struct ArmorSeries<'a> {
 
 #[derive(Hash, PartialEq, Eq)]
 pub struct MeatKey {
-    pub id: u32,
-    pub sub_id: u32,
+    pub em_type: EmTypes,
     pub part: usize,
     pub phase: usize,
 }
@@ -119,12 +118,12 @@ pub struct Item<'a> {
 }
 
 pub struct PediaEx<'a> {
-    pub sizes: HashMap<u32, &'a SizeInfo>,
+    pub sizes: HashMap<EmTypes, &'a SizeInfo>,
     pub size_dists: HashMap<i32, &'a [ScaleAndRateData]>,
     pub quests: Vec<Quest>,
-    pub discoveries: HashMap<u32, &'a DiscoverEmSetDataParam>,
-    pub skills: BTreeMap<u8, Skill>,
+    pub discoveries: HashMap<EmTypes, &'a DiscoverEmSetDataParam>,
+    pub skills: BTreeMap<PlEquipSkillId, Skill>,
     pub armors: Vec<ArmorSeries<'a>>,
     pub meat_names: HashMap<MeatKey, MsgEntry>,
-    pub items: BTreeMap<u32, Item<'a>>,
+    pub items: BTreeMap<ItemId, Item<'a>>,
 }

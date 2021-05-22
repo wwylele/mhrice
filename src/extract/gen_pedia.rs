@@ -16,7 +16,7 @@ use rayon::prelude::*;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 use std::fs::*;
 use std::io::{Cursor, Read, Seek, Write};
 use std::path::*;
@@ -619,11 +619,11 @@ fn gen_item_colors(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Resu
     Ok(())
 }
 
-fn prepare_size_map(size_data: &EnemySizeListData) -> Result<HashMap<u32, &SizeInfo>> {
+fn prepare_size_map(size_data: &EnemySizeListData) -> Result<HashMap<EmTypes, &SizeInfo>> {
     let mut result = HashMap::new();
     for size_info in &size_data.size_info_list {
         if result.insert(size_info.em_type, size_info).is_some() {
-            bail!("Duplicate size info for {}", size_info.em_type);
+            bail!("Duplicate size info for {:?}", size_info.em_type);
         }
     }
     Ok(result)
@@ -710,7 +710,7 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest>> {
         .collect::<Result<Vec<_>>>()
 }
 
-fn prepare_discoveries(pedia: &Pedia) -> Result<HashMap<u32, &DiscoverEmSetDataParam>> {
+fn prepare_discoveries(pedia: &Pedia) -> Result<HashMap<EmTypes, &DiscoverEmSetDataParam>> {
     let mut result = HashMap::new();
     for discovery in &pedia.discover_em_set_data.param {
         ensure!(discovery.param.route_no.len() == 5);
@@ -727,14 +727,14 @@ fn prepare_discoveries(pedia: &Pedia) -> Result<HashMap<u32, &DiscoverEmSetDataP
         ensure!(discovery.param.boss_multi.len() == 3);
 
         if result.insert(discovery.em_type, discovery).is_some() {
-            bail!("Duplicated discovery data for {}", discovery.em_type)
+            bail!("Duplicated discovery data for {:?}", discovery.em_type)
         }
     }
 
     Ok(result)
 }
 
-fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<u8, Skill>> {
+fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill>> {
     let mut result = BTreeMap::new();
 
     let mut name_msg: HashMap<String, MsgEntry> = pedia
@@ -759,11 +759,11 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<u8, Skill>> {
         .collect();
 
     for skill in &pedia.equip_skill.param {
-        if skill.id == 0 {
-            continue;
-        }
-        let id = skill.id - 1;
-        if result.contains_key(&id) {
+        let id = match skill.id {
+            PlEquipSkillId::None => continue,
+            PlEquipSkillId::Skill(id) => id,
+        };
+        if result.contains_key(&skill.id) {
             bail!("Multiple definition for skill {}", id);
         }
 
@@ -784,7 +784,7 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<u8, Skill>> {
             .collect::<Result<Vec<_>>>()?;
 
         result.insert(
-            id,
+            skill.id,
             Skill {
                 name,
                 explain,
@@ -798,10 +798,10 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<u8, Skill>> {
 }
 
 fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
-    let mut product_map: HashMap<u32, &ArmorProductUserDataParam> = HashMap::new();
+    let mut product_map: HashMap<PlArmorId, &ArmorProductUserDataParam> = HashMap::new();
     for product in &pedia.armor_product.param {
         if product_map.insert(product.id, product).is_some() {
-            bail!("Multiple definition for armor product {}", product.id);
+            bail!("Multiple definition for armor product {:?}", product.id);
         }
     }
 
@@ -881,15 +881,6 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
         }
 
         /*
-        let (slot, type_name, msg) = match (armor.pl_armor_id >> 20) & 7 {
-            1 => (0, "Head", &mut armor_head_name_msg),
-            2 => (1, "Chest", &mut armor_chest_name_msg),
-            3 => (2, "Arm", &mut armor_arm_name_msg),
-            4 => (3, "Waist", &mut armor_waist_name_msg),
-            5 => (4, "Leg", &mut armor_leg_name_msg),
-            _ => bail!("Unknown armor type for ID {}", armor.pl_armor_id),
-        };
-
         let name = msg
             .remove(&format!(
                 "A_{}_{:03}_Name",
@@ -899,26 +890,28 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
             .with_context(|| format!("Duplicate armor {}", armor.pl_armor_id))?;
         */
 
-        let (slot, msg) = match (armor.pl_armor_id >> 20) & 7 {
-            1 => (0, &pedia.armor_head_name_msg),
-            2 => (1, &pedia.armor_chest_name_msg),
-            3 => (2, &pedia.armor_arm_name_msg),
-            4 => (3, &pedia.armor_waist_name_msg),
-            5 => (4, &pedia.armor_leg_name_msg),
-            _ => bail!("Unknown armor type for ID {}", armor.pl_armor_id),
+        let (slot, msg, id) = match armor.pl_armor_id {
+            PlArmorId::Head(id) => (0, &pedia.armor_head_name_msg, id),
+            PlArmorId::Chest(id) => (1, &pedia.armor_chest_name_msg, id),
+            PlArmorId::Arm(id) => (2, &pedia.armor_arm_name_msg, id),
+            PlArmorId::Waist(id) => (3, &pedia.armor_waist_name_msg, id),
+            PlArmorId::Leg(id) => (4, &pedia.armor_leg_name_msg, id),
+            _ => bail!("Unknown armor ID {:?}", armor.pl_armor_id),
         };
+
+        let id = usize::try_from(id)?;
 
         let name = msg
             .entries
-            .get((armor.pl_armor_id & 0xFF) as usize)
-            .with_context(|| format!("Cannot find name for armor {}", armor.pl_armor_id))?
+            .get(id)
+            .with_context(|| format!("Cannot find name for armor {:?}", armor.pl_armor_id))?
             .clone(); // ?!
 
         let product = product_map.remove(&armor.pl_armor_id);
 
         let series = series_map.get_mut(&armor.series).with_context(|| {
             format!(
-                "Cannot find series {} for armor {}",
+                "Cannot find series {} for armor {:?}",
                 armor.series, armor.pl_armor_id
             )
         })?;
@@ -952,14 +945,11 @@ fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, MsgEntry>> {
     let mut result = HashMap::new();
 
     for boss_monster in &pedia.monster_list.data_list {
-        let id = boss_monster.em_type & 0xFF;
-        let sub_id = boss_monster.em_type >> 8;
         for part_data in &boss_monster.part_table_data {
             let part = part_data.em_meat.try_into()?;
             let phase = part_data.em_meat_group_index.try_into()?;
             let key = MeatKey {
-                id,
-                sub_id,
+                em_type: boss_monster.em_type,
                 part,
                 phase,
             };
@@ -975,9 +965,8 @@ fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, MsgEntry>> {
 
             if result.insert(key, name).is_some() {
                 bail!(
-                    "Duplicate definition for meat {}-{}-{}-{}",
-                    id,
-                    sub_id,
+                    "Duplicate definition for meat {:?}-{}-{}",
+                    boss_monster.em_type,
                     part,
                     phase
                 );
@@ -988,8 +977,8 @@ fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, MsgEntry>> {
     Ok(result)
 }
 
-fn prepare_items<'a>(pedia: &'a Pedia) -> Result<BTreeMap<u32, Item<'a>>> {
-    let mut result: BTreeMap<u32, Item<'a>> = BTreeMap::new();
+fn prepare_items<'a>(pedia: &'a Pedia) -> Result<BTreeMap<ItemId, Item<'a>>> {
+    let mut result: BTreeMap<ItemId, Item<'a>> = BTreeMap::new();
     let mut name_map: HashMap<_, _> = pedia
         .items_name_msg
         .entries
@@ -998,13 +987,19 @@ fn prepare_items<'a>(pedia: &'a Pedia) -> Result<BTreeMap<u32, Item<'a>>> {
         .collect();
     for param in &pedia.items.param {
         if let Some(existing) = result.get_mut(&param.id) {
-            eprintln!("Duplicate definition for item {}", param.id);
+            eprintln!("Duplicate definition for item {:?}", param.id);
             existing.multiple_def = true;
             continue;
         }
+
+        let name_tag = match param.id {
+            ItemId::Normal(id) => format!("I_{:04}_Name", id & 0xFFFF),
+            _ => bail!("Unexpected item type"),
+        };
+
         let name = name_map
-            .remove(&format!("I_{:04}_Name", param.id & 0xFFFF))
-            .with_context(|| format!("Name not found for item {}", param.id))?;
+            .remove(&name_tag)
+            .with_context(|| format!("Name not found for item {:?}", param.id))?;
         let item = Item {
             name,
             param,

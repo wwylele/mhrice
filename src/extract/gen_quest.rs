@@ -68,7 +68,7 @@ pub fn gen_quest_list(quests: &[Quest], root: &Path) -> Result<()> {
 
 pub fn gen_quest_monster_data(
     enemy_param: Option<&SharedEnemyParam>,
-    em_type: u32,
+    em_type: EmTypes,
     index: usize,
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
@@ -255,7 +255,12 @@ fn gen_quest_monster_multi_player_data(
         .collect()
 }
 
-fn gen_monster_tag(quest: &Quest, pedia: &Pedia, id: u32) -> Box<td<String>> {
+fn gen_monster_tag(quest: &Quest, pedia: &Pedia, em_type: EmTypes) -> Box<td<String>> {
+    let id = match em_type {
+        EmTypes::Em(id) => id,
+        EmTypes::Ems(_) => return html!(<td>"Unexpected small monster"</td>),
+    };
+
     let monster = pedia.monsters.iter().find(|m| (m.id | m.sub_id << 8) == id);
     let monster_name = (|| {
         let name_name = format!(
@@ -264,12 +269,12 @@ fn gen_monster_tag(quest: &Quest, pedia: &Pedia, id: u32) -> Box<td<String>> {
         );
         Some(gen_multi_lang(pedia.monster_names.get_entry(&name_name)?))
     })()
-    .unwrap_or(html!(<span>{text!("Monster {:03}_{:02}",
+    .unwrap_or(html!(<span>{text!("Monster {0:03}_{1:02}",
                                 id & 0xFF, id >> 8)}</span>));
 
     let icon_path = format!("/resources/em{0:03}_{1:02}_icon.png", id & 0xFF, id >> 8);
 
-    let target_tag = if quest.param.tgt_em_type.contains(&id) {
+    let target_tag = if quest.param.tgt_em_type.contains(&em_type) {
         html!(<span class="tag is-primary">"Target"</span>)
     } else {
         html!(<span />)
@@ -327,7 +332,8 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path) 
                         <th>"Stamina"</th>
                     </tr></thead>
                     <tbody> {
-                        quest.param.boss_em_type.iter().copied().enumerate().filter(|&(i, em_type)|em_type != 0)
+                        quest.param.boss_em_type.iter().copied().enumerate()
+                        .filter(|&(_, em_type)|em_type != EmTypes::Em(0))
                         .map(|(i, em_type)|{
                             html!(<tr>
                                 { gen_monster_tag(quest, pedia, em_type) }
@@ -358,10 +364,11 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path) 
                         <th>"Monster to monster"</th>
                     </tr></thead>
                     <tbody> {
-                        quest.param.boss_em_type.iter().copied().enumerate().filter(|&(i, id)|id != 0)
-                        .map(|(i, id)|{
+                        quest.param.boss_em_type.iter().copied().enumerate()
+                        .filter(|&(_, em_type)|em_type != EmTypes::Em(0))
+                        .map(|(i, em_type)|{
                             html!(<tr>
-                                { gen_monster_tag(quest, pedia, id) }
+                                { gen_monster_tag(quest, pedia, em_type) }
                                 { gen_quest_monster_multi_player_data(
                                     quest.enemy_param.as_ref().map(|p|&p.param), i, pedia) }
                             </tr>)

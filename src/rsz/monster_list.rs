@@ -39,7 +39,7 @@ rsz_struct! {
     #[rsz("snow.data.monsterList.BossMonsterData")]
     #[derive(Debug, Serialize)]
     pub struct BossMonsterData {
-        pub em_type: u32,
+        pub em_type: EmTypes,
         pub family_type: i32,
         pub habitat_area: BitSetFlagHabitatType,
         pub is_limit_open_lv: bool,

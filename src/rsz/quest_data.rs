@@ -167,6 +167,15 @@ rsz_enum! {
     }
 }
 
+rsz_enum! {
+    #[rsz(u32)]
+    #[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq, Hash)]
+    pub enum EmTypes {
+        Em(u32) = 0x0000..=0x0FFF,
+        Ems(u32) = 0x1000..=0x1FFF,
+    }
+}
+
 rsz_struct! {
     #[rsz("snow.quest.NormalQuestData.Param")]
     #[derive(Debug, Serialize, Clone)]
@@ -182,10 +191,10 @@ rsz_struct! {
         pub quest_life: u32,
         pub order_type: Vec<QuestOrderType>,
         pub target_type: Vec<QuestTargetType>,
-        pub tgt_em_type: Vec<u32>,
+        pub tgt_em_type: Vec<EmTypes>,
         pub tgt_item_id: Vec<u32>,
         pub tgt_num: Vec<u32>,
-        pub boss_em_type: Vec<u32>,
+        pub boss_em_type: Vec<EmTypes>,
         pub init_extra_em_num: u8,
         pub swap_em_rate: Vec<u8>,
         pub boss_set_condition: Vec<BossSetCondition>,
@@ -409,7 +418,7 @@ rsz_struct! {
     #[rsz("snow.enemy.SystemEnemySizeListData.SizeInfo")]
     #[derive(Debug, Serialize)]
     pub struct SizeInfo {
-        pub em_type: u32,
+        pub em_type: EmTypes,
         pub base_size: f32,
         pub small_boarder: f32,
         pub big_boarder: f32,
@@ -430,7 +439,7 @@ rsz_struct! {
     #[rsz("snow.quest.DiscoverEmSetData.Param")]
     #[derive(Debug, Serialize)]
     pub struct DiscoverEmSetDataParam {
-        pub em_type: u32,
+        pub em_type: EmTypes,
         pub cond_village: i32, // snow.progress.VillageProgress, 1 = Village progress 0
         pub cond_low: i32,
         pub cond_high: i32,

@@ -1,12 +1,20 @@
 use super::gen_website::*;
 use super::pedia::*;
+use crate::rsz::*;
 use anyhow::*;
 use std::collections::BTreeMap;
 use std::fs::{create_dir, write};
 use std::path::*;
 use typed_html::{dom::*, html, text};
 
-pub fn gen_skill_list(skills: &BTreeMap<u8, Skill>, root: &Path) -> Result<()> {
+pub fn skill_page(id: PlEquipSkillId) -> String {
+    match id {
+        PlEquipSkillId::None => "none.html".to_string(),
+        PlEquipSkillId::Skill(id) => format!("{:03}.html", id),
+    }
+}
+
+pub fn gen_skill_list(skills: &BTreeMap<PlEquipSkillId, Skill>, root: &Path) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -19,9 +27,9 @@ pub fn gen_skill_list(skills: &BTreeMap<u8, Skill>, root: &Path) -> Result<()> {
                 <h1 class="title">"Skill"</h1>
                 <ul class="mh-list-skill">
                 {
-                    skills.iter().map(|(id, skill)|{
+                    skills.iter().map(|(&id, skill)|{
                         html!(<li class="mh-list-skill">
-                            <a href={format!("/skill/{:03}.html", id)} class="mh-icon-text">
+                            <a href={format!("/skill/{}", skill_page(id))} class="mh-icon-text">
                             {gen_colored_icon(skill.icon_color, "/resources/skill", &[])}
                             <span>{gen_multi_lang(&skill.name)}</span>
                             </a>
@@ -39,11 +47,11 @@ pub fn gen_skill_list(skills: &BTreeMap<u8, Skill>, root: &Path) -> Result<()> {
     Ok(())
 }
 
-pub fn gen_skill(id: u8, skill: &Skill, path: &Path) -> Result<()> {
+pub fn gen_skill(skill: &Skill, path: &Path) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
             <head>
-                <title>{text!("Skill {:03} - MHRice", id)}</title>
+                <title>{text!("Skill - MHRice")}</title>
                 { head_common() }
             </head>
             <body>
@@ -74,12 +82,12 @@ pub fn gen_skill(id: u8, skill: &Skill, path: &Path) -> Result<()> {
     Ok(())
 }
 
-pub fn gen_skills(skills: &BTreeMap<u8, Skill>, root: &Path) -> Result<()> {
+pub fn gen_skills(skills: &BTreeMap<PlEquipSkillId, Skill>, root: &Path) -> Result<()> {
     let skill_path = root.join("skill");
     create_dir(&skill_path)?;
     for (&id, skill) in skills {
-        let path = skill_path.join(format!("{:03}.html", id));
-        gen_skill(id, skill, &path)?
+        let path = skill_path.join(skill_page(id));
+        gen_skill(skill, &path)?
     }
     Ok(())
 }

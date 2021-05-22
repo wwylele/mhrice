@@ -3,11 +3,20 @@ use crate::rsz_enum;
 use crate::rsz_struct;
 use serde::*;
 
+rsz_enum! {
+    #[rsz(u8)]
+    #[derive(Debug, Serialize, Clone, Copy, PartialEq, PartialOrd, Eq, Ord)]
+    pub enum PlEquipSkillId {
+        None = 0,
+        Skill(u8) = 1..=255,
+    }
+}
+
 rsz_struct! {
     #[rsz("snow.data.PlEquipSkillBaseUserData.Param")]
     #[derive(Debug, Serialize)]
     pub struct PlEquipSkillBaseUserDataParam {
-        pub id: u8, // snow.data.DataDef.PlEquipSkillId, 1 = ID_0
+        pub id: PlEquipSkillId,
         pub max_level: i32, // 0 = level 1
         pub icon_color: i32,
         pub worth_point_list: u32,
@@ -269,7 +278,7 @@ rsz_struct! {
         pub recipe_no: u32,
         pub skill_id: u32, // snow.data.DataDef.PlHyakuryuSkillId, 1 = ID_0
         pub cost: u32,
-        pub recipe_item_id_list:Vec<u32>, // snow.data.ContentsIdSystem.ItemId
+        pub recipe_item_id_list:Vec<ItemId>,
         pub recipe_item_num_list:Vec<u32>
     }
 }

@@ -479,7 +479,8 @@ pub fn gen_monster(
 
     let monster_id = monster.id;
     let monster_sub_id = monster.sub_id;
-    let monster_em_type = monster_id | (monster_sub_id << 8);
+    let monster_em_type =
+        if is_large { EmTypes::Em } else { EmTypes::Ems }(monster_id | (monster_sub_id << 8));
     let condition_preset = &pedia.condition_preset;
 
     let quest_list = html!(
@@ -670,8 +671,7 @@ pub fn gen_monster(
                             meats.meat_group_info.iter().enumerate()
                                 .map(move |(phase, group_info)| {
                                     let name = pedia_ex.meat_names.get(&MeatKey {
-                                        id: monster_id,
-                                        sub_id: monster_sub_id,
+                                        em_type: monster_em_type,
                                         part,
                                         phase
                                     }).map_or(html!(<span></span>), gen_multi_lang);

@@ -6,6 +6,14 @@ use std::fs::{create_dir, write};
 use std::path::*;
 use typed_html::{dom::*, elements::*, html, text};
 
+pub fn item_page(item: ItemId) -> String {
+    match item {
+        ItemId::None => "none.html".to_string(),
+        ItemId::Normal(id) => format!("normal_{:04}.html", id),
+        ItemId::Ec(id) => format!("ec_{:04}.html", id),
+    }
+}
+
 fn gen_item_icon(item: &Item) -> Box<div<String>> {
     let icon = format!("/resources/item/{:03}", item.param.icon_chara);
 
@@ -26,11 +34,7 @@ fn gen_item_icon(item: &Item) -> Box<div<String>> {
 }
 
 pub fn gen_item_label(item: &Item) -> Box<a<String>> {
-    let link = format!(
-        "/item/{}_{:04}.html",
-        item.param.id >> 16,
-        item.param.id & 0xFFFF
-    );
+    let link = format!("/item/{}", item_page(item.param.id));
     html!(
         <a href={link} class="mh-icon-text">
             {gen_item_icon(item)}
@@ -43,7 +47,7 @@ pub fn gen_item(item: &Item, pedia_ex: &PediaEx<'_>, path: &Path) -> Result<()> 
     let doc: DOMTree<String> = html!(
         <html>
             <head>
-                <title>{text!("Item {:04} - MHRice", item.param.id & 0xFFFF)}</title>
+                <title>"Item - MHRice"</title>
                 { head_common() }
             </head>
             <body>
@@ -64,7 +68,7 @@ pub fn gen_item(item: &Item, pedia_ex: &PediaEx<'_>, path: &Path) -> Result<()> 
                 <p class="mh-kv"><span>"Type"</span>
                 <span>{text!("{:?}", item.param.type_)}</span></p>
                 <p class="mh-kv"><span>"Rarity"</span>
-                <span>{text!("{}", item.param.rare + 1)}</span></p>
+                <span>{text!("{}", item.param.rare.0)}</span></p>
                 <p class="mh-kv"><span>"Maximum carry"</span>
                 <span>{text!("{}", item.param.pl_max_count)}</span></p>
                 <p class="mh-kv"><span>"Maximum carry by buddy"</span>
@@ -117,8 +121,8 @@ pub fn gen_item_list(pedia_ex: &PediaEx<'_>, root: &Path) -> Result<()> {
                 <h1 class="title">"Item"</h1>
                 <ul class="mh-list-skill">
                 {
-                    pedia_ex.items.iter().map(|(id, item)|{
-                        let link = format!("/item/{}_{:04}.html", id >> 16, id & 0xFFFF);
+                    pedia_ex.items.iter().map(|(&id, item)|{
+                        let link = format!("/item/{}", item_page(id));
                         let icon = format!("/resources/item/{:03}", item.param.icon_chara);
                         html!(<li class="mh-list-skill">
                             {gen_item_label(&item)}
@@ -140,7 +144,7 @@ pub fn gen_items(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
     let item_path = root.join("item");
     create_dir(&item_path)?;
     for (&id, item) in &pedia_ex.items {
-        let path = item_path.join(format!("{}_{:04}.html", id >> 16, id & 0xFFFF));
+        let path = item_path.join(item_page(id));
         gen_item(item, pedia_ex, &path)?
     }
     Ok(())

@@ -1,5 +1,6 @@
 use super::*;
 use crate::rsz_enum;
+use crate::rsz_newtype;
 use crate::rsz_struct;
 use serde::*;
 
@@ -17,14 +18,21 @@ rsz_enum! {
     }
 }
 
+rsz_newtype! {
+    #[rsz_offset(1)]
+    #[derive(Debug, Serialize)]
+    #[serde(transparent)]
+    pub struct AlchemyPatturnTypes(pub i32);
+}
+
 rsz_struct! {
     #[rsz("snow.data.AlchemyPatturnUserData.Param")]
     #[derive(Debug, Serialize)]
     pub struct AlchemyPatturnUserDataParam {
-        pub patturn: i32, // snow.data.AlchemyPatturnData.PatturnTypes, 0 = Alchemy1
+        pub patturn: AlchemyPatturnTypes,
         pub color: ColorTypes,
         pub cost_village_point: u32,
-        pub usable_item_list: Vec<u32>, // snow.data.ContentsIdSystem.ItemId
+        pub usable_item_list: Vec<ItemId>,
         pub cost_material_point: u32,
         pub require_talisman_num: u32,
         pub output_min_num: u32,
@@ -56,9 +64,9 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct AlchemyPlSkillTableUserDataParam {
         pub sort_id: i32,
-        pub skill_id: u8, // snow.data.DataDef.PlEquipSkillId, 1 = skill 0
+        pub skill_id: PlEquipSkillId,
         pub grade: GradeTypes,
-        pub patturn: i32, // snow.data.AlchemyPatturnData.PatturnTypes, 0 = Alchemy1
+        pub patturn: AlchemyPatturnTypes,
         pub pick_rate: u32,
         pub skill1_rate_list: Vec<u32>,
         pub miss_rate_list: Vec<u32>,
@@ -96,7 +104,7 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct RareTypeTableUserDataParam {
         pub worth_point: u32,
-        pub rare_type_list: Vec<u8>, // snow.data.DataDef.RareTypes, 0 = Ra1
+        pub rare_type_list: Vec<RareTypes>,
     }
 }
 
@@ -129,7 +137,7 @@ rsz_struct! {
     #[rsz("snow.data.alchemy.SkillGradeLotRateTableUserData.Param")]
     #[derive(Debug, Serialize)]
     pub struct SkillGradeLotRateTableUserDataParam {
-        pub patturn_type: i32, // snow.data.AlchemyPatturnData.PatturnTypes, 0 = Alchemy1
+        pub patturn_type: AlchemyPatturnTypes,
         pub probability1_list: Vec<u32>,
         pub probability_list: Vec<u32>,
         pub probability2_list: Vec<u32>,

@@ -1,5 +1,6 @@
 use super::*;
 use crate::rsz_enum;
+use crate::rsz_newtype;
 use crate::rsz_struct;
 use serde::*;
 
@@ -64,14 +65,40 @@ rsz_enum! {
     }
 }
 
+rsz_enum! {
+    #[rsz(u32)]
+    #[derive(Debug, Serialize, PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
+    pub enum ItemId {
+        None = 0x04000000,
+        Normal(u32) = 0x04100000..=0x0410FFFF,
+        Ec(u32) = 0x04200000..=0x0420FFFF,
+    }
+}
+
+rsz_newtype! {
+    #[rsz_offset(1)]
+    #[derive(Debug, Serialize)]
+    #[serde(transparent)]
+    pub struct RareTypes(pub u8);
+}
+
+rsz_newtype! {
+    // Despite the enum naming from TDB
+    // it seems that the 0-based raw value is used to index messages.
+    #[rsz_offset(0)]
+    #[derive(Debug, Serialize)]
+    #[serde(transparent)]
+    pub struct MaterialCategory(pub i32);
+}
+
 rsz_struct! {
     #[rsz("snow.data.ItemUserData.Param")]
     #[derive(Debug, Serialize)]
     pub struct ItemUserDataParam {
-        pub id: u32,// snow.data.ContentsIdSystem.ItemId
+        pub id: ItemId,
         pub cariable_filter: CarriableFilter,
         pub type_: ItemTypes,
-        pub rare: u8, // snow.data.DataDef.RareTypes, 0 = Ra1
+        pub rare: RareTypes,
         pub pl_max_count: u32,
         pub ot_max_count: u32,
         pub sort_id: u16,
@@ -92,7 +119,7 @@ rsz_struct! {
         pub rank_type: RankTypes,
         pub item_group: ItemGroupTypes,
         pub category_worth: u32,
-        pub material_category: Vec<i32>, // snow.data.NormalItemData.MaterialCategory, 2 = Category 0
+        pub material_category: Vec<MaterialCategory>,
         pub evaluation_value: u32,
     }
 }

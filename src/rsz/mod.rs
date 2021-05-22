@@ -431,32 +431,39 @@ macro_rules! rsz_struct {
 }
 
 #[macro_export]
+macro_rules! rsz_enum_arm {
+    ($enum_name:ident, $variant:ident, $raw:ident, $value:literal, $end_value:literal) => {
+        $enum_name::$variant($raw - $value)
+    };
+    ($enum_name:ident, $variant:ident, $raw:ident, $value:literal) => {
+        $enum_name::$variant
+    };
+}
+
+#[macro_export]
 macro_rules! rsz_enum {
     (
         #[rsz($base:ty)]
         $(#[$outer_meta:meta])*
         $outer_vis:vis enum $enum_name:ident {
-            $(
-                $(#[$inner_meta:meta])*
-                $field_name:ident = $field_value:literal
-            ),*$(,)?
+            $( $variant:ident $(($field:ty))? = $value:literal $(..= $end_value:literal)? ),*$(,)?
         }
     ) => {
         $(#[$outer_meta])*
         $outer_vis enum $enum_name {
-            $(
-                $(#[$inner_meta])*
-                $field_name = $field_value,
-            )*
+            $( $variant $(($field))?, )*
         }
 
         impl crate::rsz::FieldFromRsz for $enum_name {
             fn field_from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
-                let value = <$base>::field_from_rsz(rsz)?;
-                match value {
-                    $($field_value => Ok($enum_name::$field_name),)*
+                let raw = <$base>::field_from_rsz(rsz)?;
+                Ok(#[allow(unreachable_patterns)] match raw {
+                    $(
+                        $value $(..=$end_value)? =>
+                        crate::rsz_enum_arm!($enum_name, $variant, raw, $value $(, $end_value)?),
+                    )*
                     x => bail!("Unknown value {} for enum {}", x, stringify!($enum_name))
-                }
+                })
             }
         }
     };
@@ -496,6 +503,25 @@ macro_rules! rsz_bitflags {
             }
         }
     }
+}
+
+#[macro_export]
+macro_rules! rsz_newtype {
+    (
+        #[rsz_offset($offset:literal)]
+        $(#[$outer_meta:meta])*
+        $outer_vis:vis struct $name:ident($inner_vis:vis $base:ty);
+    ) => (
+        $(#[$outer_meta])*
+        $outer_vis struct $name($inner_vis $base);
+
+        impl crate::rsz::FieldFromRsz for $name {
+            fn field_from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
+                let raw = <$base>::field_from_rsz(rsz)?;
+                Ok($name(raw + $offset))
+            }
+        }
+    )
 }
 
 rsz_enum! {
