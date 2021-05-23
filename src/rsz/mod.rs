@@ -3,11 +3,13 @@ mod anger_data;
 mod armor;
 mod boss_init_set_data;
 mod collision;
+mod common;
 mod condition_damage_data;
 mod condition_damage_preset;
 mod data_base;
 mod data_tune;
 mod item;
+mod lot;
 mod meat_data;
 mod monster_list;
 mod parts_break_data;
@@ -19,11 +21,13 @@ pub use anger_data::*;
 pub use armor::*;
 pub use boss_init_set_data::*;
 pub use collision::*;
+pub use common::*;
 pub use condition_damage_data::*;
 pub use condition_damage_preset::*;
 pub use data_base::*;
 pub use data_tune::*;
 pub use item::*;
+pub use lot::*;
 pub use meat_data::*;
 pub use monster_list::*;
 pub use parts_break_data::*;
@@ -714,6 +718,20 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
     );
 
     r!(ItemUserDataParam, ItemUserData);
+
+    r!(
+        MonsterLotTableUserDataParam,
+        MonsterLotTableUserData,
+        EnemyDropItemInfo,
+        EnemyDropItemTableData,
+        EnemyDropItemInfoData,
+        PartsBreakGroupConditionInfo,
+        EnemyPartsBreakRewardInfo,
+        EnemyPartsBreakRewardData,
+        PartsTypeTextUserDataTextInfo,
+        PartsTypeInfo,
+        PartsTypeTextUserData,
+    );
 
     m
 });

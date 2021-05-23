@@ -1,10 +1,12 @@
 #![allow(clippy::unnecessary_wraps)]
 
+use super::gen_item::*;
 use super::gen_quest::*;
 use super::gen_website::{gen_multi_lang, head_common, navbar};
 use super::pedia::*;
 use crate::rsz::*;
 use anyhow::*;
+use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fs::write;
 use std::path::*;
@@ -448,6 +450,290 @@ fn gen_condition_steel_fang(
     Ok(content)
 }
 
+fn gen_reward_table<'a>(
+    pedia_ex: &'a PediaEx,
+    item: &'a [ItemId],
+    num: &'a [u32],
+    probability: &'a [u32],
+) -> impl Iterator<Item = Box<tr<String>>> + 'a {
+    item.iter()
+        .zip(num)
+        .zip(probability)
+        .filter(|&((&item, _), _)| item != ItemId::None)
+        .map(move |((&item, &num), probability)| {
+            let item = if let Some(item) = pedia_ex.items.get(&item) {
+                html!(<span>{gen_item_label(item)}</span>)
+            } else {
+                html!(<span>{text!("{:?}", item)}</span>)
+            };
+
+            html!(<tr>
+                <td>{text!("{}x ", num)}{item}</td>
+                <td>{text!("{}%", probability)}</td>
+            </tr>)
+        })
+}
+
+fn gen_grouped_reward_table<'a>(
+    pedia_ex: &'a PediaEx,
+    drop_dictionary: &'a HashMap<EnemyRewardPopTypes, Vec<String>>,
+    reward_type: &'a [EnemyRewardPopTypes],
+    item: &'a [ItemId],
+    num: &'a [u32],
+    probability: &'a [u32],
+) -> impl Iterator<Item = Box<tr<String>>> + 'a {
+    reward_type
+        .iter()
+        .zip(item.chunks(10))
+        .zip(num.chunks(10))
+        .zip(probability.chunks(10))
+        .filter(|&(((&reward_type, _), _), _)| reward_type != EnemyRewardPopTypes::None)
+        .flat_map(move |(((&reward_type, item), num), probability)| {
+            let count = item.iter().filter(|&&item| item != ItemId::None).count();
+            item.iter()
+                .zip(num)
+                .zip(probability)
+                .filter(|&((&item, _), _)| item != ItemId::None)
+                .enumerate()
+                .map(move |(i, ((&item, &num), &probability))| {
+                    let item = if let Some(item) = pedia_ex.items.get(&item) {
+                        html!(<span>{gen_item_label(item)}</span>)
+                    } else {
+                        html!(<span>{text!("{:?}", item)}</span>)
+                    };
+
+                    let reward_type: Vec<_> = drop_dictionary
+                        .get(&reward_type)
+                        .unwrap_or(&vec![])
+                        .iter()
+                        .map(|name| html!(<div>{text!("{}", name)}</div>))
+                        .collect();
+
+                    let group = (i == 0).then(|| html!(<td rowspan={count}>{reward_type}</td>));
+
+                    html!(<tr>
+                        {group}
+                        <td>{text!("{}x ", num)}{item}</td>
+                        <td>{text!("{}%", probability)}</td>
+                    </tr>)
+                })
+        })
+}
+
+pub fn gen_lot(
+    monster: &Monster,
+    em_type: EmTypes,
+    rank: QuestRank,
+    pedia_ex: &PediaEx<'_>,
+) -> Box<section<String>> {
+    let lot = if let Some(lot) = pedia_ex.monster_lot.get(&(em_type, rank)) {
+        *lot
+    } else {
+        return html!(<section></section>);
+    };
+
+    let mut drop_dictionary = HashMap::new();
+    drop_dictionary.insert(EnemyRewardPopTypes::MainBody, vec!["Main body".to_string()]);
+    drop_dictionary.insert(
+        EnemyRewardPopTypes::PartsLoss1,
+        vec!["Severed part A".to_string()],
+    );
+    drop_dictionary.insert(
+        EnemyRewardPopTypes::PartsLoss2,
+        vec!["Severed part B".to_string()],
+    );
+    drop_dictionary.insert(EnemyRewardPopTypes::Unique1, vec!["Special".to_string()]);
+
+    drop_dictionary
+        .entry(monster.drop_item.marionette_rewad_pop_type)
+        .or_default()
+        .push("Riding".to_string());
+
+    for (i, entry) in monster
+        .drop_item
+        .enemy_drop_item_table_data_tbl
+        .iter()
+        .enumerate()
+    {
+        for drop in &entry.enemy_drop_item_info_list {
+            drop_dictionary
+                .entry(drop.enemy_reward_pop_type)
+                .or_default()
+                .push(format!("Drop {} - {}%", i, drop.percentage))
+        }
+    }
+
+    let header = match rank {
+        QuestRank::Low => "Low rank reward",
+        QuestRank::High => "High rank reward",
+    };
+
+    html!(<section>
+        <h2 class="title">{text!("{}", header)}</h2>
+        <div class="mh-reward-tables">
+
+        <div class="box">
+        <table>
+            <thead><tr>
+                <th>"Target rewards"</th>
+                <th>"Probability"</th>
+            </tr></thead>
+            <tbody> {
+                gen_reward_table(pedia_ex,
+                    &lot.target_reward_item_id_list,
+                    &lot.target_reward_num_list,
+                    &lot.target_reward_probability_list)
+            } </tbody>
+        </table>
+        </div>
+
+        <div class="box">
+        <table>
+            <thead><tr>
+                <th>"Part"</th>
+                <th>"Carves"</th>
+                <th>"Probability"</th>
+            </tr></thead>
+            <tbody> {
+                gen_grouped_reward_table(pedia_ex,
+                    &drop_dictionary,
+                    &lot.enemy_reward_type_list,
+                    &lot.hagitory_reward_item_id_list,
+                    &lot.hagitory_reward_num_list,
+                    &lot.hagitory_reward_probability_list)
+            } </tbody>
+        </table>
+        </div>
+
+        <div class="box">
+        <table>
+            <thead><tr>
+                <th>"Capture rewards"</th>
+                <th>"Probability"</th>
+            </tr></thead>
+            <tbody> {
+                gen_reward_table(pedia_ex,
+                    &lot.capture_reward_item_id_list,
+                    &lot.capture_reward_num_list,
+                    &lot.capture_reward_probability_list)
+            } </tbody>
+        </table>
+        </div>
+
+        <div class="box">
+        <table>
+            <thead><tr>
+                <th>"Part"</th>
+                <th>"Broken part rewards"</th>
+                <th>"Probability"</th>
+            </tr></thead>
+            <tbody> {
+                lot.parts_break_list.iter()
+                    .zip(lot.parts_break_reward_item_id_list.chunks(10))
+                    .zip(lot.parts_break_reward_num_list.chunks(10))
+                    .zip(lot.parts_break_reward_probability_list.chunks(10))
+                    .filter(|&(((&part, _), _), _)| part != BrokenPartsTypes::None)
+                    .flat_map(|(((&part, item), num), probability)| {
+                        let count = item.iter().filter(|&&item|item != ItemId::None).count();
+                        item.iter().zip(num).zip(probability)
+                            .filter(|&((&item, _), _)|item != ItemId::None)
+                            .enumerate()
+                            .map(move |(i, ((&item, &num), &probability))|{
+                                let item = if let Some(item) = pedia_ex.items.get(&item) {
+                                    html!(<span>{gen_item_label(item)}</span>)
+                                } else {
+                                    html!(<span>{text!("{:?}", item)}</span>)
+                                };
+
+                                let part_name = if let Some(name) =
+                                    pedia_ex.parts_dictionary.get(&(em_type, part)) {
+                                    gen_multi_lang(name)
+                                } else {
+                                    html!(<span>{text!("{:?}", part)}</span>)
+                                };
+
+                                let parts_list = html!(<div class="mh-part-rule"> {
+                                    monster.parts_break_reward.iter()
+                                        .flat_map(|data|&data.enemy_parts_break_reward_infos)
+                                        .filter(|pbr|pbr.broken_parts_type == part)
+                                        .map(|pbr| {
+                                            let conds = pbr.parts_break_condition_list.iter()
+                                                .map(|cond| {
+                                                    let part_color = format!("mh-part-{}", cond.parts_group);
+                                                    html!(<li>
+                                                        {text!("[{}]", cond.parts_group)}
+                                                        <span class=part_color.as_str()>"■"</span>
+                                                        {text!("(x{})", cond.parts_break_level)}
+                                                    </li>)
+                                                });
+                                            let operator = match pbr.condition_type {
+                                                EnemyPartsBreakRewardDataConditionType::All => "All of:",
+                                                EnemyPartsBreakRewardDataConditionType::Other => "Any of:"
+                                            };
+                                            html!(<div>
+                                                {text!("{}", operator)}
+                                                <ul>
+                                                {conds}
+                                                </ul>
+                                            </div>)
+                                        })
+                                }</div>);
+
+                                let group = (i == 0).then(|| {
+                                    html!(<td rowspan={count}>
+                                        {part_name}
+                                        {parts_list}
+                                    </td>)
+                                });
+
+                                html!(<tr>
+                                    {group}
+                                    <td>{text!("{}x ", num)}{item}</td>
+                                    <td>{text!("{}%", probability)}</td>
+                                </tr>)
+                            })
+                    })
+            } </tbody>
+        </table>
+        </div>
+
+        <div class="box">
+        <table>
+            <thead><tr>
+                <th>"Part"</th>
+                <th>"Dropped materials"</th>
+                <th>"Probability"</th>
+            </tr></thead>
+            <tbody> {
+                gen_grouped_reward_table(pedia_ex,
+                    &drop_dictionary,
+                    &lot.drop_reward_type_list,
+                    &lot.drop_reward_item_id_list,
+                    &lot.drop_reward_num_list,
+                    &lot.drop_reward_probability_list)
+            } </tbody>
+        </table>
+        </div>
+
+        <div class="box">
+        <table>
+            <thead><tr>
+                <th>"From buddy"</th>
+                <th>"Probability"</th>
+            </tr></thead>
+            <tbody> {
+                gen_reward_table(pedia_ex,
+                    &lot.otomo_reward_item_id_list,
+                    &lot.otomo_reward_num_list,
+                    &lot.otomo_reward_probability_list)
+            } </tbody>
+        </table>
+        </div>
+
+        </div>
+    </section>)
+}
+
 pub fn gen_monster(
     is_large: bool,
     monster: &Monster,
@@ -485,7 +771,7 @@ pub fn gen_monster(
 
     let quest_list = html!(
         <section class="section">
-        <h2 class="subtitle">"Quests"</h2>
+        <h2 class="title">"Quests"</h2>
         <table>
             <thead><tr>
                 <th>"Quest"</th>
@@ -584,7 +870,7 @@ pub fn gen_monster(
                     }</h1>
                 </div>
                 <section class="section">
-                <h2 class="subtitle">"Basic data"</h2>
+                <h2 class="title">"Basic data"</h2>
                 <p>{ text!("Base HP: {}", monster.data_tune.base_hp_vital) }</p>
                 <p>{ text!("Limping threshold: (village) {}% / (LR) {}% / (HR) {}%",
                     monster.data_tune.dying_village_hp_vital_rate,
@@ -605,7 +891,7 @@ pub fn gen_monster(
                 { quest_list }
 
                 <section class="section">
-                <h2 class="subtitle">"Hitzone data"</h2>
+                <h2 class="title">"Hitzone data"</h2>
                 <img src=meat_figure />
                 <div>
                     <input type="checkbox" onclick="onCheckDisplay(this, 'mh-invalid-meat', null)" id="mh-invalid-meat-check"/>
@@ -697,7 +983,7 @@ pub fn gen_monster(
                 </table>
                 </section>
                 <section class="section">
-                <h2 class="subtitle">
+                <h2 class="title">
                     "Parts"
                 </h2>
                 <img src=parts_group_figure />
@@ -740,7 +1026,7 @@ pub fn gen_monster(
                                     bail!("Duplicated part break data found");
                                 }
                                 part_break.parts_break_data_list.iter().map(
-                                    |p| format!("({}) {}", p.break_level, p.vital)
+                                    |p| format!("(x{}) {}", p.break_level, p.vital)
                                 ).collect::<Vec<_>>().join(" / ")
                             } else {
                                 "".to_string()
@@ -763,7 +1049,11 @@ pub fn gen_monster(
                             };
 
                             Ok(html!(<tr class=hidden>
-                                <td><span class=part_color.as_str()>"■"</span>{ text!("{}", part_name) }</td>
+                                <td>
+                                    { text!("[{}]", index) }
+                                    <span class=part_color.as_str()>"■"</span>
+                                    { text!("{}", part_name) }
+                                </td>
                                 <td>{ text!("{}", part.vital) }</td>
                                 <td>{ text!("{}", part_break) }</td>
                                 <td>{ text!("{}", part_loss) }</td>
@@ -775,7 +1065,7 @@ pub fn gen_monster(
                 </section>
 
                 <section>
-                <h2 class="subtitle">
+                <h2 class="title">
                     "Abnormal status"
                 </h2>
                 <div>
@@ -850,6 +1140,8 @@ pub fn gen_monster(
                 </table>
                 </section>
 
+                {gen_lot(monster, monster_em_type, QuestRank::Low, pedia_ex)}
+                {gen_lot(monster, monster_em_type, QuestRank::High, pedia_ex)}
                 </div> </div> </main>
             </body>
         </html>: String

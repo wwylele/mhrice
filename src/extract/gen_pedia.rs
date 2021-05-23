@@ -90,6 +90,7 @@ pub fn gen_monsters(
     boss_init_path_gen: fn(u32, u32) -> Option<String>,
     collider_path_gen: fn(u32, u32) -> String,
     data_tune_path_gen: fn(u32, u32) -> String,
+    is_large: bool,
 ) -> Result<Vec<Monster>> {
     let mut monsters = vec![];
 
@@ -152,6 +153,11 @@ pub fn gen_monsters(
                 Rcol::new(Cursor::new(pak.read_file(rcol_index)?), true).context(rcol_path)?;
             let collider_mapping = gen_collider_mapping(rcol)?;
 
+            let drop_item = sub_file(pak, &main_pfb).context("drop_item")?;
+            let parts_break_reward = is_large
+                .then(|| sub_file(pak, &main_pfb).context("parts_break_reward"))
+                .transpose()?;
+
             monsters.push(Monster {
                 id,
                 sub_id,
@@ -163,6 +169,8 @@ pub fn gen_monsters(
                 parts_break_data,
                 boss_init_set_data,
                 collider_mapping,
+                drop_item,
+                parts_break_reward,
             })
         }
     }
@@ -205,6 +213,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
                 id, sub_id
             )
         },
+        true,
     )
     .context("Generating large monsters")?;
 
@@ -224,6 +233,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
                 id, sub_id
             )
         },
+        false,
     )
     .context("Generating small monsters")?;
 
@@ -241,6 +251,15 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         "data/Define/Common/HunterNote/MonsterListBossData.user",
     )?;
     let hunter_note_msg = get_msg(pak, "Message/HunterNote/HN_Hunternote_Menu.msg")?;
+
+    let monster_lot = get_user(
+        pak,
+        "data/System/RewardSystem/LotTable/MonsterLotTableData.user",
+    )?;
+    let parts_type = get_user(
+        pak,
+        "data/Define/Quest/System/QuestRewardSystem/PartsTypeTextData.user",
+    )?;
 
     let normal_quest_data = get_user(pak, "Quest/QuestData/NormalQuestData.user")?;
     let normal_quest_data_for_enemy =
@@ -341,6 +360,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         condition_preset,
         monster_list,
         hunter_note_msg,
+        monster_lot,
+        parts_type,
         normal_quest_data,
         normal_quest_data_for_enemy,
         difficulty_rate,
@@ -1104,12 +1125,72 @@ fn prepare_material_categories(pedia: &Pedia) -> HashMap<MaterialCategory, MsgEn
             MaterialCategory(86),
             MsgEntry {
                 name: "".to_string(),
-                guid: "".to_string(),
+                guid: Guid { bytes: [0; 16] },
+                hash: 0,
                 attributes: vec![],
                 content: vec!["Armor sphere".to_string(); 32],
             },
         )))
         .collect()
+}
+
+fn prepare_monster_lot(
+    pedia: &Pedia,
+) -> Result<HashMap<(EmTypes, QuestRank), &MonsterLotTableUserDataParam>> {
+    let mut result = HashMap::new();
+
+    for lot in &pedia.monster_lot.param {
+        if lot.em_types == EmTypes::Em(0) {
+            continue;
+        }
+
+        if result.insert((lot.em_types, lot.quest_rank), lot).is_some() {
+            bail!(
+                "Multiple LOT definition for {:?} {:?}",
+                lot.em_types,
+                lot.quest_rank
+            );
+        }
+    }
+
+    Ok(result)
+}
+
+fn prepare_parts_dictionary(
+    pedia: &Pedia,
+) -> Result<HashMap<(EmTypes, BrokenPartsTypes), MsgEntry>> {
+    let msgs: HashMap<_, _> = pedia
+        .hunter_note_msg
+        .entries
+        .iter()
+        .map(|entry| (entry.guid, entry.clone()))
+        .collect();
+
+    let mut result = HashMap::new();
+
+    for part in &pedia.parts_type.params {
+        for info in &part.text_infos {
+            let msg = msgs.get(&info.text_for_monster_list).with_context(|| {
+                format!("Cannot found part text for {:?}", part.broken_parts_types)
+            })?;
+            for &em in &info.enemy_type_list {
+                if em == EmTypes::Em(0) {
+                    continue;
+                }
+                if result
+                    .insert((em, part.broken_parts_types), msg.clone())
+                    .is_some()
+                {
+                    eprintln!(
+                        "Multiple part text for {:?}, {:?}",
+                        em, part.broken_parts_types
+                    );
+                }
+            }
+        }
+    }
+
+    Ok(result)
 }
 
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
@@ -1123,5 +1204,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         meat_names: prepare_meat_names(pedia)?,
         items: prepare_items(pedia)?,
         material_categories: prepare_material_categories(pedia),
+        monster_lot: prepare_monster_lot(pedia)?,
+        parts_dictionary: prepare_parts_dictionary(pedia)?,
     })
 }

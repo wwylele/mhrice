@@ -198,3 +198,19 @@ div.mh-logo-text {
     column-width: 20rem;
     column-count: 3;
 }
+
+.mh-reward-tables {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.mh-part-rule {
+    border: 1px black dotted;
+}
+
+.mh-part-rule ul {
+    list-style: none;
+    margin-top: 0;
+}

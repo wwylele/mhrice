@@ -315,7 +315,7 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path) 
                     )
                 }</span></p>
                 <section class="section">
-                <h2 class="subtitle">"Monster stats"</h2>
+                <h2 class="title">"Monster stats"</h2>
                 <table>
                     <thead><tr>
                         <th>"Monster"</th>
@@ -345,7 +345,7 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path) 
                 </table>
                 </section>
                 <section class="section">
-                <h2 class="subtitle">"Multiplayer Factor (Column header might be wrong)"</h2>
+                <h2 class="title">"Multiplayer Factor (Column header might be wrong)"</h2>
 
                 <table>
                     <thead><tr>

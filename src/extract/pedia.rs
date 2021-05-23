@@ -23,6 +23,8 @@ pub struct Monster {
     pub parts_break_data: EnemyPartsBreakData,
     pub boss_init_set_data: Option<EnemyBossInitSetData>,
     pub collider_mapping: ColliderMapping,
+    pub drop_item: EnemyDropItemInfoData,
+    pub parts_break_reward: Option<EnemyPartsBreakRewardData>,
 }
 
 #[derive(Debug, Serialize)]
@@ -34,6 +36,9 @@ pub struct Pedia {
     pub condition_preset: EnemyConditionPresetData,
     pub monster_list: MonsterListBossData,
     pub hunter_note_msg: Msg,
+
+    pub monster_lot: MonsterLotTableUserData,
+    pub parts_type: PartsTypeTextUserData,
 
     pub normal_quest_data: NormalQuestData,
     pub normal_quest_data_for_enemy: NormalQuestDataForEnemy,
@@ -132,4 +137,6 @@ pub struct PediaEx<'a> {
     pub meat_names: HashMap<MeatKey, MsgEntry>,
     pub items: BTreeMap<ItemId, Item<'a>>,
     pub material_categories: HashMap<MaterialCategory, MsgEntry>,
+    pub monster_lot: HashMap<(EmTypes, QuestRank), &'a MonsterLotTableUserDataParam>,
+    pub parts_dictionary: HashMap<(EmTypes, BrokenPartsTypes), MsgEntry>,
 }

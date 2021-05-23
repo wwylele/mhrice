@@ -160,7 +160,7 @@ pub fn gen_monsters(pedia: &Pedia, pedia_ex: &PediaEx<'_>, root: &Path) -> Resul
                 <main> <div class="container"> <div class="content">
                 <h1 class="title">"Monsters"</h1>
                 <section class="section">
-                <h2 class="subtitle">"Large monsters"</h2>
+                <h2 class="title">"Large monsters"</h2>
                 <ul class="mh-list-monster">{
                     pedia.monsters.iter().filter_map(|monster| {
                         let icon_path = format!("/resources/em{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
@@ -177,7 +177,7 @@ pub fn gen_monsters(pedia: &Pedia, pedia_ex: &PediaEx<'_>, root: &Path) -> Resul
                 }</ul>
                 </section>
                 <section class="section">
-                <h2 class="subtitle">"Small monsters"</h2>
+                <h2 class="title">"Small monsters"</h2>
                 <ul class="mh-list-monster">{
                     pedia.small_monsters.iter().filter(|monster|monster.sub_id == 0) // sub small monsters are b0rked
                     .map(|monster| {
@@ -240,7 +240,7 @@ pub fn gen_about(root: &Path) -> Result<()> {
                 </a>
                 </p>
                 <section class="section">
-                <h2 class="subtitle">"Build information"</h2>
+                <h2 class="title">"Build information"</h2>
                 <ul>
                     <li>"Git hash: " <span class="is-family-monospace">{
                         text!("{}{}",

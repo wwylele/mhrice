@@ -1,4 +1,6 @@
 use crate::file_ext::*;
+use crate::hash::hash_as_utf16;
+use crate::rsz::Guid;
 use anyhow::*;
 use serde::*;
 use std::convert::TryFrom;
@@ -13,7 +15,8 @@ pub struct MsgAttributeHeader {
 #[derive(Debug, Serialize, Clone)]
 pub struct MsgEntry {
     pub name: String,
-    pub guid: String,
+    pub guid: Guid,
+    pub hash: u32,
     pub attributes: Vec<String>,
     pub content: Vec<String>,
 }
@@ -81,8 +84,10 @@ impl Msg {
             .into_iter()
             .map(|entry| {
                 file.seek_noop(entry)?;
-                let mut guid = [0; 24];
+                let mut guid = [0; 16];
                 file.read_exact(&mut guid)?;
+                let _ = file.read_u32()?; //???
+                let hash = file.read_u32()?;
 
                 let name = file.read_u64()?;
                 let attributes = file.read_u64()?;
@@ -90,16 +95,16 @@ impl Msg {
                     .map(|_| file.read_u64())
                     .collect::<Result<Vec<_>>>()?;
 
-                Ok((name, guid, attributes, content))
+                Ok((name, Guid { bytes: guid }, hash, attributes, content))
             })
             .collect::<Result<Vec<_>>>()?
             .into_iter()
-            .map(|(name, guid, attributes, content)| {
+            .map(|(name, guid, hash, attributes, content)| {
                 file.seek_noop(attributes)?;
                 let attributes = (0..attribute_count)
                     .map(|_| file.read_u64())
                     .collect::<Result<Vec<_>>>()?;
-                Ok((name, guid, attributes, content))
+                Ok((name, guid, hash, attributes, content))
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -121,9 +126,11 @@ impl Msg {
 
         let entries = entries
             .into_iter()
-            .map(|(name, guid, attributes, content)| {
+            .map(|(name, guid, hash, attributes, content)| {
                 let name = (&data[usize::try_from(name - data_offset)?..]).read_u16str()?;
-                let guid = guid.iter().map(|b| format!("{:02x}", b)).collect();
+                if hash_as_utf16(&name) != hash {
+                    bail!("Wrong hash")
+                }
                 let attributes = attributes
                     .into_iter()
                     .map(|n| (&data[usize::try_from(n - data_offset)?..]).read_u16str())
@@ -135,6 +142,7 @@ impl Msg {
                 Ok(MsgEntry {
                     name,
                     guid,
+                    hash,
                     attributes,
                     content,
                 })
