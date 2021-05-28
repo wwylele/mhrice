@@ -217,7 +217,29 @@ enum Mhrice {
     },
 }
 
-fn open_pak_files(pak: Vec<String>) -> Result<Vec<File>> {
+fn open_pak_files(mut pak: Vec<String>) -> Result<Vec<File>> {
+    if pak.len() == 1 && Path::new(&pak[0]).is_dir() {
+        eprintln!("Listing all PAK files in the folder...");
+        let dir = pak.pop().unwrap();
+        let dir = Path::new(&dir);
+        for entry in std::fs::read_dir(dir)?.into_iter() {
+            let entry = entry?;
+            if entry
+                .file_name()
+                .to_str()
+                .context("Bad path")?
+                .ends_with(".pak")
+            {
+                let path = entry.path().to_str().context("Bad path")?.to_string();
+                pak.push(path);
+            }
+        }
+        pak.sort();
+        for path in &pak {
+            eprintln!("Found PAK file: {}", path);
+        }
+    }
+
     pak.into_iter().map(|path| Ok(File::open(path)?)).collect()
 }
 
