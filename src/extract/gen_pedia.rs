@@ -136,15 +136,26 @@ pub fn gen_monsters(
             let parts_break_data = sub_file(pak, &main_pfb).context("parts_break_data")?;
 
             let boss_init_set_data = if let Some(path) = boss_init_path_gen(id, sub_id) {
-                let index = pak.find_file(&path)?;
-                let data = User::new(Cursor::new(pak.read_file(index)?))?;
-                Some(
-                    data.rsz
-                        .deserialize_single()
-                        .context("boss_init_set_data")?,
-                )
+                if let Ok(index) = pak.find_file(&path) {
+                    let data = User::new(Cursor::new(pak.read_file(index)?))?;
+                    Some(
+                        data.rsz
+                            .deserialize_single()
+                            .context("boss_init_set_data")?,
+                    )
+                } else {
+                    None
+                }
             } else {
                 None
+            };
+
+            let enemy_type = if id == 99 && sub_id == 5 {
+                Some(39)
+            } else {
+                boss_init_set_data
+                    .as_ref()
+                    .map(|b: &EnemyBossInitSetData| b.enemy_type)
             };
 
             let rcol_path = collider_path_gen(id, sub_id);
@@ -161,6 +172,7 @@ pub fn gen_monsters(
             monsters.push(Monster {
                 id,
                 sub_id,
+                enemy_type,
                 data_base,
                 data_tune,
                 meat_data,
@@ -461,15 +473,15 @@ static EM_ICON_MAP: Lazy<HashMap<(i32, i32), &'static str>> = Lazy::new(|| {
     m.insert((24, 0), "A0");
     m.insert((25, 0), "B1");
     m.insert((27, 0), "C2");
-    // D3 = (86, 0)?
+    m.insert((86, 5), "D3");
     m.insert((118, 0), "E4");
     // F5?
     m.insert((2, 7), "G6");
     m.insert((7, 7), "H7");
-    // I8 = (57， 7)?
+    m.insert((57, 7), "I8");
     // J9?
     // KA?
-    // LB?
+    m.insert((99, 5), "LB");
     m
 });
 
@@ -480,11 +492,18 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
     }
     create_dir(&root)?;
 
+    let mesh_path_gen = |id, mut sub_id| {
+        if id == 99 && sub_id == 5 {
+            sub_id = 0;
+        }
+        format!("enemy/em{0:03}/{1:02}/mod/em{0:03}_{1:02}.mesh", id, sub_id)
+    };
+
     gen_monster_hitzones(
         pak,
         &root,
         gen_em_collider_path,
-        |id, sub_id| format!("enemy/em{0:03}/{1:02}/mod/em{0:03}_{1:02}.mesh", id, sub_id),
+        mesh_path_gen,
         |id, sub_id| format!("em{0:03}_{1:02}_meat.png", id, sub_id),
         |id, sub_id| format!("em{0:03}_{1:02}_parts_group.png", id, sub_id),
     )?;
@@ -687,7 +706,7 @@ fn prepare_size_dist_map(
     Ok(result)
 }
 
-fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest>> {
+fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
     let mut all_msg: HashMap<String, MsgEntry> = pedia
         .quest_hall_msg
         .entries
@@ -716,11 +735,11 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest>> {
         )
         .collect();
 
-    let mut enemy_params: HashMap<i32, NormalQuestDataForEnemyParam> = pedia
+    let mut enemy_params: HashMap<i32, &NormalQuestDataForEnemyParam> = pedia
         .normal_quest_data_for_enemy
         .param
         .iter()
-        .map(|param| (param.quest_no, param.clone()))
+        .map(|param| (param.quest_no, param))
         .collect();
 
     pedia
@@ -733,7 +752,7 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest>> {
             let target_msg_name = format!("QN{:06}_04", param.quest_no);
             let condition_msg_name = format!("QN{:06}_05", param.quest_no);
             Ok(Quest {
-                param: param.clone(),
+                param: &param,
                 enemy_param: enemy_params.remove(&param.quest_no),
                 name: all_msg.remove(&name_msg_name),
                 target: all_msg.remove(&target_msg_name),
@@ -903,7 +922,7 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
         let series = ArmorSeries {
             name,
             series: armor_series,
-            pieces: [None, None, None, None, None],
+            pieces: [None, None, None, None, None, None, None, None, None, None],
         };
         series_map.insert(armor_series.armor_series, series);
     }
@@ -923,7 +942,7 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
             .with_context(|| format!("Duplicate armor {}", armor.pl_armor_id))?;
         */
 
-        let (slot, msg, id) = match armor.pl_armor_id {
+        let (mut slot, msg, id) = match armor.pl_armor_id {
             PlArmorId::Head(id) => (0, &pedia.armor_head_name_msg, id),
             PlArmorId::Chest(id) => (1, &pedia.armor_chest_name_msg, id),
             PlArmorId::Arm(id) => (2, &pedia.armor_arm_name_msg, id),
@@ -931,6 +950,10 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
             PlArmorId::Leg(id) => (4, &pedia.armor_leg_name_msg, id),
             _ => bail!("Unknown armor ID {:?}", armor.pl_armor_id),
         };
+
+        if armor.id_after_ex_change == PlArmorId::ChangedEx {
+            slot += 5;
+        }
 
         let id = usize::try_from(id)?;
 

@@ -177,8 +177,11 @@ rsz_enum! {
 }
 
 rsz_struct! {
-    #[rsz("snow.quest.NormalQuestData.Param")]
-    #[derive(Debug, Serialize, Clone)]
+    #[rsz("snow.quest.NormalQuestData.Param",
+        0x54BDF6C5 = 0,
+        0x814CED42 = 5,
+    )]
+    #[derive(Debug, Serialize)]
     pub struct NormalQuestDataParam {
         pub quest_no: i32,
         pub quest_type: QuestType,
@@ -201,6 +204,8 @@ rsz_struct! {
         pub boss_set_param: Vec<u32>,
         pub swap_set_condition: Vec<SwapSetCondition>,
         pub swap_set_param: Vec<u8>,
+        pub swap_exit_time: Versioned<Vec<u8>, 5, {u32::MAX}>,
+        pub is_swap_exit_marionette: Versioned<bool, 5, {u32::MAX}>,
         pub swap_stop_type: SwapStopType,
         pub swap_stop_param: u8,
         pub swap_exec_type: SwapExecType,
@@ -209,7 +214,7 @@ rsz_struct! {
         pub rem_rank_point: u32,
         pub supply_tbl: u32,
         pub icon: Vec<i32>, // TODO: snow.gui.SnowGuiCommonUtility.Icon.EnemyIconFrameForQuestOrder
-        pub is_from_npc: bool,
+        pub is_from_npc: Versioned<bool, 0, 4>,
         pub is_tutorial: bool,
         pub fence_default_active: bool,
         pub fence_active_sec: u16,
@@ -224,7 +229,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.NormalQuestData")]
-    #[derive(Debug, Serialize, Clone)]
+    #[derive(Debug, Serialize)]
     pub struct NormalQuestData {
         pub param: Vec<NormalQuestDataParam>,
     }

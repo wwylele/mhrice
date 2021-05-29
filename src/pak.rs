@@ -113,7 +113,7 @@ impl<F: Read + Seek> PakReader<F> {
         Ok(self
             .find_file_i18n(path)?
             .first()
-            .context("No matching hash")?
+            .with_context(|| format!("No matching hash for {}", path))?
             .index)
     }
 

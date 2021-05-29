@@ -854,12 +854,8 @@ pub fn gen_monster(
                 <div class="mh-monster-header">
                     <img src=icon />
                     <h1 class="title"> {
-                        if is_large {
-                            let name_name = format!("Alias_EnemyIndex{:03}",
-                                monster.boss_init_set_data.as_ref()
-                                .context(format!("Cannot found boss_init_set for monster {}_{}",
-                                    monster.id, monster.sub_id))?
-                                .enemy_type);
+                        if let Some(enemy_type) = monster.enemy_type {
+                            let name_name = format!("Alias_EnemyIndex{:03}", enemy_type);
                             pedia.monster_aliases.get_entry(&name_name).map_or(
                                 html!(<span>{text!("Monster {:03}_{:02}", monster.id, monster.sub_id)}</span>),
                                 gen_multi_lang

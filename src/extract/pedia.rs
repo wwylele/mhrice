@@ -15,6 +15,7 @@ pub struct ColliderMapping {
 pub struct Monster {
     pub id: u32,
     pub sub_id: u32,
+    pub enemy_type: Option<i32>,
     pub data_base: EnemyDataBase,
     pub data_tune: EnemyDataTune,
     pub meat_data: EnemyMeatData,
@@ -85,9 +86,9 @@ pub struct Pedia {
     pub material_category_msg: Msg,
 }
 
-pub struct Quest {
-    pub param: NormalQuestDataParam,
-    pub enemy_param: Option<NormalQuestDataForEnemyParam>,
+pub struct Quest<'a> {
+    pub param: &'a NormalQuestDataParam,
+    pub enemy_param: Option<&'a NormalQuestDataForEnemyParam>,
     pub name: Option<MsgEntry>,
     pub target: Option<MsgEntry>,
     pub condition: Option<MsgEntry>,
@@ -111,7 +112,7 @@ pub struct Armor<'a> {
 pub struct ArmorSeries<'a> {
     pub name: Option<MsgEntry>,
     pub series: &'a ArmorSeriesUserDataParam,
-    pub pieces: [Option<Armor<'a>>; 5],
+    pub pieces: [Option<Armor<'a>>; 10],
 }
 
 #[derive(Hash, PartialEq, Eq)]
@@ -130,7 +131,7 @@ pub struct Item<'a> {
 pub struct PediaEx<'a> {
     pub sizes: HashMap<EmTypes, &'a SizeInfo>,
     pub size_dists: HashMap<i32, &'a [ScaleAndRateData]>,
-    pub quests: Vec<Quest>,
+    pub quests: Vec<Quest<'a>>,
     pub discoveries: HashMap<EmTypes, &'a DiscoverEmSetDataParam>,
     pub skills: BTreeMap<PlEquipSkillId, Skill>,
     pub armors: Vec<ArmorSeries<'a>>,

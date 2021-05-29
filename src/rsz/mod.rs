@@ -45,6 +45,7 @@ use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::io::{Cursor, Read, Seek, SeekFrom};
 use std::ops::Deref;
+use std::rc::*;
 
 #[derive(Debug)]
 pub struct SlotString {
@@ -149,16 +150,19 @@ impl Rsz {
 
     pub fn deserialize(&self) -> Result<Vec<Box<dyn Any>>> {
         let mut node_buf: Vec<Option<Box<dyn Any>>> = vec![None];
+        let mut node_rc_buf: HashMap<u32, Rc<dyn Any>> = HashMap::new();
         let mut cursor = Cursor::new(&self.data);
-        for td in self.type_descriptors.iter().skip(1) {
-            let hash = u32::try_from(*td & 0xFFFFFFFF)?;
-            let deserializer = RSZ_TYPE_MAP
+        for &td in self.type_descriptors.iter().skip(1) {
+            let hash = u32::try_from(td & 0xFFFFFFFF)?;
+            let (deserializer, versions) = RSZ_TYPE_MAP
                 .get(&hash)
                 .with_context(|| format!("Unsupported type {:08X}", hash))?;
             let pos = cursor.tell().unwrap();
             let mut rsz_deserializer = RszDeserializer {
                 node_buf: &mut node_buf,
+                node_rc_buf: &mut node_rc_buf,
                 cursor: &mut cursor,
+                version: versions.get(&u32::try_from(td >> 32)?).cloned(),
             };
             let node = deserializer(&mut rsz_deserializer).with_context(|| {
                 format!("Error deserializing for type {:016X} at {:08X}", td, pos)
@@ -206,12 +210,13 @@ impl Rsz {
 
 pub struct RszDeserializer<'a, 'b> {
     node_buf: &'a mut [Option<Box<dyn Any>>],
+    node_rc_buf: &'a mut HashMap<u32, Rc<dyn Any>>,
     cursor: &'a mut Cursor<&'b Vec<u8>>,
+    version: Option<u32>,
 }
 
 impl<'a, 'b> RszDeserializer<'a, 'b> {
-    pub fn get_child<T: 'static>(&mut self) -> Result<T> {
-        let index = self.cursor.read_u32()?;
+    fn get_child_inner<T: 'static>(&mut self, index: u32) -> Result<T> {
         let node = self
             .node_buf
             .get_mut(usize::try_from(index)?)
@@ -221,6 +226,29 @@ impl<'a, 'b> RszDeserializer<'a, 'b> {
             .downcast()
             .map_err(|_| anyhow!("Type mismatch"))?;
         Ok(*node)
+    }
+
+    pub fn get_child<T: 'static>(&mut self) -> Result<T> {
+        let index = self.cursor.read_u32()?;
+        self.get_child_inner(index)
+    }
+
+    pub fn get_child_rc<T: 'static>(&mut self) -> Result<Rc<T>> {
+        let index = self.cursor.read_u32()?;
+        if let Some(child) = self.node_rc_buf.get(&index) {
+            child
+                .clone()
+                .downcast()
+                .map_err(|_| anyhow!("Type mismatch"))
+        } else {
+            let child = Rc::new(self.get_child_inner::<T>(index)?);
+            self.node_rc_buf.insert(index, child.clone());
+            Ok(child)
+        }
+    }
+
+    pub fn version(&self) -> Option<u32> {
+        self.version
     }
 }
 
@@ -233,6 +261,7 @@ impl<'a, 'b> Read for RszDeserializer<'a, 'b> {
 pub trait FromRsz: Sized {
     fn from_rsz(rsz: &mut RszDeserializer) -> Result<Self>;
     const SYMBOL: &'static str;
+    const VERSIONS: &'static [(u32, u32)];
     fn type_hash() -> u32 {
         hash_as_utf8(Self::SYMBOL)
     }
@@ -330,6 +359,13 @@ impl<T: FromRsz + 'static> FieldFromRsz for T {
     }
 }
 
+impl<T: FromRsz + 'static> FieldFromRsz for Rc<T> {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.cursor.seek_align_up(4)?;
+        rsz.get_child_rc()
+    }
+}
+
 impl<T: FieldFromRsz + 'static> FieldFromRsz for Vec<T> {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
         rsz.cursor.seek_align_up(4)?;
@@ -371,6 +407,21 @@ impl<T: FromRsz> FieldFromRsz for Flatten<T> {
     }
 }
 
+#[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[serde(transparent)]
+pub struct Versioned<T, const MIN: u32, const MAX: u32>(pub Option<T>);
+
+impl<T: FieldFromRsz, const MIN: u32, const MAX: u32> FieldFromRsz for Versioned<T, MIN, MAX> {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        let version = rsz.version().context("Unknown version")?;
+        Ok(Versioned(if version >= MIN && version <= MAX {
+            Some(T::field_from_rsz(rsz)?)
+        } else {
+            None
+        }))
+    }
+}
+
 impl<T> Deref for Flatten<T> {
     type Target = T;
 
@@ -392,9 +443,10 @@ macro_rules! rsz_inner {
 
 #[macro_export]
 macro_rules! rsz_inner_trait {
-    (rsz($symbol:literal), $struct_name:ident, $($field_name:ident : $field_type:ty,)*) => {
+    (rsz($symbol:literal $(,$vhash:literal=$version:literal)*), $struct_name:ident, $($field_name:ident : $field_type:ty,)*) => {
         impl crate::rsz::FromRsz for $struct_name {
             const SYMBOL: &'static str = $symbol;
+            const VERSIONS: &'static [(u32, u32)] = &[$(($vhash, $version)),*];
             fn from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
                 crate::rsz_inner!(rsz, $($field_name : $field_type,)*)
             }
@@ -413,7 +465,8 @@ macro_rules! rsz_inner_trait {
 #[macro_export]
 macro_rules! rsz_struct {
     (
-        #[rsz($($symbol:literal)?)]
+        #[rsz($($symbol:literal $(,$vhash:literal=$version:literal)* $(,)?)?)]
+        $(#[rsz_version($a:literal, $b:literal)])*
         $(#[$outer_meta:meta])*
         $outer_vis:vis struct $struct_name:ident {
             $(
@@ -430,7 +483,7 @@ macro_rules! rsz_struct {
             )*
         }
 
-        crate::rsz_inner_trait!(rsz($($symbol)?), $struct_name, $($field_name : $field_type,)*);
+        crate::rsz_inner_trait!(rsz($($symbol $(,$vhash=$version)*)?), $struct_name, $($field_name : $field_type,)*);
     };
 }
 
@@ -536,14 +589,24 @@ rsz_enum! {
     }
 }
 
-type RszDeserializerFn = fn(&mut RszDeserializer) -> Result<Box<dyn Any>>;
+type RszDeserializerPackage = (
+    fn(&mut RszDeserializer) -> Result<Box<dyn Any>>,
+    HashMap<u32, u32>,
+);
 
-static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerFn>> = Lazy::new(|| {
+static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerPackage>> = Lazy::new(|| {
     let mut m = HashMap::new();
 
-    fn register<T: 'static + FromRsz>(m: &mut HashMap<u32, RszDeserializerFn>) {
+    fn register<T: 'static + FromRsz>(m: &mut HashMap<u32, RszDeserializerPackage>) {
         let hash = T::type_hash();
-        let old = m.insert(hash, |rsz| Ok(Box::new(T::from_rsz(rsz)?) as Box<dyn Any>));
+        let versions: HashMap<u32, u32> = T::VERSIONS.iter().copied().collect();
+        let old = m.insert(
+            hash,
+            (
+                |rsz| Ok(Box::new(T::from_rsz(rsz)?) as Box<dyn Any>),
+                versions,
+            ),
+        );
         if old.is_some() {
             panic!("Multiple type reigstered for the same hash")
         }

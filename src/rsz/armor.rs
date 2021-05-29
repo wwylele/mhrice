@@ -8,6 +8,7 @@ rsz_enum! {
     pub enum PlArmorId {
         TableNone = 0,
         None = 0x0C000000,
+        ChangedEx = 0x00010001,
         Head(u32) = 0x0C100000..=0x0C10FFFF,
         Chest(u32) = 0x0C200000..=0x0C20FFFF,
         Arm(u32) = 0x0C300000..=0x0C30FFFF,
@@ -58,7 +59,7 @@ rsz_struct! {
         pub decorations_num_list: [u32; 3],
         pub skill_list: Vec<PlEquipSkillId>,
         pub skill_lv_list: Vec<i32>,
-        pub id_after_ex_change: u32,
+        pub id_after_ex_change: PlArmorId,
     }
 }
 

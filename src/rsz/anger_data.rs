@@ -14,7 +14,7 @@ rsz_struct! {
     #[rsz("snow.enemy.EnemyAngerData")]
     #[derive(Debug, Serialize)]
     pub struct EnemyAngerData {
-        data_info: Vec<EnemyAngerSeparateData>,
+        data_info: Vec<Rc<EnemyAngerSeparateData>>,
         timer: i32,
         hyakuryu_cool_timer: i32,
         mot_rate: f32,

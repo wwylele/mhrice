@@ -164,8 +164,8 @@ pub fn gen_monsters(pedia: &Pedia, pedia_ex: &PediaEx<'_>, root: &Path) -> Resul
                 <ul class="mh-list-monster">{
                     pedia.monsters.iter().filter_map(|monster| {
                         let icon_path = format!("/resources/em{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
-                        let name_name = format!("EnemyIndex{:03}",
-                            monster.boss_init_set_data.as_ref()?.enemy_type);
+                        let name_name = format!("EnemyIndex{:03}", monster.enemy_type?);
+
                         let name_entry = pedia.monster_names.get_entry(&name_name)?;
                         Some(html!{<li class="mh-list-monster">
                             <a href={format!("/monster/{:03}_{:02}.html", monster.id, monster.sub_id)}>

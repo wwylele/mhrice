@@ -38,7 +38,7 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], root: &Path) -> Result<()> {
                                 series_name
                             }</h2>
                             <ul class="mh-armor-list"> {
-                                series.pieces.iter().map(|piece| {
+                                series.pieces.iter().take(5).map(|piece| {
                                     let piece_name = if let Some(piece) = piece {
                                         gen_multi_lang(&piece.name)
                                     } else {
@@ -99,6 +99,76 @@ fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, path: &Path) -> Result<()
         } </ul></td>)
     };
 
+    let gen_stat = |pieces: &[Option<Armor<'_>>]| {
+        html!(<table>
+            <thead><tr>
+                <th>"Name"</th>
+                <th>"Value (Sell / Buy)"</th>
+                <th>"Defense"</th>
+                <th>"Fire"</th>
+                <th>"Water"</th>
+                <th>"Ice"</th>
+                <th>"Thunder"</th>
+                <th>"Dragon"</th>
+                <th>"Slots"</th>
+                <th>"Skills"</th>
+            </tr></thead>
+            <tbody> {
+                pieces.iter().map(|piece| {
+                    let piece = if let Some(piece) = piece {
+                        piece
+                    } else {
+                        return html!(<tr><td colspan="10">"-"</td></tr>)
+                    };
+
+                    let mut slot_list = vec![];
+
+                    for (i, num) in piece.data.decorations_num_list.iter().enumerate().rev() {
+                        for _ in 0..*num {
+                            slot_list.push(i + 1);
+                        }
+                    }
+
+                    let slots = slot_list.iter()
+                        .map(|s|format!("{}", s)).collect::<Vec<String>>().join(" / ");
+
+                    let skills = html!(<ul class="mh-armor-skill-list"> {
+                        piece.data.skill_list.iter().zip(piece.data.skill_lv_list.iter())
+                            .filter(|&(&skill, _)| skill != PlEquipSkillId::None)
+                            .map(|(&skill, lv)| {
+                            let name = if let Some(skill_data) = pedia_ex.skills.get(&skill) {
+                                html!(<span><a href={format!("/skill/{}", skill_page(skill))}
+                                    class="mh-icon-text">
+                                    {gen_colored_icon(skill_data.icon_color, "/resources/skill", &[])}
+                                    {gen_multi_lang(&skill_data.name)}
+                                </a></span>)
+                            } else {
+                                html!(<span>"<UNKNOWN>"</span>)
+                            };
+                            html!(<li>
+                                {name}
+                                {text!(" + {}", lv)}
+                            </li>)
+                        })
+                    } </ul>);
+
+                    html!(<tr>
+                        <td>{gen_multi_lang(&piece.name)}</td>
+                        <td>{text!("{} / {}", piece.data.value, piece.data.buy_value)}</td>
+                        <td>{text!("{}", piece.data.def_val)}</td>
+                        <td>{text!("{}", piece.data.fire_reg_val)}</td>
+                        <td>{text!("{}", piece.data.water_reg_val)}</td>
+                        <td>{text!("{}", piece.data.ice_reg_val)}</td>
+                        <td>{text!("{}", piece.data.thunder_reg_val)}</td>
+                        <td>{text!("{}", piece.data.dragon_reg_val)}</td>
+                        <td>{text!("{}", slots)}</td>
+                        <td>{skills}</td>
+                    </tr>)
+                })
+            } </tbody>
+        </table>)
+    };
+
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -117,74 +187,18 @@ fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, path: &Path) -> Result<()
                 } </h1>
                 <section class="section">
                 <h2 class="title">"Stat"</h2>
-                <table>
-                    <thead><tr>
-                        <th>"Name"</th>
-                        <th>"Value (Sell / Buy)"</th>
-                        <th>"Defense"</th>
-                        <th>"Fire"</th>
-                        <th>"Water"</th>
-                        <th>"Ice"</th>
-                        <th>"Thunder"</th>
-                        <th>"Dragon"</th>
-                        <th>"Slots"</th>
-                        <th>"Skills"</th>
-                    </tr></thead>
-                    <tbody> {
-                        series.pieces.iter().map(|piece| {
-                            let piece = if let Some(piece) = piece {
-                                piece
-                            } else {
-                                return html!(<tr><td colspan="10">"-"</td></tr>)
-                            };
-
-                            let mut slot_list = vec![];
-
-                            for (i, num) in piece.data.decorations_num_list.iter().enumerate().rev() {
-                                for _ in 0..*num {
-                                    slot_list.push(i + 1);
-                                }
-                            }
-
-                            let slots = slot_list.iter()
-                                .map(|s|format!("{}", s)).collect::<Vec<String>>().join(" / ");
-
-                            let skills = html!(<ul class="mh-armor-skill-list"> {
-                                piece.data.skill_list.iter().zip(piece.data.skill_lv_list.iter())
-                                    .filter(|&(&skill, _)| skill != PlEquipSkillId::None)
-                                    .map(|(&skill, lv)| {
-                                    let name = if let Some(skill_data) = pedia_ex.skills.get(&skill) {
-                                        html!(<span><a href={format!("/skill/{}", skill_page(skill))}
-                                            class="mh-icon-text">
-                                            {gen_colored_icon(skill_data.icon_color, "/resources/skill", &[])}
-                                            {gen_multi_lang(&skill_data.name)}
-                                        </a></span>)
-                                    } else {
-                                        html!(<span>"<UNKNOWN>"</span>)
-                                    };
-                                    html!(<li>
-                                        {name}
-                                        {text!(" + {}", lv)}
-                                    </li>)
-                                })
-                            } </ul>);
-
-                            html!(<tr>
-                                <td>{gen_multi_lang(&piece.name)}</td>
-                                <td>{text!("{} / {}", piece.data.value, piece.data.buy_value)}</td>
-                                <td>{text!("{}", piece.data.def_val)}</td>
-                                <td>{text!("{}", piece.data.fire_reg_val)}</td>
-                                <td>{text!("{}", piece.data.water_reg_val)}</td>
-                                <td>{text!("{}", piece.data.ice_reg_val)}</td>
-                                <td>{text!("{}", piece.data.thunder_reg_val)}</td>
-                                <td>{text!("{}", piece.data.dragon_reg_val)}</td>
-                                <td>{text!("{}", slots)}</td>
-                                <td>{skills}</td>
-                            </tr>)
-                        })
-                    } </tbody>
-                </table>
+                { gen_stat(&series.pieces[0..5])}
                 </section>
+
+                {
+                    series.pieces[5..10].iter().any(|p|p.is_some()).then(||{
+                        html!(<section class="section">
+                            <h2 class="title">"EX Stat"</h2>
+                            { gen_stat(&series.pieces[5..10])}
+                            </section>
+                        )
+                    })
+                }
 
                 <section class="section">
                 <h2 class="title">"Crafting"</h2>
@@ -196,7 +210,7 @@ fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, path: &Path) -> Result<()
                         <th>"Output"</th>
                     </tr></thead>
                     <tbody> {
-                        series.pieces.iter().map(|piece| {
+                        series.pieces.iter().take(5).map(|piece| {
                             let (name, product) =
                                 if let Some(Armor{name, product: Some(product), ..}) = &piece {
                                 (name, product)
@@ -247,7 +261,7 @@ fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, path: &Path) -> Result<()
                         <th>"Material"</th>
                     </tr></thead>
                     <tbody> {
-                        series.pieces.iter().map(|piece| {
+                        series.pieces.iter().take(5).map(|piece| {
                             let (name, product) =
                                 if let Some(Armor{name, overwear_product: Some(product), ..}) = &piece {
                                 (name, product)
