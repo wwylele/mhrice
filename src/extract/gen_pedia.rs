@@ -433,9 +433,11 @@ fn gen_monster_hitzones(
             } else {
                 continue;
             };
-            let collider = pak
-                .find_file(&collider_path)
-                .context("Found mesh but not collider")?;
+            let collider = if let Ok(collider) = pak.find_file(&collider_path) {
+                collider
+            } else {
+                continue;
+            };
             let mesh = pak.read_file(mesh)?;
             let collider = pak.read_file(collider)?;
             monsters.push((index, sub_id, mesh, collider));
