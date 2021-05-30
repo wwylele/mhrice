@@ -359,6 +359,10 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         "data/System/ContentsIdSystem/Item/Normal/ItemData.user",
     )?;
     let items_name_msg = get_msg(pak, "data/System/ContentsIdSystem/Item/Normal/ItemName.msg")?;
+    let items_explain_msg = get_msg(
+        pak,
+        "data/System/ContentsIdSystem/Item/Normal/ItemExplain.msg",
+    )?;
     let material_category_msg = get_msg(
         pak,
         "data/System/ContentsIdSystem/Common/ItemCategoryType_Name.msg",
@@ -411,6 +415,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         alchemy_slot_worth,
         items,
         items_name_msg,
+        items_explain_msg,
         material_category_msg,
     })
 }
@@ -1104,6 +1109,12 @@ fn prepare_items<'a>(pedia: &'a Pedia) -> Result<BTreeMap<ItemId, Item<'a>>> {
         .iter()
         .map(|entry| (entry.name.clone(), entry.clone()))
         .collect();
+    let mut explain_map: HashMap<_, _> = pedia
+        .items_explain_msg
+        .entries
+        .iter()
+        .map(|entry| (entry.name.clone(), entry.clone()))
+        .collect();
     for param in &pedia.items.param {
         if let Some(existing) = result.get_mut(&param.id) {
             eprintln!("Duplicate definition for item {:?}", param.id);
@@ -1111,16 +1122,24 @@ fn prepare_items<'a>(pedia: &'a Pedia) -> Result<BTreeMap<ItemId, Item<'a>>> {
             continue;
         }
 
-        let name_tag = match param.id {
-            ItemId::Normal(id) => format!("I_{:04}_Name", id & 0xFFFF),
+        let (name_tag, explain_tag) = match param.id {
+            ItemId::Normal(id) => (
+                format!("I_{:04}_Name", id & 0xFFFF),
+                format!("I_{:04}_Explain", id & 0xFFFF),
+            ),
             _ => bail!("Unexpected item type"),
         };
 
         let name = name_map
             .remove(&name_tag)
             .with_context(|| format!("Name not found for item {:?}", param.id))?;
+
+        let explain = explain_map
+            .remove(&explain_tag)
+            .with_context(|| format!("Explain not found for item {:?}", param.id))?;
         let item = Item {
             name,
+            explain,
             param,
             multiple_def: false,
         };

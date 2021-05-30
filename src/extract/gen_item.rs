@@ -74,6 +74,10 @@ pub fn gen_item(item: &Item, pedia_ex: &PediaEx<'_>, path: &Path) -> Result<()> 
                     {gen_multi_lang(&item.name)}
                 </h1>
 
+                <section class="section"><p>
+                    {gen_multi_lang(&item.explain)}
+                </p></section>
+
                 <section class="section">
                 <h2 class="title">"Basic data"</h2>
                 <div class="mh-kvlist">

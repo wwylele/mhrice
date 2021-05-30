@@ -83,6 +83,7 @@ pub struct Pedia {
 
     pub items: ItemUserData,
     pub items_name_msg: Msg,
+    pub items_explain_msg: Msg,
     pub material_category_msg: Msg,
 }
 
@@ -124,6 +125,7 @@ pub struct MeatKey {
 
 pub struct Item<'a> {
     pub name: MsgEntry,
+    pub explain: MsgEntry,
     pub param: &'a ItemUserDataParam,
     pub multiple_def: bool,
 }
