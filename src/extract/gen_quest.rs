@@ -274,7 +274,7 @@ fn gen_monster_tag(quest: &Quest, pedia: &Pedia, em_type: EmTypes) -> Box<td<Str
 
     let icon_path = format!("/resources/em{0:03}_{1:02}_icon.png", id & 0xFF, id >> 8);
 
-    let target_tag = if quest.param.tgt_em_type.contains(&em_type) {
+    let target_tag = if quest.param.has_target(em_type) {
         html!(<span class="tag is-primary">"Target"</span>)
     } else {
         html!(<span />)

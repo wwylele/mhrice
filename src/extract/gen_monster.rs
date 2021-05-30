@@ -794,7 +794,7 @@ pub fn gen_monster(
                     )
                     .map(move |(i, em_type)|{
 
-                        let target_tag = if quest.param.tgt_em_type.contains(&em_type) {
+                        let target_tag = if quest.param.has_target(em_type) {
                             html!(<span class="tag is-primary">"Target"</span>)
                         } else {
                             html!(<span />)

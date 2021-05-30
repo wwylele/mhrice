@@ -71,7 +71,7 @@ rsz_enum! {
 
 rsz_enum! {
     #[rsz(u8)]
-    #[derive(Debug, Serialize, Clone, Copy)]
+    #[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq)]
     pub enum QuestTargetType {
         None = 0,
         ItemGet = 1,
@@ -224,6 +224,13 @@ rsz_struct! {
         pub auto_match_hr: u16,
         pub battle_bgm_type: BattleBgmType,
         pub clear_bgm_type: ClearBgmType,
+    }
+}
+
+impl NormalQuestDataParam {
+    pub fn has_target(&self, em_type: EmTypes) -> bool {
+        self.tgt_em_type.contains(&em_type)
+            || self.target_type.contains(&QuestTargetType::AllMainEnemy)
     }
 }
 
