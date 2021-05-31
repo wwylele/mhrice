@@ -195,12 +195,55 @@ fn get_msg(pak: &mut PakReader<impl Read + Seek>, path: &str) -> Result<Msg> {
     Msg::new(Cursor::new(pak.read_file(index)?))
 }
 
-fn get_user<T: 'static>(pak: &mut PakReader<impl Read + Seek>, path: &'static str) -> Result<T> {
+fn get_user<T: 'static>(pak: &mut PakReader<impl Read + Seek>, path: &str) -> Result<T> {
     let index = pak.find_file(path)?;
     User::new(Cursor::new(pak.read_file(index)?))?
         .rsz
         .deserialize_single()
-        .context(path)
+        .with_context(|| path.to_string())
+}
+
+fn get_weapon_list<BaseData: 'static>(
+    pak: &mut PakReader<impl Read + Seek>,
+    weapon_class: &str,
+) -> Result<WeaponList<BaseData>> {
+    Ok(WeaponList {
+        base_data: get_user(
+            pak,
+            &format!(
+                "data/Define/Player/Weapon/{0}/{0}BaseData.user",
+                weapon_class
+            ),
+        )?,
+        product: get_user(
+            pak,
+            &format!(
+                "data/Define/Player/Weapon/{0}/{0}ProductData.user",
+                weapon_class
+            ),
+        )?,
+        change: get_user(
+            pak,
+            &format!(
+                "data/Define/Player/Weapon/{0}/{0}ChangeData.user",
+                weapon_class
+            ),
+        )?,
+        process: get_user(
+            pak,
+            &format!(
+                "data/Define/Player/Weapon/{0}/{0}ProcessData.user",
+                weapon_class
+            ),
+        )?,
+        tree: get_user(
+            pak,
+            &format!(
+                "data/Define/Player/Weapon/{0}/{0}UpdateTreeData.user",
+                weapon_class
+            ),
+        )?,
+    })
 }
 
 pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
@@ -368,6 +411,21 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         "data/System/ContentsIdSystem/Common/ItemCategoryType_Name.msg",
     )?;
 
+    let great_sword = get_weapon_list(pak, "GreatSword")?;
+    let short_sword = get_weapon_list(pak, "ShortSword")?;
+    let hammer = get_weapon_list(pak, "Hammer")?;
+    let lance = get_weapon_list(pak, "Lance")?;
+    let long_sword = get_weapon_list(pak, "LongSword")?;
+    let slash_axe = get_weapon_list(pak, "SlashAxe")?;
+    let gun_lance = get_weapon_list(pak, "GunLance")?;
+    let dual_blades = get_weapon_list(pak, "DualBlades")?;
+    let horn = get_weapon_list(pak, "Horn")?;
+    let insect_glaive = get_weapon_list(pak, "InsectGlaive")?;
+    let charge_axe = get_weapon_list(pak, "ChargeAxe")?;
+    let light_bowgun = get_weapon_list(pak, "LightBowgun")?;
+    let heavy_bowgun = get_weapon_list(pak, "HeavyBowgun")?;
+    let bow = get_weapon_list(pak, "Bow")?;
+
     Ok(Pedia {
         monsters,
         small_monsters,
@@ -417,6 +475,20 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         items_name_msg,
         items_explain_msg,
         material_category_msg,
+        great_sword,
+        short_sword,
+        hammer,
+        lance,
+        long_sword,
+        slash_axe,
+        gun_lance,
+        dual_blades,
+        horn,
+        insect_glaive,
+        charge_axe,
+        light_bowgun,
+        heavy_bowgun,
+        bow,
     })
 }
 

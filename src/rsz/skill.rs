@@ -1,5 +1,6 @@
 use super::*;
 use crate::rsz_enum;
+use crate::rsz_newtype;
 use crate::rsz_struct;
 use serde::*;
 
@@ -150,6 +151,13 @@ rsz_enum! {
     }
 }
 
+rsz_newtype! {
+    #[rsz_offset(1)]
+    #[derive(Debug, Serialize)]
+    #[serde(transparent)]
+    pub struct GunLanceFireLv(pub i32);
+}
+
 rsz_enum! {
     #[rsz(u32)]
     #[derive(Debug, Serialize)]
@@ -220,11 +228,34 @@ rsz_enum! {
     }
 }
 
+rsz_enum! {
+    #[rsz(u32)]
+    #[derive(Debug, Serialize)]
+    pub enum PlHyakuryuSkillId {
+        None = 0,
+        Skill(u32) = 1..=10000,
+    }
+}
+
+rsz_newtype! {
+    #[rsz_offset(1)]
+    #[derive(Debug, Serialize)]
+    #[serde(transparent)]
+    pub struct BowChageStartLvTypes(pub i32);
+}
+
+rsz_newtype! {
+    #[rsz_offset(1)]
+    #[derive(Debug, Serialize)]
+    #[serde(transparent)]
+    pub struct InsectLevelTypes(pub i32);
+}
+
 rsz_struct! {
     #[rsz("snow.data.PlHyakuryuSkillBaseUserData.Param")]
     #[derive(Debug, Serialize)]
     pub struct PlHyakuryuSkillBaseUserDataParam {
-        pub id: u32, // snow.data.DataDef.PlHyakuryuSkillId, 1 = ID_0
+        pub id: PlHyakuryuSkillId,
         pub item_color: i32,
         pub apply_rule: ApplyRules,
         pub add_atk: i8,
@@ -250,14 +281,14 @@ rsz_struct! {
         pub overwrite_sharpness_val_list: Vec<i32>,
         pub overwrite_takumi_val_list: Vec<i32>,
         pub overwrite_gl_fire_type: GunLanceFireType,
-        pub overwrite_gl_fire_lv: i32, // 0 = Lv1
+        pub overwrite_gl_fire_lv: GunLanceFireLv,
         pub overwrite_concert_id_list: Vec<i32>, // snow.data.DataDef.HornConcertId
         pub overwrite_caxe_bottle_type: ChargeAxeBottleTypes,
         pub overwrite_saxe_bottle_type: SlashAxeBottleTypes,
-        pub overwrite_insect_lv: i32, // 0 = Lv1
+        pub overwrite_insect_lv: InsectLevelTypes,
         pub overwrite_hb_unique_bullet: UniqueBulletType,
         pub overwrite_charge_type_list: Vec<BowChargeTypes>,
-        pub overwrite_charge_start_lv: i32, // 0 = Lv1
+        pub overwrite_charge_start_lv: BowChageStartLvTypes,
         pub overwrite_curve_types: i32,
         pub overwrite_bottle_equip_flag: BowBottleTypes,
     }

@@ -178,7 +178,8 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.quest.NormalQuestData.Param",
-        0x54BDF6C5 = 0,
+        0xF9F8C5C8 = 0,
+        0x54BDF6C5 = 4,
         0x814CED42 = 5,
     )]
     #[derive(Debug, Serialize)]
@@ -452,7 +453,7 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct DiscoverEmSetDataParam {
         pub em_type: EmTypes,
-        pub cond_village: i32, // snow.progress.VillageProgress, 1 = Village progress 0
+        pub cond_village: VillageProgress,
         pub cond_low: i32,
         pub cond_high: i32,
         pub map_flag: [bool; 5],

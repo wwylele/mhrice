@@ -15,6 +15,7 @@ mod monster_list;
 mod parts_break_data;
 mod quest_data;
 mod skill;
+mod weapon;
 
 pub use alchemy::*;
 pub use anger_data::*;
@@ -33,6 +34,7 @@ pub use monster_list::*;
 pub use parts_break_data::*;
 pub use quest_data::*;
 pub use skill::*;
+pub use weapon::*;
 
 use crate::file_ext::*;
 use crate::hash::*;
@@ -794,6 +796,45 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerPackage>> = Lazy::new(|| {
         PartsTypeTextUserDataTextInfo,
         PartsTypeInfo,
         PartsTypeTextUserData,
+    );
+
+    r!(
+        GreatSwordBaseUserDataParam,
+        GreatSwordBaseUserData,
+        ShortSwordBaseUserDataParam,
+        ShortSwordBaseUserData,
+        HammerBaseUserDataParam,
+        HammerBaseUserData,
+        LanceBaseUserDataParam,
+        LanceBaseUserData,
+        LongSwordBaseUserDataParam,
+        LongSwordBaseUserData,
+        SlashAxeBaseUserDataParam,
+        SlashAxeBaseUserData,
+        GunLanceBaseUserDataParam,
+        GunLanceBaseUserData,
+        DualBladesBaseUserDataParam,
+        DualBladesBaseUserData,
+        HornBaseUserDataParam,
+        HornBaseUserData,
+        InsectGlaiveBaseUserDataParam,
+        InsectGlaiveBaseUserData,
+        ChargeAxeBaseUserDataParam,
+        ChargeAxeBaseUserData,
+        LightBowgunBaseUserDataParam,
+        LightBowgunBaseUserData,
+        HeavyBowgunBaseUserDataParam,
+        HeavyBowgunBaseUserData,
+        BowBaseUserDataParam,
+        BowBaseUserData,
+        WeaponProcessUserDataParam,
+        WeaponProcessUserData,
+        WeaponProductUserDataParam,
+        WeaponProductUserData,
+        WeaponChangeUserDataParam,
+        WeaponChangeUserData,
+        WeaponUpdateTreeUserDataParam,
+        WeaponUpdateTreeUserData,
     );
 
     m

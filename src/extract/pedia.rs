@@ -29,6 +29,15 @@ pub struct Monster {
 }
 
 #[derive(Debug, Serialize)]
+pub struct WeaponList<BaseData> {
+    pub base_data: BaseData,
+    pub product: WeaponProductUserData,
+    pub change: WeaponChangeUserData,
+    pub process: WeaponProcessUserData,
+    pub tree: WeaponUpdateTreeUserData,
+}
+
+#[derive(Debug, Serialize)]
 pub struct Pedia {
     pub monsters: Vec<Monster>,
     pub small_monsters: Vec<Monster>,
@@ -85,6 +94,21 @@ pub struct Pedia {
     pub items_name_msg: Msg,
     pub items_explain_msg: Msg,
     pub material_category_msg: Msg,
+
+    pub great_sword: WeaponList<GreatSwordBaseUserData>,
+    pub short_sword: WeaponList<ShortSwordBaseUserData>,
+    pub hammer: WeaponList<HammerBaseUserData>,
+    pub lance: WeaponList<LanceBaseUserData>,
+    pub long_sword: WeaponList<LongSwordBaseUserData>,
+    pub slash_axe: WeaponList<SlashAxeBaseUserData>,
+    pub gun_lance: WeaponList<GunLanceBaseUserData>,
+    pub dual_blades: WeaponList<DualBladesBaseUserData>,
+    pub horn: WeaponList<HornBaseUserData>,
+    pub insect_glaive: WeaponList<InsectGlaiveBaseUserData>,
+    pub charge_axe: WeaponList<ChargeAxeBaseUserData>,
+    pub light_bowgun: WeaponList<LightBowgunBaseUserData>,
+    pub heavy_bowgun: WeaponList<HeavyBowgunBaseUserData>,
+    pub bow: WeaponList<BowBaseUserData>,
 }
 
 pub struct Quest<'a> {
