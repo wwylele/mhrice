@@ -156,6 +156,22 @@ pub struct Item<'a> {
     pub multiple_def: bool,
 }
 
+pub struct Weapon<'a, Param> {
+    pub param: &'a Param,
+    pub product: Option<&'a WeaponProductUserDataParam>,
+    pub change: Option<&'a WeaponChangeUserDataParam>,
+    pub process: Option<&'a WeaponProcessUserDataParam>,
+    pub name: &'a MsgEntry,
+    pub explain: &'a MsgEntry,
+    pub children: Vec<WeaponId>,
+}
+
+pub struct WeaponTree<'a, Param> {
+    pub weapons: HashMap<WeaponId, Weapon<'a, Param>>,
+    pub roots: Vec<WeaponId>,
+    pub unpositioned: Vec<WeaponId>,
+}
+
 pub struct PediaEx<'a> {
     pub sizes: HashMap<EmTypes, &'a SizeInfo>,
     pub size_dists: HashMap<i32, &'a [ScaleAndRateData]>,
@@ -168,4 +184,19 @@ pub struct PediaEx<'a> {
     pub material_categories: HashMap<MaterialCategory, &'a MsgEntry>,
     pub monster_lot: HashMap<(EmTypes, QuestRank), &'a MonsterLotTableUserDataParam>,
     pub parts_dictionary: HashMap<(EmTypes, BrokenPartsTypes), &'a MsgEntry>,
+
+    pub great_sword: WeaponTree<'a, GreatSwordBaseUserDataParam>,
+    pub short_sword: WeaponTree<'a, ShortSwordBaseUserDataParam>,
+    pub hammer: WeaponTree<'a, HammerBaseUserDataParam>,
+    pub lance: WeaponTree<'a, LanceBaseUserDataParam>,
+    pub long_sword: WeaponTree<'a, LongSwordBaseUserDataParam>,
+    pub slash_axe: WeaponTree<'a, SlashAxeBaseUserDataParam>,
+    pub gun_lance: WeaponTree<'a, GunLanceBaseUserDataParam>,
+    pub dual_blades: WeaponTree<'a, DualBladesBaseUserDataParam>,
+    pub horn: WeaponTree<'a, HornBaseUserDataParam>,
+    pub insect_glaive: WeaponTree<'a, InsectGlaiveBaseUserDataParam>,
+    pub charge_axe: WeaponTree<'a, ChargeAxeBaseUserDataParam>,
+    pub light_bowgun: WeaponTree<'a, LightBowgunBaseUserDataParam>,
+    pub heavy_bowgun: WeaponTree<'a, HeavyBowgunBaseUserDataParam>,
+    pub bow: WeaponTree<'a, BowBaseUserDataParam>,
 }

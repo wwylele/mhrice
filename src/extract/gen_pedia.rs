@@ -19,6 +19,7 @@ use std::collections::{HashMap, HashSet};
 use std::convert::{TryFrom, TryInto};
 use std::fs::*;
 use std::io::{Cursor, Read, Seek, Write};
+use std::ops::Deref;
 use std::path::*;
 
 fn exactly_one<T>(mut iterator: impl Iterator<Item = T>) -> Result<T> {
@@ -855,6 +856,9 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
 fn prepare_discoveries(pedia: &Pedia) -> Result<HashMap<EmTypes, &DiscoverEmSetDataParam>> {
     let mut result = HashMap::new();
     for discovery in &pedia.discover_em_set_data.param {
+        if discovery.em_type == EmTypes::Em(0) {
+            continue;
+        }
         ensure!(discovery.param.route_no.len() == 5);
         ensure!(discovery.param.init_set_name.len() == 5);
         ensure!(discovery.param.sub_type.len() == 3);
@@ -879,26 +883,12 @@ fn prepare_discoveries(pedia: &Pedia) -> Result<HashMap<EmTypes, &DiscoverEmSetD
 fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> {
     let mut result = BTreeMap::new();
 
-    let mut name_msg: HashMap<&String, &MsgEntry> = pedia
-        .player_skill_name_msg
-        .entries
-        .iter()
-        .map(|entry| (&entry.name, entry))
-        .collect();
+    let mut name_msg: HashMap<&String, &MsgEntry> = pedia.player_skill_name_msg.get_name_map();
 
-    let mut explain_msg: HashMap<&String, &MsgEntry> = pedia
-        .player_skill_explain_msg
-        .entries
-        .iter()
-        .map(|entry| (&entry.name, entry))
-        .collect();
+    let mut explain_msg: HashMap<&String, &MsgEntry> =
+        pedia.player_skill_explain_msg.get_name_map();
 
-    let mut detail_msg: HashMap<&String, &MsgEntry> = pedia
-        .player_skill_detail_msg
-        .entries
-        .iter()
-        .map(|entry| (&entry.name, entry))
-        .collect();
+    let mut detail_msg: HashMap<&String, &MsgEntry> = pedia.player_skill_detail_msg.get_name_map();
 
     for skill in &pedia.equip_skill.param {
         let id = match skill.id {
@@ -947,50 +937,6 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
         }
     }
 
-    /*let mut armor_head_name_msg: HashMap<String, MsgEntry> = pedia
-        .armor_head_name_msg
-        .entries
-        .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
-        .collect();
-
-    let mut armor_chest_name_msg: HashMap<String, MsgEntry> = pedia
-        .armor_chest_name_msg
-        .entries
-        .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
-        .collect();
-
-    let mut armor_arm_name_msg: HashMap<String, MsgEntry> = pedia
-        .armor_arm_name_msg
-        .entries
-        .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
-        .collect();
-
-    let mut armor_waist_name_msg: HashMap<String, MsgEntry> = pedia
-        .armor_waist_name_msg
-        .entries
-        .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
-        .collect();
-
-    let mut armor_leg_name_msg: HashMap<String, MsgEntry> = pedia
-        .armor_leg_name_msg
-        .entries
-        .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
-        .collect();
-
-
-    let mut armor_series_name_msg: HashMap<String, MsgEntry> = pedia
-        .armor_series_name_msg
-        .entries
-        .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
-        .collect();
-    */
-
     let mut series_map: BTreeMap<PlArmorSeriesTypes, ArmorSeries> = BTreeMap::new();
 
     for armor_series in &pedia.armor_series.param {
@@ -1000,15 +946,10 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
                 armor_series.armor_series
             );
         }
-        let name = /*
-        armor_series_name_msg.remove(&format!(
-            "ArmorSeries_Hunter_{:03}",
-            armor_series.armor_series
-        ));
-        */
-            pedia
+        let name = pedia
             .armor_series_name_msg
-            .entries.get(armor_series.armor_series.0 as usize); // ?!
+            .entries
+            .get(armor_series.armor_series.0 as usize); // ?!
         let series = ArmorSeries {
             name,
             series: armor_series,
@@ -1021,16 +962,6 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
         if !armor.is_valid {
             continue;
         }
-
-        /*
-        let name = msg
-            .remove(&format!(
-                "A_{}_{:03}_Name",
-                type_name,
-                armor.pl_armor_id & 0xFF
-            ))
-            .with_context(|| format!("Duplicate armor {}", armor.pl_armor_id))?;
-        */
 
         let (mut slot, msg, id) = match armor.pl_armor_id {
             PlArmorId::Head(id) => (0, &pedia.armor_head_name_msg, id),
@@ -1141,12 +1072,7 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
 }
 
 fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, &MsgEntry>> {
-    let msg_map: HashMap<_, _> = pedia
-        .hunter_note_msg
-        .entries
-        .iter()
-        .map(|entry| (&entry.name, entry))
-        .collect();
+    let msg_map: HashMap<_, _> = pedia.hunter_note_msg.get_name_map();
 
     let mut result = HashMap::new();
 
@@ -1185,18 +1111,8 @@ fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, &MsgEntry>> {
 
 fn prepare_items<'a>(pedia: &'a Pedia) -> Result<BTreeMap<ItemId, Item<'a>>> {
     let mut result: BTreeMap<ItemId, Item<'a>> = BTreeMap::new();
-    let mut name_map: HashMap<_, _> = pedia
-        .items_name_msg
-        .entries
-        .iter()
-        .map(|entry| (&entry.name, entry))
-        .collect();
-    let mut explain_map: HashMap<_, _> = pedia
-        .items_explain_msg
-        .entries
-        .iter()
-        .map(|entry| (&entry.name, entry))
-        .collect();
+    let mut name_map: HashMap<_, _> = pedia.items_name_msg.get_name_map();
+    let mut explain_map: HashMap<_, _> = pedia.items_explain_msg.get_name_map();
     for param in &pedia.items.param {
         if let Some(existing) = result.get_mut(&param.id) {
             eprintln!("Duplicate definition for item {:?}", param.id);
@@ -1262,6 +1178,173 @@ fn prepare_material_categories(pedia: &Pedia) -> HashMap<MaterialCategory, &MsgE
         .collect()
 }
 
+fn prepare_weapon<T, Param>(weapon_list: &WeaponList<T>) -> Result<WeaponTree<'_, Param>>
+where
+    T: Deref<Target = [Param]>,
+    Param: ToBase<WeaponBaseData>,
+{
+    let mut product_map = HashMap::new();
+    for product in &weapon_list.product.param {
+        if product.base.id == WeaponId::None || product.base.id == WeaponId::Null {
+            continue;
+        }
+        if product_map.insert(product.base.id, product).is_some() {
+            bail!("Multiple product for weapon {:?}", product.base.id);
+        }
+    }
+
+    let mut change_map = HashMap::new();
+    for change in &weapon_list.change.param {
+        if change.base.id == WeaponId::None || change.base.id == WeaponId::Null {
+            continue;
+        }
+        if change_map.insert(change.base.id, change).is_some() {
+            bail!("Multiple change for weapon {:?}", change.base.id);
+        }
+    }
+
+    let mut process_map = HashMap::new();
+    for process in &weapon_list.process.param {
+        if process.base.id == WeaponId::None || process.base.id == WeaponId::Null {
+            continue;
+        }
+        if process_map.insert(process.base.id, process).is_some() {
+            bail!("Multiple process for weapon {:?}", process.base.id);
+        }
+    }
+
+    let mut name_map = weapon_list.name.get_name_map();
+    let mut explain_map = weapon_list.explain.get_name_map();
+
+    let mut weapons = HashMap::new();
+    for param in &*weapon_list.base_data {
+        let id = param.to_base().id;
+        if id == WeaponId::None || id == WeaponId::Null {
+            continue;
+        }
+        if weapons.contains_key(&id) {
+            bail!("Multiple definition for weapon {:?}", param.to_base().id)
+        }
+        let tag = id.to_tag();
+        let name = name_map.remove(&format!("W_{}_Name", tag)).unwrap();
+        let explain = explain_map.remove(&format!("W_{}_Explain", tag)).unwrap();
+
+        let weapon = Weapon {
+            param,
+            product: product_map.remove(&id),
+            change: change_map.remove(&id),
+            process: process_map.remove(&id),
+            name,
+            explain,
+            children: vec![],
+        };
+        weapons.insert(param.to_base().id, weapon);
+    }
+
+    if !product_map.is_empty() {
+        bail!("Left over product data: {:?}", product_map)
+    }
+
+    if !process_map.is_empty() {
+        bail!("Left over process data: {:?}", process_map)
+    }
+
+    if !change_map.is_empty() {
+        bail!("Left over change data: {:?}", change_map)
+    }
+
+    let mut tree_map = HashMap::new();
+    let mut tree_id_set = HashSet::new();
+    for node in &weapon_list.tree.param {
+        if node.weapon_id == WeaponId::None || node.weapon_id == WeaponId::Null {
+            continue;
+        }
+        if tree_id_set.contains(&node.weapon_id) {
+            bail!("Multiple tree node for weapon {:?}", node.weapon_id)
+        }
+        if !weapons.contains_key(&node.weapon_id) {
+            bail!("Unknown weapon in tree node {:?}", node.weapon_id);
+        }
+        tree_id_set.insert(node.weapon_id);
+        if tree_map
+            .insert((node.tree_type, node.index), node)
+            .is_some()
+        {
+            bail!(
+                "Multiple weapon at position {:?}",
+                (node.tree_type, node.index)
+            )
+        }
+    }
+
+    let mut unpositioned = vec![];
+
+    for weapon in weapons.keys() {
+        if !tree_id_set.contains(weapon) {
+            unpositioned.push(*weapon);
+        }
+    }
+
+    let mut roots = vec![];
+
+    for node in &weapon_list.tree.param {
+        if node.prev_weapon_type == TreeType::None {
+            roots.push(node.weapon_id);
+        } else {
+            let prev = tree_map
+                .get(&(node.prev_weapon_type, node.prev_weapon_index))
+                .with_context(|| format!("Unknown previous position for {:?}", node))?;
+            if !prev
+                .next_weapon_type_list
+                .iter()
+                .cloned()
+                .zip(prev.next_weapon_index_list.iter().cloned())
+                .any(|ti| ti == (node.tree_type, node.index))
+            {
+                bail!("Previous node doesn't contain next for {:?}", node)
+            }
+        }
+        let mut children: Vec<_> = node
+            .next_weapon_type_list
+            .iter()
+            .cloned()
+            .zip(node.next_weapon_index_list.iter().cloned())
+            .filter(|&(t, _)| t != TreeType::None)
+            .collect();
+        children.sort_by_key(|&(t, i)| {
+            if t == node.tree_type {
+                (TreeType::None, -1)
+            } else {
+                (t, i)
+            }
+        });
+        for (t, i) in children {
+            let next = if let Some(next) = tree_map.get(&(t, i)) {
+                next
+            } else {
+                eprintln!("Unknown children at {:?}, {}", t, i);
+                continue;
+            };
+            if next.prev_weapon_type != node.tree_type || next.prev_weapon_index != node.index {
+                bail!("Mismatch prev type/index")
+            }
+            weapons
+                .get_mut(&node.weapon_id)
+                .unwrap()
+                .children
+                .push(next.weapon_id);
+        }
+    }
+
+    let result = WeaponTree {
+        weapons,
+        unpositioned,
+        roots,
+    };
+
+    Ok(result)
+}
+
 fn prepare_monster_lot(
     pedia: &Pedia,
 ) -> Result<HashMap<(EmTypes, QuestRank), &MonsterLotTableUserDataParam>> {
@@ -1287,12 +1370,7 @@ fn prepare_monster_lot(
 fn prepare_parts_dictionary(
     pedia: &Pedia,
 ) -> Result<HashMap<(EmTypes, BrokenPartsTypes), &MsgEntry>> {
-    let msgs: HashMap<_, _> = pedia
-        .hunter_note_msg
-        .entries
-        .iter()
-        .map(|entry| (entry.guid, entry))
-        .collect();
+    let msgs: HashMap<_, _> = pedia.hunter_note_msg.get_guid_map();
 
     let mut result = HashMap::new();
 
@@ -1331,5 +1409,20 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         material_categories: prepare_material_categories(pedia),
         monster_lot: prepare_monster_lot(pedia)?,
         parts_dictionary: prepare_parts_dictionary(pedia)?,
+
+        great_sword: prepare_weapon(&pedia.great_sword)?,
+        short_sword: prepare_weapon(&pedia.short_sword)?,
+        hammer: prepare_weapon(&pedia.hammer)?,
+        lance: prepare_weapon(&pedia.lance)?,
+        long_sword: prepare_weapon(&pedia.long_sword)?,
+        slash_axe: prepare_weapon(&pedia.slash_axe)?,
+        gun_lance: prepare_weapon(&pedia.gun_lance)?,
+        dual_blades: prepare_weapon(&pedia.dual_blades)?,
+        horn: prepare_weapon(&pedia.horn)?,
+        insect_glaive: prepare_weapon(&pedia.insect_glaive)?,
+        charge_axe: prepare_weapon(&pedia.charge_axe)?,
+        light_bowgun: prepare_weapon(&pedia.light_bowgun)?,
+        heavy_bowgun: prepare_weapon(&pedia.heavy_bowgun)?,
+        bow: prepare_weapon(&pedia.bow)?,
     })
 }

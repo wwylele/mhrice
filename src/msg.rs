@@ -3,6 +3,7 @@ use crate::hash::hash_as_utf16;
 use crate::rsz::Guid;
 use anyhow::*;
 use serde::*;
+use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::io::{Read, Seek};
 
@@ -166,5 +167,19 @@ impl Msg {
 
     pub fn get_entry(&self, name: &str) -> Option<&MsgEntry> {
         self.entries.iter().find(|entry| entry.name == name)
+    }
+
+    pub fn get_name_map(&self) -> HashMap<&String, &MsgEntry> {
+        self.entries
+            .iter()
+            .map(|entry| (&entry.name, entry))
+            .collect()
+    }
+
+    pub fn get_guid_map(&self) -> HashMap<Guid, &MsgEntry> {
+        self.entries
+            .iter()
+            .map(|entry| (entry.guid, entry))
+            .collect()
     }
 }

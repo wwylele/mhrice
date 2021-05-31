@@ -2,13 +2,51 @@ use super::*;
 use crate::rsz_enum;
 use crate::rsz_struct;
 use serde::*;
+use std::ops::Deref;
 
 macro_rules! impl_base {
     ($name:ty, $base:ty) => {
-        impl std::ops::Deref for $name {
+        impl Deref for $name {
             type Target = $base;
             fn deref(&self) -> &Self::Target {
                 &self.base
+            }
+        }
+    };
+}
+
+pub trait ToBase<Base> {
+    fn to_base(&self) -> &Base;
+}
+
+macro_rules! impl_tobase_inner {
+    ($name:ty $(, $from:ty, $to:ty)*) => {
+        $(impl ToBase<$to> for $name {
+            fn to_base(&self) -> &$to {
+                &ToBase::<$from>::to_base(self).base
+            }
+        })*
+    };
+}
+
+macro_rules! impl_tobase {
+    ($name:ty, $($base:ty),* ; $last:ty) => {
+        impl ToBase<$name> for $name {
+            fn to_base(&self) -> &$name {
+                self
+            }
+        }
+
+        impl_tobase_inner!($name, $name $(, $base, $base)*, $last);
+    };
+}
+
+macro_rules! params {
+    ($outer:ty, $inner:ty) => {
+        impl Deref for $outer {
+            type Target = [$inner];
+            fn deref(&self) -> &Self::Target {
+                &self.param
             }
         }
     };
@@ -33,8 +71,9 @@ rsz_enum! {
 
 rsz_enum! {
     #[rsz(u32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, PartialEq, Eq, Clone, Copy, Hash)]
     pub enum WeaponId {
+        Null = 0, // Not in TDB but seen in data
         None = 0x08000000,
         GreatSword(u32) = 0x08100000..=0x0810FFFF,
         ShortSword(u32) = 0x08200000..=0x0820FFFF,
@@ -51,6 +90,30 @@ rsz_enum! {
         HeavyBowgun(u32) = 0x08D00000..=0x08D0FFFF,
         Bow(u32) = 0x08E00000..=0x08E0FFFF,
         Insect(u32) = 0x08F00000..=0x08F0FFFF,
+    }
+}
+
+impl WeaponId {
+    pub fn to_tag(self) -> String {
+        match self {
+            WeaponId::Null => "Null".to_string(),
+            WeaponId::None => "None".to_string(),
+            WeaponId::GreatSword(i) => format!("GreatSword_{:03}", i),
+            WeaponId::ShortSword(i) => format!("ShortSword_{:03}", i),
+            WeaponId::Hammer(i) => format!("Hammer_{:03}", i),
+            WeaponId::Lance(i) => format!("Lance_{:03}", i),
+            WeaponId::LongSword(i) => format!("LongSword_{:03}", i),
+            WeaponId::SlashAxe(i) => format!("SlashAxe_{:03}", i),
+            WeaponId::GunLance(i) => format!("GunLance_{:03}", i),
+            WeaponId::DualBlades(i) => format!("DualBlades_{:03}", i),
+            WeaponId::Horn(i) => format!("Horn_{:03}", i),
+            WeaponId::InsectGlaive(i) => format!("InsectGlaive_{:03}", i),
+            WeaponId::ChargeAxe(i) => format!("ChargeAxe_{:03}", i),
+            WeaponId::LightBowgun(i) => format!("LightBowgun_{:03}", i),
+            WeaponId::HeavyBowgun(i) => format!("HeavyBowgun_{:03}", i),
+            WeaponId::Bow(i) => format!("Bow_{:03}", i),
+            WeaponId::Insect(i) => format!("Insect_{:03}", i),
+        }
     }
 }
 
@@ -106,6 +169,20 @@ rsz_struct! {
 
 impl_base!(CloseRangeWeaponBaseData, ElementWeaponBaseData);
 
+macro_rules! melee {
+    ($name: ty) => {
+        impl_tobase!(
+            $name,
+            CloseRangeWeaponBaseData,
+            ElementWeaponBaseData,
+            MainWeaponBaseData;
+            WeaponBaseData
+        );
+
+        impl_base!($name, CloseRangeWeaponBaseData);
+    }
+}
+
 rsz_struct! {
     #[rsz("snow.equip.GreatSwordBaseUserData.Param")]
     #[derive(Debug, Serialize)]
@@ -114,7 +191,7 @@ rsz_struct! {
     }
 }
 
-impl_base!(GreatSwordBaseUserDataParam, CloseRangeWeaponBaseData);
+melee!(GreatSwordBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.GreatSwordBaseUserData")]
@@ -124,6 +201,8 @@ rsz_struct! {
     }
 }
 
+params!(GreatSwordBaseUserData, GreatSwordBaseUserDataParam);
+
 rsz_struct! {
     #[rsz("snow.equip.ShortSwordBaseUserData.Param")]
     #[derive(Debug, Serialize)]
@@ -132,7 +211,7 @@ rsz_struct! {
     }
 }
 
-impl_base!(ShortSwordBaseUserDataParam, CloseRangeWeaponBaseData);
+melee!(ShortSwordBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.ShortSwordBaseUserData")]
@@ -142,6 +221,8 @@ rsz_struct! {
     }
 }
 
+params!(ShortSwordBaseUserData, ShortSwordBaseUserDataParam);
+
 rsz_struct! {
     #[rsz("snow.equip.HammerBaseUserData.Param")]
     #[derive(Debug, Serialize)]
@@ -150,7 +231,7 @@ rsz_struct! {
     }
 }
 
-impl_base!(HammerBaseUserDataParam, CloseRangeWeaponBaseData);
+melee!(HammerBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.HammerBaseUserData")]
@@ -160,6 +241,8 @@ rsz_struct! {
     }
 }
 
+params!(HammerBaseUserData, HammerBaseUserDataParam);
+
 rsz_struct! {
     #[rsz("snow.equip.LanceBaseUserData.Param")]
     #[derive(Debug, Serialize)]
@@ -168,7 +251,7 @@ rsz_struct! {
     }
 }
 
-impl_base!(LanceBaseUserDataParam, CloseRangeWeaponBaseData);
+melee!(LanceBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.LanceBaseUserData")]
@@ -178,6 +261,8 @@ rsz_struct! {
     }
 }
 
+params!(LanceBaseUserData, LanceBaseUserDataParam);
+
 rsz_struct! {
     #[rsz("snow.equip.LongSwordBaseUserData.Param")]
     #[derive(Debug, Serialize)]
@@ -186,7 +271,7 @@ rsz_struct! {
     }
 }
 
-impl_base!(LongSwordBaseUserDataParam, CloseRangeWeaponBaseData);
+melee!(LongSwordBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.LongSwordBaseUserData")]
@@ -195,6 +280,8 @@ rsz_struct! {
         pub param: Vec<LongSwordBaseUserDataParam>,
     }
 }
+
+params!(LongSwordBaseUserData, LongSwordBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.SlashAxeBaseUserData.Param")]
@@ -206,7 +293,7 @@ rsz_struct! {
     }
 }
 
-impl_base!(SlashAxeBaseUserDataParam, CloseRangeWeaponBaseData);
+melee!(SlashAxeBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.SlashAxeBaseUserData")]
@@ -215,6 +302,8 @@ rsz_struct! {
         pub param: Vec<SlashAxeBaseUserDataParam>,
     }
 }
+
+params!(SlashAxeBaseUserData, SlashAxeBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.GunLanceBaseUserData.Param")]
@@ -226,7 +315,7 @@ rsz_struct! {
     }
 }
 
-impl_base!(GunLanceBaseUserDataParam, CloseRangeWeaponBaseData);
+melee!(GunLanceBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.GunLanceBaseUserData")]
@@ -235,6 +324,8 @@ rsz_struct! {
         pub param: Vec<GunLanceBaseUserDataParam>,
     }
 }
+
+params!(GunLanceBaseUserData, GunLanceBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.DualBladesBaseUserData.Param")]
@@ -246,7 +337,7 @@ rsz_struct! {
     }
 }
 
-impl_base!(DualBladesBaseUserDataParam, CloseRangeWeaponBaseData);
+melee!(DualBladesBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.DualBladesBaseUserData")]
@@ -255,6 +346,8 @@ rsz_struct! {
         pub param: Vec<DualBladesBaseUserDataParam>,
     }
 }
+
+params!(DualBladesBaseUserData, DualBladesBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.HornBaseUserData.Param")]
@@ -265,7 +358,7 @@ rsz_struct! {
     }
 }
 
-impl_base!(HornBaseUserDataParam, CloseRangeWeaponBaseData);
+melee!(HornBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.HornBaseUserData")]
@@ -274,6 +367,8 @@ rsz_struct! {
         pub param: Vec<HornBaseUserDataParam>,
     }
 }
+
+params!(HornBaseUserData, HornBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.InsectGlaiveBaseUserData.Param")]
@@ -284,7 +379,7 @@ rsz_struct! {
     }
 }
 
-impl_base!(InsectGlaiveBaseUserDataParam, CloseRangeWeaponBaseData);
+melee!(InsectGlaiveBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.InsectGlaiveBaseUserData")]
@@ -293,6 +388,8 @@ rsz_struct! {
         pub param: Vec<InsectGlaiveBaseUserDataParam>,
     }
 }
+
+params!(InsectGlaiveBaseUserData, InsectGlaiveBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.ChargeAxeBaseUserData.Param")]
@@ -303,7 +400,7 @@ rsz_struct! {
     }
 }
 
-impl_base!(ChargeAxeBaseUserDataParam, CloseRangeWeaponBaseData);
+melee!(ChargeAxeBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.ChargeAxeBaseUserData")]
@@ -312,6 +409,8 @@ rsz_struct! {
         pub param: Vec<ChargeAxeBaseUserDataParam>,
     }
 }
+
+params!(ChargeAxeBaseUserData, ChargeAxeBaseUserDataParam);
 
 rsz_enum! {
     #[rsz(i32)]
@@ -362,7 +461,12 @@ rsz_struct! {
         pub unique_bullet: BulletType,
     }
 }
-
+impl_tobase!(
+    LightBowgunBaseUserDataParam,
+    BulletWeaponBaseUserDataParam,
+    MainWeaponBaseData;
+    WeaponBaseData
+);
 impl_base!(LightBowgunBaseUserDataParam, BulletWeaponBaseUserDataParam);
 
 rsz_struct! {
@@ -373,6 +477,8 @@ rsz_struct! {
     }
 }
 
+params!(LightBowgunBaseUserData, LightBowgunBaseUserDataParam);
+
 rsz_struct! {
     #[rsz("snow.equip.HeavyBowgunBaseUserData.Param")]
     #[derive(Debug, Serialize)]
@@ -381,7 +487,12 @@ rsz_struct! {
         pub heavy_bowgun_unique_bullet_type: UniqueBulletType,
     }
 }
-
+impl_tobase!(
+    HeavyBowgunBaseUserDataParam,
+    BulletWeaponBaseUserDataParam,
+    MainWeaponBaseData;
+    WeaponBaseData
+);
 impl_base!(HeavyBowgunBaseUserDataParam, BulletWeaponBaseUserDataParam);
 
 rsz_struct! {
@@ -391,6 +502,8 @@ rsz_struct! {
         pub param: Vec<HeavyBowgunBaseUserDataParam>,
     }
 }
+
+params!(HeavyBowgunBaseUserData, HeavyBowgunBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.BowBaseUserData.Param")]
@@ -404,7 +517,12 @@ rsz_struct! {
         pub bow_curve_type: i32, // snow.data.BowWeaponBaseData.CurveTypes
     }
 }
-
+impl_tobase!(
+    BowBaseUserDataParam,
+    ElementWeaponBaseData,
+    MainWeaponBaseData;
+    WeaponBaseData
+);
 impl_base!(BowBaseUserDataParam, ElementWeaponBaseData);
 
 rsz_struct! {
@@ -414,6 +532,8 @@ rsz_struct! {
         pub param: Vec<BowBaseUserDataParam>,
     }
 }
+
+params!(BowBaseUserData, BowBaseUserDataParam);
 
 rsz_struct! {
     #[rsz()] // Not a TDB type
@@ -484,7 +604,7 @@ rsz_struct! {
 
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
     pub enum TreeType {
         None = 0,
         Ore = 1,
