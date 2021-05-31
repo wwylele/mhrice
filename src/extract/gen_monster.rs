@@ -804,7 +804,7 @@ pub fn gen_monster(
                             <td>
                                 <span class="tag">{text!("{:?}-{:?}", quest.param.enemy_level, quest.param.quest_level)}</span>
                                 <a href={format!("/quest/{:06}.html", quest.param.quest_no)}>
-                                {quest.name.as_ref().map_or(
+                                {quest.name.map_or(
                                     html!(<span>{text!("Quest {:06}", quest.param.quest_no)}</span>),
                                     gen_multi_lang
                                 )}
@@ -956,7 +956,7 @@ pub fn gen_monster(
                                         em_type: monster_em_type,
                                         part,
                                         phase
-                                    }).map_or(html!(<span></span>), gen_multi_lang);
+                                    }).copied().map_or(html!(<span></span>), gen_multi_lang);
 
                                     let mut tds = part_common.take().unwrap_or_else(||vec![]);
                                     tds.extend(vec![

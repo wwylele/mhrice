@@ -41,7 +41,7 @@ pub fn gen_quest_list(quests: &[Quest], root: &Path) -> Result<()> {
                                             quests.into_iter().map(|quest|{
                                                 html!{<li>
                                                     <a href={format!("/quest/{:06}.html", quest.param.quest_no)}>
-                                                    {quest.name.as_ref().map_or(
+                                                    {quest.name.map_or(
                                                         html!(<span>{text!("Quest {:06}", quest.param.quest_no)}</span>),
                                                         gen_multi_lang
                                                     )}
@@ -303,13 +303,13 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path) 
                 <h1 class="title">
                 <span class="tag">{text!("{:?}-{:?}", quest.param.enemy_level, quest.param.quest_level)}</span>
                 {
-                    quest.name.as_ref().map_or(
+                    quest.name.map_or(
                         html!(<span>{text!("Quest {:06}", quest.param.quest_no)}</span>),
                         gen_multi_lang
                     )
                 }</h1>
                 <p><span>"Objective: "</span><span> {
-                    quest.target.as_ref().map_or(
+                    quest.target.map_or(
                         html!(<span>"-"</span>),
                         gen_multi_lang
                     )

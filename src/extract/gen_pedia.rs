@@ -243,6 +243,17 @@ fn get_weapon_list<BaseData: 'static>(
                 weapon_class
             ),
         )?,
+        name: get_msg(
+            pak,
+            &format!("data/Define/Player/Weapon/{0}/{0}_Name.msg", weapon_class),
+        )?,
+        explain: get_msg(
+            pak,
+            &format!(
+                "data/Define/Player/Weapon/{0}/{0}_Explain.msg",
+                weapon_class
+            ),
+        )?,
     })
 }
 
@@ -786,31 +797,31 @@ fn prepare_size_dist_map(
 }
 
 fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
-    let mut all_msg: HashMap<String, MsgEntry> = pedia
+    let mut all_msg: HashMap<&String, &MsgEntry> = pedia
         .quest_hall_msg
         .entries
         .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
+        .map(|entry| (&entry.name, entry))
         .chain(
             pedia
                 .quest_village_msg
                 .entries
                 .iter()
-                .map(|entry| (entry.name.clone(), entry.clone())),
+                .map(|entry| (&entry.name, entry)),
         )
         .chain(
             pedia
                 .quest_tutorial_msg
                 .entries
                 .iter()
-                .map(|entry| (entry.name.clone(), entry.clone())),
+                .map(|entry| (&entry.name, entry)),
         )
         .chain(
             pedia
                 .quest_arena_msg
                 .entries
                 .iter()
-                .map(|entry| (entry.name.clone(), entry.clone())),
+                .map(|entry| (&entry.name, entry)),
         )
         .collect();
 
@@ -865,28 +876,28 @@ fn prepare_discoveries(pedia: &Pedia) -> Result<HashMap<EmTypes, &DiscoverEmSetD
     Ok(result)
 }
 
-fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill>> {
+fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> {
     let mut result = BTreeMap::new();
 
-    let mut name_msg: HashMap<String, MsgEntry> = pedia
+    let mut name_msg: HashMap<&String, &MsgEntry> = pedia
         .player_skill_name_msg
         .entries
         .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
+        .map(|entry| (&entry.name, entry))
         .collect();
 
-    let mut explain_msg: HashMap<String, MsgEntry> = pedia
+    let mut explain_msg: HashMap<&String, &MsgEntry> = pedia
         .player_skill_explain_msg
         .entries
         .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
+        .map(|entry| (&entry.name, entry))
         .collect();
 
-    let mut detail_msg: HashMap<String, MsgEntry> = pedia
+    let mut detail_msg: HashMap<&String, &MsgEntry> = pedia
         .player_skill_detail_msg
         .entries
         .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
+        .map(|entry| (&entry.name, entry))
         .collect();
 
     for skill in &pedia.equip_skill.param {
@@ -997,7 +1008,7 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
         */
             pedia
             .armor_series_name_msg
-            .entries.get(armor_series.armor_series.0 as usize).cloned(); // ?!
+            .entries.get(armor_series.armor_series.0 as usize); // ?!
         let series = ArmorSeries {
             name,
             series: armor_series,
@@ -1039,8 +1050,7 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
         let name = msg
             .entries
             .get(id)
-            .with_context(|| format!("Cannot find name for armor {:?}", armor.pl_armor_id))?
-            .clone(); // ?!
+            .with_context(|| format!("Cannot find name for armor {:?}", armor.pl_armor_id))?; // ?!
 
         let product = product_map.remove(&armor.pl_armor_id);
 
@@ -1130,12 +1140,12 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
     Ok(series_map.into_iter().map(|(_, v)| v).collect())
 }
 
-fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, MsgEntry>> {
+fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, &MsgEntry>> {
     let msg_map: HashMap<_, _> = pedia
         .hunter_note_msg
         .entries
         .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
+        .map(|entry| (&entry.name, entry))
         .collect();
 
     let mut result = HashMap::new();
@@ -1150,11 +1160,11 @@ fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, MsgEntry>> {
                 phase,
             };
 
-            let name = if let Some(name) = msg_map.get(&format!(
+            let name = if let Some(&name) = msg_map.get(&format!(
                 "HN_Hunternote_ML_Tab_02_Parts{:02}",
                 part_data.part
             )) {
-                name.clone()
+                name
             } else {
                 continue;
             };
@@ -1179,13 +1189,13 @@ fn prepare_items<'a>(pedia: &'a Pedia) -> Result<BTreeMap<ItemId, Item<'a>>> {
         .items_name_msg
         .entries
         .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
+        .map(|entry| (&entry.name, entry))
         .collect();
     let mut explain_map: HashMap<_, _> = pedia
         .items_explain_msg
         .entries
         .iter()
-        .map(|entry| (entry.name.clone(), entry.clone()))
+        .map(|entry| (&entry.name, entry))
         .collect();
     for param in &pedia.items.param {
         if let Some(existing) = result.get_mut(&param.id) {
@@ -1221,7 +1231,15 @@ fn prepare_items<'a>(pedia: &'a Pedia) -> Result<BTreeMap<ItemId, Item<'a>>> {
     Ok(result)
 }
 
-fn prepare_material_categories(pedia: &Pedia) -> HashMap<MaterialCategory, MsgEntry> {
+static AMMOR_SPHERE_CATEGORY_MSG: Lazy<MsgEntry> = Lazy::new(|| MsgEntry {
+    name: "".to_string(),
+    guid: Guid { bytes: [0; 16] },
+    hash: 0,
+    attributes: vec![],
+    content: vec!["Armor sphere".to_string(); 32],
+});
+
+fn prepare_material_categories(pedia: &Pedia) -> HashMap<MaterialCategory, &MsgEntry> {
     const PREFIX: &str = "ICT_Name_";
     pedia
         .material_category_msg
@@ -1234,18 +1252,12 @@ fn prepare_material_categories(pedia: &Pedia) -> HashMap<MaterialCategory, MsgEn
 
             Some((
                 MaterialCategory(entry.name[PREFIX.len()..].parse().ok()?),
-                entry.clone(),
+                entry,
             ))
         })
         .chain(std::iter::once((
             MaterialCategory(86),
-            MsgEntry {
-                name: "".to_string(),
-                guid: Guid { bytes: [0; 16] },
-                hash: 0,
-                attributes: vec![],
-                content: vec!["Armor sphere".to_string(); 32],
-            },
+            &*AMMOR_SPHERE_CATEGORY_MSG,
         )))
         .collect()
 }
@@ -1274,29 +1286,26 @@ fn prepare_monster_lot(
 
 fn prepare_parts_dictionary(
     pedia: &Pedia,
-) -> Result<HashMap<(EmTypes, BrokenPartsTypes), MsgEntry>> {
+) -> Result<HashMap<(EmTypes, BrokenPartsTypes), &MsgEntry>> {
     let msgs: HashMap<_, _> = pedia
         .hunter_note_msg
         .entries
         .iter()
-        .map(|entry| (entry.guid, entry.clone()))
+        .map(|entry| (entry.guid, entry))
         .collect();
 
     let mut result = HashMap::new();
 
     for part in &pedia.parts_type.params {
         for info in &part.text_infos {
-            let msg = msgs.get(&info.text_for_monster_list).with_context(|| {
+            let msg = *msgs.get(&info.text_for_monster_list).with_context(|| {
                 format!("Cannot found part text for {:?}", part.broken_parts_types)
             })?;
             for &em in &info.enemy_type_list {
                 if em == EmTypes::Em(0) {
                     continue;
                 }
-                if result
-                    .insert((em, part.broken_parts_types), msg.clone())
-                    .is_some()
-                {
+                if result.insert((em, part.broken_parts_types), msg).is_some() {
                     eprintln!(
                         "Multiple part text for {:?}, {:?}",
                         em, part.broken_parts_types

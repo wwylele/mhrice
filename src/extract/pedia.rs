@@ -35,6 +35,8 @@ pub struct WeaponList<BaseData> {
     pub change: WeaponChangeUserData,
     pub process: WeaponProcessUserData,
     pub tree: WeaponUpdateTreeUserData,
+    pub name: Msg,
+    pub explain: Msg,
 }
 
 #[derive(Debug, Serialize)]
@@ -114,20 +116,20 @@ pub struct Pedia {
 pub struct Quest<'a> {
     pub param: &'a NormalQuestDataParam,
     pub enemy_param: Option<&'a NormalQuestDataForEnemyParam>,
-    pub name: Option<MsgEntry>,
-    pub target: Option<MsgEntry>,
-    pub condition: Option<MsgEntry>,
+    pub name: Option<&'a MsgEntry>,
+    pub target: Option<&'a MsgEntry>,
+    pub condition: Option<&'a MsgEntry>,
 }
 
-pub struct Skill {
-    pub name: MsgEntry,
-    pub explain: MsgEntry,
-    pub levels: Vec<MsgEntry>,
+pub struct Skill<'a> {
+    pub name: &'a MsgEntry,
+    pub explain: &'a MsgEntry,
+    pub levels: Vec<&'a MsgEntry>,
     pub icon_color: i32,
 }
 
 pub struct Armor<'a> {
-    pub name: MsgEntry,
+    pub name: &'a MsgEntry,
     pub data: &'a ArmorBaseUserDataParam,
     pub product: Option<&'a ArmorProductUserDataParam>,
     pub overwear: Option<&'a PlOverwearBaseUserDataParam>,
@@ -135,7 +137,7 @@ pub struct Armor<'a> {
 }
 
 pub struct ArmorSeries<'a> {
-    pub name: Option<MsgEntry>,
+    pub name: Option<&'a MsgEntry>,
     pub series: &'a ArmorSeriesUserDataParam,
     pub pieces: [Option<Armor<'a>>; 10],
 }
@@ -148,8 +150,8 @@ pub struct MeatKey {
 }
 
 pub struct Item<'a> {
-    pub name: MsgEntry,
-    pub explain: MsgEntry,
+    pub name: &'a MsgEntry,
+    pub explain: &'a MsgEntry,
     pub param: &'a ItemUserDataParam,
     pub multiple_def: bool,
 }
@@ -159,11 +161,11 @@ pub struct PediaEx<'a> {
     pub size_dists: HashMap<i32, &'a [ScaleAndRateData]>,
     pub quests: Vec<Quest<'a>>,
     pub discoveries: HashMap<EmTypes, &'a DiscoverEmSetDataParam>,
-    pub skills: BTreeMap<PlEquipSkillId, Skill>,
+    pub skills: BTreeMap<PlEquipSkillId, Skill<'a>>,
     pub armors: Vec<ArmorSeries<'a>>,
-    pub meat_names: HashMap<MeatKey, MsgEntry>,
+    pub meat_names: HashMap<MeatKey, &'a MsgEntry>,
     pub items: BTreeMap<ItemId, Item<'a>>,
-    pub material_categories: HashMap<MaterialCategory, MsgEntry>,
+    pub material_categories: HashMap<MaterialCategory, &'a MsgEntry>,
     pub monster_lot: HashMap<(EmTypes, QuestRank), &'a MonsterLotTableUserDataParam>,
-    pub parts_dictionary: HashMap<(EmTypes, BrokenPartsTypes), MsgEntry>,
+    pub parts_dictionary: HashMap<(EmTypes, BrokenPartsTypes), &'a MsgEntry>,
 }
