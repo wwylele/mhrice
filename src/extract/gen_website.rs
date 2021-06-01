@@ -3,6 +3,7 @@ use super::gen_item::*;
 use super::gen_monster::*;
 use super::gen_quest::*;
 use super::gen_skill::*;
+use super::gen_weapon::*;
 use super::pedia::*;
 use crate::msg::*;
 use crate::part_color::*;
@@ -308,6 +309,7 @@ pub fn gen_website(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &str) -> Resul
     gen_quest_list(&pedia_ex.quests, &root)?;
     gen_items(pedia_ex, &root)?;
     gen_item_list(pedia_ex, &root)?;
+    gen_weapons(pedia_ex, &root)?;
     gen_about(&root)?;
     gen_static(&root)?;
     gen_part_color_css(&root)?;

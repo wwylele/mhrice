@@ -1288,6 +1288,9 @@ where
     let mut roots = vec![];
 
     for node in &weapon_list.tree.param {
+        if node.weapon_id == WeaponId::None || node.weapon_id == WeaponId::Null {
+            continue;
+        }
         if node.prev_weapon_type == TreeType::None {
             roots.push(node.weapon_id);
         } else {
