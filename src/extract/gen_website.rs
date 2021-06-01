@@ -122,11 +122,147 @@ pub fn navbar() -> Box<div<String>> {
     </div>: String)
 }
 
+pub fn translate_msg(content: &str) -> Box<span<String>> {
+    let mut msg = content;
+    struct Tag<'a> {
+        tag: &'a str,
+        arg: &'a str,
+        seq: Seq<'a>,
+    }
+    enum Node<'a> {
+        Raw(&'a str),
+        Tagged(Tag<'a>),
+    }
+
+    struct Seq<'a> {
+        nodes: Vec<Node<'a>>,
+    }
+
+    let mut root = Seq { nodes: vec![] };
+    let mut stack: Vec<Tag> = vec![];
+
+    loop {
+        let next_stop = if let Some(next_stop) = msg.find('<') {
+            next_stop
+        } else {
+            if !stack.is_empty() {
+                eprintln!("Parse error: {}", content);
+            }
+            root.nodes.push(Node::Raw(msg));
+            break;
+        };
+
+        let raw = Node::Raw(&msg[0..next_stop]);
+        msg = &msg[(next_stop + 1)..];
+        if let Some(last) = stack.last_mut() {
+            last.seq.nodes.push(raw);
+        } else {
+            root.nodes.push(raw);
+        }
+
+        let next_stop = if let Some(next_stop) = msg.find('>') {
+            next_stop
+        } else {
+            if !stack.is_empty() {
+                eprintln!("Parse error: {}", content);
+            }
+            break;
+        };
+        let tag = &msg[0..next_stop];
+        msg = &msg[(next_stop + 1)..];
+
+        if let Some(tag) = tag.strip_prefix('/') {
+            let stack_tag = if let Some(stack_tag) = stack.pop() {
+                stack_tag
+            } else {
+                eprintln!("Parse error: {}", content);
+                break;
+            };
+            if stack_tag.tag != tag {
+                eprintln!("Parse error: {}", content);
+            }
+            let tag = Node::Tagged(stack_tag);
+            if let Some(last) = stack.last_mut() {
+                last.seq.nodes.push(tag);
+            } else {
+                root.nodes.push(tag);
+            }
+        } else {
+            let (tag, arg) = if let Some(space) = tag.find(' ') {
+                (&tag[0..space], &tag[(space + 1)..])
+            } else {
+                (tag, "")
+            };
+            let tag = Tag {
+                tag,
+                arg,
+                seq: Seq { nodes: vec![] },
+            };
+            if tag.tag == "LSNR" {
+                let tag = Node::Tagged(tag);
+                if let Some(last) = stack.last_mut() {
+                    last.seq.nodes.push(tag);
+                } else {
+                    root.nodes.push(tag);
+                }
+            } else {
+                stack.push(tag);
+            }
+        }
+    }
+
+    fn translate_rec(node: &Node<'_>) -> Box<dyn PhrasingContent<String>> {
+        match node {
+            Node::Raw(s) => Box::new(TextNode::<String>::new(*s)),
+            Node::Tagged(t) => {
+                let inner = t.seq.nodes.iter().map(translate_rec);
+                match t.tag {
+                    "COLOR" => {
+                        let style = format!("color: #{};", t.arg);
+                        html!(<span style={style}> {inner} </span>)
+                    }
+                    "COL" => {
+                        let color = match t.arg {
+                            "RED" => "red",
+                            "YEL" => "yellow",
+                            _ => {
+                                eprintln!("Unknown color: {}", t.arg);
+                                "black"
+                            }
+                        };
+                        let style = format!("color: {};", color);
+                        html!(<span style={style}> {inner} </span>)
+                    }
+                    "LSNR" => {
+                        // Gender selector
+                        html!(<span> {text!("{}", t.arg)} </span>)
+                    }
+                    "BSL" => {
+                        // Text direction change?
+                        html!(<span> {inner} </span>)
+                    }
+                    _ => {
+                        eprintln!("Unknown tag: {}", t.tag);
+                        html!(<span> {inner} </span>)
+                    }
+                }
+            }
+        }
+    }
+
+    html!(<span> {root.nodes.iter().map(translate_rec)} </span>)
+}
+
 pub fn gen_multi_lang(msg: &MsgEntry) -> Box<span<String>> {
     html!(<span> {
         (0..32).filter(|&i|LANGUAGE_MAP[i].is_some()).map(|i|{
-            html! (<span class={format!("mh-lang-{}", i).as_str()}>
-                {text!("{}", msg.content[i])}
+            let hidden = if i == 1 {
+                ""
+            } else {
+                " mh-hidden"
+            };
+            html! (<span class={format!("mh-lang-{}{}", i, hidden).as_str()}>
+                {translate_msg(&msg.content[i])}
             </span>)
         })
     } </span>)
