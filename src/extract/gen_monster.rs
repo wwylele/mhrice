@@ -718,7 +718,7 @@ pub fn gen_lot(
         <div class="box">
         <table>
             <thead><tr>
-                <th>"From buddy"</th>
+                <th>"From buddy (?)"</th>
                 <th>"Probability"</th>
             </tr></thead>
             <tbody> {

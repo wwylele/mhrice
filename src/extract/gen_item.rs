@@ -44,6 +44,51 @@ pub fn gen_item_label(item: &Item) -> Box<a<String>> {
     )
 }
 
+pub fn gen_materials(
+    pedia_ex: &PediaEx,
+    item: &[ItemId],
+    item_num: &[u32],
+    item_flag: ItemId,
+) -> Box<td<String>> {
+    html!(<td><ul class="mh-armor-skill-list"> {
+        item.iter().zip(item_num)
+            .filter(|&(&item, _)| item != ItemId::None)
+            .map(|(&item, num)|{
+            let key = if item == item_flag {
+                Some(html!(<span class="tag is-primary">"Key"</span>))
+            } else {
+                None
+            };
+            let item = if let Some(item) = pedia_ex.items.get(&item) {
+                html!(<span>{gen_item_label(item)}</span>)
+            } else {
+                html!(<span>{text!("{:?}", item)}</span>)
+            };
+            html!(<li>
+                {text!("{}x ", num)}
+                {item}
+                {key}
+            </li>)
+        })
+    } </ul></td>)
+}
+
+pub fn gen_category(
+    pedia_ex: &PediaEx,
+    material_category: MaterialCategory,
+    material_category_num: u32,
+) -> Box<td<String>> {
+    let category = if material_category == MaterialCategory(0) {
+        return html!(<td>"-"</td>);
+    } else if let Some(name) = pedia_ex.material_categories.get(&material_category) {
+        html!(<span>{gen_multi_lang(name)}" "</span>)
+    } else {
+        html!(<span>{text!("{:?} ", material_category)}</span>)
+    };
+
+    html!(<td>{category}{text!("{} pt", material_category_num)}</td>)
+}
+
 pub fn gen_item(item: &Item, pedia_ex: &PediaEx<'_>, path: &Path) -> Result<()> {
     let material_categories = item.param.material_category.iter().filter_map(|&category| {
         if category == MaterialCategory(0) {
@@ -137,7 +182,7 @@ pub fn gen_item_list(pedia_ex: &PediaEx<'_>, root: &Path) -> Result<()> {
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container"> <div class="content">
+                <main> <div class="container">
                 <h1 class="title">"Item"</h1>
                 <ul class="mh-list-skill">
                 {
@@ -150,7 +195,7 @@ pub fn gen_item_list(pedia_ex: &PediaEx<'_>, root: &Path) -> Result<()> {
                     })
                 }
                 </ul>
-                </div></div></main>
+                </div></main>
             </body>
         </html>
     );

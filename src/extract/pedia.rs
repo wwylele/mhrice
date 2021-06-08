@@ -164,6 +164,7 @@ pub struct Weapon<'a, Param> {
     pub name: &'a MsgEntry,
     pub explain: &'a MsgEntry,
     pub children: Vec<WeaponId>,
+    pub parent: Option<WeaponId>,
 }
 
 pub struct WeaponTree<'a, Param> {

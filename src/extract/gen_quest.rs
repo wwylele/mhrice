@@ -26,7 +26,7 @@ pub fn gen_quest_list(quests: &[Quest], root: &Path) -> Result<()> {
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container"> <div class="content">
+                <main> <div class="container">
                 <h1 class="title">"Quests"</h1>
                 {
                     quests_ordered.into_iter().map(|(enemy_level, quests)|{
@@ -39,12 +39,17 @@ pub fn gen_quest_list(quests: &[Quest], root: &Path) -> Result<()> {
                                         <h3 class="title">{text!("{:?}", quest_level)}</h3>
                                         <ul>{
                                             quests.into_iter().map(|quest|{
+                                                let link = format!("/quest/{:06}.html", quest.param.quest_no);
+                                                let name = quest.name.map_or(
+                                                    html!(<span>{text!("Quest {:06}", quest.param.quest_no)}</span>),
+                                                    gen_multi_lang
+                                                );
+                                                let img = format!("/resources/questtype_{}.png",
+                                                    quest.param.quest_type.icon_index());
                                                 html!{<li>
-                                                    <a href={format!("/quest/{:06}.html", quest.param.quest_no)}>
-                                                    {quest.name.map_or(
-                                                        html!(<span>{text!("Quest {:06}", quest.param.quest_no)}</span>),
-                                                        gen_multi_lang
-                                                    )}
+                                                    <a href={link} class="mh-icon-text">
+                                                    <img src={img} class="mh-quest-icon"/>
+                                                    {name}
                                                     </a>
                                                 </li>}
                                             })
@@ -55,7 +60,7 @@ pub fn gen_quest_list(quests: &[Quest], root: &Path) -> Result<()> {
                         }</ul></section>)
                     })
                 }
-                </div> </div> </main>
+               </div> </main>
             </body>
         </html>
     );
@@ -263,10 +268,7 @@ fn gen_monster_tag(quest: &Quest, pedia: &Pedia, em_type: EmTypes) -> Box<td<Str
 
     let monster = pedia.monsters.iter().find(|m| (m.id | m.sub_id << 8) == id);
     let monster_name = (|| {
-        let name_name = format!(
-            "EnemyIndex{:03}",
-            monster?.boss_init_set_data.as_ref()?.enemy_type
-        );
+        let name_name = format!("EnemyIndex{:03}", monster?.enemy_type?);
         Some(gen_multi_lang(pedia.monster_names.get_entry(&name_name)?))
     })()
     .unwrap_or(html!(<span>{text!("Monster {0:03}_{1:02}",
@@ -291,6 +293,10 @@ fn gen_monster_tag(quest: &Quest, pedia: &Pedia, em_type: EmTypes) -> Box<td<Str
 }
 
 fn gen_quest(quest: &Quest, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path) -> Result<()> {
+    let img = format!(
+        "/resources/questtype_{}.png",
+        quest.param.quest_type.icon_index()
+    );
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -300,6 +306,9 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path) 
             <body>
                 { navbar() }
                 <main> <div class="container"> <div class="content">
+                <div class="mh-title-icon">
+                    <img src={img} class="mh-quest-icon"/>
+                </div>
                 <h1 class="title">
                 <span class="tag">{text!("{:?}-{:?}", quest.param.enemy_level, quest.param.quest_level)}</span>
                 {

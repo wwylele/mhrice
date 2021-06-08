@@ -20,6 +20,43 @@ rsz_bitflags! {
     }
 }
 
+impl QuestType {
+    pub fn icon_index(&self) -> u32 {
+        if self.contains(QuestType::HUNTING) {
+            return 0;
+        }
+        if self.contains(QuestType::KILL) {
+            return 1;
+        }
+        if self.contains(QuestType::HUNTING) {
+            return 2;
+        }
+        if self.contains(QuestType::BOSSRUSH) {
+            return 6;
+        }
+        if self.contains(QuestType::COLLECTS) {
+            return 3;
+        }
+        if self.contains(QuestType::TOUR) {
+            return 7;
+        }
+        if self.contains(QuestType::ARENA) {
+            return 4;
+        }
+        if self.contains(QuestType::SPECIAL) {
+            return 5;
+        }
+        if self.contains(QuestType::HYAKURYU) {
+            return 8;
+        }
+        if self.contains(QuestType::TRAINING) {
+            return 0;
+        }
+
+        0
+    }
+}
+
 rsz_enum! {
     #[rsz(i32)]
     #[allow(clippy::upper_case_acronyms)]

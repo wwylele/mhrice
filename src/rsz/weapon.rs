@@ -115,6 +115,27 @@ impl WeaponId {
             WeaponId::Insect(i) => format!("Insect_{:03}", i),
         }
     }
+
+    pub fn icon_index(self) -> u32 {
+        match self {
+            WeaponId::GreatSword(_) => 16,
+            WeaponId::ShortSword(_) => 15,
+            WeaponId::Hammer(_) => 21,
+            WeaponId::Lance(_) => 19,
+            WeaponId::LongSword(_) => 17,
+            WeaponId::SlashAxe(_) => 23,
+            WeaponId::GunLance(_) => 20,
+            WeaponId::DualBlades(_) => 18,
+            WeaponId::Horn(_) => 22,
+            WeaponId::InsectGlaive(_) => 25,
+            WeaponId::ChargeAxe(_) => 24,
+            WeaponId::LightBowgun(_) => 26,
+            WeaponId::HeavyBowgun(_) => 27,
+            WeaponId::Bow(_) => 28,
+            WeaponId::Insect(_) => 7, // TODO: or 8
+            _ => 29,
+        }
+    }
 }
 
 rsz_struct! {

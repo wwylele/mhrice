@@ -78,7 +78,7 @@ rsz_enum! {
 
 rsz_newtype! {
     #[rsz_offset(1)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone, Copy)]
     #[serde(transparent)]
     pub struct RareTypes(pub u8);
 }

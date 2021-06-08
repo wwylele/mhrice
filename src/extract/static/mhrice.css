@@ -61,12 +61,13 @@ li.mh-list-monster {
 
 ul.mh-list-quest {
     margin: 0 auto;
-    text-align: center;
+    text-align: left;
 }
 
 li.mh-list-quest {
     display: inline-block;
     vertical-align: top;
+    margin: 1rem
 }
 
 div.mh-monster-header img {
@@ -75,12 +76,18 @@ div.mh-monster-header img {
 
 div.mh-title-icon {
     float: left;
+    padding-left: 1rem;
+    padding-right: 1rem;
 }
 
 ul.mh-list-skill {
     list-style: none;
     display: grid;
     grid-template-columns: repeat( auto-fit, minmax(250px, 1fr) );
+}
+
+li.mh-list-skill {
+    margin-top: 0.5rem;
 }
 
 ul.mh-armor-series-list {
@@ -91,6 +98,7 @@ ul.mh-armor-series-list {
 li.mh-armor-series-list {
     display: inline-block;
     vertical-align: top;
+    margin-top: 1rem;
 }
 
 ul.mh-armor-skill-list {
@@ -213,4 +221,77 @@ div.mh-logo-text {
 .mh-part-rule ul {
     list-style: none;
     margin-top: 0;
+}
+
+.mh-sharpness-bar {
+    display: inline-block;
+    white-space: nowrap;
+    width: 10rem;
+    height: 1rem;
+    background-color: black;
+    border: solid gray;
+}
+
+.mh-sharpness {
+    display: inline-block;
+    height: 100%
+}
+
+.mh-sharpness-half {
+    display: inline-block;
+    height: 50%
+}
+
+.mh-sharpness-color-0 {
+    background-color: red;
+}
+.mh-sharpness-color-1 {
+    background-color: orange;
+}
+.mh-sharpness-color-2 {
+    background-color: yellow;
+}
+.mh-sharpness-color-3 {
+    background-color: green;
+}
+.mh-sharpness-color-4 {
+    background-color: blue;
+}
+.mh-sharpness-color-5 {
+    background-color: white;
+}
+.mh-sharpness-color-6 {
+    background-color: blueviolet;
+}
+
+.mh-weapon-tree > ul > li {
+    display: inline-block;
+    vertical-align: top;
+    border-radius: 6px;
+    border-width: thin;
+    border-color: gray;
+    border-style: solid;
+    margin: 0.5rem;
+    padding: 0.5rem;
+}
+
+.mh-weapon-tree > ul > li li {
+    list-style-type: none;
+    margin-left: 1rem;
+}
+
+li.mh-armor-list {
+    list-style-type: none;
+}
+
+.mh-slot {
+    display: inline-block;
+    width: 1.65rem;
+    height: 1.25rem;
+}
+
+img.mh-quest-icon {
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
 }

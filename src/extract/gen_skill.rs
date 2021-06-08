@@ -23,7 +23,7 @@ pub fn gen_skill_list(skills: &BTreeMap<PlEquipSkillId, Skill>, root: &Path) -> 
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container"> <div class="content">
+                <main> <div class="container">
                 <h1 class="title">"Skill"</h1>
                 <ul class="mh-list-skill">
                 {
@@ -37,7 +37,7 @@ pub fn gen_skill_list(skills: &BTreeMap<PlEquipSkillId, Skill>, root: &Path) -> 
                     })
                 }
                 </ul>
-                </div></div></main>
+                </div></main>
             </body>
         </html>
     );

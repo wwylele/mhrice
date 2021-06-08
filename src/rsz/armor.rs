@@ -17,6 +17,19 @@ rsz_enum! {
     }
 }
 
+impl PlArmorId {
+    pub fn icon_index(self) -> u32 {
+        match self {
+            PlArmorId::Head(_) => 0,
+            PlArmorId::Chest(_) => 1,
+            PlArmorId::Arm(_) => 2,
+            PlArmorId::Waist(_) => 3,
+            PlArmorId::Leg(_) => 4,
+            _ => 6,
+        }
+    }
+}
+
 rsz_newtype! {
     #[rsz_offset(0)]
     #[derive(Debug, Serialize, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]

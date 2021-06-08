@@ -7,6 +7,7 @@ use super::gen_weapon::*;
 use super::pedia::*;
 use crate::msg::*;
 use crate::part_color::*;
+use crate::rsz::*;
 use anyhow::*;
 use chrono::prelude::*;
 use std::convert::TryInto;
@@ -58,6 +59,7 @@ pub fn head_common() -> Vec<Box<dyn MetadataContent<String>>> {
         html!(<link rel="stylesheet" href="/mhrice.css" />),
         html!(<link rel="stylesheet" href="/part_color.css" />),
         html!(<link rel="stylesheet" href="/resources/item_color.css" />),
+        html!(<link rel="stylesheet" href="/resources/rarity_color.css" />),
         html!(<script src="https://kit.fontawesome.com/ceb13a2ba1.js" crossorigin="anonymous" />),
         html!(<script src="/mhrice.js" crossorigin="anonymous" />),
     ]
@@ -93,6 +95,29 @@ pub fn navbar() -> Box<div<String>> {
                     <a class="navbar-item" href="/armor.html">
                         "Armors"
                     </a>
+
+                    <div class="navbar-item has-dropdown is-hoverable">
+                    <a class="navbar-link">
+                        "Weapon"
+                    </a>
+                    <div class="navbar-dropdown">
+                        <a class="navbar-item" href="/weapon/great_sword.html">"Great sword"</a>
+                        <a class="navbar-item" href="/weapon/long_sword.html">"Long sword"</a>
+                        <a class="navbar-item" href="/weapon/short_sword.html">"Sword & shield"</a>
+                        <a class="navbar-item" href="/weapon/dual_blades.html">"Dual blades"</a>
+                        <a class="navbar-item" href="/weapon/hammer.html">"Hammer"</a>
+                        <a class="navbar-item" href="/weapon/horn.html">"Hunting horn"</a>
+                        <a class="navbar-item" href="/weapon/lance.html">"Lance"</a>
+                        <a class="navbar-item" href="/weapon/gun_lance.html">"Gunlance"</a>
+                        <a class="navbar-item" href="/weapon/slash_axe.html">"Switch axe"</a>
+                        <a class="navbar-item" href="/weapon/charge_axe.html">"Charge blade"</a>
+                        <a class="navbar-item" href="/weapon/insect_glaive.html">"Insect glaive"</a>
+                        <a class="navbar-item" href="/weapon/light_bowgun.html">"Light bowgun"</a>
+                        <a class="navbar-item" href="/weapon/heavy_bowgun.html">"Heavy bowgun"</a>
+                        <a class="navbar-item" href="/weapon/bow.html">"Bow"</a>
+                    </div>
+                    </div>
+
                     <a class="navbar-item" href="/item.html">
                         "Items"
                     </a>
@@ -269,13 +294,22 @@ pub fn gen_multi_lang(msg: &MsgEntry) -> Box<span<String>> {
 }
 
 pub fn gen_colored_icon(color: i32, icon: &str, addons: &[&str]) -> Box<div<String>> {
+    let color_class = format!("mh-item-color-{}", color);
+    gen_colored_icon_inner(&color_class, icon, addons)
+}
+
+pub fn gen_rared_icon(rarity: RareTypes, icon: &str) -> Box<div<String>> {
+    let color_class = format!("mh-rarity-color-{}", rarity.0);
+    gen_colored_icon_inner(&color_class, icon, &[])
+}
+
+fn gen_colored_icon_inner(color_class: &str, icon: &str, addons: &[&str]) -> Box<div<String>> {
     let image_r_base = format!("url('{}.r.png')", icon);
     let image_a_base = format!("url('{}.a.png')", icon);
     let image_r = format!("mask-image: {0}; -webkit-mask-image: {0};", image_r_base);
     let image_a = format!("mask-image: {0}; -webkit-mask-image: {0};", image_a_base);
     html!(<div class="mh-colored-icon">
-        <div style={image_r.as_str()}
-            class={format!("mh-item-color-{}", color).as_str()}/>
+        <div style={image_r.as_str()} class={color_class}/>
         <div style={image_a.as_str()}/>
         <div>{ addons.iter().map(|&addon| html!(
             <div class=addon/>
@@ -294,7 +328,7 @@ pub fn gen_monsters(pedia: &Pedia, pedia_ex: &PediaEx<'_>, root: &Path) -> Resul
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container"> <div class="content">
+                <main> <div class="container">
                 <h1 class="title">"Monsters"</h1>
                 <section class="section">
                 <h2 class="title">"Large monsters"</h2>
@@ -330,7 +364,7 @@ pub fn gen_monsters(pedia: &Pedia, pedia_ex: &PediaEx<'_>, root: &Path) -> Resul
                     })
                 }</ul>
                 </section>
-                </div> </div> </main>
+                </div> </main>
             </body>
         </html>
     );

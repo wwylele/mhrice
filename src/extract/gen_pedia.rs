@@ -688,7 +688,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
     let item_addon_uvs = pak.find_file("gui/70_UVSequence/Item_addonicon.uvs")?;
     let item_addon_uvs = Uvs::new(Cursor::new(pak.read_file(item_addon_uvs)?))?;
     if item_addon_uvs.textures.len() != 1 || item_addon_uvs.spriter_groups.len() != 1 {
-        bail!("Broken item_addonicon_IAM.uvs");
+        bail!("Broken item_addon.uvs");
     }
     let item_addon = pak.find_file(&item_addon_uvs.textures[0].path)?;
     let item_addon = Tex::new(Cursor::new(pak.read_file(item_addon)?))?.to_rgba(0, 0)?;
@@ -715,21 +715,74 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
     skill_r.save_png(&root.join("skill.r.png"))?;
     skill_a.save_png(&root.join("skill.a.png"))?;
 
+    let equip_icon_path = root.join("equip");
+    create_dir(&equip_icon_path)?;
+    let equip_icon_uvs = pak.find_file("gui/70_UVSequence/EquipIcon.uvs")?;
+    let equip_icon_uvs = Uvs::new(Cursor::new(pak.read_file(equip_icon_uvs)?))?;
+    if equip_icon_uvs.textures.len() != 2 || equip_icon_uvs.spriter_groups.len() != 2 {
+        bail!("Broken EquipIcon.uvs");
+    }
+    let equip_icon = pak.find_file(&equip_icon_uvs.textures[0].path)?;
+    let equip_icon = Tex::new(Cursor::new(pak.read_file(equip_icon)?))?.to_rgba(0, 0)?;
+    for (i, spriter) in equip_icon_uvs.spriter_groups[0].spriters.iter().enumerate() {
+        let (equip_icon_r, equip_icon_a) = equip_icon
+            .sub_image_f(spriter.p0, spriter.p1)?
+            .gen_double_mask();
+        equip_icon_r.save_png(&equip_icon_path.join(format!("{:03}.r.png", i)))?;
+        equip_icon_a.save_png(&equip_icon_path.join(format!("{:03}.a.png", i)))?;
+    }
+
+    let common_uvs = pak.find_file("gui/70_UVSequence/common.uvs")?;
+    let common_uvs = Uvs::new(Cursor::new(pak.read_file(common_uvs)?))?;
+    if common_uvs.textures.len() != 1 || common_uvs.spriter_groups.len() != 2 {
+        bail!("Broken common.uvs");
+    }
+    let common = pak.find_file(&common_uvs.textures[0].path)?;
+    let common = Tex::new(Cursor::new(pak.read_file(common)?))?.to_rgba(0, 0)?;
+    for (i, spriter) in common_uvs.spriter_groups[1].spriters.iter().enumerate() {
+        common
+            .sub_image_f(spriter.p0, spriter.p1)?
+            .save_png(&root.join(format!("questtype_{}.png", i)))?;
+    }
+
+    let common_uvs = pak.find_file("gui/70_UVSequence/Slot_Icon.uvs")?;
+    let common_uvs = Uvs::new(Cursor::new(pak.read_file(common_uvs)?))?;
+    if common_uvs.textures.len() != 1 || common_uvs.spriter_groups.len() != 1 {
+        bail!("Broken Slot_Icon.uvs");
+    }
+    let common = pak.find_file(&common_uvs.textures[0].path)?;
+    let common = Tex::new(Cursor::new(pak.read_file(common)?))?.to_rgba(0, 0)?;
+    for (i, spriter) in common_uvs.spriter_groups[0].spriters.iter().enumerate() {
+        common
+            .sub_image_f(spriter.p0, spriter.p1)?
+            .save_png(&root.join(format!("slot_{}.png", i)))?;
+    }
+
     let item_colors_path = root.join("item_color.css");
     gen_item_colors(pak, &item_colors_path)?;
+
+    let item_colors_path = root.join("rarity_color.css");
+    gen_rarity_colors(pak, &item_colors_path)?;
 
     Ok(())
 }
 
-fn gen_item_colors(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Result<()> {
+fn gen_gui_colors(
+    pak: &mut PakReader<impl Read + Seek>,
+    output: &Path,
+    gui: &str,
+    control_name: &str,
+    prefix: &str,
+    css_prefix: &str,
+) -> Result<()> {
     let mut file = File::create(output)?;
-    let item_icon_gui = pak.find_file("gui/01_Common/ItemIcon.gui")?;
+    let item_icon_gui = pak.find_file(gui)?;
     let item_icon_gui = Gui::new(Cursor::new(pak.read_file(item_icon_gui)?))?;
     let item_icon_color = item_icon_gui
         .controls
         .iter()
-        .find(|control| control.name == "pnl_ItemIcon_Color")
-        .context("pnl_ItemIcon_Color not found")?;
+        .find(|control| control.name == control_name)
+        .context("Control not found")?;
 
     fn color_tran(value: u64) -> Result<u8> {
         let value = f64::from_bits(value);
@@ -740,11 +793,10 @@ fn gen_item_colors(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Resu
     }
 
     for clips in &item_icon_color.clips {
-        const NAME_PREFIX: &str = "ITEM_ICON_COLOR_";
-        if !clips.name.starts_with(NAME_PREFIX) {
-            bail!("Unexpected prefix");
+        if !clips.name.starts_with(prefix) {
+            continue;
         }
-        let id: u32 = clips.name[NAME_PREFIX.len()..].parse()?;
+        let id: u32 = clips.name[prefix.len()..].parse()?;
         if clips.variable_values.len() != 3 {
             bail!("Unexpected variable values len");
         }
@@ -754,12 +806,34 @@ fn gen_item_colors(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Resu
 
         writeln!(
             file,
-            ".mh-item-color-{} {{background-color: #{:02X}{:02X}{:02X}}}",
-            id, r, g, b
+            ".{}{} {{background-color: #{:02X}{:02X}{:02X}}}",
+            css_prefix, id, r, g, b
         )?;
     }
 
     Ok(())
+}
+
+fn gen_item_colors(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Result<()> {
+    gen_gui_colors(
+        pak,
+        output,
+        "gui/01_Common/ItemIcon.gui",
+        "pnl_ItemIcon_Color",
+        "ITEM_ICON_COLOR_",
+        "mh-item-color-",
+    )
+}
+
+fn gen_rarity_colors(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Result<()> {
+    gen_gui_colors(
+        pak,
+        output,
+        "gui/01_Common/EquipIcon.gui",
+        "pnl_EquipIcon_Color",
+        "rare_col",
+        "mh-rarity-color-",
+    )
 }
 
 fn prepare_size_map(size_data: &EnemySizeListData) -> Result<HashMap<EmTypes, &SizeInfo>> {
@@ -1237,6 +1311,7 @@ where
             name,
             explain,
             children: vec![],
+            parent: None,
         };
         weapons.insert(param.to_base().id, weapon);
     }
@@ -1297,6 +1372,7 @@ where
             let prev = tree_map
                 .get(&(node.prev_weapon_type, node.prev_weapon_index))
                 .with_context(|| format!("Unknown previous position for {:?}", node))?;
+            weapons.get_mut(&node.weapon_id).unwrap().parent = Some(prev.weapon_id);
             if !prev
                 .next_weapon_type_list
                 .iter()
