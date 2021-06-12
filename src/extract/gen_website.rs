@@ -471,7 +471,7 @@ pub fn gen_website(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &str) -> Resul
     create_dir(&root)?;
 
     gen_quests(pedia, pedia_ex, &root)?;
-    gen_skills(&pedia_ex.skills, &root)?;
+    gen_skills(pedia_ex, &root)?;
     gen_skill_list(&pedia_ex.skills, &root)?;
     gen_armors(pedia_ex, &root)?;
     gen_armor_list(&pedia_ex.armors, &root)?;

@@ -321,3 +321,56 @@ rsz_struct! {
         pub param: Vec<PlHyakuryuSkillRecipeUserDataParam>,
     }
 }
+
+rsz_enum! {
+    #[rsz(u32)]
+    #[derive(Debug, Serialize, Copy, Clone, Hash, PartialEq, Eq)]
+    pub enum DecorationsId {
+        None = 0,
+        Deco(u32) = 1..=255,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.DecorationsBaseUserData.Param")]
+    #[derive(Debug, Serialize)]
+    pub struct DecorationsBaseUserDataParam {
+        pub id: DecorationsId,
+        pub sort_id: u32,
+        pub rare: RareTypes,
+        pub icon_color: i32,
+        pub decoration_lv: i32,
+        pub skill_id_list: Vec<PlEquipSkillId>,
+        pub skill_lv_list: Vec<i32>,
+        pub base_price: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.DecorationsBaseUserData")]
+    #[derive(Debug, Serialize)]
+    pub struct DecorationsBaseUserData {
+        pub param: Vec<DecorationsBaseUserDataParam>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.DecorationsProductUserData.Param")]
+    #[derive(Debug, Serialize)]
+    pub struct DecorationsProductUserDataParam {
+        pub id: DecorationsId,
+        pub item_flag: ItemId,
+        pub enemy_flag: EmTypes,
+        pub progress_flag: i32, // snow.data.DataDef.UnlockProgressTypes
+        pub item_id_list: Vec<ItemId>,
+        pub item_num_list: Vec<u32>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.DecorationsProductUserData")]
+    #[derive(Debug, Serialize)]
+    pub struct DecorationsProductUserData {
+        pub param: Vec<DecorationsProductUserDataParam>,
+    }
+}

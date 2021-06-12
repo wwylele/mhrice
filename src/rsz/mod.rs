@@ -753,6 +753,10 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerPackage>> = Lazy::new(|| {
         PlHyakuryuSkillBaseUserDataParam,
         PlHyakuryuSkillRecipeUserData,
         PlHyakuryuSkillRecipeUserDataParam,
+        DecorationsBaseUserDataParam,
+        DecorationsBaseUserData,
+        DecorationsProductUserDataParam,
+        DecorationsProductUserData,
     );
 
     r!(

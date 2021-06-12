@@ -382,6 +382,21 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         "data/Define/Player/Skill/PlHyakuryuSkill/HyakuryuSkillRecipeData.user",
     )?;
 
+    let decorations = get_user(
+        pak,
+        "data/Define/Player/Equip/Decorations/DecorationsBaseData.user",
+    )?;
+
+    let decorations_product = get_user(
+        pak,
+        "data/Define/Player/Equip/Decorations/DecorationsProductData.user",
+    )?;
+
+    let decorations_name_msg = get_msg(
+        pak,
+        "data/Define/Player/Equip/Decorations/Decorations_Name.msg",
+    )?;
+
     let alchemy_pattern = get_user(
         pak,
         "data/Define/Lobby/Facility/Alchemy/AlchemyPatturnData.user",
@@ -475,6 +490,9 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         player_skill_name_msg,
         hyakuryu_skill,
         hyakuryu_skill_recipe,
+        decorations,
+        decorations_product,
+        decorations_name_msg,
         alchemy_pattern,
         alchemy_pl_skill,
         alchemy_grade_worth,
@@ -996,8 +1014,51 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> 
                 explain,
                 levels,
                 icon_color: skill.icon_color,
+                deco: None,
             },
         );
+    }
+
+    let mut deco_name_msg = pedia.decorations_name_msg.get_name_map();
+    let mut deco_product = HashMap::new();
+    for product in &pedia.decorations_product.param {
+        if product.id == DecorationsId::None {
+            continue;
+        }
+        if deco_product.insert(product.id, product).is_some() {
+            bail!("Multiple product for deco {:?}", product.id)
+        }
+    }
+
+    for deco in &pedia.decorations.param {
+        let inner_id = if let DecorationsId::Deco(id) = deco.id {
+            id
+        } else {
+            continue;
+        };
+        let product = deco_product
+            .remove(&deco.id)
+            .with_context(|| format!("Product not found for deco {:?}", deco.id))?;
+        let name = deco_name_msg
+            .remove(&format!("Decorations_{:03}_Name", inner_id))
+            .with_context(|| format!("Name not found for deco {:?}", deco.id))?;
+        let deco_pack = Deco {
+            data: deco,
+            product,
+            name,
+        };
+
+        if deco.skill_id_list.len() != 1 || deco.skill_lv_list.len() != 1 {
+            bail!("Multi skill deco {:?}", deco.id)
+        }
+        if deco.skill_lv_list[0] != 1 {
+            bail!("Multi level deco {:?}", deco.id)
+        }
+
+        result
+            .get_mut(&deco.skill_id_list[0])
+            .with_context(|| format!("Skill not found for deco {:?}", deco.id))?
+            .deco = Some(deco_pack);
     }
 
     Ok(result)

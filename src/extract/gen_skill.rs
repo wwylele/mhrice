@@ -1,3 +1,4 @@
+use super::gen_item::*;
 use super::gen_website::*;
 use super::pedia::*;
 use crate::rsz::*;
@@ -5,7 +6,7 @@ use anyhow::*;
 use std::collections::BTreeMap;
 use std::fs::{create_dir, write};
 use std::path::*;
-use typed_html::{dom::*, html, text};
+use typed_html::{dom::*, elements::*, html, text};
 
 pub fn skill_page(id: PlEquipSkillId) -> String {
     match id {
@@ -47,7 +48,34 @@ pub fn gen_skill_list(skills: &BTreeMap<PlEquipSkillId, Skill>, root: &Path) -> 
     Ok(())
 }
 
-pub fn gen_skill(skill: &Skill, path: &Path) -> Result<()> {
+pub fn gen_deco_label(deco: &Deco) -> Box<div<String>> {
+    let icon = format!("/resources/item/{:03}", 63 + deco.data.decoration_lv);
+    html!(<div class="mh-icon-text">
+        { gen_colored_icon(deco.data.icon_color, &icon, &[]) }
+        <span>{gen_multi_lang(deco.name)}</span>
+    </div>)
+}
+
+pub fn gen_skill(skill: &Skill, path: &Path, pedia_ex: &PediaEx) -> Result<()> {
+    let deco = skill.deco.as_ref().map(|deco| {
+        html!(<section class="section">
+        <h2 class="title">"Decoration"</h2>
+        <table>
+            <thead><tr>
+                <th>"Name"</th>
+                <th>"Material"</th>
+            </tr></thead>
+            <tbody>
+            <tr>
+                <td>{gen_deco_label(deco)}</td>
+                { gen_materials(pedia_ex, &deco.product.item_id_list,
+                    &deco.product.item_num_list, deco.product.item_flag) }
+            </tr>
+            </tbody>
+        </table>
+        </section>)
+    });
+
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -72,6 +100,9 @@ pub fn gen_skill(skill: &Skill, path: &Path) -> Result<()> {
                         </li>)
                     })
                 }</ul>
+
+                { deco }
+
                 </div></div></main>
             </body>
         </html>
@@ -82,12 +113,12 @@ pub fn gen_skill(skill: &Skill, path: &Path) -> Result<()> {
     Ok(())
 }
 
-pub fn gen_skills(skills: &BTreeMap<PlEquipSkillId, Skill>, root: &Path) -> Result<()> {
+pub fn gen_skills(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
     let skill_path = root.join("skill");
     create_dir(&skill_path)?;
-    for (&id, skill) in skills {
+    for (&id, skill) in &pedia_ex.skills {
         let path = skill_path.join(skill_page(id));
-        gen_skill(skill, &path)?
+        gen_skill(skill, &path, pedia_ex)?
     }
     Ok(())
 }
