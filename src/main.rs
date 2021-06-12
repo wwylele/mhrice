@@ -405,6 +405,7 @@ async fn cleanup_s3_old_files(path: &Path, bucket: String, client: &S3Client) ->
 fn upload_s3_folder(path: &Path, bucket: String, client: &S3Client) -> Result<()> {
     use futures::future::try_join_all;
     use tokio::runtime::Runtime;
+    let rt = Runtime::new()?;
     let mut futures = vec![];
     for entry in WalkDir::new(path) {
         let entry = entry?;
@@ -443,9 +444,12 @@ fn upload_s3_folder(path: &Path, bucket: String, client: &S3Client) -> Result<()
             key,
             client,
         ));
+
+        if futures.len() > 10 {
+            rt.block_on(try_join_all(futures.drain(..)))?;
+        }
     }
 
-    let rt = Runtime::new()?;
     rt.block_on(try_join_all(futures))?;
     println!("Finished uploading. Cleaning deleted files...");
     rt.block_on(cleanup_s3_old_files(path, bucket, client))?;
