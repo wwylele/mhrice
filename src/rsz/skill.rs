@@ -57,7 +57,7 @@ rsz_enum! {
 
 rsz_enum! {
     #[rsz(u32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Copy, Clone, Hash, PartialEq, Eq)]
     pub enum BulletType {
         None = 0,
         Normal1 = 1,
@@ -230,7 +230,7 @@ rsz_enum! {
 
 rsz_enum! {
     #[rsz(u32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
     pub enum PlHyakuryuSkillId {
         None = 0,
         Skill(u32) = 1..=10000,
@@ -307,7 +307,7 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct PlHyakuryuSkillRecipeUserDataParam {
         pub recipe_no: u32,
-        pub skill_id: u32, // snow.data.DataDef.PlHyakuryuSkillId, 1 = ID_0
+        pub skill_id: PlHyakuryuSkillId,
         pub cost: u32,
         pub recipe_item_id_list:Vec<ItemId>,
         pub recipe_item_num_list:Vec<u32>

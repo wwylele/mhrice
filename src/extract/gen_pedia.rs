@@ -381,6 +381,14 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         pak,
         "data/Define/Player/Skill/PlHyakuryuSkill/HyakuryuSkillRecipeData.user",
     )?;
+    let hyakuryu_skill_name_msg = get_msg(
+        pak,
+        "data/Define/Player/Skill/PlHyakuryuSkill/HyakuryuSkill_Name.msg",
+    )?;
+    let hyakuryu_skill_explain_msg = get_msg(
+        pak,
+        "data/Define/Player/Skill/PlHyakuryuSkill/HyakuryuSkill_Explain.msg",
+    )?;
 
     let decorations = get_user(
         pak,
@@ -490,6 +498,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         player_skill_name_msg,
         hyakuryu_skill,
         hyakuryu_skill_recipe,
+        hyakuryu_skill_name_msg,
+        hyakuryu_skill_explain_msg,
         decorations,
         decorations_product,
         decorations_name_msg,
@@ -1064,6 +1074,48 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> 
     Ok(result)
 }
 
+fn prepare_hyakuryu_skills(
+    pedia: &Pedia,
+) -> Result<BTreeMap<PlHyakuryuSkillId, HyakuryuSkill<'_>>> {
+    let mut names = pedia.hyakuryu_skill_name_msg.get_name_map();
+    let mut explains = pedia.hyakuryu_skill_explain_msg.get_name_map();
+    let mut result = BTreeMap::new();
+    let mut recipes = HashMap::new();
+    for recipe in &pedia.hyakuryu_skill_recipe.param {
+        if recipe.skill_id == PlHyakuryuSkillId::None {
+            continue;
+        }
+        if recipes.insert(recipe.skill_id, recipe).is_some() {
+            bail!("Multiple recipe for hyakuryu skill {:?}", recipe.skill_id);
+        }
+    }
+    for skill in &pedia.hyakuryu_skill.param {
+        let raw_id = if let PlHyakuryuSkillId::Skill(id) = skill.id {
+            id
+        } else {
+            continue;
+        };
+        let recipe = recipes.remove(&skill.id);
+        let name = names
+            .remove(&format!("HyakuryuSkill_{:03}_Name", raw_id))
+            .with_context(|| format!("No name found for hyakuryu skill {:?}", skill.id))?;
+        let explain = explains
+            .remove(&format!("HyakuryuSkill_{:03}_Explain", raw_id))
+            .with_context(|| format!("No explain found for hyakuryu skill {:?}", skill.id))?;
+        let skill_package = HyakuryuSkill {
+            data: skill,
+            recipe,
+            name,
+            explain,
+        };
+        if result.insert(skill.id, skill_package).is_some() {
+            bail!("Multiple definition for hyakuryu skill {:?}", skill.id);
+        }
+    }
+
+    Ok(result)
+}
+
 fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
     let mut product_map: HashMap<PlArmorId, &ArmorProductUserDataParam> = HashMap::new();
     for product in &pedia.armor_product.param {
@@ -1543,6 +1595,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         quests: prepare_quests(pedia)?,
         discoveries: prepare_discoveries(pedia)?,
         skills: prepare_skills(pedia)?,
+        hyakuryu_skills: prepare_hyakuryu_skills(pedia)?,
         armors: prepare_armors(pedia)?,
         meat_names: prepare_meat_names(pedia)?,
         items: prepare_items(pedia)?,

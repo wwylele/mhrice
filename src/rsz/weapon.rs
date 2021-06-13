@@ -456,6 +456,76 @@ rsz_enum! {
     }
 }
 
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Copy, Clone)]
+    pub enum ShootType {
+        None = 0,
+        MovingShot = 1,
+        MovingShotReload = 2,
+        MovingShotSingleAuto = 3,
+        MovingReload = 4,
+        MovingReloadSingleAuto = 5,
+        SingleAuto = 6, //?
+        MovingShotReloadSingleAuto = 7,
+    }
+}
+
+#[derive(Debug)]
+pub struct ShootTypeFlags {
+    pub moving_shot: bool,
+    pub moving_reload: bool,
+    pub single_auto: bool,
+}
+
+impl ShootType {
+    pub fn to_flags(self) -> ShootTypeFlags {
+        match self {
+            ShootType::None => ShootTypeFlags {
+                moving_shot: false,
+                moving_reload: false,
+                single_auto: false,
+            },
+            ShootType::MovingShot => ShootTypeFlags {
+                moving_shot: true,
+                moving_reload: false,
+                single_auto: false,
+            },
+            ShootType::MovingReload => ShootTypeFlags {
+                moving_shot: false,
+                moving_reload: true,
+                single_auto: false,
+            },
+            ShootType::MovingShotReload => ShootTypeFlags {
+                moving_shot: true,
+                moving_reload: true,
+                single_auto: false,
+            },
+
+            ShootType::SingleAuto => ShootTypeFlags {
+                moving_shot: false,
+                moving_reload: false,
+                single_auto: true,
+            },
+            ShootType::MovingShotSingleAuto => ShootTypeFlags {
+                moving_shot: true,
+                moving_reload: false,
+                single_auto: true,
+            },
+            ShootType::MovingReloadSingleAuto => ShootTypeFlags {
+                moving_shot: false,
+                moving_reload: true,
+                single_auto: true,
+            },
+            ShootType::MovingShotReloadSingleAuto => ShootTypeFlags {
+                moving_shot: true,
+                moving_reload: true,
+                single_auto: true,
+            },
+        }
+    }
+}
+
 rsz_struct! {
     #[rsz()]
     #[derive(Debug, Serialize)]
@@ -465,9 +535,12 @@ rsz_struct! {
         pub reload: i32, // snow.data.GameItemEnum.Reload
         pub recoil: i32, // snow.data.GameItemEnum.Recoil
         pub kakusan_type: KakusanType,
-        pub bullet_equip_flag_list: Vec<bool>,
-        pub bullet_num_list: Vec<u32>,
-        pub bullet_type_list: Vec<i32>, // snow.data.GameItemEnum.ShootType,
+        #[serde(serialize_with = "ser_arr")]
+        pub bullet_equip_flag_list: [bool; 50],
+        #[serde(serialize_with = "ser_arr")]
+        pub bullet_num_list: [u32; 50],
+        #[serde(serialize_with = "ser_arr")]
+        pub bullet_type_list: [ShootType; 50],
     }
 }
 

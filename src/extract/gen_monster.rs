@@ -572,7 +572,7 @@ pub fn gen_lot(
         <h2 class="title">{text!("{}", header)}</h2>
         <div class="mh-reward-tables">
 
-        <div class="box">
+        <div class="mh-reward-box">
         <table>
             <thead><tr>
                 <th>"Target rewards"</th>
@@ -587,7 +587,7 @@ pub fn gen_lot(
         </table>
         </div>
 
-        <div class="box">
+        <div class="mh-reward-box">
         <table>
             <thead><tr>
                 <th>"Part"</th>
@@ -605,7 +605,7 @@ pub fn gen_lot(
         </table>
         </div>
 
-        <div class="box">
+        <div class="mh-reward-box">
         <table>
             <thead><tr>
                 <th>"Capture rewards"</th>
@@ -620,7 +620,7 @@ pub fn gen_lot(
         </table>
         </div>
 
-        <div class="box">
+        <div class="mh-reward-box">
         <table>
             <thead><tr>
                 <th>"Part"</th>
@@ -697,7 +697,7 @@ pub fn gen_lot(
         </table>
         </div>
 
-        <div class="box">
+        <div class="mh-reward-box">
         <table>
             <thead><tr>
                 <th>"Part"</th>
@@ -715,7 +715,7 @@ pub fn gen_lot(
         </table>
         </div>
 
-        <div class="box">
+        <div class="mh-reward-box">
         <table>
             <thead><tr>
                 <th>"From buddy (?)"</th>

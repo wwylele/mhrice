@@ -41,7 +41,7 @@ use crate::hash::*;
 use anyhow::*;
 use bitflags::*;
 use once_cell::sync::Lazy;
-use serde::Serialize;
+use serde::{Serialize, Serializer};
 use std::any::*;
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
@@ -513,9 +513,8 @@ macro_rules! rsz_enum {
             $( $variant $(($field))?, )*
         }
 
-        impl crate::rsz::FieldFromRsz for $enum_name {
-            fn field_from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
-                let raw = <$base>::field_from_rsz(rsz)?;
+        impl $enum_name {
+            pub fn from_raw(raw: $base) -> Result<Self> {
                 Ok(#[allow(unreachable_patterns)] match raw {
                     $(
                         $value $(..=$end_value)? =>
@@ -523,6 +522,13 @@ macro_rules! rsz_enum {
                     )*
                     x => bail!("Unknown value {} for enum {}", x, stringify!($enum_name))
                 })
+            }
+        }
+
+        impl crate::rsz::FieldFromRsz for $enum_name {
+            fn field_from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
+                let raw = <$base>::field_from_rsz(rsz)?;
+                Self::from_raw(raw)
             }
         }
     };
@@ -589,6 +595,13 @@ rsz_enum! {
     pub enum Zero {
         Zero = 0
     }
+}
+
+pub fn ser_arr<S, T: Serialize, const N: usize>(arr: &[T; N], s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    (&arr[..]).serialize(s)
 }
 
 type RszDeserializerPackage = (
