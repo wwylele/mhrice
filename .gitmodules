@@ -1,3 +1,0 @@
-[submodule "ffi/astc-codec"]
-	path = ffi/astc-codec
-	url = https://github.com/google/astc-codec

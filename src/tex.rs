@@ -124,15 +124,19 @@ trait TexCodec {
     }
 }
 
-struct Atsc<const W: usize, const H: usize>;
+struct Astc<const W: usize, const H: usize>;
 
-impl<const W: usize, const H: usize> TexCodec for Atsc<W, H> {
+impl<const W: usize, const H: usize> TexCodec for Astc<W, H> {
     const PACKET_WIDTH: usize = W;
     const PACKET_HEIGHT: usize = H;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(packet: &[u8; 16], writer: F) {
-        atsc_decompress_block(packet, W, H, writer);
+    fn decode<F: FnMut(usize, usize, Self::T)>(packet: &[u8; 16], mut writer: F) {
+        astc_decode::astc_decode_block(
+            packet,
+            astc_decode::Footprint::new(W as u32, H as u32),
+            |x, y, v| writer(x as usize, y as usize, v),
+        )
     }
 }
 
@@ -493,20 +497,20 @@ impl Tex {
             0x50 => Bc4Unorm::decode_image,
             0x53 => Bc5Unorm::decode_image,
             0x62 | 0x63 => Bc7Unorm::decode_image,
-            0x402 | 0x403 => Atsc::<4, 4>::decode_image,
-            0x405 | 0x406 => Atsc::<5, 4>::decode_image,
-            0x408 | 0x409 => Atsc::<5, 5>::decode_image,
-            0x40B | 0x40C => Atsc::<6, 5>::decode_image,
-            0x40E | 0x40F => Atsc::<6, 6>::decode_image,
-            0x411 | 0x412 => Atsc::<8, 5>::decode_image,
-            0x414 | 0x415 => Atsc::<8, 6>::decode_image,
-            0x417 | 0x418 => Atsc::<8, 8>::decode_image,
-            0x41A | 0x41B => Atsc::<10, 5>::decode_image,
-            0x41D | 0x41E => Atsc::<10, 6>::decode_image,
-            0x420 | 0x421 => Atsc::<10, 8>::decode_image,
-            0x423 | 0x424 => Atsc::<10, 10>::decode_image,
-            0x426 | 0x427 => Atsc::<12, 10>::decode_image,
-            0x429 | 0x42A => Atsc::<12, 12>::decode_image,
+            0x402 | 0x403 => Astc::<4, 4>::decode_image,
+            0x405 | 0x406 => Astc::<5, 4>::decode_image,
+            0x408 | 0x409 => Astc::<5, 5>::decode_image,
+            0x40B | 0x40C => Astc::<6, 5>::decode_image,
+            0x40E | 0x40F => Astc::<6, 6>::decode_image,
+            0x411 | 0x412 => Astc::<8, 5>::decode_image,
+            0x414 | 0x415 => Astc::<8, 6>::decode_image,
+            0x417 | 0x418 => Astc::<8, 8>::decode_image,
+            0x41A | 0x41B => Astc::<10, 5>::decode_image,
+            0x41D | 0x41E => Astc::<10, 6>::decode_image,
+            0x420 | 0x421 => Astc::<10, 8>::decode_image,
+            0x423 | 0x424 => Astc::<10, 10>::decode_image,
+            0x426 | 0x427 => Astc::<12, 10>::decode_image,
+            0x429 | 0x42A => Astc::<12, 12>::decode_image,
             x => bail!("unsupported format {:08X}", x),
         };
         decoder(&texture, width, height, super_width, super_height, writer);

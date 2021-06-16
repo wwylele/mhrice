@@ -110,6 +110,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "astc-decode"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f5a38c32ebb2aa1c293f7c76a49dd0311f58b0decc53b209256391c328611add"
+
+[[package]]
 name = "async-trait"
 version = "0.1.50"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -360,15 +366,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ddfc5b9aa5d4507acaf872de71051dfd0e309860e88966e1051e462a077aac4f"
 dependencies = [
  "bitflags",
-]
-
-[[package]]
-name = "cmake"
-version = "0.1.45"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb6210b637171dfba4cda12e579ac6dc73f5165ad56133e5d72ef3131f320855"
-dependencies = [
- "cc",
 ]
 
 [[package]]
@@ -1468,10 +1465,11 @@ name = "mhrice"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "astc-decode",
  "bitflags",
  "built",
+ "cc",
  "chrono",
- "cmake",
  "compress",
  "futures",
  "glium",
