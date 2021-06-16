@@ -343,8 +343,7 @@ impl TexCodec for R8Unorm {
     type T = [u8; 4];
 
     fn decode<F: FnMut(usize, usize, Self::T)>(packet: &[u8; 16], mut writer: F) {
-        for i in 0..16 {
-            let c = packet[i];
+        for (i, &c) in packet.iter().enumerate() {
             writer(i, 0, [c, c, c, 255])
         }
     }
