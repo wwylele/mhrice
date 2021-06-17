@@ -111,9 +111,9 @@ dependencies = [
 
 [[package]]
 name = "astc-decode"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5a38c32ebb2aa1c293f7c76a49dd0311f58b0decc53b209256391c328611add"
+checksum = "caed431402dfd4b66ef78aee6db52ea12e4e127e3aa2dbdf9b58fb38f90bb112"
 
 [[package]]
 name = "async-trait"
