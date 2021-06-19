@@ -32,7 +32,7 @@ png = "0.16"
 ordered-float = "2.1"
 half = "1.7"
 compress = "0.2"
-astc-decode = "0.2"
+astc-decode = "0.3"
 
 [build-dependencies]
 built = { version = "0.4", features = ["git2"] }

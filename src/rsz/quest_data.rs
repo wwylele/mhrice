@@ -5,7 +5,6 @@ use crate::rsz_struct;
 use serde::*;
 
 rsz_bitflags! {
-    #[derive(Serialize)]
     pub struct QuestType: u32 {
         const HUNTING  = 0x00000001;
         const KILL     = 0x00000002;

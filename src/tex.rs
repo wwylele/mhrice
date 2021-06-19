@@ -136,7 +136,7 @@ impl<const W: usize, const H: usize> TexCodec for Astc<W, H> {
             packet,
             astc_decode::Footprint::new(W as u32, H as u32),
             |x, y, v| writer(x as usize, y as usize, v),
-        )
+        );
     }
 }
 

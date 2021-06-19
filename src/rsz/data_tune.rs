@@ -100,7 +100,6 @@ rsz_struct! {
 }
 
 rsz_bitflags! {
-    #[derive(Serialize)]
     pub struct DamageCategoryFlag: u32 {
         const MARIONETTE_FRIENDLY_FIRE = 0x00000001;
         const MARIONETTE_START         = 0x00000002;

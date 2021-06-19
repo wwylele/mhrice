@@ -41,7 +41,7 @@ use crate::hash::*;
 use anyhow::*;
 use bitflags::*;
 use once_cell::sync::Lazy;
-use serde::{Serialize, Serializer};
+use serde::*;
 use std::any::*;
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
@@ -543,8 +543,8 @@ macro_rules! rsz_bitflags {
         }
     ) => {
         bitflags! {
+            #[derive(Serialize)]
             #[serde(into = "Vec<&'static str>")]
-            $(#[$outer_meta])*
             pub struct $name : $base {
                 $( const $field_name = $field_value; )*
             }

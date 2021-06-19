@@ -72,7 +72,6 @@ rsz_enum! {
 }
 
 rsz_bitflags! {
-    #[derive(Serialize)]
     pub struct DamageAttr: u16 {
         const ALLOW_DISABLE = 1;
         const NO_BREAK_CONST_OBJECT = 2;

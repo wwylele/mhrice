@@ -83,7 +83,6 @@ rsz_struct! {
 }
 
 rsz_bitflags! {
-    #[derive(Serialize)]
     pub struct StanceStatusFlags: u32 {
         const STAND = 1;
         const FLY = 2;
