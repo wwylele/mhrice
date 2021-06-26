@@ -114,7 +114,7 @@ rsz_enum! {
 
 rsz_enum! {
     #[rsz(u32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, PartialEq, Eq, Copy, Clone)]
     pub enum BottlePowerUpTypes {
         None = 0,
         ShortRange = 1,

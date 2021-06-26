@@ -129,8 +129,10 @@ fn gen_weapon<Param>(
     has_element: fn(&Param) -> Option<&ElementWeaponBaseData>,
     has_second_element: fn(&Param) -> Option<&DualBladesBaseUserDataParam>,
     has_close_range: fn(&Param) -> Option<&CloseRangeWeaponBaseData>,
+    has_horn: fn(&Param) -> Option<&HornBaseUserDataParam>,
     has_bullet: fn(&Param) -> Option<&BulletWeaponBaseUserDataParam>,
     has_lbg: fn(&Param) -> Option<&LightBowgunBaseUserDataParam>,
+    has_bow: fn(&Param) -> Option<&BowBaseUserDataParam>,
     special: Option<fn(&Param) -> Vec<Box<p<String>>>>,
 ) -> Result<()>
 where
@@ -141,8 +143,39 @@ where
     let element = has_element(param);
     let second_element = has_second_element(param);
     let close_range = has_close_range(param);
+    let horn = has_horn(param);
     let bullet = has_bullet(param);
     let lbg = has_lbg(param);
+    let bow = has_bow(param);
+
+    let bowgun_param = bullet.into_iter().flat_map(|bullet| {
+        [
+            html!(<p class="mh-kv"><span>"Fluctuation"</span>
+            <span>{ text!("{:?}", bullet.fluctuation) }</span></p>),
+            html!(<p class="mh-kv"><span>"Reload"</span>
+            <span>{ text!("{}", bullet.reload) }</span></p>),
+            html!(<p class="mh-kv"><span>"Recoil"</span>
+            <span>{ text!("{}", bullet.recoil) }</span></p>),
+            html!(<p class="mh-kv"><span>"Kakusan type"</span>
+            <span>{ text!("{:?}", bullet.kakusan_type) }</span></p>),
+        ]
+    });
+
+    let bow_param = bow.into_iter().flat_map(|bow| {
+        let charge_type: Vec<String> = bow
+            .bow_charge_type_list
+            .iter()
+            .map(|c| format!("{:?}", c))
+            .collect();
+        [
+            html!(<p class="mh-kv"><span>"Default charge lv"</span>
+            <span>{ text!("{}", bow.bow_default_charge_lv_limit.0) }</span></p>),
+            html!(<p class="mh-kv"><span>"Charge type"</span>
+            <span>{ text!("{}", charge_type.join("-")) }</span></p>),
+            html!(<p class="mh-kv"><span>"Curve type"</span>
+            <span>{ text!("{:?}", bow.bow_curve_type) }</span></p>),
+        ]
+    });
 
     let sharpness = close_range.map(|close_range| {
         let highest = close_range
@@ -172,6 +205,79 @@ where
             }
         </span>
         </span></p>)
+    });
+
+    let horn = horn.map(|horn| {
+        html!(<section class="section">
+        <h2 class="title">"Melody"</h2>
+        <ul> {
+            horn.horn_melody_type_list.iter().map(|id| {
+                html!(<li> {
+                    if let Some(name) = pedia_ex.horn_melody.get(&id) {
+                        gen_multi_lang(name)
+                    } else {
+                        html!(<span>{ text!("[{}]", id) }</span>)
+                    }
+                } </li>)
+            })
+        } </ul>
+        </section>)
+    });
+
+    struct BowBottleMap {
+        name: &'static str,
+        power_up: Option<BottlePowerUpTypes>,
+    }
+
+    const BOW_BOTTLE_MAP: [BowBottleMap; 7] = [
+        BowBottleMap {
+            name: "Close range",
+            power_up: Some(BottlePowerUpTypes::ShortRange),
+        },
+        BowBottleMap {
+            name: "Power",
+            power_up: None,
+        },
+        BowBottleMap {
+            name: "Poison",
+            power_up: Some(BottlePowerUpTypes::Poison),
+        },
+        BowBottleMap {
+            name: "Paralyze",
+            power_up: Some(BottlePowerUpTypes::Paralyze),
+        },
+        BowBottleMap {
+            name: "Sleep",
+            power_up: Some(BottlePowerUpTypes::Sleep),
+        },
+        BowBottleMap {
+            name: "Blast",
+            power_up: None,
+        },
+        BowBottleMap {
+            name: "Exhaust",
+            power_up: None,
+        },
+    ];
+
+    let bow = bow.map(|bow| {
+        html!(<section class="section">
+        <h2 class="title">"Bottle"</h2>
+        <ul> {
+            BOW_BOTTLE_MAP.iter().enumerate().filter(|&(i,_)| {
+                bow.bow_bottle_equip_flag_list[i]
+            }).map(|(_, bottle)| {
+                let power_up = if let Some(power_up) = bottle.power_up {
+                    bow.bow_bottle_power_up_type_list.contains(&power_up)
+                } else {
+                    false
+                }.then(|| html!(<span class="tag">"Power up"</span>));
+                html!(<li>{ text!("{}", bottle.name) }
+                {power_up}
+                </li>)
+            })
+        } </ul>
+        </section>)
     });
 
     let more_bullet: HashSet<BulletType> = main
@@ -302,6 +408,10 @@ where
 
                 { sharpness }
 
+                { bowgun_param }
+
+                { bow_param }
+
                 { special.map(|special|special(param)).into_iter().flatten() }
 
                 </div>
@@ -322,7 +432,11 @@ where
                 } </ul>
                 </section>
 
+                { horn }
+
                 { bullet }
+
+                { bow }
 
                 <section class="section">
                 <h2 class="title">"Crafting"</h2>
@@ -461,6 +575,14 @@ fn charge_axe(param: &ChargeAxeBaseUserDataParam) -> Vec<Box<p<String>>> {
     </p>)]
 }
 
+#[allow(clippy::vec_box)]
+fn heavy_bowgun(param: &HeavyBowgunBaseUserDataParam) -> Vec<Box<p<String>>> {
+    vec![html!(<p class="mh-kv">
+    <span>"Unique bullet"</span>
+    <span>{text!("{:?}", param.heavy_bowgun_unique_bullet_type)}</span>
+    </p>)]
+}
+
 pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
     let path = root.join("weapon");
     create_dir(&path)?;
@@ -470,8 +592,10 @@ pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
             element:$element:ident,
             second_element:$second_element:ident,
             close_range:$close_range:ident,
+            horn:$horn:ident,
             bullet:$bullet:ident,
             lbg:$lbg:ident,
+            bow:$bow:ident,
             special:$special:expr
         ) => {{
             gen_tree(&pedia_ex.$label, &path, stringify!($label), $name)?;
@@ -485,8 +609,10 @@ pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
                     $element,
                     $second_element,
                     $close_range,
+                    $horn,
                     $bullet,
                     $lbg,
+                    $bow,
                     $special,
                 )?;
             }
@@ -499,8 +625,10 @@ pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
         element: yes,
         second_element: no,
         close_range: yes,
+        horn: no,
         bullet: no,
         lbg: no,
+        bow: no,
         special: None
     );
     weapon!(
@@ -509,8 +637,10 @@ pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
         element: yes,
         second_element: no,
         close_range: yes,
+        horn: no,
         bullet: no,
         lbg: no,
+        bow: no,
         special: None
     );
     weapon!(
@@ -519,8 +649,10 @@ pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
         element: yes,
         second_element: no,
         close_range: yes,
+        horn: no,
         bullet: no,
         lbg: no,
+        bow: no,
         special: None
     );
     weapon!(
@@ -529,8 +661,10 @@ pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
         element: yes,
         second_element: no,
         close_range: yes,
+        horn: no,
         bullet: no,
         lbg: no,
+        bow: no,
         special: None
     );
     weapon!(
@@ -539,8 +673,10 @@ pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
         element: yes,
         second_element: no,
         close_range: yes,
+        horn: no,
         bullet: no,
         lbg: no,
+        bow: no,
         special: None
     );
     weapon!(
@@ -549,8 +685,10 @@ pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
         element: yes,
         second_element: no,
         close_range: yes,
+        horn: no,
         bullet: no,
         lbg: no,
+        bow: no,
         special: Some(slash_axe)
     );
     weapon!(
@@ -559,8 +697,10 @@ pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
         element: yes,
         second_element: no,
         close_range: yes,
+        horn: no,
         bullet: no,
         lbg: no,
+        bow: no,
         special: Some(gun_lance)
     );
     weapon!(
@@ -569,8 +709,10 @@ pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
         element: yes,
         second_element: yes,
         close_range: yes,
+        horn: no,
         bullet: no,
         lbg: no,
+        bow: no,
         special: None
     );
     weapon!(
@@ -579,8 +721,10 @@ pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
         element: yes,
         second_element: no,
         close_range: yes,
+        horn: yes,
         bullet: no,
         lbg: no,
+        bow: no,
         special: None
     );
     weapon!(
@@ -589,8 +733,10 @@ pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
         element: yes,
         second_element: no,
         close_range: yes,
+        horn: no,
         bullet: no,
         lbg: no,
+        bow: no,
         special: Some(insect_glaive)
     );
     weapon!(
@@ -599,8 +745,10 @@ pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
         element: yes,
         second_element: no,
         close_range: yes,
+        horn: no,
         bullet: no,
         lbg: no,
+        bow: no,
         special: Some(charge_axe)
     );
     weapon!(
@@ -609,8 +757,10 @@ pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
         element: no,
         second_element: no,
         close_range: no,
+        horn: no,
         bullet: yes,
         lbg: yes,
+        bow: no,
         special: None
     );
     weapon!(
@@ -619,9 +769,11 @@ pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
         element: no,
         second_element: no,
         close_range: no,
+        horn: no,
         bullet: yes,
         lbg: no,
-        special: None
+        bow: no,
+        special: Some(heavy_bowgun)
     );
     weapon!(
         bow,
@@ -629,8 +781,10 @@ pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
         element: yes,
         second_element: no,
         close_range: no,
+        horn: no,
         bullet: no,
         lbg: no,
+        bow: yes,
         special: None
     );
 

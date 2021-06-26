@@ -461,6 +461,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let heavy_bowgun = get_weapon_list(pak, "HeavyBowgun")?;
     let bow = get_weapon_list(pak, "Bow")?;
 
+    let horn_melody = get_msg(pak, "data/Define/Player/Weapon/Horn/Horn_UniqueParam.msg")?;
+
     Ok(Pedia {
         monsters,
         small_monsters,
@@ -529,6 +531,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         light_bowgun,
         heavy_bowgun,
         bow,
+        horn_melody,
     })
 }
 
@@ -1588,6 +1591,18 @@ fn prepare_parts_dictionary(
     Ok(result)
 }
 
+fn prepare_horn_melody(pedia: &Pedia) -> HashMap<i32, &'_ MsgEntry> {
+    let mut res = HashMap::new();
+    let map = pedia.horn_melody.get_name_map();
+    for id in 0..999 {
+        let name = format!("Horn_UniqueParam_{:03}_Name", id);
+        if let Some(&name) = map.get(&name) {
+            res.insert(id, name);
+        }
+    }
+    res
+}
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     Ok(PediaEx {
         sizes: prepare_size_map(&pedia.size_list)?,
@@ -1617,5 +1632,6 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         light_bowgun: prepare_weapon(&pedia.light_bowgun)?,
         heavy_bowgun: prepare_weapon(&pedia.heavy_bowgun)?,
         bow: prepare_weapon(&pedia.bow)?,
+        horn_melody: prepare_horn_melody(&pedia),
     })
 }

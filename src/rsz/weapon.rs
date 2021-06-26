@@ -605,9 +605,9 @@ rsz_struct! {
     pub struct BowBaseUserDataParam {
         pub base: ElementWeaponBaseData,
         pub bow_bottle_power_up_type_list: Vec<BottlePowerUpTypes>,
-        pub bow_bottle_equip_flag_list: Vec<bool>,
+        pub bow_bottle_equip_flag_list: [bool; 7],
         pub bow_default_charge_lv_limit: BowChageStartLvTypes,
-        pub bow_charge_type_list: Vec<BowChargeTypes>,
+        pub bow_charge_type_list: [BowChargeTypes; 4],
         pub bow_curve_type: i32, // snow.data.BowWeaponBaseData.CurveTypes
     }
 }

@@ -117,6 +117,8 @@ pub struct Pedia {
     pub light_bowgun: WeaponList<LightBowgunBaseUserData>,
     pub heavy_bowgun: WeaponList<HeavyBowgunBaseUserData>,
     pub bow: WeaponList<BowBaseUserData>,
+
+    pub horn_melody: Msg,
 }
 
 pub struct Quest<'a> {
@@ -221,4 +223,6 @@ pub struct PediaEx<'a> {
     pub light_bowgun: WeaponTree<'a, LightBowgunBaseUserDataParam>,
     pub heavy_bowgun: WeaponTree<'a, HeavyBowgunBaseUserDataParam>,
     pub bow: WeaponTree<'a, BowBaseUserDataParam>,
+
+    pub horn_melody: HashMap<i32, &'a MsgEntry>,
 }
