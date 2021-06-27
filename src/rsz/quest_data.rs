@@ -217,6 +217,7 @@ rsz_struct! {
         0xF9F8C5C8 = 0,
         0x54BDF6C5 = 4,
         0x814CED42 = 5,
+        0x46BFF4C2 = 6,
     )]
     #[derive(Debug, Serialize)]
     pub struct NormalQuestDataParam {
