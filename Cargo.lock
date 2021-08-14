@@ -1468,7 +1468,6 @@ dependencies = [
  "astc-decode",
  "bitflags",
  "built",
- "cc",
  "chrono",
  "compress",
  "futures",

@@ -9,11 +9,10 @@ use std::path::Path;
 use std::sync::mpsc::*;
 use std::thread::*;
 
-// mod astc;
-mod ffi;
+mod bc7;
 mod monster_hitzone;
 
-pub use ffi::*;
+pub use bc7::*;
 pub use monster_hitzone::*;
 
 struct Job {

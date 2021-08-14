@@ -36,4 +36,3 @@ astc-decode = "0.3"
 
 [build-dependencies]
 built = { version = "0.5", features = ["git2"] }
-cc = "1.0"

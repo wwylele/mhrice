@@ -15,9 +15,6 @@ Although I don't enforce anything beyond the license conditions, I kindly ask yo
  - Actively tested on linux. Might work on Windows or macOS. (If not please open an issue)
  - Rust, cargo
  - OpenGL 3.3 if running any model-related command
- - C++ for a BC7 decoding library. RIIR to remove this dependency is still WIP
-
-*Note: this repo contain git submodule. Either clone with `git clone --recursive` or do `git submodule update --init --recursive` after cloning.
 
 ## License
 
