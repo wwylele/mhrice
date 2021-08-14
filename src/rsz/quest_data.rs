@@ -154,7 +154,10 @@ rsz_enum! {
         Em4Hp = 10,
         Em5Hp = 11,
         HpEmx1 = 12,
-        InitRandom = 13,
+        // TODO: this depends on version
+        U13 = 13, // INIT_RANDOM (v6), HP_EMx2 (v7)
+        U14 = 14, // SWAP_RANDOM (v6), INIT_RANDOM (v7)
+        U15 = 15, // SWAP_RANDOM (v7)
     }
 }
 
@@ -218,6 +221,7 @@ rsz_struct! {
         0x54BDF6C5 = 4,
         0x814CED42 = 5,
         0x46BFF4C2 = 6,
+        0x42DBE1AB = 7,
     )]
     #[derive(Debug, Serialize)]
     pub struct NormalQuestDataParam {
