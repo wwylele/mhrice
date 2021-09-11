@@ -820,6 +820,7 @@ fn hash(input: String, utf16: bool) {
 }
 
 fn main() -> Result<()> {
+    gpu::gpu_init();
     match Mhrice::from_args() {
         Mhrice::Dump { pak, name, output } => dump(pak, name, output),
         Mhrice::DumpIndex {

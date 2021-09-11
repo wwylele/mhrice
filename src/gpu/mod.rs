@@ -1,12 +1,15 @@
 use anyhow::bail;
 use glium::backend::glutin::headless::Headless;
 use glium::*;
+use glutin::Context;
+use glutin::NotCurrent;
 use nalgebra_glm::*;
 use once_cell::sync::Lazy;
 use std::convert::TryFrom;
 use std::marker::*;
 use std::path::Path;
 use std::sync::mpsc::*;
+use std::sync::Mutex;
 use std::thread::*;
 
 mod bc7;
@@ -15,18 +18,15 @@ mod monster_hitzone;
 pub use bc7::*;
 pub use monster_hitzone::*;
 
+static INIT_CONTEXT: Lazy<Mutex<Option<Context<NotCurrent>>>> = Lazy::new(|| Mutex::new(None));
+
 struct Job {
     f: Box<dyn FnOnce(&GlHandle) + Send + 'static>,
 }
 
-fn gpu_thread(receiver: Receiver<Job>) {
-    #[cfg(target_family = "unix")]
-    use glutin::platform::unix::EventLoopExtUnix;
-    #[cfg(target_family = "windows")]
-    use glutin::platform::windows::EventLoopExtWindows;
-
-    let event_loop: glutin::event_loop::EventLoop<()> =
-        glutin::event_loop::EventLoop::new_any_thread();
+// Must be called from the main thread
+pub fn gpu_init() {
+    let event_loop: glutin::event_loop::EventLoop<()> = glutin::event_loop::EventLoop::new();
     let cb = glutin::ContextBuilder::new()
         .with_gl(glutin::GlRequest::Specific(glutin::Api::OpenGl, (3, 3)))
         .with_gl_profile(glutin::GlProfile::Core);
@@ -34,9 +34,19 @@ fn gpu_thread(receiver: Receiver<Job>) {
         width: 800,
         height: 600,
     };
-    let context = cb.build_headless(&event_loop, size).unwrap();
+    if let Ok(context) = cb.build_headless(&event_loop, size) {
+        *INIT_CONTEXT.lock().unwrap() = Some(context);
+    }
+}
+
+fn gpu_thread(receiver: Receiver<Job>) {
+    let context = INIT_CONTEXT
+        .lock()
+        .unwrap()
+        .take()
+        .expect("Failed to create GL context");
     // SAFETY: this is the only GL context in the entire program
-    let context = unsafe { context.treat_as_current() };
+    let context = unsafe { context.make_current().unwrap() };
     let display = glium::backend::glutin::headless::Headless::new(context).unwrap();
 
     let gl_handle = GlHandle { display };
@@ -49,17 +59,17 @@ struct GlHandle {
     display: Headless,
 }
 
-struct Context {
+struct GpuContext {
     job_sender: SyncSender<Job>,
 }
 
-static CONTEXT: Lazy<Context> = Lazy::new(|| {
+static CONTEXT: Lazy<GpuContext> = Lazy::new(|| {
     let (job_sender, job_receiver) = sync_channel(0);
     spawn(move || gpu_thread(job_receiver));
-    Context { job_sender }
+    GpuContext { job_sender }
 });
 
-impl Context {
+impl GpuContext {
     fn run<R: Send + 'static, F: FnOnce(&GlHandle) -> R + Send + 'static>(&self, f: F) -> R {
         let (result_sender, result_receiver) = channel();
         self.job_sender
