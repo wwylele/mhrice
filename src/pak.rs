@@ -83,30 +83,34 @@ impl<F: Read + Seek> PakReader<F> {
         let suffix = *SUFFIX_MAP
             .get(&path[dot + 1..])
             .context("Unknown extension")?;
-        let full_path = format!("natives/NSW/{}.{}", path, suffix);
-        let full_path_nsw = format!("{}.NSW", &full_path);
+        for suffix in suffix {
+            let full_path = format!("natives/NSW/{}.{}", path, suffix);
+            let full_path_nsw = format!("{}.NSW", &full_path);
 
-        let mut result = vec![];
+            let mut result = vec![];
 
-        for &language in LANGUAGE_LIST {
-            let (path_l, path_nsw_l) = if language.is_empty() {
-                (full_path.clone(), full_path_nsw.clone())
-            } else {
-                let path_l = format!("{}.{}", &full_path, language);
-                let path_nsw_l = format!("{}.{}", &full_path_nsw, language);
-                (path_l, path_nsw_l)
-            };
-            if let Some(index) = self.find_file_internal(path_l) {
-                result.push(I18nPakFileIndex { language, index });
-                continue;
+            for &language in LANGUAGE_LIST {
+                let (path_l, path_nsw_l) = if language.is_empty() {
+                    (full_path.clone(), full_path_nsw.clone())
+                } else {
+                    let path_l = format!("{}.{}", &full_path, language);
+                    let path_nsw_l = format!("{}.{}", &full_path_nsw, language);
+                    (path_l, path_nsw_l)
+                };
+                if let Some(index) = self.find_file_internal(path_l) {
+                    result.push(I18nPakFileIndex { language, index });
+                    continue;
+                }
+
+                if let Some(index) = self.find_file_internal(path_nsw_l) {
+                    result.push(I18nPakFileIndex { language, index });
+                }
             }
-
-            if let Some(index) = self.find_file_internal(path_nsw_l) {
-                result.push(I18nPakFileIndex { language, index });
+            if !result.is_empty() {
+                return Ok(result);
             }
         }
-
-        Ok(result)
+        return Ok(vec![]);
     }
 
     pub fn find_file(&mut self, path: &str) -> Result<PakFileIndex> {
