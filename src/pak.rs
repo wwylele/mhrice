@@ -151,7 +151,7 @@ impl<F: Read + Seek> PakReader<F> {
                 return Ok(result);
             }
         }
-        return Ok(vec![]);
+        Ok(vec![])
     }
 
     pub fn find_file(&mut self, path: &str) -> Result<PakFileIndex> {

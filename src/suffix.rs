@@ -1,8 +1,7 @@
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 
-// Originally dumped from Ghidra from demo ExeFS, then updated with some newer value
-// TODO: do a thorough check again with the latest ExeFS
+// Dumped from 3.6.1.0 PC version.
 // The suffix list for a particular file format is ordered that the latest version comes first
 pub static SUFFIX_MAP: Lazy<HashMap<&'static str, &'static [u32]>> = Lazy::new(|| {
     let mut m: HashMap<&'static str, &'static [u32]> = HashMap::new();
@@ -10,19 +9,19 @@ pub static SUFFIX_MAP: Lazy<HashMap<&'static str, &'static [u32]>> = Lazy::new(|
     m.insert("pfb", &[0x11]);
     m.insert("user", &[2]);
     m.insert("uvar", &[2]);
-    m.insert("hapvib", &[0x6bb788fe]);
+    m.insert("hapvib", &[0x6BB788FE]);
     m.insert("psop", &[1]);
-    m.insert("sdf", &[0x77a4cbdd]);
-    m.insert("mmtr", &[0x77da5e9d, 0x77a4cbdd]);
-    m.insert("mmtrs", &[0x77da5e9d, 0x77a4cbdd]);
-    m.insert("vsdf", &[0x77da5e9e, 0x77a4cbde]);
+    m.insert("sdf", &[0x7DB96331]);
+    m.insert("mmtr", &[0x7DB96331]);
+    m.insert("mmtrs", &[0x7DB96331]);
+    m.insert("vsdf", &[0x7DB96332]);
     m.insert("tex", &[0x1c]);
     m.insert("rtex", &[5]);
     m.insert("rcfg", &[3]);
     m.insert("sss", &[2]);
     m.insert("lod", &[3]);
     m.insert("rtmr", &[3]);
-    m.insert("mesh", &[0x77b089b0]);
+    m.insert("mesh", &[0x77B089B0]);
     m.insert("gpbf", &[1]);
     m.insert("mdf2", &[0x13]);
     m.insert("ies", &[2]);
@@ -49,11 +48,11 @@ pub static SUFFIX_MAP: Lazy<HashMap<&'static str, &'static [u32]>> = Lazy::new(|
     m.insert("clip", &[0x28]);
     m.insert("tml", &[0x9c41]);
     m.insert("ucurve", &[0x28]);
-    m.insert("dlgtml", &[40000]);
-    m.insert("tmlfsm2", &[0x262f641]);
-    m.insert("tmlbld", &[0x9c44]);
+    m.insert("dlgtml", &[0x9C40]);
+    m.insert("tmlfsm2", &[0x262F641]);
+    m.insert("tmlbld", &[0x9C44]);
     m.insert("ucurvelist", &[0x28]);
-    m.insert("dlgtmllist", &[40000000]);
+    m.insert("dlgtmllist", &[0x2625A00]);
     m.insert("mot", &[0x1c8]);
     m.insert("motblend", &[0x1c8]);
     m.insert("mottree", &[10]);
@@ -138,7 +137,7 @@ pub static SUFFIX_MAP: Lazy<HashMap<&'static str, &'static [u32]>> = Lazy::new(|
     m.insert("gcp", &[1]);
     m.insert("gsty", &[1]);
     m.insert("oft", &[1]);
-    m.insert("ift", &[2]);
+    m.insert("ift", &[4]);
     m.insert("fslt", &[2]);
     m.insert("tean", &[1]);
     m.insert("svgn", &[3]);
@@ -155,8 +154,8 @@ pub static SUFFIX_MAP: Lazy<HashMap<&'static str, &'static [u32]>> = Lazy::new(|
     m.insert("ainvmmgr", &[2]);
     m.insert("aivspcmgr", &[2]);
     m.insert("nar", &[1]);
-    m.insert("nmr", &[0xf]);
-    m.insert("ncf", &[5]);
+    m.insert("nmr", &[0x11]);
+    m.insert("ncf", &[9]);
     m.insert("rfl", &[1]);
     m.insert("pup", &[0]);
     m.insert("mov", &[1]);
@@ -164,14 +163,15 @@ pub static SUFFIX_MAP: Lazy<HashMap<&'static str, &'static [u32]>> = Lazy::new(|
     m.insert("areamap", &[8]);
     m.insert("areaquery", &[2]);
     m.insert("nnfp", &[1]);
-    m.insert("spt", &[0x6bf3afba]);
-    m.insert("spf", &[0x6be4bb9a]);
+    m.insert("spt", &[0x6BF3AFBA]);
+    m.insert("spf", &[0x6BE4BB9A]);
     m.insert("stmesh", &[2]);
     m.insert("path", &[0]);
     m.insert("lform", &[7]);
     m.insert("fol", &[0]);
     m.insert("gp", &[0]);
     m.insert("layergrid", &[7]);
+    m.insert("fgrl", &[1]);
 
     m
 });
