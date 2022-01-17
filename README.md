@@ -1,5 +1,9 @@
 # ![](src/extract/static/favicon.png) mhrice
 
+# :construction: This project is currently under transition for PC version :construction:
+
+And things don't work. If you want the old version that works for the old switch version, please refer to the release tag.
+
 ## What?
 
 To build http://mhrice.info, and to reverse engineer the game.
@@ -12,7 +16,7 @@ Although I don't enforce anything beyond the license conditions, I kindly ask yo
 
 ## Platform and dependency
 
- - Actively tested on linux. Might work on Windows or macOS. (If not please open an issue)
+ - Actively tested on linux and Windows. Might work on macOS. (If not please open an issue)
  - Rust, cargo
  - OpenGL 3.3 if running any model-related command
 
