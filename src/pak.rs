@@ -125,17 +125,17 @@ impl<F: Read + Seek> PakReader<F> {
             .get(&path[dot + 1..])
             .context("Unknown extension")?;
         for suffix in suffix {
-            let full_path = format!("natives/NSW/{}.{}", path, suffix);
-            let full_path_nsw = format!("{}.NSW", &full_path);
+            let full_path = format!("natives/STM/{}.{}", path, suffix);
+            let full_path_platform = format!("{}.x64", &full_path);
 
             let mut result = vec![];
 
             for &language in LANGUAGE_LIST {
                 let (path_l, path_nsw_l) = if language.is_empty() {
-                    (full_path.clone(), full_path_nsw.clone())
+                    (full_path.clone(), full_path_platform.clone())
                 } else {
                     let path_l = format!("{}.{}", &full_path, language);
-                    let path_nsw_l = format!("{}.{}", &full_path_nsw, language);
+                    let path_nsw_l = format!("{}.{}", &full_path_platform, language);
                     (path_l, path_nsw_l)
                 };
                 if let Some(index) = self.find_file_internal(path_l) {
