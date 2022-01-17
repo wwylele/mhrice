@@ -822,38 +822,39 @@ fn hash(input: String, utf16: bool) {
 fn main() -> Result<()> {
     gpu::gpu_init();
     match Mhrice::from_args() {
-        Mhrice::Dump { pak, name, output } => dump(pak, name, output),
-        Mhrice::DumpIndex {
-            pak,
-            version,
-            index,
-            output,
-        } => dump_index(pak, version, index, output),
-        Mhrice::Scan { pak } => scan(pak),
-        Mhrice::GenJson { pak } => gen_json(pak),
-        Mhrice::GenWebsite { pak, output, s3 } => gen_website(pak, output, s3),
-        Mhrice::ReadTdb { tdb } => read_tdb(tdb),
-        Mhrice::ReadMsg { msg } => read_msg(msg),
-        Mhrice::ScanMsg { pak, output } => scan_msg(pak, output),
-        Mhrice::GrepMsg { pak, pattern } => grep_msg(pak, pattern),
-        Mhrice::Grep { pak, pattern } => grep(pak, pattern),
-        Mhrice::SearchPath { pak } => search_path(pak),
-        Mhrice::DumpTree { pak, list, output } => dump_tree(pak, list, output),
-        Mhrice::ScanMesh { pak } => scan_mesh(pak),
-        Mhrice::ScanRcol { pak } => scan_rcol(pak),
-        Mhrice::ScanTex { pak } => scan_tex(pak),
-        Mhrice::ScanGui { pak } => scan_gui(pak),
-        Mhrice::ScanUvs { pak } => scan_uvs(pak),
-        Mhrice::DumpMesh { mesh, output } => dump_mesh(mesh, output),
-        Mhrice::DumpRcol { rcol } => dump_rcol(rcol),
-        Mhrice::DumpMeat { mesh, rcol, output } => dump_meat(mesh, rcol, output),
-        Mhrice::DumpTex { tex, output } => dump_tex(tex, output),
-        Mhrice::DumpGui { gui } => dump_gui(gui),
-        Mhrice::GenMeat { pak, index, output } => gen_meat(pak, index, output),
-        Mhrice::GenResources { pak, output } => gen_resources(pak, output),
-        Mhrice::Hash { input, utf16 } => {
-            hash(input, utf16);
-            Ok(())
-        }
+        //Mhrice::Dump { pak, name, output } => dump(pak, name, output),
+        //Mhrice::DumpIndex {
+        //    pak,
+        //    version,
+        //    index,
+        //    output,
+        //} => dump_index(pak, version, index, output),
+        //Mhrice::Scan { pak } => scan(pak),
+        //Mhrice::GenJson { pak } => gen_json(pak),
+        //Mhrice::GenWebsite { pak, output, s3 } => gen_website(pak, output, s3),
+        //Mhrice::ReadTdb { tdb } => read_tdb(tdb),
+        //Mhrice::ReadMsg { msg } => read_msg(msg),
+        //Mhrice::ScanMsg { pak, output } => scan_msg(pak, output),
+        //Mhrice::GrepMsg { pak, pattern } => grep_msg(pak, pattern),
+        //Mhrice::Grep { pak, pattern } => grep(pak, pattern),
+        //Mhrice::SearchPath { pak } => search_path(pak),
+        //Mhrice::DumpTree { pak, list, output } => dump_tree(pak, list, output),
+        //Mhrice::ScanMesh { pak } => scan_mesh(pak),
+        //Mhrice::ScanRcol { pak } => scan_rcol(pak),
+        //Mhrice::ScanTex { pak } => scan_tex(pak),
+        //Mhrice::ScanGui { pak } => scan_gui(pak),
+        //Mhrice::ScanUvs { pak } => scan_uvs(pak),
+        //Mhrice::DumpMesh { mesh, output } => dump_mesh(mesh, output),
+        //Mhrice::DumpRcol { rcol } => dump_rcol(rcol),
+        //Mhrice::DumpMeat { mesh, rcol, output } => dump_meat(mesh, rcol, output),
+        //Mhrice::DumpTex { tex, output } => dump_tex(tex, output),
+        //Mhrice::DumpGui { gui } => dump_gui(gui),
+        //Mhrice::GenMeat { pak, index, output } => gen_meat(pak, index, output),
+        //Mhrice::GenResources { pak, output } => gen_resources(pak, output),
+        //Mhrice::Hash { input, utf16 } => {
+        //    hash(input, utf16);
+        //    Ok(())
+        //}
+        _ => unimplemented!(),
     }
 }
