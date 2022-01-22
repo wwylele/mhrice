@@ -33,6 +33,8 @@ ordered-float = "2.1"
 half = "1.7"
 compress = "0.2"
 astc-decode = "0.3"
+num-bigint = "0.4"
+base64 = "0.13"
 
 [build-dependencies]
 built = { version = "0.5", features = ["git2"] }

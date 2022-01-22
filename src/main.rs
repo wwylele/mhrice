@@ -1,9 +1,11 @@
 #![recursion_limit = "4096"]
 
 use anyhow::*;
+use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use rusoto_core::{ByteStream, Region};
 use rusoto_s3::*;
+use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Cursor};
@@ -48,6 +50,37 @@ use uvs::*;
 pub mod built_info {
     // The file has been placed there by the build script.
     include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+pub static CONFIG: Lazy<HashMap<String, String>> = Lazy::new(|| {
+    let mut config = HashMap::new();
+    if let Ok(file) = File::open("mhrice.config") {
+        eprintln!("Reading global config file...");
+        for line in BufReader::new(file).lines() {
+            if let Ok(line) = line {
+                let split = if let Some(split) = line.find('=') {
+                    split
+                } else {
+                    continue;
+                };
+                let key = line[0..split].trim().to_string();
+                let value = line[split + 1..].trim().to_string();
+                eprintln!("Got {}", key);
+                config.insert(key, value);
+            } else {
+                break;
+            }
+        }
+        eprintln!("Finished reading global config file");
+    }
+    config
+});
+
+pub fn get_config(key: &str) -> Option<String> {
+    if let Ok(value) = std::env::var(key) {
+        return Some(value);
+    }
+    CONFIG.get(key).map(|s| s.to_string())
 }
 
 #[derive(StructOpt)]

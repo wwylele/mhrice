@@ -1,11 +1,24 @@
+use crate::align::align_up;
 use crate::file_ext::*;
+use crate::get_config;
 use crate::hash::hash_as_utf16;
 use crate::suffix::SUFFIX_MAP;
 use anyhow::*;
 use compress::flate;
+use num_bigint::BigUint;
+use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::io::{Read, Seek, SeekFrom};
+
+static PAK_MAIN_KEY_MOD: Lazy<Option<Vec<u8>>> =
+    Lazy::new(|| get_config("PAK_MAIN_KEY_MOD").and_then(|s| base64::decode(s).ok()));
+
+static PAK_SUB_KEY_MOD: Lazy<Option<Vec<u8>>> =
+    Lazy::new(|| get_config("PAK_SUB_KEY_MOD").and_then(|s| base64::decode(s).ok()));
+
+static PAK_SUB_KEY_EXP: Lazy<Option<Vec<u8>>> =
+    Lazy::new(|| get_config("PAK_SUB_KEY_EXP").and_then(|s| base64::decode(s).ok()));
 
 const LANGUAGE_LIST: &[&str] = &[
     "", "Ja", "En", "Fr", "It", "De", "Es", "Ru", "Pl", "Nl", "Pt", "PtBR", "Ko", "ZhTW", "ZhCN",
@@ -38,6 +51,7 @@ struct PakEntry {
     len: u64,
     format: u8,
     flag: u8,
+    encryption: u8,
 }
 
 #[derive(Debug)]
@@ -78,7 +92,25 @@ impl<F: Read + Seek> PakReader<F> {
                 file.read_exact(&mut entries_buffer)?;
 
                 if flag & 8 != 0 {
-                    let key = guess_key(&entries_buffer)?;
+                    let key = if let Some(m) = &*PAK_MAIN_KEY_MOD {
+                        let mut encrypted_key = [0; 128];
+                        file.read_exact(&mut encrypted_key)?;
+
+                        let base = BigUint::from_bytes_le(&encrypted_key);
+                        let modulus = BigUint::from_bytes_le(&m);
+                        let exponent = BigUint::from(0x10001u32);
+                        let power = base.modpow(&exponent, &modulus);
+                        let key_vec = power.to_bytes_le();
+                        if key_vec.len() > 32 {
+                            bail!("Key too long")
+                        }
+                        let mut key = [0; 32];
+                        key[0..key_vec.len()].copy_from_slice(&key_vec);
+                        key
+                    } else {
+                        eprintln!("PAK_MAIN_KEY_MOD not provided. Going to guess the key...");
+                        guess_key(&entries_buffer)?
+                    };
                     decrypt_pak_entry_table(&mut entries_buffer, &key);
                 }
 
@@ -93,12 +125,14 @@ impl<F: Read + Seek> PakReader<F> {
                         let len = entry.read_u64()?;
                         let format = entry.read_u8()?;
                         let flag = entry.read_u8()?;
+                        let encryption = entry.read_u8()?;
                         Ok(PakEntry {
                             offset,
                             len_compressed,
                             len,
                             format,
                             flag,
+                            encryption,
                         })
                     })
                     .collect::<Result<Vec<PakEntry>>>()?;
@@ -169,30 +203,62 @@ impl<F: Read + Seek> PakReader<F> {
             len_compressed,
             len,
             format,
-            flag,
+            encryption,
+            ..
         } = entries[file_index.index];
 
         file.seek(SeekFrom::Start(offset))?;
+        let mut data = vec![0; len_compressed.try_into()?];
+        file.read_exact(&mut data)?;
+
+        match encryption {
+            0 => {}
+            1 => {
+                let encrypted = data;
+                let mut encrypted = &encrypted[..];
+                let plain_len: usize = encrypted.read_u64()?.try_into()?;
+                if align_up(plain_len, 8) * 0x10 != encrypted.len() {
+                    bail!("Unexpected size for decryption")
+                }
+                data = vec![0; plain_len];
+                let e = (&*PAK_SUB_KEY_EXP)
+                    .as_ref()
+                    .context("Needs PAK_SUB_KEY_EXP")?;
+                let m = (&*PAK_SUB_KEY_MOD)
+                    .as_ref()
+                    .context("Needs PAK_SUB_KEY_MOD")?;
+                let e = BigUint::from_bytes_le(e);
+                let m = BigUint::from_bytes_le(m);
+                for (plain, enc) in data.chunks_mut(8).zip(encrypted.chunks(0x80)) {
+                    let p = BigUint::from_bytes_le(&enc[0..0x40]);
+                    let q = BigUint::from_bytes_le(&enc[0x40..0x80]);
+                    let r = (q / (p.modpow(&e, &m))).to_bytes_le();
+                    if r.len() > plain.len() {
+                        bail!("Unexpected plain text")
+                    }
+                    plain[0..r.len()].copy_from_slice(&r);
+                }
+            }
+            _ => bail!("Unsupported encryption {}", encryption),
+        }
+
         match format {
             0 => {
-                if len != len_compressed {
+                if len != u64::try_from(data.len())? {
                     bail!("Uncompressed file should have len == len_compressed")
                 }
-                let mut data = vec![0; len.try_into()?];
-                file.read_exact(&mut data)?;
                 Ok(data)
             }
             1 => {
-                let stream = file.by_ref().take(len_compressed);
                 let mut decompressed = Vec::new();
-                flate::Decoder::new(stream).read_to_end(&mut decompressed)?;
+                flate::Decoder::new(&data[..]).read_to_end(&mut decompressed)?;
                 if u64::try_from(decompressed.len()).unwrap() != len {
                     bail!("Expected size {}, actual size {}", len, decompressed.len());
                 }
                 Ok(decompressed)
             }
             2 => {
-                let decoded = zstd::decode_all(file.by_ref().take(len_compressed))?;
+                let decoded = zstd::decode_all(&data[..])?;
                 if u64::try_from(decoded.len()).unwrap() != len {
                     bail!("Expected size {}, actual size {}", len, decoded.len());
                 }
