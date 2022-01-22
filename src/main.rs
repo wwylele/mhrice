@@ -870,7 +870,7 @@ fn main() -> Result<()> {
         //Mhrice::ScanMsg { pak, output } => scan_msg(pak, output),
         //Mhrice::GrepMsg { pak, pattern } => grep_msg(pak, pattern),
         //Mhrice::Grep { pak, pattern } => grep(pak, pattern),
-        //Mhrice::SearchPath { pak } => search_path(pak),
+        Mhrice::SearchPath { pak } => search_path(pak),
         //Mhrice::DumpTree { pak, list, output } => dump_tree(pak, list, output),
         //Mhrice::ScanMesh { pak } => scan_mesh(pak),
         //Mhrice::ScanRcol { pak } => scan_rcol(pak),
