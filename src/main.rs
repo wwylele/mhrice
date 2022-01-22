@@ -869,9 +869,9 @@ fn main() -> Result<()> {
         //Mhrice::ReadMsg { msg } => read_msg(msg),
         //Mhrice::ScanMsg { pak, output } => scan_msg(pak, output),
         //Mhrice::GrepMsg { pak, pattern } => grep_msg(pak, pattern),
-        //Mhrice::Grep { pak, pattern } => grep(pak, pattern),
+        Mhrice::Grep { pak, pattern } => grep(pak, pattern),
         Mhrice::SearchPath { pak } => search_path(pak),
-        //Mhrice::DumpTree { pak, list, output } => dump_tree(pak, list, output),
+        Mhrice::DumpTree { pak, list, output } => dump_tree(pak, list, output),
         //Mhrice::ScanMesh { pak } => scan_mesh(pak),
         //Mhrice::ScanRcol { pak } => scan_rcol(pak),
         //Mhrice::ScanTex { pak } => scan_tex(pak),
@@ -884,10 +884,10 @@ fn main() -> Result<()> {
         //Mhrice::DumpGui { gui } => dump_gui(gui),
         //Mhrice::GenMeat { pak, index, output } => gen_meat(pak, index, output),
         //Mhrice::GenResources { pak, output } => gen_resources(pak, output),
-        //Mhrice::Hash { input, utf16 } => {
-        //    hash(input, utf16);
-        //    Ok(())
-        //}
+        Mhrice::Hash { input, utf16 } => {
+            hash(input, utf16);
+            Ok(())
+        }
         _ => unimplemented!(),
     }
 }
