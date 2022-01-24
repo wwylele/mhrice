@@ -914,7 +914,7 @@ fn main() -> Result<()> {
         //Mhrice::DumpMesh { mesh, output } => dump_mesh(mesh, output),
         //Mhrice::DumpRcol { rcol } => dump_rcol(rcol),
         //Mhrice::DumpMeat { mesh, rcol, output } => dump_meat(mesh, rcol, output),
-        //Mhrice::DumpTex { tex, output } => dump_tex(tex, output),
+        Mhrice::DumpTex { tex, output } => dump_tex(tex, output),
         //Mhrice::DumpGui { gui } => dump_gui(gui),
         //Mhrice::GenMeat { pak, index, output } => gen_meat(pak, index, output),
         //Mhrice::GenResources { pak, output } => gen_resources(pak, output),

@@ -10,12 +10,13 @@ use std::path::Path;
 
 Let's talk about Switch's texture layout (only covers 2D texture here)
 
-On top of pixels, the smallest unit is a packet.
-A packet is always 16 bytes, and represents a small rectangle area of pixels.
-The size of this rectangle depends on the texture format.
+On top of pixels, the smallest unit is a cell. A cell is minimal decoding unit defined by the codec
 For example:
- - for RGBA8, a packet is a 4x1 rectangle. Each pixel uses 4 bytes.
- - for ASTC6x6, which also use each 16 bytes as one decoding unit, a packet is a 6x6 square,
+ - for plain RGBA8, a cell is exactly one pixel
+ - for for ASTC6x6, a cell is 6x6 pixels
+
+On top of cells, the next unit is a packet. A packet is always 16 bytes.
+Cells in a packet are in horizontal layout.
 
 On top of packets, the next unit is a block, which always contains 4x8 packets,
 and the packet layout in one block is like this:
@@ -44,6 +45,17 @@ Finally, super blocks fill the texture.
 Super blocks fill in the x direction first, then in y direction.
 */
 
+#[derive(Debug, Clone, Copy)]
+enum Layout {
+    Linear,
+    Nsw {
+        super_width: usize,
+        super_height: usize,
+        #[allow(dead_code)]
+        super_depth: usize,
+    },
+}
+
 const PACKET_LEN: usize = 16;
 const BLOCK_LEN: usize = PACKET_LEN * 4 * 8;
 
@@ -55,32 +67,91 @@ fn step<'a>(data: &'_ mut &'a [u8], max_len: usize) -> &'a [u8] {
 }
 
 trait TexCodec {
-    const PACKET_WIDTH: usize;
-    const PACKET_HEIGHT: usize;
+    const CELL_WIDTH: usize;
+    const CELL_HEIGHT: usize;
+    const CELL_LEN: usize;
     type T;
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(packet: &[u8; 16], writer: F);
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], writer: F);
+
+    fn decode_image<F: FnMut(usize, usize, Self::T)>(
+        data: &[u8],
+        width: usize,
+        height: usize,
+        layout: Layout,
+        writer: F,
+    ) {
+        match layout {
+            Layout::Linear => Self::decode_image_linear(data, width, height, writer),
+            Layout::Nsw {
+                super_width,
+                super_height,
+                ..
+            } => Self::decode_image_nsw(data, width, height, super_width, super_height, writer),
+        }
+    }
+
+    fn decode_image_linear<F: FnMut(usize, usize, Self::T)>(
+        data: &[u8],
+        width: usize,
+        height: usize,
+        mut writer: F,
+    ) {
+        let mut writer = |x, y, v| {
+            if x >= width || y >= height {
+                return;
+            }
+            writer(x, y, v)
+        };
+
+        let x_cells = (width + Self::CELL_WIDTH - 1) / Self::CELL_WIDTH;
+        let y_cells = (height + Self::CELL_HEIGHT - 1) / Self::CELL_HEIGHT;
+
+        for y_cell in 0..y_cells {
+            for x_cell in 0..x_cells {
+                let cell = x_cell + y_cell * x_cells;
+                Self::decode(
+                    &data[cell * Self::CELL_LEN..][..Self::CELL_LEN],
+                    |x, y, v| {
+                        writer(
+                            x + x_cell * Self::CELL_WIDTH,
+                            y + y_cell * Self::CELL_HEIGHT,
+                            v,
+                        )
+                    },
+                )
+            }
+        }
+    }
 
     fn decode_block<F: FnMut(usize, usize, Self::T)>(
         mut block: &[u8], /* BLOCK_LEN or less */
         mut writer: F,
     ) {
+        let cells_per_packet = PACKET_LEN / Self::CELL_LEN;
         for i in 0..32 {
             if block.is_empty() {
                 return;
             }
             let packet = step(&mut block, PACKET_LEN);
-            let mut packet_buf = [0; 16];
+            let mut packet_buf = [0; PACKET_LEN];
             packet_buf[0..packet.len()].copy_from_slice(packet);
             let bx = ((i & 2) >> 1) | ((i & 16) >> 3);
             let by = (i & 1) | ((i & 4) >> 1) | ((i & 8) >> 1);
-            Self::decode(&packet_buf, |x, y, v| {
-                writer(x + bx * Self::PACKET_WIDTH, y + by * Self::PACKET_HEIGHT, v)
-            })
+            for cell in 0..cells_per_packet {
+                let cell_buf = &packet_buf[cell * Self::CELL_LEN..][..Self::CELL_LEN];
+                Self::decode(&cell_buf, |x, y, v| {
+                    writer(
+                        x + cell * Self::CELL_WIDTH + bx * Self::CELL_WIDTH * cells_per_packet,
+                        y + by * Self::CELL_HEIGHT,
+                        v,
+                    )
+                })
+            }
         }
     }
 
-    fn decode_image<F: FnMut(usize, usize, Self::T)>(
+    fn decode_image_nsw<F: FnMut(usize, usize, Self::T)>(
         mut data: &[u8],
         width: usize,
         height: usize,
@@ -95,8 +166,10 @@ trait TexCodec {
             writer(x, y, v)
         };
 
-        let block_width = Self::PACKET_WIDTH * 4;
-        let block_height = Self::PACKET_HEIGHT * 8;
+        let cells_per_packet = PACKET_LEN / Self::CELL_LEN;
+
+        let block_width = Self::CELL_WIDTH * cells_per_packet * 4;
+        let block_height = Self::CELL_HEIGHT * 8;
         let super_block_width = block_width * super_width;
         let super_block_height = block_height * super_height;
         let hyper_width = (width + super_block_width - 1) / super_block_width;
@@ -127,13 +200,14 @@ trait TexCodec {
 struct Astc<const W: usize, const H: usize>;
 
 impl<const W: usize, const H: usize> TexCodec for Astc<W, H> {
-    const PACKET_WIDTH: usize = W;
-    const PACKET_HEIGHT: usize = H;
+    const CELL_WIDTH: usize = W;
+    const CELL_HEIGHT: usize = H;
+    const CELL_LEN: usize = 16;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(packet: &[u8; 16], mut writer: F) {
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], mut writer: F) {
         astc_decode::astc_decode_block(
-            packet,
+            cell.try_into().unwrap(),
             astc_decode::Footprint::new(W as u32, H as u32),
             |x, y, v| writer(x as usize, y as usize, v),
         );
@@ -151,9 +225,9 @@ fn color6to8(value: u8) -> u8 {
 struct Bc1Unorm;
 
 impl Bc1Unorm {
-    fn decode_half<F: FnMut(usize, usize, [u8; 4])>(packet: &[u8; 8], mut writer: F) {
-        let c0 = u16::from_le_bytes(packet[0..2].try_into().unwrap());
-        let c1 = u16::from_le_bytes(packet[2..4].try_into().unwrap());
+    fn decode_half<F: FnMut(usize, usize, [u8; 4])>(cell: &[u8; 8], mut writer: F) {
+        let c0 = u16::from_le_bytes(cell[0..2].try_into().unwrap());
+        let c1 = u16::from_le_bytes(cell[2..4].try_into().unwrap());
         let mut colors = [[0; 4]; 4];
         fn decode_color(c: u16) -> [u8; 4] {
             let (b, g, r) = c.bit_split((5, 6, 5));
@@ -188,7 +262,7 @@ impl Bc1Unorm {
             ];
             colors[3] = [0, 0, 0, 0];
         }
-        for (y, &b) in packet[4..8].iter().enumerate() {
+        for (y, &b) in cell[4..8].iter().enumerate() {
             let (b0, b1, b2, b3) = b.bit_split((2, 2, 2, 2));
             writer(0, y, colors[b0 as usize]);
             writer(1, y, colors[b1 as usize]);
@@ -199,32 +273,31 @@ impl Bc1Unorm {
 }
 
 impl TexCodec for Bc1Unorm {
-    const PACKET_WIDTH: usize = 8;
-    const PACKET_HEIGHT: usize = 4;
+    const CELL_WIDTH: usize = 4;
+    const CELL_HEIGHT: usize = 4;
+    const CELL_LEN: usize = 8;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(packet: &[u8; 16], mut writer: F) {
-        Self::decode_half(packet[0..8].try_into().unwrap(), &mut writer);
-        Self::decode_half(packet[8..16].try_into().unwrap(), |x, y, v| {
-            writer(x + 4, y, v)
-        });
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], mut writer: F) {
+        Self::decode_half(cell.try_into().unwrap(), &mut writer);
     }
 }
 
 struct Bc3Unorm;
 
 impl TexCodec for Bc3Unorm {
-    const PACKET_WIDTH: usize = 4;
-    const PACKET_HEIGHT: usize = 4;
+    const CELL_WIDTH: usize = 4;
+    const CELL_HEIGHT: usize = 4;
+    const CELL_LEN: usize = 16;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(packet: &[u8; 16], mut writer: F) {
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], mut writer: F) {
         let mut color_buf = [[[0; 3]; 4]; 4];
         let mut alpha_buf = [[0; 4]; 4];
-        Bc4Unorm::decode_half(packet[0..8].try_into().unwrap(), |x, y, v| {
+        Bc4Unorm::decode_half(cell[0..8].try_into().unwrap(), |x, y, v| {
             alpha_buf[x][y] = v[0]
         });
-        Bc1Unorm::decode_half(packet[8..16].try_into().unwrap(), |x, y, v| {
+        Bc1Unorm::decode_half(cell[8..16].try_into().unwrap(), |x, y, v| {
             color_buf[x][y] = [v[0], v[1], v[2]]
         });
         for x in 0..4 {
@@ -239,10 +312,10 @@ impl TexCodec for Bc3Unorm {
 struct Bc4Unorm;
 
 impl Bc4Unorm {
-    fn decode_half<F: FnMut(usize, usize, [u8; 4])>(packet: &[u8; 8], mut writer: F) {
+    fn decode_half<F: FnMut(usize, usize, [u8; 4])>(cell: &[u8; 8], mut writer: F) {
         let mut c = [0; 8];
-        let c0 = packet[0];
-        let c1 = packet[1];
+        let c0 = cell[0];
+        let c1 = cell[1];
         c[0] = c0;
         c[1] = c1;
         if c[0] > c[1] {
@@ -262,7 +335,7 @@ impl Bc4Unorm {
         }
         let mut buf = [0; 4];
         for super_y in 0..2 {
-            buf[0..3].copy_from_slice(&packet[2 + super_y * 3..][..3]);
+            buf[0..3].copy_from_slice(&cell[2 + super_y * 3..][..3]);
             let mut a = u32::from_le_bytes(buf);
             for y in 0..2 {
                 for x in 0..4 {
@@ -276,32 +349,31 @@ impl Bc4Unorm {
 }
 
 impl TexCodec for Bc4Unorm {
-    const PACKET_WIDTH: usize = 8;
-    const PACKET_HEIGHT: usize = 4;
+    const CELL_WIDTH: usize = 4;
+    const CELL_HEIGHT: usize = 4;
+    const CELL_LEN: usize = 8;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(packet: &[u8; 16], mut writer: F) {
-        Self::decode_half(packet[0..8].try_into().unwrap(), &mut writer);
-        Self::decode_half(packet[8..16].try_into().unwrap(), |x, y, v| {
-            writer(x + 4, y, v)
-        });
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], mut writer: F) {
+        Self::decode_half(cell.try_into().unwrap(), &mut writer);
     }
 }
 
 struct Bc5Unorm;
 
 impl TexCodec for Bc5Unorm {
-    const PACKET_WIDTH: usize = 4;
-    const PACKET_HEIGHT: usize = 4;
+    const CELL_WIDTH: usize = 4;
+    const CELL_HEIGHT: usize = 4;
+    const CELL_LEN: usize = 16;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(packet: &[u8; 16], mut writer: F) {
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], mut writer: F) {
         let mut red_buf = [[0; 4]; 4];
         let mut green_buf = [[0; 4]; 4];
-        Bc4Unorm::decode_half(packet[0..8].try_into().unwrap(), |x, y, v| {
+        Bc4Unorm::decode_half(cell[0..8].try_into().unwrap(), |x, y, v| {
             red_buf[x][y] = v[0]
         });
-        Bc4Unorm::decode_half(packet[8..16].try_into().unwrap(), |x, y, v| {
+        Bc4Unorm::decode_half(cell[8..16].try_into().unwrap(), |x, y, v| {
             green_buf[x][y] = v[0]
         });
         for x in 0..4 {
@@ -315,57 +387,55 @@ impl TexCodec for Bc5Unorm {
 struct Bc7Unorm;
 
 impl TexCodec for Bc7Unorm {
-    const PACKET_WIDTH: usize = 4;
-    const PACKET_HEIGHT: usize = 4;
+    const CELL_WIDTH: usize = 4;
+    const CELL_HEIGHT: usize = 4;
+    const CELL_LEN: usize = 16;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(packet: &[u8; 16], writer: F) {
-        bc7_decompress_block(packet, writer);
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], writer: F) {
+        bc7_decompress_block(cell.try_into().unwrap(), writer);
     }
 }
 
 struct R8G8B8A8Unorm;
 
 impl TexCodec for R8G8B8A8Unorm {
-    const PACKET_WIDTH: usize = 4;
-    const PACKET_HEIGHT: usize = 1;
+    const CELL_WIDTH: usize = 1;
+    const CELL_HEIGHT: usize = 1;
+    const CELL_LEN: usize = 4;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(packet: &[u8; 16], mut writer: F) {
-        writer(0, 0, packet[0..4].try_into().unwrap());
-        writer(1, 0, packet[4..8].try_into().unwrap());
-        writer(2, 0, packet[8..12].try_into().unwrap());
-        writer(3, 0, packet[12..16].try_into().unwrap());
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], mut writer: F) {
+        writer(0, 0, cell.try_into().unwrap());
     }
 }
 
 struct R8Unorm;
 
 impl TexCodec for R8Unorm {
-    const PACKET_WIDTH: usize = 16;
-    const PACKET_HEIGHT: usize = 1;
+    const CELL_WIDTH: usize = 1;
+    const CELL_HEIGHT: usize = 1;
+    const CELL_LEN: usize = 1;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(packet: &[u8; 16], mut writer: F) {
-        for (i, &c) in packet.iter().enumerate() {
-            writer(i, 0, [c, c, c, 255])
-        }
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], mut writer: F) {
+        let c = cell[0];
+        writer(0, 0, [c, c, c, 255])
     }
 }
 
 struct R8G8Unorm;
 
 impl TexCodec for R8G8Unorm {
-    const PACKET_WIDTH: usize = 8;
-    const PACKET_HEIGHT: usize = 1;
+    const CELL_WIDTH: usize = 1;
+    const CELL_HEIGHT: usize = 1;
+    const CELL_LEN: usize = 2;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(packet: &[u8; 16], mut writer: F) {
-        for i in 0..8 {
-            let r = packet[i + 1];
-            let g = packet[i * 2 + 1];
-            writer(i, 0, [r, g, 0, 255])
-        }
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], mut writer: F) {
+        let r = cell[0];
+        let g = cell[1];
+        writer(0, 0, [r, g, 0, 255])
     }
 }
 
@@ -375,10 +445,7 @@ pub struct Tex {
     height: u16,
     depth: u16,
     textures: Vec<Vec<Vec<u8>>>,
-    log_super_width: u8,
-    log_super_height: u8,
-    #[allow(dead_code)]
-    log_super_depth: u8,
+    layout: Layout,
 }
 
 impl Tex {
@@ -395,10 +462,7 @@ impl Tex {
         let (texture_count, mipmap_count) = file.read_u16()?.bit_split((12, 4));
 
         let format = file.read_u32()?;
-        let x = file.read_u32()?;
-        if x != 1 {
-            bail!("Expected 1")
-        }
+        let layout = file.read_u32()?;
         let _b = file.read_u32()?;
         let _c = file.read_u32()?;
         let (log_super_height, log_super_depth) = file.read_u8()?.bit_split((4, 4));
@@ -407,14 +471,24 @@ impl Tex {
         if x != 0 {
             bail!("Expected 0")
         }
-        let x = file.read_u16()?;
-        if x != 7 {
-            bail!("Expected 7")
-        }
-        let x = file.read_u16()?;
-        if x != 1 {
-            bail!("Expected 1")
-        }
+        let _x = file.read_u16()?;
+        //if x != 7 {
+        //    bail!("Expected 7")
+        //}
+        let _x = file.read_u16()?;
+        //if x != 1 {
+        //    bail!("Expected 1")
+        //}
+
+        let layout = match layout {
+            1 => Layout::Nsw {
+                super_width: 1 << log_super_width,
+                super_height: 1 << log_super_height,
+                super_depth: 1 << log_super_depth,
+            },
+            0xFFFFFFFF => Layout::Linear,
+            _ => bail!("unsupport layout {}", layout),
+        };
 
         struct TextureInfo {
             offset: u64,
@@ -428,7 +502,7 @@ impl Tex {
                     .map(|_| {
                         Ok(TextureInfo {
                             offset: file.read_u64()?,
-                            len: file.read_u32()?,
+                            len: file.read_u32()?, //?
                             len_padded: file.read_u32()?,
                         })
                     })
@@ -448,8 +522,14 @@ impl Tex {
                         }
                         let mut buffer = vec![0; usize::try_from(t.len_padded)?];
                         file.seek(SeekFrom::Start(t.offset))?;
+
+                        let read_len = match layout {
+                            Layout::Nsw { .. } => t.len,    // this seems to work for Nsw
+                            Layout::Linear => t.len_padded, // this seems to work for pc. t.len is something unknown
+                        };
+
                         if file
-                            .read_exact(&mut buffer[0..usize::try_from(t.len)?])
+                            .read_exact(&mut buffer[0..usize::try_from(read_len)?])
                             .is_err()
                         {
                             // Some texture is seen with a few bytes missing. Don't know why
@@ -467,9 +547,7 @@ impl Tex {
             height,
             depth,
             textures,
-            log_super_width,
-            log_super_height,
-            log_super_depth,
+            layout,
         })
     }
 
@@ -480,8 +558,6 @@ impl Tex {
         let texture = &self.textures[index][mipmap];
         let width = usize::try_from(self.width >> mipmap)?;
         let height = usize::try_from(self.height >> mipmap)?;
-        let super_width = 1 << self.log_super_width;
-        let super_height = 1 << self.log_super_height;
 
         let mut data = vec![0; width * height * 4];
         let writer = |x, y, v: [u8; 4]| {
@@ -513,7 +589,7 @@ impl Tex {
             0x429 | 0x42A => Astc::<12, 12>::decode_image,
             x => bail!("unsupported format {:08X}", x),
         };
-        decoder(&texture, width, height, super_width, super_height, writer);
+        decoder(texture, width, height, self.layout, writer);
         Ok(RgbaImage::new(
             data,
             u32::try_from(width)?,
