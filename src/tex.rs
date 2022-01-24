@@ -66,13 +66,12 @@ fn step<'a>(data: &'_ mut &'a [u8], max_len: usize) -> &'a [u8] {
     ret
 }
 
-trait TexCodec {
+trait TexCodec<const CELL_LEN: usize> {
     const CELL_WIDTH: usize;
     const CELL_HEIGHT: usize;
-    const CELL_LEN: usize;
     type T;
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], writer: F);
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8; CELL_LEN], writer: F);
 
     fn decode_image<F: FnMut(usize, usize, Self::T)>(
         data: &[u8],
@@ -92,7 +91,7 @@ trait TexCodec {
     }
 
     fn decode_image_linear<F: FnMut(usize, usize, Self::T)>(
-        data: &[u8],
+        mut data: &[u8],
         width: usize,
         height: usize,
         mut writer: F,
@@ -109,17 +108,16 @@ trait TexCodec {
 
         for y_cell in 0..y_cells {
             for x_cell in 0..x_cells {
-                let cell = x_cell + y_cell * x_cells;
-                Self::decode(
-                    &data[cell * Self::CELL_LEN..][..Self::CELL_LEN],
-                    |x, y, v| {
-                        writer(
-                            x + x_cell * Self::CELL_WIDTH,
-                            y + y_cell * Self::CELL_HEIGHT,
-                            v,
-                        )
-                    },
-                )
+                let mut cell_buf = [0; CELL_LEN];
+                let cell = step(&mut data, CELL_LEN);
+                cell_buf[0..cell.len()].copy_from_slice(cell);
+                Self::decode(&cell_buf, |x, y, v| {
+                    writer(
+                        x + x_cell * Self::CELL_WIDTH,
+                        y + y_cell * Self::CELL_HEIGHT,
+                        v,
+                    )
+                })
             }
         }
     }
@@ -128,7 +126,7 @@ trait TexCodec {
         mut block: &[u8], /* BLOCK_LEN or less */
         mut writer: F,
     ) {
-        let cells_per_packet = PACKET_LEN / Self::CELL_LEN;
+        let cells_per_packet = PACKET_LEN / CELL_LEN;
         for i in 0..32 {
             if block.is_empty() {
                 return;
@@ -139,8 +137,10 @@ trait TexCodec {
             let bx = ((i & 2) >> 1) | ((i & 16) >> 3);
             let by = (i & 1) | ((i & 4) >> 1) | ((i & 8) >> 1);
             for cell in 0..cells_per_packet {
-                let cell_buf = &packet_buf[cell * Self::CELL_LEN..][..Self::CELL_LEN];
-                Self::decode(&cell_buf, |x, y, v| {
+                let cell_buf = &packet_buf[cell * CELL_LEN..][..CELL_LEN]
+                    .try_into()
+                    .unwrap();
+                Self::decode(cell_buf, |x, y, v| {
                     writer(
                         x + cell * Self::CELL_WIDTH + bx * Self::CELL_WIDTH * cells_per_packet,
                         y + by * Self::CELL_HEIGHT,
@@ -166,7 +166,7 @@ trait TexCodec {
             writer(x, y, v)
         };
 
-        let cells_per_packet = PACKET_LEN / Self::CELL_LEN;
+        let cells_per_packet = PACKET_LEN / CELL_LEN;
 
         let block_width = Self::CELL_WIDTH * cells_per_packet * 4;
         let block_height = Self::CELL_HEIGHT * 8;
@@ -199,15 +199,14 @@ trait TexCodec {
 
 struct Astc<const W: usize, const H: usize>;
 
-impl<const W: usize, const H: usize> TexCodec for Astc<W, H> {
+impl<const W: usize, const H: usize> TexCodec<16> for Astc<W, H> {
     const CELL_WIDTH: usize = W;
     const CELL_HEIGHT: usize = H;
-    const CELL_LEN: usize = 16;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], mut writer: F) {
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8; 16], mut writer: F) {
         astc_decode::astc_decode_block(
-            cell.try_into().unwrap(),
+            cell,
             astc_decode::Footprint::new(W as u32, H as u32),
             |x, y, v| writer(x as usize, y as usize, v),
         );
@@ -272,26 +271,24 @@ impl Bc1Unorm {
     }
 }
 
-impl TexCodec for Bc1Unorm {
+impl TexCodec<8> for Bc1Unorm {
     const CELL_WIDTH: usize = 4;
     const CELL_HEIGHT: usize = 4;
-    const CELL_LEN: usize = 8;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], mut writer: F) {
-        Self::decode_half(cell.try_into().unwrap(), &mut writer);
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8; 8], mut writer: F) {
+        Self::decode_half(cell, &mut writer);
     }
 }
 
 struct Bc3Unorm;
 
-impl TexCodec for Bc3Unorm {
+impl TexCodec<16> for Bc3Unorm {
     const CELL_WIDTH: usize = 4;
     const CELL_HEIGHT: usize = 4;
-    const CELL_LEN: usize = 16;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], mut writer: F) {
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8; 16], mut writer: F) {
         let mut color_buf = [[[0; 3]; 4]; 4];
         let mut alpha_buf = [[0; 4]; 4];
         Bc4Unorm::decode_half(cell[0..8].try_into().unwrap(), |x, y, v| {
@@ -348,26 +345,24 @@ impl Bc4Unorm {
     }
 }
 
-impl TexCodec for Bc4Unorm {
+impl TexCodec<8> for Bc4Unorm {
     const CELL_WIDTH: usize = 4;
     const CELL_HEIGHT: usize = 4;
-    const CELL_LEN: usize = 8;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], mut writer: F) {
-        Self::decode_half(cell.try_into().unwrap(), &mut writer);
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8; 8], mut writer: F) {
+        Self::decode_half(cell, &mut writer);
     }
 }
 
 struct Bc5Unorm;
 
-impl TexCodec for Bc5Unorm {
+impl TexCodec<16> for Bc5Unorm {
     const CELL_WIDTH: usize = 4;
     const CELL_HEIGHT: usize = 4;
-    const CELL_LEN: usize = 16;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], mut writer: F) {
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8; 16], mut writer: F) {
         let mut red_buf = [[0; 4]; 4];
         let mut green_buf = [[0; 4]; 4];
         Bc4Unorm::decode_half(cell[0..8].try_into().unwrap(), |x, y, v| {
@@ -386,39 +381,36 @@ impl TexCodec for Bc5Unorm {
 
 struct Bc7Unorm;
 
-impl TexCodec for Bc7Unorm {
+impl TexCodec<16> for Bc7Unorm {
     const CELL_WIDTH: usize = 4;
     const CELL_HEIGHT: usize = 4;
-    const CELL_LEN: usize = 16;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], writer: F) {
-        bc7_decompress_block(cell.try_into().unwrap(), writer);
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8; 16], writer: F) {
+        bc7_decompress_block(cell, writer);
     }
 }
 
 struct R8G8B8A8Unorm;
 
-impl TexCodec for R8G8B8A8Unorm {
+impl TexCodec<4> for R8G8B8A8Unorm {
     const CELL_WIDTH: usize = 1;
     const CELL_HEIGHT: usize = 1;
-    const CELL_LEN: usize = 4;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], mut writer: F) {
-        writer(0, 0, cell.try_into().unwrap());
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8; 4], mut writer: F) {
+        writer(0, 0, *cell);
     }
 }
 
 struct R8Unorm;
 
-impl TexCodec for R8Unorm {
+impl TexCodec<1> for R8Unorm {
     const CELL_WIDTH: usize = 1;
     const CELL_HEIGHT: usize = 1;
-    const CELL_LEN: usize = 1;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], mut writer: F) {
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8; 1], mut writer: F) {
         let c = cell[0];
         writer(0, 0, [c, c, c, 255])
     }
@@ -426,13 +418,12 @@ impl TexCodec for R8Unorm {
 
 struct R8G8Unorm;
 
-impl TexCodec for R8G8Unorm {
+impl TexCodec<2> for R8G8Unorm {
     const CELL_WIDTH: usize = 1;
     const CELL_HEIGHT: usize = 1;
-    const CELL_LEN: usize = 2;
     type T = [u8; 4];
 
-    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8], mut writer: F) {
+    fn decode<F: FnMut(usize, usize, Self::T)>(cell: &[u8; 2], mut writer: F) {
         let r = cell[0];
         let g = cell[1];
         writer(0, 0, [r, g, 0, 255])
