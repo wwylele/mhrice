@@ -155,19 +155,23 @@ impl Rsz {
         let mut node_rc_buf: HashMap<u32, Rc<dyn Any>> = HashMap::new();
         let mut cursor = Cursor::new(&self.data);
         for &td in self.type_descriptors.iter().skip(1) {
-            let hash = u32::try_from(td & 0xFFFFFFFF)?;
+            let hash = u32::try_from(td & 0xFFFFFFFF).unwrap();
+            let crc = u32::try_from(td >> 32).unwrap();
             let (deserializer, versions) = RSZ_TYPE_MAP
                 .get(&hash)
                 .with_context(|| format!("Unsupported type {:08X}", hash))?;
+            let version = *versions
+                .get(&crc)
+                .with_context(|| format!("Unknown type CRC {:08X} for type {:08X}", crc, hash))?;
             let pos = cursor.tell().unwrap();
             let mut rsz_deserializer = RszDeserializer {
                 node_buf: &mut node_buf,
                 node_rc_buf: &mut node_rc_buf,
                 cursor: &mut cursor,
-                version: versions.get(&u32::try_from(td >> 32)?).cloned(),
+                version,
             };
             let node = deserializer(&mut rsz_deserializer).with_context(|| {
-                format!("Error deserializing for type {:016X} at {:08X}", td, pos)
+                format!("Error deserializing for type {:08X} at {:08X}", hash, pos)
             })?;
             node_buf.push(Some(node));
         }
@@ -214,7 +218,7 @@ pub struct RszDeserializer<'a, 'b> {
     node_buf: &'a mut [Option<Box<dyn Any>>],
     node_rc_buf: &'a mut HashMap<u32, Rc<dyn Any>>,
     cursor: &'a mut Cursor<&'b Vec<u8>>,
-    version: Option<u32>,
+    version: u32,
 }
 
 impl<'a, 'b> RszDeserializer<'a, 'b> {
@@ -249,7 +253,7 @@ impl<'a, 'b> RszDeserializer<'a, 'b> {
         }
     }
 
-    pub fn version(&self) -> Option<u32> {
+    pub fn version(&self) -> u32 {
         self.version
     }
 }
@@ -415,7 +419,7 @@ pub struct Versioned<T, const MIN: u32, const MAX: u32>(pub Option<T>);
 
 impl<T: FieldFromRsz, const MIN: u32, const MAX: u32> FieldFromRsz for Versioned<T, MIN, MAX> {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
-        let version = rsz.version().context("Unknown version")?;
+        let version = rsz.version();
         Ok(Versioned(if version >= MIN && version <= MAX {
             Some(T::field_from_rsz(rsz)?)
         } else {
