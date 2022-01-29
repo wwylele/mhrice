@@ -85,6 +85,7 @@ rsz_newtype! {
     pub struct RareTypes(pub u8);
 }
 
+// snow.data.NormalItemData.MaterialCategory
 rsz_newtype! {
     // Despite the enum naming from TDB
     // it seems that the 0-based raw value is used to index messages.

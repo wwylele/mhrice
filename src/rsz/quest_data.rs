@@ -206,6 +206,7 @@ rsz_enum! {
     }
 }
 
+// snow.enemy.EnemyDef.EmTypes
 rsz_enum! {
     #[rsz(u32)]
     #[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq, Hash)]

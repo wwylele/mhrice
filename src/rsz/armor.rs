@@ -2,12 +2,14 @@ use super::*;
 use crate::{rsz_enum, rsz_newtype, rsz_struct};
 use serde::*;
 
+// snow.data.DataDef.PlArmorId
 rsz_enum! {
     #[rsz(u32)]
     #[derive(Debug, Serialize, Copy, Clone, PartialEq, Eq, Hash)]
     pub enum PlArmorId {
         TableNone = 0,
         None = 0x0C000000,
+        NoneForPlEquipPack = 0x0000FFFF,
         ChangedEx = 0x00010001,
         Head(u32) = 0x0C100000..=0x0C10FFFF,
         Chest(u32) = 0x0C200000..=0x0C20FFFF,
@@ -30,12 +32,14 @@ impl PlArmorId {
     }
 }
 
+// snow.data.DataDef.PlArmorSeriesTypes
 rsz_newtype! {
     #[rsz_offset(0)]
     #[derive(Debug, Serialize, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
     pub struct PlArmorSeriesTypes(pub i32);
 }
 
+// snow.data.GameItemEnum.SexualEquipableFlag
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize, Clone)]
@@ -47,14 +51,16 @@ rsz_enum! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.ArmorBaseUserData.Param")]
+    #[rsz("snow.data.ArmorBaseUserData.Param",
+        0xe256b3a6 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct ArmorBaseUserDataParam {
         pub pl_armor_id: PlArmorId,
         pub is_valid: bool,
         pub series: PlArmorSeriesTypes,
         pub sort_id: u32,
-        pub model_id: u32,
+        pub model_id: u32, // snow.data.DataDef.PlArmorModelId
         pub rare: RareTypes,
         pub value: u32,
         pub buy_value: u32,
@@ -77,24 +83,29 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.ArmorBaseUserData")]
+    #[rsz("snow.data.ArmorBaseUserData",
+        0x2b3920a5 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct ArmorBaseUserData {
         pub param: Vec<ArmorBaseUserDataParam>
     }
 }
 
+// snow.data.ArmorSeriesData.EquipDifficultyGroup
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize, Clone)]
     pub enum EquipDifficultyGroup {
         Lower = 0,
-        Higher = 1,
+        Upper = 1,
     }
 }
 
 rsz_struct! {
-    #[rsz("snow.data.ArmorSeriesUserData.Param")]
+    #[rsz("snow.data.ArmorSeriesUserData.Param",
+        0x57e0d148 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct ArmorSeriesUserDataParam {
         pub armor_series: PlArmorSeriesTypes,
@@ -107,7 +118,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.ArmorSeriesUserData")]
+    #[rsz("snow.data.ArmorSeriesUserData",
+        0x45342000 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct ArmorSeriesUserData {
         pub param: Vec<ArmorSeriesUserDataParam>
@@ -115,7 +128,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.ArmorProductUserData.Param")]
+    #[rsz("snow.data.ArmorProductUserData.Param",
+        0x9b5b7c58 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct ArmorProductUserDataParam {
         pub id: PlArmorId,
@@ -132,13 +147,16 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.ArmorProductUserData")]
+    #[rsz("snow.data.ArmorProductUserData",
+        0x0b84dd13 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct ArmorProductUserData {
         pub param: Vec<ArmorProductUserDataParam>
     }
 }
 
+// snow.equip.PlOverwearId
 rsz_enum! {
     #[rsz(u32)]
     #[derive(Debug, Serialize, Copy, Clone, PartialEq, Eq, Hash)]
@@ -152,7 +170,9 @@ rsz_enum! {
 }
 
 rsz_struct! {
-    #[rsz("snow.equip.PlOverwearBaseUserData.Param")]
+    #[rsz("snow.equip.PlOverwearBaseUserData.Param",
+        0x069374e8 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PlOverwearBaseUserDataParam {
         pub id: PlOverwearId,
@@ -170,7 +190,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.equip.PlOverwearBaseUserData")]
+    #[rsz("snow.equip.PlOverwearBaseUserData",
+        0x495e0b7a = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PlOverwearBaseUserData {
         pub param: Vec<PlOverwearBaseUserDataParam>
@@ -178,7 +200,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.equip.PlOverwearProductUserData.Param")]
+    #[rsz("snow.equip.PlOverwearProductUserData.Param",
+        0x03c08e37 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PlOverwearProductUserDataParam {
         pub id: PlOverwearId,
@@ -195,7 +219,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.equip.PlOverwearProductUserData")]
+    #[rsz("snow.equip.PlOverwearProductUserData",
+        0x3d82ca7b = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PlOverwearProductUserData {
         pub param: Vec<PlOverwearProductUserDataParam>
