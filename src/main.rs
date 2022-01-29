@@ -248,6 +248,11 @@ enum Mhrice {
         #[structopt(short, long)]
         utf16: bool,
     },
+
+    ReadUser {
+        #[structopt(short, long)]
+        user: String,
+    },
 }
 
 fn open_pak_files(mut pak: Vec<String>) -> Result<Vec<File>> {
@@ -886,6 +891,14 @@ fn hash(input: String, utf16: bool) {
     }
 }
 
+fn read_user(user: String) -> Result<()> {
+    let nodes = User::new(File::open(user)?)?.rsz.deserialize()?;
+    for node in nodes {
+        println!("{}", node.to_json()?);
+    }
+    Ok(())
+}
+
 fn main() -> Result<()> {
     gpu::gpu_init();
     match Mhrice::from_args() {
@@ -922,6 +935,7 @@ fn main() -> Result<()> {
             hash(input, utf16);
             Ok(())
         }
+        Mhrice::ReadUser { user } => read_user(user),
         _ => unimplemented!(),
     }
 }

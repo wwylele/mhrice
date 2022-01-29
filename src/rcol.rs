@@ -12,11 +12,11 @@ use std::io::{Cursor, Read, Seek, SeekFrom};
 
 pub enum UserData {
     RszRootIndex(usize),
-    Data(Box<dyn Any>),
+    Data(AnyRsz),
 }
 
 impl UserData {
-    fn accept(&mut self, roots: &mut [Option<Box<dyn Any>>]) -> Result<()> {
+    fn accept(&mut self, roots: &mut [Option<AnyRsz>]) -> Result<()> {
         if let UserData::RszRootIndex(index) = *self {
             *self = UserData::Data(
                 roots
@@ -33,7 +33,7 @@ impl UserData {
 
     pub fn downcast<T: 'static>(self) -> Option<Box<T>> {
         if let UserData::Data(data) = self {
-            data.downcast().ok()
+            data.downcast()
         } else {
             panic!();
         }
@@ -453,13 +453,9 @@ impl Rcol {
     }
 
     pub fn dump(&self) -> Result<()> {
-        fn print_user_data(user_data: &Box<dyn Any>) {
-            if let Some(d) = user_data.downcast_ref::<EmHitDamageShapeData>() {
-                println!("{:#?}", d)
-            } else if let Some(d) = user_data.downcast_ref::<EmHitDamageRsData>() {
-                println!("{:#?}", d)
-            } else {
-            }
+        fn print_user_data(user_data: &AnyRsz) -> Result<()> {
+            println!("{}", user_data.to_json()?);
+            Ok(())
         }
         for (i, collider_group) in self.collider_groups.iter().enumerate() {
             println!("[{}] {}", i, collider_group.name);
@@ -469,7 +465,7 @@ impl Rcol {
                     collider.name, collider.bone_a, collider.bone_b, collider.ignore_tag_bits
                 );
                 if let UserData::Data(data) = &collider.user_data {
-                    print_user_data(data);
+                    print_user_data(data)?;
                 }
                 println!("{:#?}", collider.shape);
             }
@@ -485,7 +481,7 @@ impl Rcol {
                 c.collider_group_index, c.name, c.name_b, c.p, c.r
             );
             if let UserData::Data(data) = &c.user_data {
-                print_user_data(data);
+                print_user_data(data)?;
             }
         }
 

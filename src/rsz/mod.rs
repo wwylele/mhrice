@@ -150,8 +150,8 @@ impl Rsz {
         })
     }
 
-    pub fn deserialize(&self) -> Result<Vec<Box<dyn Any>>> {
-        let mut node_buf: Vec<Option<Box<dyn Any>>> = vec![None];
+    pub fn deserialize(&self) -> Result<Vec<AnyRsz>> {
+        let mut node_buf: Vec<Option<AnyRsz>> = vec![None];
         let mut node_rc_buf: HashMap<u32, Rc<dyn Any>> = HashMap::new();
         let mut cursor = Cursor::new(&self.data);
         for &td in self.type_descriptors.iter().skip(1) {
@@ -206,16 +206,12 @@ impl Rsz {
         if result.len() != 1 {
             bail!("Not a single-valued RSZ");
         }
-        Ok(*result
-            .pop()
-            .unwrap()
-            .downcast()
-            .map_err(|_| anyhow!("Type mismatch"))?)
+        Ok(result.pop().unwrap().downcast().context("Type mismatch")?)
     }
 }
 
 pub struct RszDeserializer<'a, 'b> {
-    node_buf: &'a mut [Option<Box<dyn Any>>],
+    node_buf: &'a mut [Option<AnyRsz>],
     node_rc_buf: &'a mut HashMap<u32, Rc<dyn Any>>,
     cursor: &'a mut Cursor<&'b Vec<u8>>,
     version: u32,
@@ -230,8 +226,8 @@ impl<'a, 'b> RszDeserializer<'a, 'b> {
             .take()
             .context("None child")?
             .downcast()
-            .map_err(|_| anyhow!("Type mismatch"))?;
-        Ok(*node)
+            .context("Type mismatch")?;
+        Ok(node)
     }
 
     pub fn get_child<T: 'static>(&mut self) -> Result<T> {
@@ -261,6 +257,34 @@ impl<'a, 'b> RszDeserializer<'a, 'b> {
 impl<'a, 'b> Read for RszDeserializer<'a, 'b> {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         self.cursor.read(buf)
+    }
+}
+
+pub struct AnyRsz {
+    any: Box<dyn Any>,
+    to_json_fn: fn(&dyn Any) -> Result<String>,
+}
+
+impl AnyRsz {
+    pub fn new<T: Any + Serialize>(v: T) -> AnyRsz {
+        let any = Box::new(v);
+        let to_json_fn = |any: &dyn Any| {
+            serde_json::to_string_pretty(any.downcast_ref::<T>().unwrap())
+                .context("Failed to convert to json")
+        };
+        AnyRsz { any, to_json_fn }
+    }
+
+    pub fn downcast<T: Any>(self) -> Option<T> {
+        self.any.downcast().ok().map(|b| *b)
+    }
+
+    pub fn downcast_ref<T: Any>(&self) -> Option<&T> {
+        self.any.downcast_ref()
+    }
+
+    pub fn to_json(&self) -> Result<String> {
+        (self.to_json_fn)(&self.any)
     }
 }
 
@@ -609,23 +633,17 @@ where
 }
 
 type RszDeserializerPackage = (
-    fn(&mut RszDeserializer) -> Result<Box<dyn Any>>,
+    fn(&mut RszDeserializer) -> Result<AnyRsz>,
     HashMap<u32, u32>,
 );
 
 static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerPackage>> = Lazy::new(|| {
     let mut m = HashMap::new();
 
-    fn register<T: 'static + FromRsz>(m: &mut HashMap<u32, RszDeserializerPackage>) {
+    fn register<T: 'static + FromRsz + Serialize>(m: &mut HashMap<u32, RszDeserializerPackage>) {
         let hash = T::type_hash();
         let versions: HashMap<u32, u32> = T::VERSIONS.iter().copied().collect();
-        let old = m.insert(
-            hash,
-            (
-                |rsz| Ok(Box::new(T::from_rsz(rsz)?) as Box<dyn Any>),
-                versions,
-            ),
-        );
+        let old = m.insert(hash, (|rsz| Ok(AnyRsz::new(T::from_rsz(rsz)?)), versions));
         if old.is_some() {
             panic!("Multiple type reigstered for the same hash")
         }
