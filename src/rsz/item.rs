@@ -65,6 +65,7 @@ rsz_enum! {
     }
 }
 
+// snow.data.ContentsIdSystem.ItemId
 rsz_enum! {
     #[rsz(u32)]
     #[derive(Debug, Serialize, PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
@@ -76,6 +77,7 @@ rsz_enum! {
     }
 }
 
+// snow.data.DataDef.RareTypes
 rsz_newtype! {
     #[rsz_offset(1)]
     #[derive(Debug, Serialize, Clone, Copy)]

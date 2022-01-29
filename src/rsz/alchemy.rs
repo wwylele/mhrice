@@ -4,6 +4,7 @@ use crate::rsz_newtype;
 use crate::rsz_struct;
 use serde::*;
 
+// snow.data.DataDef.ColorTypes
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -18,6 +19,7 @@ rsz_enum! {
     }
 }
 
+// snow.data.AlchemyPatturnData.PatturnTypes
 rsz_newtype! {
     #[rsz_offset(1)]
     #[derive(Debug, Serialize)]
@@ -26,7 +28,9 @@ rsz_newtype! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.AlchemyPatturnUserData.Param")]
+    #[rsz("snow.data.AlchemyPatturnUserData.Param",
+        0x41f213e8 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct AlchemyPatturnUserDataParam {
         pub patturn: AlchemyPatturnTypes,
@@ -41,13 +45,16 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.AlchemyPatturnUserData")]
+    #[rsz("snow.data.AlchemyPatturnUserData",
+        0xcc163e12 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct AlchemyPatturnUserData {
         pub param_list: Vec<AlchemyPatturnUserDataParam>,
     }
 }
 
+// snow.data.AlchemyPlSkillTableData.GradeTypes
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -60,7 +67,9 @@ rsz_enum! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.AlchemyPlSkillTableUserData.Param")]
+    #[rsz("snow.data.AlchemyPlSkillTableUserData.Param",
+        0x9cd28096 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct AlchemyPlSkillTableUserDataParam {
         pub sort_id: i32,
@@ -75,7 +84,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.AlchemyPlSkillTableUserData")]
+    #[rsz("snow.data.AlchemyPlSkillTableUserData",
+        0x251e564f = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct AlchemyPlSkillTableUserData {
         pub param: Vec<AlchemyPlSkillTableUserDataParam>
@@ -83,7 +94,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.alchemy.GradeWorthTableUserData.Param")]
+    #[rsz("snow.data.alchemy.GradeWorthTableUserData.Param",
+        0x8aaef4d8 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct GradeWorthTableUserDataParam {
         pub grade_point: u32,
@@ -92,7 +105,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.alchemy.GradeWorthTableUserData")]
+    #[rsz("snow.data.alchemy.GradeWorthTableUserData",
+        0x8f3edc1d = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct GradeWorthTableUserData {
         pub param: Vec<GradeWorthTableUserDataParam>
@@ -100,7 +115,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.alchemy.RareTypeTableUserData.Param")]
+    #[rsz("snow.data.alchemy.RareTypeTableUserData.Param",
+        0xfaa5f87d = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct RareTypeTableUserDataParam {
         pub worth_point: u32,
@@ -109,7 +126,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.alchemy.RareTypeTableUserData")]
+    #[rsz("snow.data.alchemy.RareTypeTableUserData",
+        0x3a39f3cd = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct RareTypeTableUserData {
         pub param: Vec<RareTypeTableUserDataParam>
@@ -117,7 +136,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.alchemy.SecondSkillLotRateTableUserData.Param")]
+    #[rsz("snow.data.alchemy.SecondSkillLotRateTableUserData.Param",
+        0x9515f151 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct SecondSkillLotRateTableUserDataParam {
         pub skill1_grade: GradeTypes,
@@ -126,7 +147,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.alchemy.SecondSkillLotRateTableUserData")]
+    #[rsz("snow.data.alchemy.SecondSkillLotRateTableUserData",
+        0x2b059c58 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct SecondSkillLotRateTableUserData {
         pub param: Vec<SecondSkillLotRateTableUserDataParam>
@@ -134,7 +157,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.alchemy.SkillGradeLotRateTableUserData.Param")]
+    #[rsz("snow.data.alchemy.SkillGradeLotRateTableUserData.Param",
+        0xed421f20 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct SkillGradeLotRateTableUserDataParam {
         pub patturn_type: AlchemyPatturnTypes,
@@ -145,13 +170,16 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.alchemy.SkillGradeLotRateTableUserData")]
+    #[rsz("snow.data.alchemy.SkillGradeLotRateTableUserData",
+        0x05992de0 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct SkillGradeLotRateTableUserData {
         pub param: Vec<SkillGradeLotRateTableUserDataParam>
     }
 }
 
+// snow.data.alchemy.SlotNumTableUserData.GradeTypesForUserData
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -165,7 +193,9 @@ rsz_enum! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.alchemy.SlotNumTableUserData.SkillParam")]
+    #[rsz("snow.data.alchemy.SlotNumTableUserData.SkillParam",
+        0xa284155e = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct SlotNumTableUserDataSkillParam {
         pub skill1_grade: GradeTypesForSlotNumTable,
@@ -179,7 +209,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.alchemy.SlotNumTableUserData.SlotParam")]
+    #[rsz("snow.data.alchemy.SlotNumTableUserData.SlotParam",
+        0x931389cf = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct SlotNumTableUserDataSlotParam {
         pub slot_param: Vec<SlotNumTableUserDataSkillParam>
@@ -187,7 +219,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.alchemy.SlotNumTableUserData")]
+    #[rsz("snow.data.alchemy.SlotNumTableUserData",
+        0x4a3cbaa7 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct SlotNumTableUserData {
         pub param: Vec<SlotNumTableUserDataSlotParam>
@@ -195,7 +229,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.alchemy.SlotWorthTableUserData.Param")]
+    #[rsz("snow.data.alchemy.SlotWorthTableUserData.Param",
+        0x1a50e70a = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct SlotWorthTableUserDataParam {
         pub worth_point: u32,
@@ -203,7 +239,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.alchemy.SlotWorthTableUserData")]
+    #[rsz("snow.data.alchemy.SlotWorthTableUserData",
+        0xe2f54f75 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct SlotWorthTableUserData {
         pub param: Vec<SlotWorthTableUserDataParam>

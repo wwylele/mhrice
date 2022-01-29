@@ -4,6 +4,7 @@ use crate::rsz_newtype;
 use crate::rsz_struct;
 use serde::*;
 
+// snow.data.DataDef.PlEquipSkillId
 rsz_enum! {
     #[rsz(u8)]
     #[derive(Debug, Serialize, Clone, Copy, PartialEq, PartialOrd, Eq, Ord)]
