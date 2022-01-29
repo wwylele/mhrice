@@ -49,6 +49,16 @@ use std::io::{Cursor, Read, Seek, SeekFrom};
 use std::ops::Deref;
 use std::rc::*;
 
+/****
+
+Version list:
+
+0 = 3.6.1.0
+1 = 3.6.1.1
+
+
+****/
+
 #[derive(Debug)]
 pub struct SlotString {
     pub slot: u32,
@@ -284,7 +294,7 @@ impl AnyRsz {
     }
 
     pub fn to_json(&self) -> Result<String> {
-        (self.to_json_fn)(&self.any)
+        (self.to_json_fn)(&*self.any)
     }
 }
 

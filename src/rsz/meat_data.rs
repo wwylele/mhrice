@@ -3,7 +3,9 @@ use crate::rsz_struct;
 use serde::*;
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyMeatContainer.MeatGroupInfo")]
+    #[rsz("snow.enemy.EnemyMeatContainer.MeatGroupInfo",
+        0xd256a6ba = 0,
+    )]
     #[derive(Debug, Serialize, PartialEq, Eq)]
     pub struct MeatGroupInfo {
         pub slash: u16,
@@ -19,7 +21,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyMeatContainer")]
+    #[rsz("snow.enemy.EnemyMeatContainer",
+        0x8a1f3742 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnemyMeatContainer {
         pub meat_group_info: Vec<MeatGroupInfo>,
@@ -27,7 +31,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyMeatData")]
+    #[rsz("snow.enemy.EnemyMeatData",
+        0x6ad65290 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnemyMeatData {
         pub meat_container: Vec<EnemyMeatContainer>,
