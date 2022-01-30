@@ -3,7 +3,9 @@ use super::*;
 use crate::rsz_struct;
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetParalyzeData")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetParalyzeData",
+        0x17a55907 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetParalyzeData {
         #[serde(flatten)]
@@ -12,7 +14,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetSleepData")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetSleepData",
+        0xdc7c6f18 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetSleepData {
         #[serde(flatten)]
@@ -21,7 +25,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetStunData")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetStunData",
+        0x1f170ab4 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetStunData {
         #[serde(flatten)]
@@ -30,7 +36,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetStaminaData")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetStaminaData",
+        0x3325de97 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetStaminaData {
         #[serde(flatten)]
@@ -39,7 +47,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetFlashData")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetFlashData",
+        0x4afcc366 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetFlashData {
         #[serde(flatten)]
@@ -48,7 +58,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetPoison")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetPoison",
+        0xc96e7e0e = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetPoison {
         #[serde(flatten)]
@@ -57,7 +69,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetBlastData")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetBlastData",
+        0xb69fdb89 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetBlastData {
         #[serde(flatten)]
@@ -66,7 +80,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetWater")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetWater",
+        0xf8267eb8 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetWater {
         #[serde(flatten)]
@@ -75,7 +91,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetFireData")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetFireData",
+        0x3db2de86 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetFireData {
         #[serde(flatten)]
@@ -84,7 +102,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetIceData")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetIceData",
+        0x270cf819 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetIceData {
         #[serde(flatten)]
@@ -93,7 +113,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetThunderData")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetThunderData",
+        0x725a8ef4 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetThunderData {
         #[serde(flatten)]
@@ -102,7 +124,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetFallTrapData")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetFallTrapData",
+        0xb4233c06 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetFallTrapData {
         #[serde(flatten)]
@@ -111,7 +135,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetFallQuickSandData")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetFallQuickSandData",
+        0xb9746c2a = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetFallQuickSandData {
         #[serde(flatten)]
@@ -120,7 +146,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetFallOtomoTrapData")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetFallOtomoTrapData",
+        0x64c58663 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetFallOtomoTrapData {
         #[serde(flatten)]
@@ -129,7 +157,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetShockTrapData")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetShockTrapData",
+        0xbaaae127 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetShockTrapData {
         #[serde(flatten)]
@@ -138,7 +168,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetShockOtomoTrapData")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetShockOtomoTrapData",
+        0x58465db7 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetShockOtomoTrapData {
         #[serde(flatten)]
@@ -147,7 +179,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetCaptureData")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetCaptureData",
+        0x4c70d9e8 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetCaptureData {
         #[serde(flatten)]
@@ -156,7 +190,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetKoyashiData")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetKoyashiData",
+        0x18bcaf06 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetKoyashiData {
         #[serde(flatten)]
@@ -165,7 +201,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData.PresetSteelFangData")]
+    #[rsz("snow.enemy.EnemyConditionPresetData.PresetSteelFangData",
+        0x747ea8e0 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PresetSteelFangData {
         #[serde(flatten)]
@@ -174,7 +212,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionPresetData")]
+    #[rsz("snow.enemy.EnemyConditionPresetData",
+        0xe6f93283 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnemyConditionPresetData {
         pub paralyze_data: Vec<PresetParalyzeData>,
