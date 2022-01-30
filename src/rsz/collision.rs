@@ -3,7 +3,9 @@ use crate::{rsz_bitflags, rsz_enum, rsz_struct};
 use serde::*;
 
 rsz_struct! {
-    #[rsz("via.physics.RequestSetColliderUserData")]
+    #[rsz("via.physics.RequestSetColliderUserData",
+        0x6de94d21 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct RequestSetColliderUserData {
         pub name: String,
@@ -12,7 +14,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("via.physics.UserData")]
+    #[rsz("via.physics.UserData",
+        0x16593069 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PhysicsUserData {
         pub name: String,
@@ -20,14 +24,17 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.hit.userdata.EmHitDamageRSData")]
+    #[rsz("snow.hit.userdata.EmHitDamageRSData",
+        0x2fe4e6f5 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EmHitDamageRsData {
         pub base: PhysicsUserData,
-        pub parts_group: u16,
+        pub parts_group: u16, // snow.enemy.EnemyDef.PartsGroup
     }
 }
 
+// snow.hit.CustomShapeType
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -41,6 +48,7 @@ rsz_enum! {
     }
 }
 
+// snow.hit.LimitedHitAttr
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -50,6 +58,7 @@ rsz_enum! {
     }
 }
 
+// snow.enemy.EnemyDef.HitSoundAttr
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -71,6 +80,7 @@ rsz_enum! {
     }
 }
 
+// snow.hit.DamageAttr
 rsz_bitflags! {
     pub struct DamageAttr: u16 {
         const ALLOW_DISABLE = 1;
@@ -79,6 +89,7 @@ rsz_bitflags! {
     }
 }
 
+// snow.enemy.EnemyDef.BaseHitMarkType
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -91,7 +102,9 @@ rsz_enum! {
 }
 
 rsz_struct! {
-    #[rsz("snow.hit.userdata.EmHitDamageShapeData")]
+    #[rsz("snow.hit.userdata.EmHitDamageShapeData",
+        0xaa5a3f29 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EmHitDamageShapeData {
         pub base: PhysicsUserData,
@@ -100,7 +113,7 @@ rsz_struct! {
         pub limited_hit_attr: LimitedHitAttr,
         pub hit_sound_attr: HitSoundAttr,
         pub hit_pos_correction: f32,
-        pub meat: i32,
+        pub meat: i32, // snow.enemy.EnemyDef.Meat
         pub damage_attr: DamageAttr,
         pub base_hit_mark_type: BaseHitMarkType,
     }
