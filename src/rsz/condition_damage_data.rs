@@ -5,7 +5,9 @@ use crate::rsz_struct;
 use serde::*;
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.StockData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.StockData",
+        0xc777885c = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct StockData {
         pub default_limit: f32,
@@ -16,6 +18,8 @@ rsz_struct! {
     }
 }
 
+// snow.enemy.EnemyConditionDamageData.ConditionDamageDataBase
+// flattend base
 rsz_struct! {
     #[rsz()]
     #[derive(Debug, Serialize)]
@@ -33,7 +37,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.ParalyzeDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.ParalyzeDamageData",
+        0x137585f6 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct ParalyzeDamageData {
         #[serde(flatten)]
@@ -43,7 +49,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.SleepDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.SleepDamageData",
+        0xad7bd1de = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct SleepDamageData {
         #[serde(flatten)]
@@ -53,7 +61,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.StunDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.StunDamageData",
+        0x118cd23e = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct StunDamageData {
         #[serde(flatten)]
@@ -63,7 +73,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.StaminaDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.StaminaDamageData",
+        0x9d03fcc2 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct StaminaDamageData {
         #[serde(flatten)]
@@ -74,7 +86,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyFlashDamageParam.DamageLvData")]
+    #[rsz("snow.enemy.EnemyFlashDamageParam.DamageLvData",
+        0x203e344e = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct FlashDamageLvData {
         pub activate_count: i32,
@@ -82,6 +96,7 @@ rsz_struct! {
     }
 }
 
+// snow.enemy.EnemyFlashDamageParam.StanceStatusFlags
 rsz_bitflags! {
     pub struct StanceStatusFlags: u32 {
         const STAND = 1;
@@ -93,7 +108,9 @@ rsz_bitflags! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.FlashDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.FlashDamageData",
+        0x3441c585 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct FlashDamageData {
         #[serde(flatten)]
@@ -108,7 +125,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.PoisonDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.PoisonDamageData",
+        0x91bdc48a = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PoisonDamageData {
         #[serde(flatten)]
@@ -118,7 +137,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.BlastDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.BlastDamageData",
+        0x006e8e35 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct BlastDamageData {
         #[serde(flatten)]
@@ -128,6 +149,7 @@ rsz_struct! {
     }
 }
 
+// snow.enemy.EnemyDef.UseDataType
 rsz_enum! {
     #[rsz(u32)]
     #[derive(Debug, Serialize)]
@@ -138,7 +160,9 @@ rsz_enum! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.MarionetteStartDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.MarionetteStartDamageData",
+        0x5f80df06 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct MarionetteStartDamageData {
         #[serde(flatten)]
@@ -149,7 +173,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.WaterDamageData.AdjustMeatDownData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.WaterDamageData.AdjustMeatDownData",
+        0xc351f144 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct AdjustMeatDownData {
         pub hard_meat_adjust_value: f32,
@@ -159,7 +185,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.WaterDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.WaterDamageData",
+        0x59904df2 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct WaterDamageData {
         #[serde(flatten)]
@@ -171,7 +199,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.FireDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.FireDamageData",
+        0x86f141aa = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct FireDamageData {
         #[serde(flatten)]
@@ -182,7 +212,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.IceDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.IceDamageData",
+        0xdc55cb29 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct IceDamageData {
         #[serde(flatten)]
@@ -193,7 +225,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyThunderDamageParam.AdjustParamData")]
+    #[rsz("snow.enemy.EnemyThunderDamageParam.AdjustParamData",
+        0x97f24030 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct ThunderAdjustParamData {
         pub hit_damage_to_stun_rate: f32,
@@ -204,7 +238,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.ThunderDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.ThunderDamageData",
+        0x33653378 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct ThunderDamageData {
         #[serde(flatten)]
@@ -217,7 +253,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.FallTrapDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.FallTrapDamageData",
+        0x75132b74 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct FallTrapDamageData {
         #[serde(flatten)]
@@ -230,7 +268,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.FallQuickSandDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.FallQuickSandDamageData",
+        0x667f7652 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct FallQuickSandDamageData {
         #[serde(flatten)]
@@ -243,7 +283,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.FallOtomoTrapDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.FallOtomoTrapDamageData",
+        0x16e8d19d = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct FallOtomoTrapDamageData {
         #[serde(flatten)]
@@ -254,7 +296,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.ShockTrapDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.ShockTrapDamageData",
+        0x77145ad3 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct ShockTrapDamageData {
         #[serde(flatten)]
@@ -264,7 +308,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.CaptureDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.CaptureDamageData",
+        0x0d61e436 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct CaptureDamageData {
         #[serde(flatten)]
@@ -274,7 +320,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.KoyashiDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.KoyashiDamageData",
+        0x975b8e3f = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct KoyashiDamageData {
         #[serde(flatten)]
@@ -284,14 +332,16 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData.SteelFangData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData.SteelFangData",
+        0xf4c0bd7b = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct SteelFangData {
         #[serde(flatten)]
         pub base: ConditionDamageDataBase,
         pub active_limit_count: i32,
         pub preset_type: u32,
-        pub is_unique_target_param: u32,
+        pub is_unique_target_param: bool,
         pub max_distance: f32,
         pub min_distance: f32,
         pub angle: f32,
@@ -308,7 +358,9 @@ rsz_enum! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyConditionDamageData")]
+    #[rsz("snow.enemy.EnemyConditionDamageData",
+        0x2ca2f7c2 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnemyConditionDamageData {
         pub paralyze_data: ParalyzeDamageData,
