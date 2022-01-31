@@ -4,6 +4,7 @@ use crate::rsz_enum;
 use crate::rsz_struct;
 use serde::*;
 
+// snow.enemy.EnemyDef.ExtractiveType
 rsz_enum! {
     #[rsz(u32)]
     #[derive(Debug, Serialize, PartialEq, Eq, Clone, Copy)]
@@ -16,7 +17,9 @@ rsz_enum! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyPartsData")]
+    #[rsz("snow.enemy.EnemyPartsData",
+        0xdbf55bff = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnemyPartsData {
         pub vital: i32,
@@ -24,6 +27,7 @@ rsz_struct! {
     }
 }
 
+// snow.enemy.EnemyDataTune.PartsBreakData.IgnoreCondition
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -35,7 +39,9 @@ rsz_enum! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyDataTune.PartsBreakData")]
+    #[rsz("snow.enemy.EnemyDataTune.PartsBreakData",
+        0xcf7e209a = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct DataTunePartsBreakData {
         pub break_level: i32,
@@ -47,14 +53,17 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyDataTune.EnemyPartsBreakData")]
+    #[rsz("snow.enemy.EnemyDataTune.EnemyPartsBreakData",
+        0x00474562 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct DataTuneEnemyPartsBreakData {
-        pub parts_group: u16,
+        pub parts_group: u16, // snow.enemy.EnemyDef.PartsGroup
         pub parts_break_data_list: Vec<DataTunePartsBreakData>,
     }
 }
 
+// snow.enemy.EnemyDataTune.PartsLossData.PermitDamageAttrEnum
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -66,7 +75,9 @@ rsz_enum! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyDataTune.PartsLossData")]
+    #[rsz("snow.enemy.EnemyDataTune.PartsLossData",
+        0x4e573da9 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct DataTunePartsLossData {
         pub vital: i32,
@@ -75,16 +86,20 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyDataTune.EnemyPartsLossData")]
+    #[rsz("snow.enemy.EnemyDataTune.EnemyPartsLossData",
+        0x4f9e8a18 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct DataTuneEnemyPartsLossData {
-        pub parts_group: u16,
+        pub parts_group: u16, // snow.enemy.EnemyDef.PartsGroup
         pub parts_loss_data: DataTunePartsLossData,
     }
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnablePartsGroup")]
+    #[rsz("snow.enemy.EnablePartsGroup",
+        0x9c77985e = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnablePartsGroup {
         pub enable_parts: Vec<bool>,
@@ -92,13 +107,16 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.MultiPartsVital")]
+    #[rsz("snow.enemy.MultiPartsVital",
+        0x3e34bd92 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct MultiPartsVital {
         pub vital: i32,
     }
 }
 
+// snow.enemy.EnemyDef.DamageCategoryFlag
 rsz_bitflags! {
     pub struct DamageCategoryFlag: u32 {
         const MARIONETTE_FRIENDLY_FIRE = 0x00000001;
@@ -133,7 +151,9 @@ rsz_bitflags! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyMultiPartsSystemVitalData")]
+    #[rsz("snow.enemy.EnemyMultiPartsSystemVitalData",
+        0xc954c0c5 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnemyMultiPartsSystemVitalData {
         pub use_type: UseDataType,
@@ -152,7 +172,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyMultiPartsVitalData")]
+    #[rsz("snow.enemy.EnemyMultiPartsVitalData",
+        0xd4a750bf = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnemyMultiPartsVitalData {
         pub use_type: UseDataType,
@@ -171,7 +193,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyGimmickVitalData")]
+    #[rsz("snow.enemy.EnemyGimmickVitalData",
+        0xb6c04bfd = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnemyGimmickVitalData {
         pub vital_s: i32,
@@ -182,7 +206,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyMarionetteVitalData")]
+    #[rsz("snow.enemy.EnemyMarionetteVitalData",
+        0x4e4e9113 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnemyMarionetteVitalData {
         pub vital_s: i32,
@@ -192,7 +218,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyDataTune.CharacterContollerTune")] // yep, official typo
+    #[rsz("snow.enemy.EnemyDataTune.CharacterContollerTune", // yep, official typo
+        0xdb63fcc7 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct CharacterContollerTune {
         pub radius: f32,
@@ -200,6 +228,7 @@ rsz_struct! {
     }
 }
 
+// snow.hit.HitWeight
 rsz_enum! {
     #[rsz(u8)]
     #[allow(clippy::upper_case_acronyms)]
@@ -221,7 +250,9 @@ rsz_enum! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyDataTune")]
+    #[rsz("snow.enemy.EnemyDataTune",
+        0xf2b27352 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnemyDataTune {
         pub base_hp_vital: i32,
