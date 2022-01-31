@@ -3,7 +3,9 @@ use crate::rsz_struct;
 use serde::*;
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyDataBase")]
+    #[rsz("snow.enemy.EnemyDataBase",
+        0xa01ee02d = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnemyDataBase {
         pub caution_to_combat_vision_timer: f32,
