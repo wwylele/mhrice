@@ -4,6 +4,7 @@ use crate::rsz_newtype;
 use crate::rsz_struct;
 use serde::*;
 
+// snow.data.GameItemEnum.CarriableFilter
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -15,6 +16,7 @@ rsz_enum! {
     }
 }
 
+// snow.data.DataDef.ItemTypes
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -34,6 +36,7 @@ rsz_enum! {
     }
 }
 
+// snow.data.GameItemEnum.IconRank
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -46,6 +49,7 @@ rsz_enum! {
     }
 }
 
+// snow.data.OtEquipSeriesData.RankTypes
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -55,6 +59,7 @@ rsz_enum! {
     }
 }
 
+// snow.data.NormalItemData.ItemGroupTypes
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -96,7 +101,9 @@ rsz_newtype! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.ItemUserData.Param")]
+    #[rsz("snow.data.ItemUserData.Param",
+        0xc5401e4b = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct ItemUserDataParam {
         pub id: ItemId,
@@ -129,7 +136,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.ItemUserData")]
+    #[rsz("snow.data.ItemUserData",
+        0x66200423 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct ItemUserData {
         pub param: Vec<ItemUserDataParam>,
