@@ -3,6 +3,7 @@ use crate::rsz_enum;
 use crate::rsz_struct;
 use serde::*;
 
+// snow.QuestManager.QuestRank
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize, Copy, Clone, PartialEq, Eq, Hash)]
@@ -12,6 +13,7 @@ rsz_enum! {
     }
 }
 
+// snow.data.LotDataManager.EnemyRewardPopTypes
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize, Copy, Clone, PartialEq, Eq, Hash)]
@@ -30,8 +32,8 @@ rsz_enum! {
     }
 }
 
+// snow.data.PartsBreakInfo.BrokenPartsTypes
 rsz_enum! {
-    // see snow.data.PartsBreakInfo.BrokenPartsTypes
     #[rsz(i32)]
     #[derive(Debug, Serialize, PartialEq, Eq, Clone, Copy, Hash)]
     pub enum BrokenPartsTypes {
@@ -40,6 +42,7 @@ rsz_enum! {
     }
 }
 
+// snow.data.PartsBreakInfo.BreakLvTypes
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -51,7 +54,9 @@ rsz_enum! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.MonsterLotTableUserData.Param")]
+    #[rsz("snow.data.MonsterLotTableUserData.Param",
+        0x47aec6b3 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct MonsterLotTableUserDataParam {
         pub em_types: EmTypes,
@@ -83,7 +88,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.MonsterLotTableUserData")]
+    #[rsz("snow.data.MonsterLotTableUserData",
+        0xdda16506 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct MonsterLotTableUserData {
         pub param: Vec<MonsterLotTableUserDataParam>,
@@ -91,7 +98,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyDropItemInfoData.EnemyDropItemTableData.EnemyDropItemInfo")]
+    #[rsz("snow.enemy.EnemyDropItemInfoData.EnemyDropItemTableData.EnemyDropItemInfo",
+        0x8ce51602 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnemyDropItemInfo {
         pub percentage: u32,
@@ -101,7 +110,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyDropItemInfoData.EnemyDropItemTableData")]
+    #[rsz("snow.enemy.EnemyDropItemInfoData.EnemyDropItemTableData",
+        0x10beea0e = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnemyDropItemTableData {
         pub percentage: u32,
@@ -111,7 +122,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyDropItemInfoData")]
+    #[rsz("snow.enemy.EnemyDropItemInfoData",
+        0x08aa30ec = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnemyDropItemInfoData {
         pub enemy_drop_item_table_data_tbl: Vec<EnemyDropItemTableData>,
@@ -120,7 +133,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyPartsBreakRewardData.EnemyPartsBreakRewardInfo.PartsBreakGroupConditionInfo")]
+    #[rsz("snow.enemy.EnemyPartsBreakRewardData.EnemyPartsBreakRewardInfo.PartsBreakGroupConditionInfo",
+        0x92ab2acb = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PartsBreakGroupConditionInfo {
         pub parts_group: u16,
@@ -128,6 +143,7 @@ rsz_struct! {
     }
 }
 
+// snow.enemy.EnemyPartsBreakRewardData.ConditionType
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -138,7 +154,9 @@ rsz_enum! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyPartsBreakRewardData.EnemyPartsBreakRewardInfo")]
+    #[rsz("snow.enemy.EnemyPartsBreakRewardData.EnemyPartsBreakRewardInfo",
+        0xb7e700cc = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnemyPartsBreakRewardInfo {
         pub parts_break_condition_list: Vec<PartsBreakGroupConditionInfo>,
@@ -148,7 +166,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyPartsBreakRewardData")]
+    #[rsz("snow.enemy.EnemyPartsBreakRewardData",
+        0xd0ef6d2d = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnemyPartsBreakRewardData {
         pub enemy_parts_break_reward_infos: Vec<EnemyPartsBreakRewardInfo>,
@@ -156,7 +176,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.PartsTypeTextUserData.TextInfo")]
+    #[rsz("snow.data.PartsTypeTextUserData.TextInfo",
+        0x8988fd90 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PartsTypeTextUserDataTextInfo {
        pub enemy_type_list: Vec<EmTypes>,
@@ -168,7 +190,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.PartsTypeTextUserData.PartsTypeInfo")]
+    #[rsz("snow.data.PartsTypeTextUserData.PartsTypeInfo",
+        0x7db22cf7 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PartsTypeInfo {
         pub broken_parts_types: BrokenPartsTypes,
@@ -177,7 +201,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.PartsTypeTextUserData")]
+    #[rsz("snow.data.PartsTypeTextUserData",
+        0x03a010a7 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PartsTypeTextUserData {
         pub params: Vec<PartsTypeInfo>
