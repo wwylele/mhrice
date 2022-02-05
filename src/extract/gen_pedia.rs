@@ -592,6 +592,8 @@ fn gen_monster_hitzones(
 // hard-coded in game code.
 static EM_ICON_MAP: Lazy<HashMap<(i32, i32), &'static str>> = Lazy::new(|| {
     let mut m = HashMap::new();
+    // This is not applicable in PC update anymore
+    /*
     m.insert((24, 0), "A0");
     m.insert((25, 0), "B1");
     m.insert((27, 0), "C2");
@@ -604,6 +606,10 @@ static EM_ICON_MAP: Lazy<HashMap<(i32, i32), &'static str>> = Lazy::new(|| {
     // J9?
     // KA?
     m.insert((99, 5), "LB");
+    */
+
+    // Except... they did a oopsie on pc
+    m.insert((86, 5), "em086_00");
     m
 });
 
