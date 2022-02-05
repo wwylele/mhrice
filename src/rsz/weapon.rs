@@ -52,6 +52,7 @@ macro_rules! params {
     };
 }
 
+// snow.equip.PlWeaponElementTypes
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -69,6 +70,7 @@ rsz_enum! {
     }
 }
 
+// snow.data.ContentsIdSystem.WeaponId
 rsz_enum! {
     #[rsz(u32)]
     #[derive(Debug, Serialize, PartialEq, Eq, Clone, Copy, Hash)]
@@ -138,6 +140,7 @@ impl WeaponId {
     }
 }
 
+// snow.equip.WeaponBaseData
 rsz_struct! {
     #[rsz()]
     #[derive(Debug, Serialize)]
@@ -151,6 +154,7 @@ rsz_struct! {
     }
 }
 
+// snow.equip.MainWeaponBaseData
 rsz_struct! {
     #[rsz()]
     #[derive(Debug, Serialize)]
@@ -166,6 +170,7 @@ rsz_struct! {
 
 impl_base!(MainWeaponBaseData, WeaponBaseData);
 
+// snow.equip.ElementWeaponBaseData
 rsz_struct! {
     #[rsz()]
     #[derive(Debug, Serialize)]
@@ -178,6 +183,7 @@ rsz_struct! {
 
 impl_base!(ElementWeaponBaseData, WeaponBaseData);
 
+// snow.equip.CloseRangeWeaponBaseData
 rsz_struct! {
     #[rsz()]
     #[derive(Debug, Serialize)]
@@ -205,7 +211,9 @@ macro_rules! melee {
 }
 
 rsz_struct! {
-    #[rsz("snow.equip.GreatSwordBaseUserData.Param")]
+    #[rsz("snow.equip.GreatSwordBaseUserData.Param",
+        0x847c5de5 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct GreatSwordBaseUserDataParam {
         pub base: CloseRangeWeaponBaseData,
@@ -215,7 +223,9 @@ rsz_struct! {
 melee!(GreatSwordBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.GreatSwordBaseUserData")]
+    #[rsz("snow.equip.GreatSwordBaseUserData",
+        0x2d76ecd1 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct GreatSwordBaseUserData {
         pub param: Vec<GreatSwordBaseUserDataParam>,
@@ -225,7 +235,9 @@ rsz_struct! {
 params!(GreatSwordBaseUserData, GreatSwordBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.ShortSwordBaseUserData.Param")]
+    #[rsz("snow.equip.ShortSwordBaseUserData.Param",
+        0x72e55595 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct ShortSwordBaseUserDataParam {
         pub base: CloseRangeWeaponBaseData,
@@ -235,7 +247,9 @@ rsz_struct! {
 melee!(ShortSwordBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.ShortSwordBaseUserData")]
+    #[rsz("snow.equip.ShortSwordBaseUserData",
+        0x5212b08f = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct ShortSwordBaseUserData {
         pub param: Vec<ShortSwordBaseUserDataParam>,
@@ -245,7 +259,9 @@ rsz_struct! {
 params!(ShortSwordBaseUserData, ShortSwordBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.HammerBaseUserData.Param")]
+    #[rsz("snow.equip.HammerBaseUserData.Param",
+        0xdb1c6163 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct HammerBaseUserDataParam {
         pub base: CloseRangeWeaponBaseData,
@@ -255,7 +271,9 @@ rsz_struct! {
 melee!(HammerBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.HammerBaseUserData")]
+    #[rsz("snow.equip.HammerBaseUserData",
+        0x91d46308 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct HammerBaseUserData {
         pub param: Vec<HammerBaseUserDataParam>,
@@ -265,7 +283,9 @@ rsz_struct! {
 params!(HammerBaseUserData, HammerBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.LanceBaseUserData.Param")]
+    #[rsz("snow.equip.LanceBaseUserData.Param",
+        0x3ac6a90d = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct LanceBaseUserDataParam {
         pub base: CloseRangeWeaponBaseData,
@@ -275,7 +295,9 @@ rsz_struct! {
 melee!(LanceBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.LanceBaseUserData")]
+    #[rsz("snow.equip.LanceBaseUserData",
+        0x6f0b52cc = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct LanceBaseUserData {
         pub param: Vec<LanceBaseUserDataParam>,
@@ -285,7 +307,9 @@ rsz_struct! {
 params!(LanceBaseUserData, LanceBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.LongSwordBaseUserData.Param")]
+    #[rsz("snow.equip.LongSwordBaseUserData.Param",
+        0xc5d4b59f = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct LongSwordBaseUserDataParam {
         pub base: CloseRangeWeaponBaseData,
@@ -295,7 +319,9 @@ rsz_struct! {
 melee!(LongSwordBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.LongSwordBaseUserData")]
+    #[rsz("snow.equip.LongSwordBaseUserData",
+        0xbcb98f04 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct LongSwordBaseUserData {
         pub param: Vec<LongSwordBaseUserDataParam>,
@@ -305,7 +331,9 @@ rsz_struct! {
 params!(LongSwordBaseUserData, LongSwordBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.SlashAxeBaseUserData.Param")]
+    #[rsz("snow.equip.SlashAxeBaseUserData.Param",
+        0xfadf2630 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct SlashAxeBaseUserDataParam {
         pub base: CloseRangeWeaponBaseData,
@@ -317,7 +345,9 @@ rsz_struct! {
 melee!(SlashAxeBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.SlashAxeBaseUserData")]
+    #[rsz("snow.equip.SlashAxeBaseUserData",
+        0x185fd335 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct SlashAxeBaseUserData {
         pub param: Vec<SlashAxeBaseUserDataParam>,
@@ -327,7 +357,9 @@ rsz_struct! {
 params!(SlashAxeBaseUserData, SlashAxeBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.GunLanceBaseUserData.Param")]
+    #[rsz("snow.equip.GunLanceBaseUserData.Param",
+        0x03e3c5f3 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct GunLanceBaseUserDataParam {
         pub base: CloseRangeWeaponBaseData,
@@ -339,7 +371,9 @@ rsz_struct! {
 melee!(GunLanceBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.GunLanceBaseUserData")]
+    #[rsz("snow.equip.GunLanceBaseUserData",
+        0x9544cb29 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct GunLanceBaseUserData {
         pub param: Vec<GunLanceBaseUserDataParam>,
@@ -349,7 +383,9 @@ rsz_struct! {
 params!(GunLanceBaseUserData, GunLanceBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.DualBladesBaseUserData.Param")]
+    #[rsz("snow.equip.DualBladesBaseUserData.Param",
+        0xc074f109 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct DualBladesBaseUserDataParam {
         pub base: CloseRangeWeaponBaseData,
@@ -361,7 +397,9 @@ rsz_struct! {
 melee!(DualBladesBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.DualBladesBaseUserData")]
+    #[rsz("snow.equip.DualBladesBaseUserData",
+        0x0f4b43c9 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct DualBladesBaseUserData {
         pub param: Vec<DualBladesBaseUserDataParam>,
@@ -371,7 +409,9 @@ rsz_struct! {
 params!(DualBladesBaseUserData, DualBladesBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.HornBaseUserData.Param")]
+    #[rsz("snow.equip.HornBaseUserData.Param",
+        0x9705bdd1 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct HornBaseUserDataParam {
         pub base: CloseRangeWeaponBaseData,
@@ -382,7 +422,9 @@ rsz_struct! {
 melee!(HornBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.HornBaseUserData")]
+    #[rsz("snow.equip.HornBaseUserData",
+        0xb6dd7468 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct HornBaseUserData {
         pub param: Vec<HornBaseUserDataParam>,
@@ -392,7 +434,9 @@ rsz_struct! {
 params!(HornBaseUserData, HornBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.InsectGlaiveBaseUserData.Param")]
+    #[rsz("snow.equip.InsectGlaiveBaseUserData.Param",
+        0xea83e382 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct InsectGlaiveBaseUserDataParam {
         pub base: CloseRangeWeaponBaseData,
@@ -403,7 +447,9 @@ rsz_struct! {
 melee!(InsectGlaiveBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.InsectGlaiveBaseUserData")]
+    #[rsz("snow.equip.InsectGlaiveBaseUserData",
+        0x0e15ac78 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct InsectGlaiveBaseUserData {
         pub param: Vec<InsectGlaiveBaseUserDataParam>,
@@ -413,7 +459,9 @@ rsz_struct! {
 params!(InsectGlaiveBaseUserData, InsectGlaiveBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.ChargeAxeBaseUserData.Param")]
+    #[rsz("snow.equip.ChargeAxeBaseUserData.Param",
+        0xf06e49d2 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct ChargeAxeBaseUserDataParam {
         pub base: CloseRangeWeaponBaseData,
@@ -424,7 +472,9 @@ rsz_struct! {
 melee!(ChargeAxeBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.ChargeAxeBaseUserData")]
+    #[rsz("snow.equip.ChargeAxeBaseUserData",
+        0x242847cf = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct ChargeAxeBaseUserData {
         pub param: Vec<ChargeAxeBaseUserDataParam>,
@@ -433,6 +483,7 @@ rsz_struct! {
 
 params!(ChargeAxeBaseUserData, ChargeAxeBaseUserDataParam);
 
+// snow.data.GameItemEnum.Fluctuation
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -447,6 +498,7 @@ rsz_enum! {
     }
 }
 
+// snow.data.GameItemEnum.KakusanType
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -456,6 +508,7 @@ rsz_enum! {
     }
 }
 
+// snow.data.GameItemEnum.ShootType
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize, Copy, Clone)]
@@ -526,6 +579,7 @@ impl ShootType {
     }
 }
 
+// snow.equip.BulletWeaponBaseUserData.Param
 rsz_struct! {
     #[rsz()]
     #[derive(Debug, Serialize)]
@@ -547,7 +601,9 @@ rsz_struct! {
 impl_base!(BulletWeaponBaseUserDataParam, MainWeaponBaseData);
 
 rsz_struct! {
-    #[rsz("snow.equip.LightBowgunBaseUserData.Param")]
+    #[rsz("snow.equip.LightBowgunBaseUserData.Param",
+        0xbcbd7e25 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct LightBowgunBaseUserDataParam {
         pub base: BulletWeaponBaseUserDataParam,
@@ -564,7 +620,9 @@ impl_tobase!(
 impl_base!(LightBowgunBaseUserDataParam, BulletWeaponBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.LightBowgunBaseUserData")]
+    #[rsz("snow.equip.LightBowgunBaseUserData",
+        0xe12489c3 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct LightBowgunBaseUserData {
         pub param: Vec<LightBowgunBaseUserDataParam>,
@@ -574,7 +632,9 @@ rsz_struct! {
 params!(LightBowgunBaseUserData, LightBowgunBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.HeavyBowgunBaseUserData.Param")]
+    #[rsz("snow.equip.HeavyBowgunBaseUserData.Param",
+        0xb7ef4f5e = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct HeavyBowgunBaseUserDataParam {
         pub base: BulletWeaponBaseUserDataParam,
@@ -590,7 +650,9 @@ impl_tobase!(
 impl_base!(HeavyBowgunBaseUserDataParam, BulletWeaponBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.HeavyBowgunBaseUserData")]
+    #[rsz("snow.equip.HeavyBowgunBaseUserData",
+        0xe3ffb4d0 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct HeavyBowgunBaseUserData {
         pub param: Vec<HeavyBowgunBaseUserDataParam>,
@@ -600,7 +662,9 @@ rsz_struct! {
 params!(HeavyBowgunBaseUserData, HeavyBowgunBaseUserDataParam);
 
 rsz_struct! {
-    #[rsz("snow.equip.BowBaseUserData.Param")]
+    #[rsz("snow.equip.BowBaseUserData.Param",
+        0x867e2cea = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct BowBaseUserDataParam {
         pub base: ElementWeaponBaseData,
@@ -620,7 +684,9 @@ impl_tobase!(
 impl_base!(BowBaseUserDataParam, ElementWeaponBaseData);
 
 rsz_struct! {
-    #[rsz("snow.equip.BowBaseUserData")]
+    #[rsz("snow.equip.BowBaseUserData",
+        0x74b733b8 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct BowBaseUserData {
         pub param: Vec<BowBaseUserDataParam>,
@@ -645,7 +711,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.WeaponProcessUserData.Param")]
+    #[rsz("snow.data.WeaponProcessUserData.Param",
+        0xcf089e94 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct WeaponProcessUserDataParam {
         pub base: WeaponCraftingData,
@@ -655,7 +723,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.WeaponProcessUserData")]
+    #[rsz("snow.data.WeaponProcessUserData",
+        0xcf09e417 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct WeaponProcessUserData {
         pub param: Vec<WeaponProcessUserDataParam>,
@@ -663,7 +733,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.WeaponProductUserData.Param")]
+    #[rsz("snow.data.WeaponProductUserData.Param",
+        0x619d3718 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct WeaponProductUserDataParam {
         pub base: WeaponCraftingData,
@@ -673,7 +745,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.WeaponProductUserData")]
+    #[rsz("snow.data.WeaponProductUserData",
+        0xb7f1be22 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct WeaponProductUserData {
         pub param: Vec<WeaponProductUserDataParam>,
@@ -681,7 +755,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.WeaponChangeUserData.Param")]
+    #[rsz("snow.data.WeaponChangeUserData.Param",
+        0xca046cc6 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct WeaponChangeUserDataParam {
         pub base: WeaponCraftingData,
@@ -689,13 +765,16 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.WeaponChangeUserData")]
+    #[rsz("snow.data.WeaponChangeUserData",
+        0xb84edaa5 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct WeaponChangeUserData {
         pub param: Vec<WeaponChangeUserDataParam>,
     }
 }
 
+// snow.data.UpdateTreeData.TreeType
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
@@ -706,6 +785,7 @@ rsz_enum! {
     }
 }
 
+// snow.progress.VillageProgress
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -715,6 +795,7 @@ rsz_enum! {
     }
 }
 
+// snow.progress.HallProgress
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
@@ -725,7 +806,9 @@ rsz_enum! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.WeaponUpdateTreeUserData.Param")]
+    #[rsz("snow.data.WeaponUpdateTreeUserData.Param",
+        0xcbb3dfb2 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct WeaponUpdateTreeUserDataParam {
         pub tree_type: TreeType,
@@ -741,7 +824,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.data.WeaponUpdateTreeUserData")]
+    #[rsz("snow.data.WeaponUpdateTreeUserData",
+        0x5eb36312 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct WeaponUpdateTreeUserData {
         pub param: Vec<WeaponUpdateTreeUserDataParam>,
