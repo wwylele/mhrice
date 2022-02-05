@@ -4,6 +4,7 @@ use crate::rsz_enum;
 use crate::rsz_struct;
 use serde::*;
 
+// snow.quest.QuestType
 rsz_bitflags! {
     pub struct QuestType: u32 {
         const HUNTING  = 0x00000001;
@@ -56,6 +57,7 @@ impl QuestType {
     }
 }
 
+// snow.quest.QuestLevel
 rsz_enum! {
     #[rsz(i32)]
     #[allow(clippy::upper_case_acronyms)]
@@ -72,6 +74,7 @@ rsz_enum! {
     }
 }
 
+// snow.quest.EnemyLv
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize, PartialOrd, Ord, PartialEq, Eq, Clone, Copy)]
@@ -82,6 +85,7 @@ rsz_enum! {
     }
 }
 
+// snow.quest.QuestOrderType
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize, Clone, Copy)]
@@ -105,6 +109,7 @@ rsz_enum! {
     }
 }
 
+// snow.quest.QuestTargetType
 rsz_enum! {
     #[rsz(u8)]
     #[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq)]
@@ -137,6 +142,7 @@ rsz_enum! {
     }
 }
 
+// snow.QuestManager.BossSetCondition
 rsz_enum! {
     #[rsz(u32)]
     #[derive(Debug, Serialize, Clone, Copy)]
@@ -154,13 +160,13 @@ rsz_enum! {
         Em4Hp = 10,
         Em5Hp = 11,
         HpEmx1 = 12,
-        // TODO: this depends on version
-        U13 = 13, // INIT_RANDOM (v6), HP_EMx2 (v7)
-        U14 = 14, // SWAP_RANDOM (v6), INIT_RANDOM (v7)
-        U15 = 15, // SWAP_RANDOM (v7)
+        HpEmx2 = 13,
+        InitRandom = 14,
+        SwapRandom = 15,
     }
 }
 
+// snow.QuestManager.SwapSetCondition
 rsz_enum! {
     #[rsz(u32)]
     #[derive(Debug, Serialize, Clone, Copy)]
@@ -170,6 +176,7 @@ rsz_enum! {
     }
 }
 
+// snow.QuestManager.SwapStopType
 rsz_enum! {
     #[rsz(u32)]
     #[derive(Debug, Serialize, Clone, Copy)]
@@ -179,6 +186,7 @@ rsz_enum! {
     }
 }
 
+// snow.QuestManager.SwapExecType
 rsz_enum! {
     #[rsz(u32)]
     #[derive(Debug, Serialize, Clone, Copy)]
@@ -188,15 +196,23 @@ rsz_enum! {
     }
 }
 
+// snow.quest.BattleBGMType
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize, Clone, Copy)]
     pub enum BattleBgmType {
         Default = 0,
-        SpBattle01 = 1,
+        C01 = 1,
+        C02 = 2,
+        C03 = 3,
+        C04 = 4,
+        C05 = 5,
+        C06 = 6,
+        C07 = 7,
     }
 }
 
+// snow.quest.ClearBGMType
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize, Clone, Copy)]
@@ -218,11 +234,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.quest.NormalQuestData.Param",
-        0xF9F8C5C8 = 0,
-        0x54BDF6C5 = 4,
-        0x814CED42 = 5,
-        0x46BFF4C2 = 6,
-        0x42DBE1AB = 7,
+        0xe51737b2 = 0,
     )]
     #[derive(Debug, Serialize)]
     pub struct NormalQuestDataParam {
@@ -230,7 +242,7 @@ rsz_struct! {
         pub quest_type: QuestType,
         pub quest_level: QuestLevel,
         pub enemy_level: EnemyLevel,
-        pub map_no: i32,
+        pub map_no: i32, // snow.QuestMapManager.MapNoType
         pub base_time: u32,
         pub time_variation: u32,
         pub time_limit: u32,
@@ -247,8 +259,8 @@ rsz_struct! {
         pub boss_set_param: Vec<u32>,
         pub swap_set_condition: Vec<SwapSetCondition>,
         pub swap_set_param: Vec<u8>,
-        pub swap_exit_time: Versioned<Vec<u8>, 5, {u32::MAX}>,
-        pub is_swap_exit_marionette: Versioned<bool, 5, {u32::MAX}>,
+        pub swap_exit_time: Vec<u8>,
+        pub is_swap_exit_marionette: bool,
         pub swap_stop_type: SwapStopType,
         pub swap_stop_param: u8,
         pub swap_exec_type: SwapExecType,
@@ -257,7 +269,6 @@ rsz_struct! {
         pub rem_rank_point: u32,
         pub supply_tbl: u32,
         pub icon: Vec<i32>, // TODO: snow.gui.SnowGuiCommonUtility.Icon.EnemyIconFrameForQuestOrder
-        pub is_from_npc: Versioned<bool, 0, 4>,
         pub is_tutorial: bool,
         pub fence_default_active: bool,
         pub fence_active_sec: u16,
@@ -278,7 +289,9 @@ impl NormalQuestDataParam {
 }
 
 rsz_struct! {
-    #[rsz("snow.quest.NormalQuestData")]
+    #[rsz("snow.quest.NormalQuestData",
+        0x299bae19 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct NormalQuestData {
         pub param: Vec<NormalQuestDataParam>,
@@ -324,6 +337,7 @@ rsz_struct! {
     }
 }*/
 
+// snow.enemy.EnemyDef.NandoYuragi
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize, Clone, Copy)]
@@ -354,7 +368,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.quest.NormalQuestDataForEnemy.Param")]
+    #[rsz("snow.quest.NormalQuestDataForEnemy.Param",
+        0x705fc847 = 0
+    )]
     #[derive(Debug, Serialize, Clone)]
     pub struct NormalQuestDataForEnemyParam {
         pub quest_no: i32,
@@ -369,7 +385,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.quest.NormalQuestDataForEnemy")]
+    #[rsz("snow.quest.NormalQuestDataForEnemy",
+        0xd1f4bc61 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct NormalQuestDataForEnemy {
         pub param: Vec<NormalQuestDataForEnemyParam>,
@@ -377,7 +395,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.SystemDifficultyRateData.VitalRateTableData")]
+    #[rsz("snow.enemy.SystemDifficultyRateData.VitalRateTableData",
+        0x11ea886d = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct VitalRateTableData {
         pub vital_rate: f32,
@@ -385,7 +405,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.SystemDifficultyRateData.AttackRateTableData")]
+    #[rsz("snow.enemy.SystemDifficultyRateData.AttackRateTableData",
+        0xa9a1e8ba = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct AttackRateTableData {
         pub attack_rate: f32,
@@ -393,7 +415,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.SystemDifficultyRateData.PartsRateTableData")]
+    #[rsz("snow.enemy.SystemDifficultyRateData.PartsRateTableData",
+        0x2d825942 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct PartsRateTableData {
         pub parts_vital_rate: f32,
@@ -401,7 +425,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.SystemDifficultyRateData.OtherRateTableData")]
+    #[rsz("snow.enemy.SystemDifficultyRateData.OtherRateTableData",
+        0x6a5bdfc8 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct OtherRateTableData {
         pub defense_rate: f32,
@@ -414,7 +440,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.SystemDifficultyRateData.MultiRateTableData.MultiData")]
+    #[rsz("snow.enemy.SystemDifficultyRateData.MultiRateTableData.MultiData",
+        0x4efdc07a = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct MultiData {
         pub two: f32,
@@ -424,7 +452,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.SystemDifficultyRateData.MultiRateTableData")]
+    #[rsz("snow.enemy.SystemDifficultyRateData.MultiRateTableData",
+        0x5f51c7d9 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct MultiRateTableData {
         pub multi_data_list: [MultiData; 12],
@@ -432,7 +462,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.SystemDifficultyRateData")]
+    #[rsz("snow.enemy.SystemDifficultyRateData",
+        0xed679ca7 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct SystemDifficultyRateData {
         pub vital_rate_table_list: Vec<VitalRateTableData>,
@@ -444,7 +476,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyBossRandomScaleData.ScaleAndRateData")]
+    #[rsz("snow.enemy.EnemyBossRandomScaleData.ScaleAndRateData",
+        0x72b0bab3 = 0
+    )]
     #[derive(Debug, Serialize, Clone)]
     pub struct ScaleAndRateData {
         pub scale: f32,
@@ -453,7 +487,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyBossRandomScaleData.RandomScaleTableData")]
+    #[rsz("snow.enemy.EnemyBossRandomScaleData.RandomScaleTableData",
+        0x63c935dc = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct RandomScaleTableData {
         pub type_: i32, // snow.enemy.EnemyDef.BossScaleTblType
@@ -462,7 +498,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.EnemyBossRandomScaleData")]
+    #[rsz("snow.enemy.EnemyBossRandomScaleData",
+        0xc45db706 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnemyBossRandomScaleData {
         pub random_scale_table_data_list: Vec<RandomScaleTableData>,
@@ -470,7 +508,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.SystemEnemySizeListData.SizeInfo")]
+    #[rsz("snow.enemy.SystemEnemySizeListData.SizeInfo",
+        0x5d3dd8e1 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct SizeInfo {
         pub em_type: EmTypes,
@@ -483,7 +523,9 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.enemy.SystemEnemySizeListData")]
+    #[rsz("snow.enemy.SystemEnemySizeListData",
+        0xab121e9c = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct EnemySizeListData {
         pub size_info_list: Vec<SizeInfo>,
@@ -491,20 +533,24 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("snow.quest.DiscoverEmSetData.Param")]
+    #[rsz("snow.quest.DiscoverEmSetData.Param",
+        0x9f570ffb = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct DiscoverEmSetDataParam {
         pub em_type: EmTypes,
         pub cond_village: VillageProgress,
-        pub cond_low: i32,
-        pub cond_high: i32,
+        pub cond_low: i32, // snow.progress.HallProgress
+        pub cond_high: i32, // snow.progress.HallProgress
         pub map_flag: [bool; 5],
         pub param: SharedEnemyParam,
     }
 }
 
 rsz_struct! {
-    #[rsz("snow.quest.DiscoverEmSetData")]
+    #[rsz("snow.quest.DiscoverEmSetData",
+        0x250dcb35 = 0
+    )]
     #[derive(Debug, Serialize)]
     pub struct DiscoverEmSetData {
         pub param: Vec<DiscoverEmSetDataParam>,
