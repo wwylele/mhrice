@@ -1,8 +1,6 @@
 # ![](src/extract/static/favicon.png) mhrice
 
-# :construction: This project is currently under transition for PC version :construction:
-
-And things don't work. If you want the old version that works for the old switch version, please refer to the release tag.
+:warning: This project mainly targets the PC version. It might or might not work for the Switch version
 
 ## What?
 
