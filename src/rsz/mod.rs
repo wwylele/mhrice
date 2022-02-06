@@ -216,7 +216,7 @@ impl Rsz {
         if result.len() != 1 {
             bail!("Not a single-valued RSZ");
         }
-        Ok(result.pop().unwrap().downcast().context("Type mismatch")?)
+        result.pop().unwrap().downcast().context("Type mismatch")
     }
 }
 
@@ -518,7 +518,7 @@ macro_rules! rsz_struct {
         $(#[$outer_meta])*
         $outer_vis struct $struct_name {
             $(
-                $(#[$inner_meta])*
+                $(#[$inner_meta])* #[allow(dead_code)]
                 $inner_vis $field_name : $field_type,
             )*
         }
@@ -546,7 +546,7 @@ macro_rules! rsz_enum {
             $( $variant:ident $(($field:ty))? = $value:literal $(..= $end_value:literal)? ),*$(,)?
         }
     ) => {
-        $(#[$outer_meta])*
+        $(#[$outer_meta])* #[allow(clippy::enum_variant_names)]
         $outer_vis enum $enum_name {
             $( $variant $(($field))?, )*
         }

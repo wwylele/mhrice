@@ -954,7 +954,7 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
             let target_msg_name = format!("QN{:06}_04", param.quest_no);
             let condition_msg_name = format!("QN{:06}_05", param.quest_no);
             Ok(Quest {
-                param: &param,
+                param,
                 enemy_param: enemy_params.remove(&param.quest_no),
                 name: all_msg.remove(&name_msg_name),
                 target: all_msg.remove(&target_msg_name),
@@ -1260,7 +1260,7 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
         if armor.overwear.is_some() {
             bail!("Multiple definition for overwear {:?}", overwear.id);
         }
-        armor.overwear = Some(&overwear);
+        armor.overwear = Some(overwear);
         armor.overwear_product = overwear_product_map.remove(&overwear.id);
     }
 
@@ -1638,6 +1638,6 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         light_bowgun: prepare_weapon(&pedia.light_bowgun)?,
         heavy_bowgun: prepare_weapon(&pedia.heavy_bowgun)?,
         bow: prepare_weapon(&pedia.bow)?,
-        horn_melody: prepare_horn_melody(&pedia),
+        horn_melody: prepare_horn_melody(pedia),
     })
 }

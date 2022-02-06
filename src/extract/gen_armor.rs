@@ -270,7 +270,7 @@ pub fn gen_armors(pedia_ex: &PediaEx<'_>, root: &Path) -> Result<()> {
     create_dir(&armor_path)?;
     for series in &pedia_ex.armors {
         let path = armor_path.join(format!("{:03}.html", series.series.armor_series.0));
-        gen_armor(series, &pedia_ex, &path)?
+        gen_armor(series, pedia_ex, &path)?
     }
     Ok(())
 }

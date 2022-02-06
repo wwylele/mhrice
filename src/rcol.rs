@@ -5,7 +5,6 @@ use crate::mesh::*;
 use crate::rsz::*;
 use anyhow::*;
 use nalgebra_glm::*;
-use std::any::Any;
 use std::collections::HashSet;
 use std::convert::{TryFrom, TryInto};
 use std::io::{Cursor, Read, Seek, SeekFrom};
@@ -58,12 +57,12 @@ pub enum Shape {
 impl Shape {
     pub fn distance(&self, point: &Vec3) -> Result<f32> {
         match self {
-            Shape::Sphere { p, r } => Ok(distance(&p, &point) / r),
+            Shape::Sphere { p, r } => Ok(distance(p, point) / r),
             Shape::Capsule { p0, p1, r } => {
-                let l2 = distance2(&p0, &p1);
+                let l2 = distance2(p0, p1);
                 let t = RealField::clamp(dot(&(point - p0), &(p1 - p0)) / l2, 0.0, 1.0);
                 let projection = p0 + t * (p1 - p0);
-                Ok(distance(&point, &projection) / r)
+                Ok(distance(point, &projection) / r)
             }
             Shape::Unknown => bail!("Unknown shape"),
         }

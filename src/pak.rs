@@ -50,6 +50,7 @@ struct PakEntry {
     len_compressed: u64,
     len: u64,
     format: u8,
+    #[allow(dead_code)]
     flag: u8,
     encryption: u8,
 }
@@ -97,7 +98,7 @@ impl<F: Read + Seek> PakReader<F> {
                         file.read_exact(&mut encrypted_key)?;
 
                         let base = BigUint::from_bytes_le(&encrypted_key);
-                        let modulus = BigUint::from_bytes_le(&m);
+                        let modulus = BigUint::from_bytes_le(m);
                         let exponent = BigUint::from(0x10001u32);
                         let power = base.modpow(&exponent, &modulus);
                         let key_vec = power.to_bytes_le();

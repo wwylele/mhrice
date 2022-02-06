@@ -121,6 +121,7 @@ fn display_bullet_type(bullet: BulletType) -> &'static str {
 }
 
 #[allow(clippy::too_many_arguments)]
+#[allow(clippy::type_complexity)]
 fn gen_weapon<Param>(
     weapon: &Weapon<Param>,
     weapon_tree: &WeaponTree<'_, Param>,

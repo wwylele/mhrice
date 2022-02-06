@@ -260,7 +260,7 @@ fn open_pak_files(mut pak: Vec<String>) -> Result<Vec<File>> {
         eprintln!("Listing all PAK files in the folder...");
         let dir = pak.pop().unwrap();
         let dir = Path::new(&dir);
-        for entry in std::fs::read_dir(dir)?.into_iter() {
+        for entry in std::fs::read_dir(dir)? {
             let entry = entry?;
             if entry
                 .file_name()
@@ -297,6 +297,8 @@ fn dump_index(pak: Vec<String>, version: usize, index: usize, output: String) ->
     Ok(())
 }
 
+/*
+
 #[derive(Debug, Clone)]
 struct TreeNode {
     parsed: bool,
@@ -306,7 +308,7 @@ struct TreeNode {
     visited: bool,
 }
 
-/*fn visit_tree(nodes: &mut [TreeNode], current: usize, depth: i32) {
+fn visit_tree(nodes: &mut [TreeNode], current: usize, depth: i32) {
     for _ in 0..depth {
         print!("    ")
     }
@@ -926,16 +928,15 @@ fn main() -> Result<()> {
         Mhrice::ScanUvs { pak } => scan_uvs(pak),
         Mhrice::DumpMesh { mesh, output } => dump_mesh(mesh, output),
         Mhrice::DumpRcol { rcol } => dump_rcol(rcol),
-        //Mhrice::DumpMeat { mesh, rcol, output } => dump_meat(mesh, rcol, output),
+        Mhrice::DumpMeat { mesh, rcol, output } => dump_meat(mesh, rcol, output),
         Mhrice::DumpTex { tex, output } => dump_tex(tex, output),
         Mhrice::DumpGui { gui } => dump_gui(gui),
-        //Mhrice::GenMeat { pak, index, output } => gen_meat(pak, index, output),
+        Mhrice::GenMeat { pak, index, output } => gen_meat(pak, index, output),
         Mhrice::GenResources { pak, output } => gen_resources(pak, output),
         Mhrice::Hash { input, utf16 } => {
             hash(input, utf16);
             Ok(())
         }
         Mhrice::ReadUser { user } => read_user(user),
-        _ => unimplemented!(),
     }
 }
