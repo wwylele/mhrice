@@ -262,9 +262,28 @@ impl Tdb {
         let param_count = file.read_u32()?;
         let attribute_count = file.read_u32()?;
         let constant_count = file.read_u32()?;
-        let (constant2_count, attribute_list_count) = file.read_u32()?.bit_split((16, 16));
+        let (attribute_list_count, data_attribute_list_count) =
+            file.read_u32()?.bit_split((16, 16));
         let q_count = file.read_u32()?;
         let assembly_count = file.read_u32()?;
+
+        /*
+        println!("type_instance_count = {}", type_instance_count);
+        println!("method_membership_count = {}", method_membership_count);
+        println!("field_membership_count = {}", field_membership_count);
+        println!("type_count = {}", type_count);
+        println!("field_count = {}", field_count);
+        println!("method_count = {}", method_count);
+        println!("property_count = {}", property_count);
+        println!("property_membership_count = {}", property_membership_count);
+        println!("event_count = {}", event_count);
+        println!("param_count = {}", param_count);
+        println!("attribute_count = {}", attribute_count);
+        println!("constant_count = {}", constant_count);
+        println!("attribute_list_count = {}", attribute_list_count);
+        println!("data_attribute_list_count = {}", data_attribute_list_count);
+        println!("q_count = {}", q_count);
+        */
 
         if file.read_u32()? != 0 {
             bail!("Expected 0");
@@ -287,8 +306,8 @@ impl Tdb {
         let param_offset = file.read_u64()?;
         let attribute_offset = file.read_u64()?;
         let constant_offset = file.read_u64()?;
-        let constant2_offset = file.read_u64()?;
         let attribute_list_offset = file.read_u64()?;
+        let data_attribute_list_offset = file.read_u64()?;
         let string_table_offset = file.read_u64()?;
         let heap_offset = file.read_u64()?;
         let q_offset = file.read_u64()?;
@@ -473,7 +492,7 @@ impl Tdb {
 
             n4: u16,
             n5: u16,
-            n6: u16,
+            attribute_list_index: usize,
             n7: u16,
 
             flag_a: u64,
@@ -494,7 +513,7 @@ impl Tdb {
                 let field_count = file.read_u32()?;
                 let n4 = file.read_u16()?;
                 let n5 = file.read_u16()?;
-                let n6 = file.read_u16()?;
+                let attribute_list_index = file.read_u16()?;
                 let n7 = file.read_u16()?;
 
                 let flag_a = file.read_u64()?;
@@ -510,7 +529,7 @@ impl Tdb {
                     field_count: field_count.try_into()?,
                     n4,
                     n5,
-                    n6,
+                    attribute_list_index: attribute_list_index.try_into()?,
                     n7,
                     flag_a,
                     flag_b,
@@ -695,13 +714,13 @@ impl Tdb {
             .map(|_| read_constant(&mut file))
             .collect::<Result<Vec<_>>>()?;
 
-        file.seek_assert_align_up(constant2_offset, 16)?;
-        let constants_2 = (0..constant2_count)
-            .map(|_| read_constant(&mut file))
-            .collect::<Result<Vec<_>>>()?;
-
         file.seek_assert_align_up(attribute_list_offset, 16)?;
         let attribute_lists = (0..attribute_list_count)
+            .map(|_| file.read_u32())
+            .collect::<Result<Vec<_>>>()?;
+
+        file.seek_assert_align_up(data_attribute_list_offset, 16)?;
+        let data_attribute_lists = (0..data_attribute_list_count)
             .map(|_| file.read_u32())
             .collect::<Result<Vec<_>>>()?;
 
@@ -862,34 +881,132 @@ impl Tdb {
             )?;
         }
 
-        let print_attributes = |attribute_list_index: usize| -> Result<()> {
-            fn read_vint<F: ReadExt>(mut f: F) -> Result<usize> {
-                let a = f.read_u8()?.into();
-                if a < 128 {
-                    Ok(a)
-                } else {
-                    let b: usize = f.read_u8()?.into();
-                    Ok(((a - 128) << 8) + b)
+        fn read_vint<F: ReadExt>(mut f: F) -> Result<usize> {
+            let a = f.read_u8()?.into();
+            if a < 128 {
+                Ok(a)
+            } else {
+                let b: usize = f.read_u8()?.into();
+                Ok(((a - 128) << 8) + b)
+            }
+        }
+
+        let print_attribute = |attribute_i: usize| -> Result<()> {
+            if attribute_i == 0 {
+                return Ok(());
+            }
+            let attribute = &attributes[attribute_i];
+            let ctor = &method_memberships[attribute.ctor_method_index];
+            let mut attribute_args = &heap[attribute.arguments_offset..];
+            let args_len = read_vint(&mut attribute_args)?;
+            let mut args_data = &attribute_args[0..args_len];
+            let start = args_data.read_u16()?;
+            if start != 1 {
+                bail!("unexpected attribute arg start {}", start)
+            }
+            let symbol = symbols[ctor.type_instance_index].as_ref().unwrap();
+            print!("[{}(", symbol);
+
+            let mut mp = &heap[ctor.param_list_offset..];
+            let param_count = mp.read_u16()?;
+            let _abi_id = mp.read_u16()?;
+            let _return_value_index = usize::try_from(mp.read_u32()?)?;
+
+            let print_arg = |primitive_type: &str, args_data: &mut &[u8]| -> Result<()> {
+                match primitive_type {
+                    "System.UInt32" => {
+                        print!("{}", args_data.read_u32()?);
+                    }
+                    "System.Int32" => {
+                        print!("{}", args_data.read_i32()?);
+                    }
+                    "System.Boolean" => {
+                        print!("{}", args_data.read_bool()?);
+                    }
+                    "System.Single" => {
+                        print!("{}", args_data.read_f32()?);
+                    }
+                    "System.String" | "System.Type" => {
+                        let len = read_vint(&mut *args_data)?;
+                        let mut buf = vec![0; len];
+                        args_data.read_exact(&mut buf)?;
+                        let v = std::str::from_utf8(&buf)?;
+                        print!("\"{}\"", v);
+                    }
+                    _ => {
+                        // TODO: Other type
+                        // And for enums, we should look up the base type
+                        print!("{}", args_data.read_i32()?);
+                    }
                 }
+                Ok(())
+            };
+
+            for param_i in 0..param_count {
+                let param_index = usize::try_from(mp.read_u32()?)?;
+                let param = &params[param_index];
+                let param_symbol = symbols[param.type_instance_index].as_ref().unwrap();
+
+                if param_symbol.ends_with("[]") {
+                    let element_type = &param_symbol[0..param_symbol.len() - 2];
+                    print!("[");
+                    let len = args_data.read_u32()?;
+                    for _ in 0..len {
+                        print_arg(element_type, &mut args_data)?;
+                        print!(",");
+                    }
+                    print!("]");
+                    return Ok(());
+                } else {
+                    print_arg(param_symbol, &mut args_data)?;
+                }
+                print!(",");
             }
 
-            let attribute_list = attribute_lists[attribute_list_index] as usize;
-            let mut attribute_list = &heap[attribute_list..];
-            let attribute_count = attribute_list.read_u16()?;
+            let positional_arg_count = args_data.read_u16()?;
+            for _ in 0..positional_arg_count {
+                let magic = args_data.read_u8()?;
+                if magic != 84 {
+                    print!("unexpected magic {}", magic);
+                    break;
+                }
+                let arg_type = args_data.read_u8()?;
+                let name_length = read_vint(&mut args_data)?;
+                let mut name_buf = vec![0; name_length];
+                args_data.read_exact(&mut name_buf)?;
+                print!("{}=", std::str::from_utf8(&name_buf)?);
+                match arg_type {
+                    2 => {
+                        print!("{}", args_data.read_bool()?);
+                    }
+                    14 => {
+                        let v_length = read_vint(&mut args_data)?;
+                        let mut v_buf = vec![0; v_length];
+                        args_data.read_exact(&mut v_buf)?;
+                        print!("{}", std::str::from_utf8(&v_buf)?);
+                    }
+                    _ => break, //TODO: what else type?
+                }
+
+                print!(",");
+            }
+
+            if !args_data.is_empty() {
+                print!("$%$ leftover {:?}", args_data);
+            }
+            print!(")]");
+            Ok(())
+        };
+
+        let print_attributes = |attribute_list_offset: u32| -> Result<()> {
+            let attribute_list_offset = attribute_list_offset.try_into()?;
+            let mut attribute_list = &heap[attribute_list_offset..];
+            let attribute_count = attribute_list.read_u32()?;
             let attribute_list = (0..attribute_count)
-                .map(|_| attribute_list.read_u16())
+                .map(|_| attribute_list.read_u32())
                 .collect::<Result<Vec<_>>>()?;
-            for attribute in attribute_list {
-                let attribute = &attributes[attribute as usize];
-                let ctor = &method_memberships[attribute.ctor_method_index];
-                let mut attribute_args = &heap[attribute.arguments_offset..];
-                let args_len = read_vint(&mut attribute_args)?;
-                let args_data = &attribute_args[0..args_len];
-                print!(
-                    "[{}({:?})]",
-                    symbols[ctor.type_instance_index].as_ref().unwrap(),
-                    args_data,
-                );
+            for attribute_i in attribute_list {
+                print_attribute(attribute_i.try_into()?)?;
             }
             Ok(())
         };
@@ -899,6 +1016,9 @@ impl Tdb {
 
         for i in order {
             let type_instance = &type_instances[i];
+            let ty = types
+                .get(type_instance.type_index)
+                .context("Type index out of bound")?;
             // println!("/// $TI[{}]", i);
             let full_name = &symbols[i].as_ref().unwrap();
             let calc_hash = hash_as_utf8(full_name);
@@ -906,6 +1026,10 @@ impl Tdb {
                 bail!("Mismatched hash for TI[{}]", i)
             }
             println!("/// % {:08X}", calc_hash);
+            if ty.attribute_list_index != 0 {
+                print_attributes(attribute_lists[ty.attribute_list_index])?;
+                println!();
+            }
             println!(
                 "class {}: {}",
                 full_name,
@@ -966,10 +1090,6 @@ impl Tdb {
                 }
             }
 
-            let ty = types
-                .get(type_instance.type_index)
-                .context("Type index out of bound")?;
-
             // println!("    // size: {}", ty.len);
 
             println!(
@@ -995,7 +1115,7 @@ impl Tdb {
 
                 if method.attribute_list_index != 0 {
                     print!("    ");
-                    print_attributes(method.attribute_list_index)?;
+                    print_attributes(attribute_lists[method.attribute_list_index])?;
                     println!();
                 }
 
@@ -1005,9 +1125,8 @@ impl Tdb {
                 let return_value_index = usize::try_from(mp.read_u32()?)?;
                 let return_value = &params[return_value_index];
                 if return_value.attribute_list_index != 0 {
-                    println!("/* returns */");
-                    print!("    ");
-                    print_attributes(return_value.attribute_list_index)?;
+                    print!("    /* returns */");
+                    print_attributes(attribute_lists[return_value.attribute_list_index])?;
                     println!();
                 }
 
@@ -1025,7 +1144,7 @@ impl Tdb {
                     let param = &params[param_index];
                     print!("        ");
                     if param.attribute_list_index != 0 {
-                        print_attributes(param.attribute_list_index)?;
+                        print_attributes(attribute_lists[param.attribute_list_index])?;
                     }
                     print!(
                         "/*{}*/ {} {} {}",
@@ -1075,7 +1194,7 @@ impl Tdb {
 
                 if field.attribute_list_index != 0 {
                     print!("    ");
-                    print_attributes(field.attribute_list_index)?;
+                    print_attributes(data_attribute_lists[field.attribute_list_index])?;
                     println!();
                 }
 
@@ -1122,7 +1241,7 @@ impl Tdb {
                 let property = &properties[property_membership.property_index];
                 if property.attribute_list_index != 0 {
                     print!("    ");
-                    print_attributes(property.attribute_list_index)?;
+                    print_attributes(data_attribute_lists[property.attribute_list_index])?;
                     println!();
                 }
                 println!(

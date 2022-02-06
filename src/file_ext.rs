@@ -4,6 +4,7 @@ use nalgebra_glm::*;
 use std::convert::TryInto;
 use std::io::{Read, Seek, SeekFrom};
 pub trait ReadExt {
+    fn read_bool(&mut self) -> Result<bool>;
     fn read_u8(&mut self) -> Result<u8>;
     fn read_u16(&mut self) -> Result<u16>;
     fn read_u32(&mut self) -> Result<u32>;
@@ -29,6 +30,13 @@ pub trait SeekExt {
 }
 
 impl<T: Read + ?Sized> ReadExt for T {
+    fn read_bool(&mut self) -> Result<bool> {
+        let v = self.read_u8()?;
+        if v > 1 {
+            bail!("Invalid value {} for bool", v);
+        }
+        Ok(v != 0)
+    }
     fn read_u8(&mut self) -> Result<u8> {
         let mut buf = [0; 1];
         self.read_exact(&mut buf)?;
