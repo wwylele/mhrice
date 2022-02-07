@@ -27,7 +27,7 @@ bitflags! {
         const POINTER                  = 0x0800;
         const MARSHAL                  = 0x1000;
         const PINVOKE                  = 0x2000;
-        const UNK                      = 0x4000;
+        const EXPOSE_MEMBER            = 0x4000;
         const DEFAULT                  = 0x8000;
     }
 }
@@ -71,6 +71,41 @@ bitflags! {
     }
 }
 
+bitflags! {
+    struct MethodImplFlag: u16 {
+        const CODE_TYPE_MASK              = 0x0003;
+        const IL                          = 0x0000;
+        const NATIVE                      = 0x0001;
+        const OPTIL                       = 0x0002;
+        const RUNTIME                     = 0x0003;
+        const UNMANAGED                   = 0x0004;
+        const NO_INLINING                 = 0x0008;
+        const FORWARD_REF                 = 0x0010;
+        const SYNCHRONIZED                = 0x0020;
+        const NO_OPTMIZATION              = 0x0040;
+        const PRESERVE_SIG                = 0x0080;
+        const AGGRESSIVE_INLINING         = 0x0100;
+        const HAS_RET_VAL                 = 0x0200;
+        const EXPOSE_MEMBER               = 0x0400;
+        const EMPTY_CTOR                  = 0x0800;
+        const INTERNAL_CALL               = 0x1000;
+        const CONTAINS_GENERIC_PARAMETERS = 0x2000;
+        const HAS_THIS                    = 0x4000;
+        const THREAD_SAFE                 = 0x8000;
+    }
+}
+
+fn display_param_modifier(param_modifier: u32, return_pos: bool) -> String {
+    let return_pos = if return_pos { "return:" } else { "" };
+    let tag = match param_modifier {
+        0 => return "".to_string(),
+        1 => "ptr",
+        2 => "ref",
+        _ => "unknown-mod",
+    };
+    format!("[{}{}]", return_pos, tag)
+}
+
 fn display_field_attributes(attributes: FieldAttribute) -> String {
     let mut s = String::new();
 
@@ -79,11 +114,11 @@ fn display_field_attributes(attributes: FieldAttribute) -> String {
     }
 
     if attributes.contains(FieldAttribute::NO_SERIALIZE) {
-        s += "[no-serialize]"
+        s += "[no_serialize]"
     }
 
     if attributes.contains(FieldAttribute::HAS_RVA) {
-        s += "[has-rva]"
+        s += "[has_rva]"
     }
 
     if attributes.contains(FieldAttribute::SPECIAL) {
@@ -91,7 +126,7 @@ fn display_field_attributes(attributes: FieldAttribute) -> String {
     }
 
     if attributes.contains(FieldAttribute::RT_SPECIAL) {
-        s += "[rt-special]"
+        s += "[rt_special]"
     }
 
     if attributes.contains(FieldAttribute::POINTER) {
@@ -106,8 +141,8 @@ fn display_field_attributes(attributes: FieldAttribute) -> String {
         s += "[pinvoke]"
     }
 
-    if attributes.contains(FieldAttribute::UNK) {
-        s += "[4000]"
+    if attributes.contains(FieldAttribute::EXPOSE_MEMBER) {
+        s += "[expose]"
     }
 
     if attributes.contains(FieldAttribute::DEFAULT) {
@@ -134,6 +169,64 @@ fn display_field_attributes(attributes: FieldAttribute) -> String {
         s += "readonly "
     }
 
+    s
+}
+
+fn display_method_impl_flag(attributes: MethodImplFlag) -> String {
+    let mut s = String::new();
+
+    s += match attributes & MethodImplFlag::CODE_TYPE_MASK {
+        MethodImplFlag::IL => "[il]",
+        MethodImplFlag::NATIVE => "[native]",
+        MethodImplFlag::OPTIL => "[optil]",
+        MethodImplFlag::RUNTIME => "[runtime]",
+        _ => panic!(),
+    };
+
+    if attributes.contains(MethodImplFlag::UNMANAGED) {
+        s += "[unmanaged]"
+    }
+
+    if attributes.contains(MethodImplFlag::NO_INLINING) {
+        s += "[no_inline]"
+    }
+
+    if attributes.contains(MethodImplFlag::FORWARD_REF) {
+        s += "[forward_ref]"
+    }
+    if attributes.contains(MethodImplFlag::SYNCHRONIZED) {
+        s += "[synchronized]"
+    }
+    if attributes.contains(MethodImplFlag::NO_OPTMIZATION) {
+        s += "[no_optimization]"
+    }
+    if attributes.contains(MethodImplFlag::PRESERVE_SIG) {
+        s += "[preserve_sig]"
+    }
+    if attributes.contains(MethodImplFlag::AGGRESSIVE_INLINING) {
+        s += "[inline]"
+    }
+    if attributes.contains(MethodImplFlag::HAS_RET_VAL) {
+        s += "[ret]"
+    }
+    if attributes.contains(MethodImplFlag::EXPOSE_MEMBER) {
+        s += "[expose]"
+    }
+    if attributes.contains(MethodImplFlag::EMPTY_CTOR) {
+        s += "[empty_ctor]"
+    }
+    if attributes.contains(MethodImplFlag::INTERNAL_CALL) {
+        s += "[internal_call]"
+    }
+    if attributes.contains(MethodImplFlag::CONTAINS_GENERIC_PARAMETERS) {
+        s += "[generic]"
+    }
+    if attributes.contains(MethodImplFlag::HAS_THIS) {
+        s += "[has_this]"
+    }
+    if attributes.contains(MethodImplFlag::THREAD_SAFE) {
+        s += "[thread_safe]"
+    }
     s
 }
 
@@ -541,7 +634,7 @@ impl Tdb {
             attribute_list_index: usize,
             vtable_slot: i16,
             attributes: MethodAttribute,
-            b2: u16,
+            impl_flag: MethodImplFlag,
             name_offset: u32,
         }
         file.seek_assert_align_up(method_offset, 16)?;
@@ -550,14 +643,15 @@ impl Tdb {
                 let attribute_list_index = file.read_u16()?;
                 let vtable_slot = file.read_i16()?;
                 let attributes = file.read_u16()?;
-                let b2 = file.read_u16()?;
+                let impl_flag = file.read_u16()?;
                 let name_offset = file.read_u32()?;
                 Ok(Method {
                     attribute_list_index: attribute_list_index.try_into()?,
                     vtable_slot,
                     attributes: MethodAttribute::from_bits(attributes)
                         .context("Unknown method attr")?,
-                    b2,
+                    impl_flag: MethodImplFlag::from_bits(impl_flag)
+                        .context("Unknown method impl flag")?,
                     name_offset,
                 })
             })
@@ -671,7 +765,7 @@ impl Tdb {
             attribute_list_index: usize,
             default_const_index: usize,
             name_offset: u32,
-            no_high: u32,
+            modifier: u32,
             type_instance_index: usize,
             attribute: ParamAttribute,
         }
@@ -680,13 +774,13 @@ impl Tdb {
             .map(|_| {
                 let attribute_list_index = file.read_u16()?;
                 let default_const_index = file.read_u16()?;
-                let (name_offset, no_high) = file.read_u32()?.bit_split((30, 2));
+                let (name_offset, modifier) = file.read_u32()?.bit_split((30, 2));
                 let (type_instance_index, attribute) = file.read_u32()?.bit_split((18, 14));
                 Ok(Param {
                     attribute_list_index: attribute_list_index.try_into()?,
                     default_const_index: default_const_index.try_into()?,
                     name_offset,
-                    no_high,
+                    modifier,
                     type_instance_index: type_instance_index.try_into()?,
                     attribute: ParamAttribute::from_bits(u16::try_from(attribute)?)
                         .context("Unknown param attr")?,
@@ -891,7 +985,7 @@ impl Tdb {
             }
         }
 
-        let print_attribute = |attribute_i: usize| -> Result<()> {
+        let print_attribute = |attribute_i: usize, return_pos: bool| -> Result<()> {
             if attribute_i == 0 {
                 return Ok(());
             }
@@ -905,7 +999,8 @@ impl Tdb {
                 bail!("unexpected attribute arg start {}", start)
             }
             let symbol = symbols[ctor.type_instance_index].as_ref().unwrap();
-            print!("[{}(", symbol);
+            let return_pos = if return_pos { "return:" } else { "" };
+            print!("[{}{}(", return_pos, symbol);
 
             let mut mp = &heap[ctor.param_list_offset..];
             let param_count = mp.read_u16()?;
@@ -956,7 +1051,6 @@ impl Tdb {
                         print!(",");
                     }
                     print!("]");
-                    return Ok(());
                 } else {
                     print_arg(param_symbol, &mut args_data)?;
                 }
@@ -985,7 +1079,7 @@ impl Tdb {
                         args_data.read_exact(&mut v_buf)?;
                         print!("{}", std::str::from_utf8(&v_buf)?);
                     }
-                    _ => break, //TODO: what else type?
+                    _ => break, //TODO: what else type? Probably via.clr.ElementType
                 }
 
                 print!(",");
@@ -998,7 +1092,7 @@ impl Tdb {
             Ok(())
         };
 
-        let print_attributes = |attribute_list_offset: u32| -> Result<()> {
+        let print_attributes = |attribute_list_offset: u32, return_pos: bool| -> Result<()> {
             let attribute_list_offset = attribute_list_offset.try_into()?;
             let mut attribute_list = &heap[attribute_list_offset..];
             let attribute_count = attribute_list.read_u32()?;
@@ -1006,7 +1100,7 @@ impl Tdb {
                 .map(|_| attribute_list.read_u32())
                 .collect::<Result<Vec<_>>>()?;
             for attribute_i in attribute_list {
-                print_attribute(attribute_i.try_into()?)?;
+                print_attribute(attribute_i.try_into()?, return_pos)?;
             }
             Ok(())
         };
@@ -1027,7 +1121,7 @@ impl Tdb {
             }
             println!("/// % {:08X}", calc_hash);
             if ty.attribute_list_index != 0 {
-                print_attributes(attribute_lists[ty.attribute_list_index])?;
+                print_attributes(attribute_lists[ty.attribute_list_index], false)?;
                 println!();
             }
             println!(
@@ -1115,7 +1209,7 @@ impl Tdb {
 
                 if method.attribute_list_index != 0 {
                     print!("    ");
-                    print_attributes(attribute_lists[method.attribute_list_index])?;
+                    print_attributes(attribute_lists[method.attribute_list_index], false)?;
                     println!();
                 }
 
@@ -1125,15 +1219,15 @@ impl Tdb {
                 let return_value_index = usize::try_from(mp.read_u32()?)?;
                 let return_value = &params[return_value_index];
                 if return_value.attribute_list_index != 0 {
-                    print!("    /* returns */");
-                    print_attributes(attribute_lists[return_value.attribute_list_index])?;
+                    print!("    ");
+                    print_attributes(attribute_lists[return_value.attribute_list_index], true)?;
                     println!();
                 }
 
                 println!(
-                    "    /*{}, {}*/ {} {} {} (",
-                    method.b2,
-                    return_value.no_high,
+                    "    {}{}{}\n    {} {} (",
+                    display_param_modifier(return_value.modifier, true),
+                    display_method_impl_flag(method.impl_flag),
                     display_method_attributes(method.attributes),
                     symbols[return_value.type_instance_index].as_ref().unwrap(),
                     read_string(method.name_offset)?
@@ -1144,11 +1238,11 @@ impl Tdb {
                     let param = &params[param_index];
                     print!("        ");
                     if param.attribute_list_index != 0 {
-                        print_attributes(attribute_lists[param.attribute_list_index])?;
+                        print_attributes(attribute_lists[param.attribute_list_index], false)?;
                     }
                     print!(
-                        "/*{}*/ {} {} {}",
-                        param.no_high,
+                        "{}{} {} {}",
+                        display_param_modifier(param.modifier, false),
                         display_param_attributes(param.attribute),
                         symbols[param.type_instance_index].as_ref().unwrap(),
                         read_string(param.name_offset)?
@@ -1173,7 +1267,7 @@ impl Tdb {
                     println!(",");
                 }
 
-                println!("    );");
+                println!("    );\n");
             }
 
             println!();
@@ -1194,7 +1288,7 @@ impl Tdb {
 
                 if field.attribute_list_index != 0 {
                     print!("    ");
-                    print_attributes(data_attribute_lists[field.attribute_list_index])?;
+                    print_attributes(data_attribute_lists[field.attribute_list_index], false)?;
                     println!();
                 }
 
@@ -1241,7 +1335,7 @@ impl Tdb {
                 let property = &properties[property_membership.property_index];
                 if property.attribute_list_index != 0 {
                     print!("    ");
-                    print_attributes(data_attribute_lists[property.attribute_list_index])?;
+                    print_attributes(data_attribute_lists[property.attribute_list_index], false)?;
                     println!();
                 }
                 println!(
