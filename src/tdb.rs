@@ -72,6 +72,56 @@ bitflags! {
 }
 
 bitflags! {
+    struct TypeFlag: u32 {
+        const NOT_PUBLIC           = 0x00000000;
+        const PUBLIC               = 0x00000001;
+        const NESTED_PUBLIC        = 0x00000002;
+        const NESTED_PRIVATE       = 0x00000003;
+        const NESTED_FAMILY        = 0x00000004;
+        const NESTED_ASSEMBLY      = 0x00000005;
+        const NESTED_FAMANDASSEM   = 0x00000006;
+        const NESTED_FAMORASSEM    = 0x00000007;
+        const VISIBILITY_MASK      = 0x00000007;
+
+        const AUTO_LAYOUT          = 0x00000000;
+        const SEQUENTIAL_LAYOUT    = 0x00000008;
+        const EXPLICIT_LAYOUT      = 0x00000010;
+        const LAYOUT_MASK          = 0x00000018;
+
+        const INTERFACE            = 0x00000020;
+        // no 0x0040
+        const ABSTRACT             = 0x00000080;
+        const SEALED               = 0x00000100;
+        // no 0x0200
+        const SPECIAL_NAME         = 0x00000400;
+        const RT_SPECIAL_NAME      = 0x00000800;
+        const IMPORT               = 0x00001000;
+        const SERIALIZABLE         = 0x00002000;
+        const WINDOWS_RUNTIME      = 0x00004000;
+        // no 0x8000
+
+        const ANSI_CLASS           = 0x00000000;
+        const UNICODE_CLASS        = 0x00010000;
+        const AUTO_CLASS           = 0x00020000;
+        const CUSTOM_FORMAT_CLASS  = 0x00030000;
+        const STRING_FORMAT_MASK   = 0x00030000;
+
+        const HAS_SECURITY         = 0x00040000;
+        // no 0x080000
+        const BEFORE_FIELD_INIT    = 0x00100000;
+        // no 0x200000
+        const CUSTOM_FORMAT_MASK   = 0x00C00000;
+        const LOCAL_HEAP           = 0x01000000;
+        const FINALIZE             = 0x02000000;
+        const NATIVE_TYPE          = 0x04000000;
+        const UNK_08000000         = 0x08000000;
+        const NATIVE_CTOR          = 0x10000000;
+        // no 0x20000000
+        const MANAGED_VTABLE       = 0x40000000;
+    }
+}
+
+bitflags! {
     struct MethodImplFlag: u16 {
         const CODE_TYPE_MASK              = 0x0003;
         const IL                          = 0x0000;
@@ -95,6 +145,32 @@ bitflags! {
     }
 }
 
+bitflags! {
+    struct PropertyFlag: u16 {
+        const SPECIAL_NAME    = 0x0200;
+        const RT_SPECIAL_NAME = 0x0400;
+        const HAS_DEFAULT     = 0x1000;
+        const EXPOSE_MEMBER   = 0x4000;
+    }
+}
+
+fn display_property_flag(flags: PropertyFlag) -> String {
+    let mut s = String::new();
+    if flags.contains(PropertyFlag::SPECIAL_NAME) {
+        s += "[special]";
+    }
+    if flags.contains(PropertyFlag::RT_SPECIAL_NAME) {
+        s += "[rt_special]";
+    }
+    if flags.contains(PropertyFlag::HAS_DEFAULT) {
+        s += "[default]";
+    }
+    if flags.contains(PropertyFlag::EXPOSE_MEMBER) {
+        s += "[expose]";
+    }
+    s
+}
+
 fn display_param_modifier(param_modifier: u32, return_pos: bool) -> String {
     let return_pos = if return_pos { "return:" } else { "" };
     let tag = match param_modifier {
@@ -104,6 +180,88 @@ fn display_param_modifier(param_modifier: u32, return_pos: bool) -> String {
         _ => "unknown-mod",
     };
     format!("[{}{}]", return_pos, tag)
+}
+
+fn display_type_flags(flags: TypeFlag) -> String {
+    let mut s = String::new();
+
+    s += match flags & TypeFlag::LAYOUT_MASK {
+        TypeFlag::AUTO_LAYOUT => "[auto]",
+        TypeFlag::SEQUENTIAL_LAYOUT => "[sequential]",
+        TypeFlag::EXPLICIT_LAYOUT => "[explicit]",
+        _ => "[unknown_layout]",
+    };
+
+    if flags.contains(TypeFlag::INTERFACE) {
+        s += "[interface]"
+    }
+    if flags.contains(TypeFlag::ABSTRACT) {
+        s += "[abstract]"
+    }
+    if flags.contains(TypeFlag::SEALED) {
+        s += "[sealed]"
+    }
+    if flags.contains(TypeFlag::SPECIAL_NAME) {
+        s += "[special]"
+    }
+    if flags.contains(TypeFlag::RT_SPECIAL_NAME) {
+        s += "[rt_special]"
+    }
+    if flags.contains(TypeFlag::IMPORT) {
+        s += "[import]"
+    }
+    if flags.contains(TypeFlag::SERIALIZABLE) {
+        s += "[serializable]"
+    }
+    if flags.contains(TypeFlag::WINDOWS_RUNTIME) {
+        s += "[windows_runtime]"
+    }
+
+    s += match flags & TypeFlag::STRING_FORMAT_MASK {
+        TypeFlag::ANSI_CLASS => "[ansi]",
+        TypeFlag::UNICODE_CLASS => "[unicode]",
+        TypeFlag::AUTO_CLASS => "[auto_format]",
+        TypeFlag::CUSTOM_FORMAT_CLASS => "[custom_format]",
+        _ => panic!(),
+    };
+    if flags.contains(TypeFlag::HAS_SECURITY) {
+        s += "[has_security]"
+    }
+    if flags.contains(TypeFlag::BEFORE_FIELD_INIT) {
+        s += "[before_field_init]"
+    }
+    if flags.contains(TypeFlag::LOCAL_HEAP) {
+        s += "[local_heap]"
+    }
+    if flags.contains(TypeFlag::FINALIZE) {
+        s += "[finalize]"
+    }
+    if flags.contains(TypeFlag::NATIVE_TYPE) {
+        s += "[native]"
+    }
+    if flags.contains(TypeFlag::UNK_08000000) {
+        s += "[UNK_08000000]"
+    }
+    if flags.contains(TypeFlag::NATIVE_CTOR) {
+        s += "[native_ctor]"
+    }
+    if flags.contains(TypeFlag::MANAGED_VTABLE) {
+        s += "[managed_vtable]"
+    }
+
+    s += match flags & TypeFlag::VISIBILITY_MASK {
+        TypeFlag::NOT_PUBLIC => "",
+        TypeFlag::PUBLIC => "public ",
+        TypeFlag::NESTED_PUBLIC => "[nested]public",
+        TypeFlag::NESTED_PRIVATE => "[nested]private",
+        TypeFlag::NESTED_FAMILY => "[nested]protected",
+        TypeFlag::NESTED_ASSEMBLY => "[nested]internal",
+        TypeFlag::NESTED_FAMANDASSEM => "[nested]private protected",
+        TypeFlag::NESTED_FAMORASSEM => "[nested]protected internal",
+        _ => panic!(),
+    };
+
+    s
 }
 
 fn display_field_attributes(attributes: FieldAttribute) -> String {
@@ -455,7 +613,7 @@ impl Tdb {
             field_membership_start_index: usize,
             template_argument_list_offset: usize,
             hash: u32,
-            j: u32,
+            flags: TypeFlag,
             event_start_index: usize,
             event_count: usize,
             property_membership_start_index: usize,
@@ -479,7 +637,7 @@ impl Tdb {
                     special_type_id,
                 ) = file.read_u64()?.bit_split((18, 18, 18, 10));
 
-                let j = file.read_u32()?;
+                let flags = file.read_u32()?;
                 let x = file.read_u32()?;
                 if x != 0 {
                     bail!("Expected 0: {}", index);
@@ -520,7 +678,7 @@ impl Tdb {
                     field_membership_start_index: field_membership_start_index.try_into()?,
                     template_argument_list_offset: template_argument_list_offset.try_into()?,
                     hash,
-                    j,
+                    flags: TypeFlag::from_bits(flags).context("Unknown type flag")?,
                     event_start_index: event_start_index.try_into()?,
                     event_count: event_count.try_into()?,
                     property_count: property_count.try_into()?,
@@ -670,7 +828,7 @@ impl Tdb {
                 let attribute_list_index = file.read_u16()?;
                 let attributes = file.read_u16()?;
                 let (type_instance_index, constant_index) = file.read_u32()?.bit_split((18, 14));
-                let name_offset = file.read_u32()?;
+                let name_offset = file.read_u32()?; // is there a high bits of this for something else?
                 Ok(Field {
                     attribute_list_index: attribute_list_index.try_into()?,
                     attributes: FieldAttribute::from_bits(attributes)
@@ -701,21 +859,18 @@ impl Tdb {
             .collect::<Result<Vec<_>>>()?;
 
         struct Property {
-            a: u16,
+            flags: PropertyFlag,
             attribute_list_index: usize,
             name_offset: u32,
         }
         file.seek_assert_align_up(property_offset, 16)?;
         let properties = (0..property_count)
             .map(|_| {
-                let a = file.read_u16()?;
-                if a != 0 && a != 0x4000 {
-                    bail!("Unexpected flag")
-                }
+                let flags = file.read_u16()?;
                 let attribute_list_index = file.read_u16()?;
                 let name_offset = file.read_u32()?;
                 Ok(Property {
-                    a,
+                    flags: PropertyFlag::from_bits(flags).context("Unknown property flag")?,
                     attribute_list_index: attribute_list_index.try_into()?,
                     name_offset,
                 })
@@ -1124,6 +1279,7 @@ impl Tdb {
                 print_attributes(attribute_lists[ty.attribute_list_index], false)?;
                 println!();
             }
+            println!("{}", display_type_flags(type_instance.flags));
             println!(
                 "class {}: {}",
                 full_name,
@@ -1339,7 +1495,8 @@ impl Tdb {
                     println!();
                 }
                 println!(
-                    "    public property {};",
+                    "    {}public property {};",
+                    display_property_flag(property.flags),
                     read_string(property.name_offset)?
                 );
             }
