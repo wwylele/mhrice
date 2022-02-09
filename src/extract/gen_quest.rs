@@ -229,7 +229,7 @@ fn gen_quest_monster_multi_player_data(
     enemy_param: Option<&SharedEnemyParam>,
     index: usize,
     pedia: &Pedia,
-) -> impl IntoIterator<Item = Box<td<String>>> {
+) -> Vec<Box<td<String>>> {
     let no_data = || vec![html!(<td colspan=9>"[NO DATA]"</td>)];
 
     let enemy_param = if let Some(enemy_param) = enemy_param.as_ref() {
