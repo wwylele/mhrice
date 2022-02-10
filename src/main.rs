@@ -1,6 +1,7 @@
 #![recursion_limit = "4096"]
 
 use anyhow::*;
+use minidump::*;
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use rusoto_core::{ByteStream, Region};
@@ -51,6 +52,8 @@ pub mod built_info {
     // The file has been placed there by the build script.
     include!(concat!(env!("OUT_DIR"), "/built.rs"));
 }
+
+const TDB_ANCHOR: &[u8] = b"TDB\0\x46\0\0\0";
 
 pub static CONFIG: Lazy<HashMap<String, String>> = Lazy::new(|| {
     let mut config = HashMap::new();
@@ -252,6 +255,11 @@ enum Mhrice {
     ReadUser {
         #[structopt(short, long)]
         user: String,
+    },
+
+    ReadDmpTdb {
+        #[structopt(short, long)]
+        dmp: String,
     },
 }
 
@@ -512,42 +520,122 @@ fn gen_website(pak: Vec<String>, output: String, s3: Option<String>) -> Result<(
     Ok(())
 }
 
+struct OffsetFile<F> {
+    file: F,
+    offset: u64,
+}
+
+impl<F: Seek> OffsetFile<F> {
+    fn new(file: F, offset: u64) -> Result<Self> {
+        let mut of = OffsetFile { file, offset };
+        of.seek(SeekFrom::Start(0))?;
+        Ok(of)
+    }
+}
+
+impl<F: Read> Read for OffsetFile<F> {
+    fn read(&mut self, b: &mut [u8]) -> std::result::Result<usize, std::io::Error> {
+        self.file.read(b)
+    }
+}
+
+impl<F: Seek> Seek for OffsetFile<F> {
+    fn seek(&mut self, pos: SeekFrom) -> std::io::Result<u64> {
+        match pos {
+            SeekFrom::Current(_) => self.file.seek(pos),
+            SeekFrom::Start(x) => self.file.seek(SeekFrom::Start(x + self.offset)),
+            _ => unimplemented!(),
+        }
+        .map(|x| x - self.offset)
+    }
+}
+
 fn read_tdb(tdb: String) -> Result<()> {
     let mut file = BufReader::new(File::open(tdb)?);
-    let anchor = b"TDB\0\x46\0\0\0";
     let offset = loop {
-        let mut magic = vec![0; anchor.len()];
+        let mut magic = vec![0; TDB_ANCHOR.len()];
         file.read_exact(&mut magic)?;
-        if magic == anchor {
-            break file.seek(SeekFrom::Current(-(anchor.len() as i64)))?;
+        if magic == TDB_ANCHOR {
+            break file.seek(SeekFrom::Current(-(TDB_ANCHOR.len() as i64)))?;
         } else {
-            file.seek(SeekFrom::Current(-(anchor.len() as i64) + 1))?;
+            file.seek(SeekFrom::Current(-(TDB_ANCHOR.len() as i64) + 1))?;
         }
     };
 
-    struct OffsetFile<F> {
-        file: F,
-        offset: u64,
+    let _ = Tdb::new(OffsetFile::new(file, offset)?, 0)?;
+    Ok(())
+}
+
+fn read_dmp_tdb(dmp: String) -> Result<()> {
+    struct MinidumpReader<'a> {
+        memory_list: &'a MinidumpMemory64List<'a>,
+        pos: u64,
     }
 
-    impl<F: Read> Read for OffsetFile<F> {
-        fn read(&mut self, b: &mut [u8]) -> std::result::Result<usize, std::io::Error> {
-            self.file.read(b)
+    impl<'a> MinidumpReader<'a> {
+        fn new(memory_list: &'a MinidumpMemory64List<'a>) -> Self {
+            MinidumpReader {
+                memory_list,
+                pos: 0,
+            }
         }
     }
 
-    impl<F: Seek> Seek for OffsetFile<F> {
+    impl<'a> Read for MinidumpReader<'a> {
+        fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+            let mut offset = 0;
+            while offset != buf.len() as u64 {
+                if let Some(block) = self.memory_list.memory_at_address(self.pos) {
+                    let available = std::cmp::min(
+                        buf.len() as u64 - offset,
+                        block.base_address + block.size - self.pos,
+                    );
+                    buf[offset as usize..][..available as usize].copy_from_slice(
+                        &block.bytes[(self.pos - block.base_address) as usize..]
+                            [..available as usize],
+                    );
+                    self.pos += available;
+                    offset += available;
+                } else {
+                    buf[offset as usize] = 0xCC;
+                    self.pos += 1;
+                    offset += 1;
+                }
+            }
+            Ok(buf.len())
+        }
+    }
+
+    impl<'a> Seek for MinidumpReader<'a> {
         fn seek(&mut self, pos: SeekFrom) -> std::io::Result<u64> {
             match pos {
-                SeekFrom::Current(_) => self.file.seek(pos),
-                SeekFrom::Start(x) => self.file.seek(SeekFrom::Start(x + self.offset)),
-                _ => unimplemented!(),
+                SeekFrom::Start(s) => self.pos = s,
+                SeekFrom::End(e) => self.pos = e as u64,
+                SeekFrom::Current(c) => self.pos = (self.pos as i64 + c) as u64,
             }
-            .map(|x| x - self.offset)
+            Ok(self.pos)
         }
     }
 
-    let _ = Tdb::new(OffsetFile { file, offset })?;
+    let dmp = Minidump::read_path(dmp).map_err(|e| anyhow!(e))?;
+    let memory = dmp
+        .get_stream::<MinidumpMemory64List>()
+        .map_err(|e| anyhow!(e))?;
+    for block in memory.iter() {
+        if let Some(pos) = block
+            .bytes
+            .windows(TDB_ANCHOR.len())
+            .position(|w| w == TDB_ANCHOR)
+        {
+            let base = block.base_address + u64::try_from(pos)?;
+            let file = OffsetFile::new(MinidumpReader::new(&memory), base)?;
+
+            let _ = Tdb::new(file, base)?;
+
+            break;
+        }
+    }
+
     Ok(())
 }
 
@@ -938,5 +1026,6 @@ fn main() -> Result<()> {
             Ok(())
         }
         Mhrice::ReadUser { user } => read_user(user),
+        Mhrice::ReadDmpTdb { dmp } => read_dmp_tdb(dmp),
     }
 }

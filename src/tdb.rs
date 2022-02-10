@@ -488,7 +488,7 @@ pub struct Tdb {}
 
 impl Tdb {
     #[allow(unused_variables, dead_code)]
-    pub fn new<F: Read + Seek>(mut file: F) -> Result<Tdb> {
+    pub fn new<F: Read + Seek>(mut file: F, base_address: u64) -> Result<Tdb> {
         if &file.read_magic()? != b"TDB\0" {
             bail!("Wrong magic for TDB file");
         }
@@ -544,24 +544,24 @@ impl Tdb {
         let string_table_len = file.read_u32()?;
         let heap_len = file.read_u32()?;
 
-        let assembly_offset = file.read_u64()?;
-        let type_instance_offset = file.read_u64()?;
-        let type_offset = file.read_u64()?;
-        let method_membership_offset = file.read_u64()?;
-        let method_offset = file.read_u64()?;
-        let field_membership_offset = file.read_u64()?;
-        let field_offset = file.read_u64()?;
-        let property_membership_offset = file.read_u64()?;
-        let property_offset = file.read_u64()?;
-        let event_offset = file.read_u64()?;
-        let param_offset = file.read_u64()?;
-        let attribute_offset = file.read_u64()?;
-        let constant_offset = file.read_u64()?;
-        let attribute_list_offset = file.read_u64()?;
-        let data_attribute_list_offset = file.read_u64()?;
-        let string_table_offset = file.read_u64()?;
-        let heap_offset = file.read_u64()?;
-        let q_offset = file.read_u64()?;
+        let assembly_offset = file.read_u64()? - base_address;
+        let type_instance_offset = file.read_u64()? - base_address;
+        let type_offset = file.read_u64()? - base_address;
+        let method_membership_offset = file.read_u64()? - base_address;
+        let method_offset = file.read_u64()? - base_address;
+        let field_membership_offset = file.read_u64()? - base_address;
+        let field_offset = file.read_u64()? - base_address;
+        let property_membership_offset = file.read_u64()? - base_address;
+        let property_offset = file.read_u64()? - base_address;
+        let event_offset = file.read_u64()? - base_address;
+        let param_offset = file.read_u64()? - base_address;
+        let attribute_offset = file.read_u64()? - base_address;
+        let constant_offset = file.read_u64()? - base_address;
+        let attribute_list_offset = file.read_u64()? - base_address;
+        let data_attribute_list_offset = file.read_u64()? - base_address;
+        let string_table_offset = file.read_u64()? - base_address;
+        let heap_offset = file.read_u64()? - base_address;
+        let q_offset = file.read_u64()? - base_address;
         let _ = file.read_u64()?;
 
         struct Assembly {
@@ -640,7 +640,7 @@ impl Tdb {
                 let flags = file.read_u32()?;
                 let x = file.read_u32()?;
                 if x != 0 {
-                    bail!("Expected 0: {}", index);
+                    // bail!("Expected 0: {}", index);
                 }
                 let hash = file.read_u32()?;
                 file.read_u32()?;
@@ -658,11 +658,11 @@ impl Tdb {
 
                 let x = file.read_u64()?;
                 if x != 0 {
-                    bail!("Expected 0: {}", index);
+                    //bail!("Expected 0: {}", index);
                 }
                 let x = file.read_u64()?;
                 if x != 0 {
-                    bail!("Expected 0: {}", index);
+                    //bail!("Expected 0: {}", index);
                 }
                 Ok(TypeInstance {
                     base_type_instance_index: base_type_instance_index.try_into()?,
@@ -693,20 +693,19 @@ impl Tdb {
             type_instance_index: usize,
             method_index: usize,
             param_list_offset: usize,
+            address: u64,
         }
         file.seek_assert_align_up(method_membership_offset, 16)?;
         let method_memberships = (0..method_membership_count)
             .map(|_| {
                 let (type_instance_index, method_index, param_list_offset) =
                     file.read_u64()?.bit_split((18, 20, 26));
-                let zero = file.read_u64()?;
-                if zero != 0 {
-                    bail!("Expected 0")
-                }
+                let address = file.read_u64()?;
                 Ok(MethodMembership {
                     type_instance_index: type_instance_index.try_into()?,
                     method_index: method_index.try_into()?,
                     param_list_offset: param_list_offset.try_into()?,
+                    address,
                 })
             })
             .collect::<Result<Vec<_>>>()?;
@@ -1423,7 +1422,13 @@ impl Tdb {
                     println!(",");
                 }
 
-                println!("    );\n");
+                let address = if method_membership.address != 0 {
+                    format!(" = 0x{:016X}", method_membership.address)
+                } else {
+                    "".to_string()
+                };
+
+                println!("    ){};\n", address);
             }
 
             println!();
