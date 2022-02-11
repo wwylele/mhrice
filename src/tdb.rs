@@ -3,8 +3,10 @@ use crate::file_ext::*;
 use crate::hash::*;
 use anyhow::*;
 use bitflags::*;
+use std::collections::*;
 use std::convert::{TryFrom, TryInto};
-use std::io::{Read, Seek};
+use std::fs::File;
+use std::io::{Read, Seek, Write};
 
 bitflags! {
     struct FieldAttribute: u16 {
@@ -488,7 +490,7 @@ pub struct Tdb {}
 
 impl Tdb {
     #[allow(unused_variables, dead_code)]
-    pub fn new<F: Read + Seek>(mut file: F, base_address: u64) -> Result<Tdb> {
+    pub fn new<F: Read + Seek>(mut file: F, base_address: u64, map: Option<String>) -> Result<Tdb> {
         if &file.read_magic()? != b"TDB\0" {
             bail!("Wrong magic for TDB file");
         }
@@ -1259,6 +1261,8 @@ impl Tdb {
             Ok(())
         };
 
+        let mut function_map: BTreeMap<u64, Vec<String>> = BTreeMap::new();
+
         let mut order: Vec<_> = (0..type_instances.len()).collect();
         order.sort_by_key(|&i| symbols[i].as_ref().unwrap());
 
@@ -1379,13 +1383,15 @@ impl Tdb {
                     println!();
                 }
 
+                let method_name = read_string(method.name_offset)?;
+
                 println!(
                     "    {}{}{}\n    {} {} (",
                     display_param_modifier(return_value.modifier, true),
                     display_method_impl_flag(method.impl_flag),
                     display_method_attributes(method.attributes),
                     symbols[return_value.type_instance_index].as_ref().unwrap(),
-                    read_string(method.name_offset)?
+                    method_name
                 );
 
                 for _ in 0..param_count {
@@ -1423,6 +1429,10 @@ impl Tdb {
                 }
 
                 let address = if method_membership.address != 0 {
+                    function_map
+                        .entry(method_membership.address)
+                        .or_default()
+                        .push(format!("{}.{}", full_name, method_name));
                     format!(" = 0x{:016X}", method_membership.address)
                 } else {
                     "".to_string()
@@ -1521,6 +1531,15 @@ impl Tdb {
                 read_string(assembly.full_path_offset)?,
                 read_string(assembly.dll_name_offset)?
             );
+        }
+
+        if let Some(map) = map {
+            let mut map = File::create(map)?;
+            for (address, names) in function_map {
+                for name in names {
+                    writeln!(map, "{:016X} {}", address, name)?
+                }
+            }
         }
 
         Ok(Tdb {})

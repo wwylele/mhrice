@@ -260,6 +260,8 @@ enum Mhrice {
     ReadDmpTdb {
         #[structopt(short, long)]
         dmp: String,
+        #[structopt(short, long)]
+        map: Option<String>,
     },
 }
 
@@ -562,11 +564,11 @@ fn read_tdb(tdb: String) -> Result<()> {
         }
     };
 
-    let _ = Tdb::new(OffsetFile::new(file, offset)?, 0)?;
+    let _ = Tdb::new(OffsetFile::new(file, offset)?, 0, None)?;
     Ok(())
 }
 
-fn read_dmp_tdb(dmp: String) -> Result<()> {
+fn read_dmp_tdb(dmp: String, map: Option<String>) -> Result<()> {
     struct MinidumpReader<'a> {
         memory_list: &'a MinidumpMemory64List<'a>,
         pos: u64,
@@ -630,7 +632,7 @@ fn read_dmp_tdb(dmp: String) -> Result<()> {
             let base = block.base_address + u64::try_from(pos)?;
             let file = OffsetFile::new(MinidumpReader::new(&memory), base)?;
 
-            let _ = Tdb::new(file, base)?;
+            let _ = Tdb::new(file, base, map)?;
 
             break;
         }
@@ -1026,6 +1028,6 @@ fn main() -> Result<()> {
             Ok(())
         }
         Mhrice::ReadUser { user } => read_user(user),
-        Mhrice::ReadDmpTdb { dmp } => read_dmp_tdb(dmp),
+        Mhrice::ReadDmpTdb { dmp, map } => read_dmp_tdb(dmp, map),
     }
 }
