@@ -54,6 +54,8 @@ pub struct Pedia {
 
     pub normal_quest_data: NormalQuestData,
     pub normal_quest_data_for_enemy: NormalQuestDataForEnemy,
+    pub dl_quest_data: NormalQuestData,
+    pub dl_quest_data_for_enemy: NormalQuestDataForEnemy,
     pub difficulty_rate: SystemDifficultyRateData,
     pub random_scale: EnemyBossRandomScaleData,
     pub size_list: EnemySizeListData,
@@ -62,6 +64,7 @@ pub struct Pedia {
     pub quest_village_msg: Msg,
     pub quest_tutorial_msg: Msg,
     pub quest_arena_msg: Msg,
+    pub quest_dlc_msg: Msg,
 
     pub armor: ArmorBaseUserData,
     pub armor_series: ArmorSeriesUserData,
@@ -127,6 +130,7 @@ pub struct Quest<'a> {
     pub name: Option<&'a MsgEntry>,
     pub target: Option<&'a MsgEntry>,
     pub condition: Option<&'a MsgEntry>,
+    pub is_dl: bool,
 }
 
 pub struct Deco<'a> {

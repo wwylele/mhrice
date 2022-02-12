@@ -40,7 +40,7 @@ pub fn gen_quest_list(quests: &[Quest], root: &Path) -> Result<()> {
                                         <ul>{
                                             quests.into_iter().map(|quest|{
                                                 let link = format!("/quest/{:06}.html", quest.param.quest_no);
-                                                let name = quest.name.map_or(
+                                                let mut name = quest.name.map_or(
                                                     html!(<span>{text!("Quest {:06}", quest.param.quest_no)}</span>),
                                                     gen_multi_lang
                                                 );
@@ -49,6 +49,11 @@ pub fn gen_quest_list(quests: &[Quest], root: &Path) -> Result<()> {
                                                 html!{<li>
                                                     <a href={link} class="mh-icon-text">
                                                     <img src={img} class="mh-quest-icon"/>
+                                                    {
+                                                        quest.is_dl.then(
+                                                            ||html!(<span class="tag">{text!("Event")}</span>)
+                                                        )
+                                                    }
                                                     {name}
                                                     </a>
                                                 </li>}
@@ -312,6 +317,11 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path) 
                 <h1 class="title">
                 <span class="tag">{text!("{:?}-{:?}", quest.param.enemy_level, quest.param.quest_level)}</span>
                 {
+                    quest.is_dl.then(
+                        ||html!(<span class="tag">{text!("Event")}</span>)
+                    )
+                }
+                {
                     quest.name.map_or(
                         html!(<span>{text!("Quest {:06}", quest.param.quest_no)}</span>),
                         gen_multi_lang
@@ -328,7 +338,7 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path) 
                 <table>
                     <thead><tr>
                         <th>"Monster"</th>
-                        <th>"Size (?)"</th>
+                        <th>"Size"</th>
                         <th>"HP"</th>
                         <th>"Attack"</th>
                         <th>"Parts"</th>
@@ -354,7 +364,7 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path) 
                 </table>
                 </section>
                 <section class="section">
-                <h2 class="title">"Multiplayer Factor (Column header might be wrong)"</h2>
+                <h2 class="title">"Multiplayer Factor"</h2>
 
                 <table>
                     <thead><tr>

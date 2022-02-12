@@ -331,6 +331,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let normal_quest_data = get_user(pak, "Quest/QuestData/NormalQuestData.user")?;
     let normal_quest_data_for_enemy =
         get_user(pak, "Quest/QuestData/NormalQuestDataForEnemy.user")?;
+    let dl_quest_data = get_user(pak, "Quest/QuestData/DlQuestData.user")?;
+    let dl_quest_data_for_enemy = get_user(pak, "Quest/QuestData/DlQuestDataForEnemy.user")?;
     let difficulty_rate = get_user(pak, "enemy/user_data/system_difficulty_rate_data.user")?;
     let random_scale = get_user(pak, "enemy/user_data/system_boss_random_scale_data.user")?;
     let size_list = get_user(pak, "enemy/user_data/system_enemy_sizelist_data.user")?;
@@ -339,6 +341,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let quest_village_msg = get_msg(pak, "Message/Quest/QuestData_Village.msg")?;
     let quest_tutorial_msg = get_msg(pak, "Message/Quest/QuestData_Tutorial.msg")?;
     let quest_arena_msg = get_msg(pak, "Message/Quest/QuestData_Arena.msg")?;
+    let quest_dlc_msg = get_msg(pak, "Message/Quest/QuestData_Dlc.msg")?;
 
     let armor = get_user(pak, "data/Define/Player/Armor/ArmorBaseData.user")?;
     let armor_series = get_user(pak, "data/Define/Player/Armor/ArmorSeriesData.user")?;
@@ -475,6 +478,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         parts_type,
         normal_quest_data,
         normal_quest_data_for_enemy,
+        dl_quest_data,
+        dl_quest_data_for_enemy,
         difficulty_rate,
         random_scale,
         size_list,
@@ -483,6 +488,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         quest_village_msg,
         quest_tutorial_msg,
         quest_arena_msg,
+        quest_dlc_msg,
         armor,
         armor_series,
         armor_product,
@@ -935,6 +941,13 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
                 .iter()
                 .map(|entry| (&entry.name, entry)),
         )
+        .chain(
+            pedia
+                .quest_dlc_msg
+                .entries
+                .iter()
+                .map(|entry| (&entry.name, entry)),
+        )
         .collect();
 
     let mut enemy_params: HashMap<i32, &NormalQuestDataForEnemyParam> = pedia
@@ -942,6 +955,13 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
         .param
         .iter()
         .map(|param| (param.quest_no, param))
+        .chain(
+            pedia
+                .dl_quest_data_for_enemy
+                .param
+                .iter()
+                .map(|param| (param.quest_no, param)),
+        )
         .collect();
 
     pedia
@@ -949,7 +969,16 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
         .param
         .iter()
         .filter(|param| param.quest_no != 0)
-        .map(|param| {
+        .map(|param| (param, false))
+        .chain(
+            pedia
+                .dl_quest_data
+                .param
+                .iter()
+                .filter(|param| param.quest_no != 0)
+                .map(|param| (param, true)),
+        )
+        .map(|(param, is_dl)| {
             let name_msg_name = format!("QN{:06}_01", param.quest_no);
             let target_msg_name = format!("QN{:06}_04", param.quest_no);
             let condition_msg_name = format!("QN{:06}_05", param.quest_no);
@@ -959,6 +988,7 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
                 name: all_msg.remove(&name_msg_name),
                 target: all_msg.remove(&target_msg_name),
                 condition: all_msg.remove(&condition_msg_name),
+                is_dl,
             })
         })
         .collect::<Result<Vec<_>>>()

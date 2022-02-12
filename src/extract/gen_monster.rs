@@ -801,6 +801,11 @@ pub fn gen_monster(
                         html!(<tr>
                             <td>
                                 <span class="tag">{text!("{:?}-{:?}", quest.param.enemy_level, quest.param.quest_level)}</span>
+                                {
+                                    quest.is_dl.then(
+                                        ||html!(<span class="tag">{text!("Event")}</span>)
+                                    )
+                                }
                                 <a href={format!("/quest/{:06}.html", quest.param.quest_no)}>
                                 {quest.name.map_or(
                                     html!(<span>{text!("Quest {:06}", quest.param.quest_no)}</span>),
