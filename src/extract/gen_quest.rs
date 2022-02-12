@@ -333,6 +333,18 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path) 
                         gen_multi_lang
                     )
                 }</span></p>
+                <p><span>"From: "</span><span> {
+                    quest.requester.map_or(
+                        html!(<span>"-"</span>),
+                        gen_multi_lang
+                    )
+                }</span></p>
+                <p><span>"Detail: "</span><span> {
+                    quest.detail.map_or(
+                        html!(<span>"-"</span>),
+                        gen_multi_lang
+                    )
+                }</span></p>
                 <section class="section">
                 <h2 class="title">"Monster stats"</h2>
                 <table>

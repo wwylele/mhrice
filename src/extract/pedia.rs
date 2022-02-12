@@ -128,6 +128,8 @@ pub struct Quest<'a> {
     pub param: &'a NormalQuestDataParam,
     pub enemy_param: Option<&'a NormalQuestDataForEnemyParam>,
     pub name: Option<&'a MsgEntry>,
+    pub requester: Option<&'a MsgEntry>,
+    pub detail: Option<&'a MsgEntry>,
     pub target: Option<&'a MsgEntry>,
     pub condition: Option<&'a MsgEntry>,
     pub is_dl: bool,

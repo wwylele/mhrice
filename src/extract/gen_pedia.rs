@@ -980,12 +980,16 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
         )
         .map(|(param, is_dl)| {
             let name_msg_name = format!("QN{:06}_01", param.quest_no);
+            let requester_msg_name = format!("QN{:06}_02", param.quest_no);
+            let detail_msg_name = format!("QN{:06}_03", param.quest_no);
             let target_msg_name = format!("QN{:06}_04", param.quest_no);
             let condition_msg_name = format!("QN{:06}_05", param.quest_no);
             Ok(Quest {
                 param,
                 enemy_param: enemy_params.remove(&param.quest_no),
                 name: all_msg.remove(&name_msg_name),
+                requester: all_msg.remove(&requester_msg_name),
+                detail: all_msg.remove(&detail_msg_name),
                 target: all_msg.remove(&target_msg_name),
                 condition: all_msg.remove(&condition_msg_name),
                 is_dl,
