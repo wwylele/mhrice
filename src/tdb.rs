@@ -1537,7 +1537,7 @@ impl Tdb {
             let mut map = File::create(map)?;
             for (address, names) in function_map {
                 for name in names {
-                    writeln!(map, "{:016X} {}", address, name)?
+                    writeln!(map, "{} {:016X} f", name, address)?
                 }
             }
         }
