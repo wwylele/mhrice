@@ -608,7 +608,7 @@ rsz_struct! {
 // snow.data.ItemLotTable.LotRule
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone, Copy)]
     pub enum LotRule {
         Random = 0,
         RandomOut1 = 1,

@@ -306,3 +306,7 @@ img.mh-quest-icon {
 .mh-msg-place-holder {
     background-color: yellow;
 }
+
+.mh-lot-rule {
+    font-weight: normal;
+}

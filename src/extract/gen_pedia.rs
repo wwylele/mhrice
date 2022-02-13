@@ -1045,7 +1045,7 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
                     .iter()
                     .filter(|&&i| i != 0)
                     .map(|i| {
-                        Ok(*reward_lot.get(&i).with_context(|| {
+                        Ok(*reward_lot.get(i).with_context(|| {
                             format!(
                                 "Can't find additional_quest_reward for quest {}, id {}",
                                 param.quest_no, i

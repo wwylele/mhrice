@@ -1,3 +1,4 @@
+use super::gen_item::*;
 use super::gen_website::*;
 use super::pedia::*;
 use crate::rsz::*;
@@ -230,6 +231,17 @@ fn gen_multi_factor(data: &MultiData) -> Box<div<String>> {
     </ul></div>)
 }
 
+fn translate_rule(rule: LotRule) -> Box<span<String>> {
+    let desc = match rule {
+        LotRule::Random => "Get random amount",
+        LotRule::RandomOut1 => "Get one",
+        LotRule::RandomOut2 => "Get two",
+        LotRule::RandomOut3 => "Get three",
+        LotRule::FirstFix => "First one fixed",
+    };
+    html!(<span class="mh-lot-rule">{ text!("{}", desc) }</span>)
+}
+
 fn gen_quest_monster_multi_player_data(
     enemy_param: Option<&SharedEnemyParam>,
     index: usize,
@@ -407,6 +419,95 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path) 
                     } </tbody>
                 </table>
 
+                </section>
+                <section>
+                <h2 class="title">"Rewards"</h2>
+                { if let Some(reward) = &quest.reward {
+                    html!(<div>
+                    <p>{text!("Addtional target rewards: {}", reward.param.target_reward_add_num)}</p>
+                    <p>{text!("Addtional quest rewards: {}", reward.param.common_material_add_num)}</p>
+                    <p>"See monster's page for target rewards."</p>
+                    <div class="mh-reward-tables">
+
+                    { if let Some(common_material_reward) = &reward.common_material_reward {
+                        html!(<div class="mh-reward-box">
+                        <table>
+                            <thead><tr>
+                                <th>"Common rewards"<br/>{translate_rule(common_material_reward.lot_rule)}</th>
+                                <th>"Probability"</th>
+                            </tr></thead>
+                            <tbody> {
+                                gen_reward_table(pedia_ex,
+                                    &common_material_reward.item_id_list,
+                                    &common_material_reward.num_list,
+                                    &common_material_reward.probability_list)
+                            } </tbody>
+                        </table>
+                        </div>)
+                    } else {
+                        html!(<div></div>)
+                    }}
+
+                    { if let Some(additional_target_reward) = reward.additional_target_reward {
+                        html!(<div class="mh-reward-box">
+                        <table>
+                            <thead><tr>
+                                <th>"Addtional target rewards"<br/>{translate_rule(additional_target_reward.lot_rule)}</th>
+                                <th>"Probability"</th>
+                            </tr></thead>
+                            <tbody> {
+                                gen_reward_table(pedia_ex,
+                                    &additional_target_reward.item_id_list,
+                                    &additional_target_reward.num_list,
+                                    &additional_target_reward.probability_list)
+                            } </tbody>
+                        </table>
+                        </div>)
+                    } else {
+                        html!(<div></div>)
+                    }}
+
+                    { reward.additional_quest_reward.iter().enumerate().map(|(i, additional_quest_reward)| {
+                        html!(<div class="mh-reward-box">
+                        <table>
+                            <thead><tr>
+                                <th>{ text!("Addtional rewards {}", i) }<br/>{translate_rule(additional_quest_reward.lot_rule)}</th>
+                                <th>"Probability"</th>
+                            </tr></thead>
+                            <tbody> {
+                                gen_reward_table(pedia_ex,
+                                    &additional_quest_reward.item_id_list,
+                                    &additional_quest_reward.num_list,
+                                    &additional_quest_reward.probability_list)
+                            } </tbody>
+                        </table>
+                        </div>)
+                    })}
+
+                    { if let Some(cloth_ticket) = &reward.cloth_ticket {
+                        html!(<div class="mh-reward-box">
+                        <table>
+                            <thead><tr>
+                                <th>"Outfit voucher"<br/>{translate_rule(cloth_ticket.lot_rule)}</th>
+                                <th>"Probability"</th>
+                            </tr></thead>
+                            <tbody> {
+                                gen_reward_table(pedia_ex,
+                                    &cloth_ticket.item_id_list,
+                                    &cloth_ticket.num_list,
+                                    &cloth_ticket.probability_list)
+                            } </tbody>
+                        </table>
+                        </div>)
+                    } else {
+                        html!(<div></div>)
+                    }}
+
+                    </div>
+                    </div>)
+                } else {
+                    html!(<div>"No data"</div>)
+                }}
                 </section>
                 </div> </div> </main>
             </body>

@@ -214,3 +214,27 @@ pub fn gen_items(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
     }
     Ok(())
 }
+
+pub fn gen_reward_table<'a>(
+    pedia_ex: &'a PediaEx,
+    item: &'a [ItemId],
+    num: &'a [u32],
+    probability: &'a [u32],
+) -> impl Iterator<Item = Box<tr<String>>> + 'a {
+    item.iter()
+        .zip(num)
+        .zip(probability)
+        .filter(|&((&item, _), _)| item != ItemId::None)
+        .map(move |((&item, &num), probability)| {
+            let item = if let Some(item) = pedia_ex.items.get(&item) {
+                html!(<span>{gen_item_label(item)}</span>)
+            } else {
+                html!(<span>{text!("{:?}", item)}</span>)
+            };
+
+            html!(<tr>
+                <td>{text!("{}x ", num)}{item}</td>
+                <td>{text!("{}%", probability)}</td>
+            </tr>)
+        })
+}
