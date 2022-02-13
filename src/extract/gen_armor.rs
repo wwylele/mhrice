@@ -7,7 +7,25 @@ use crate::rsz::*;
 use anyhow::*;
 use std::fs::{create_dir, write};
 use std::path::*;
-use typed_html::{dom::*, html, text};
+use typed_html::{dom::*, elements::*, html, text};
+
+pub fn gen_armor_label(piece: Option<&Armor>) -> Box<div<String>> {
+    let piece_name = if let Some(piece) = piece {
+        let icon = format!(
+            "/resources/equip/{:03}",
+            piece.data.pl_armor_id.icon_index()
+        );
+        html!(<div class="mh-icon-text">
+            { gen_rared_icon(piece.data.rare, &icon) }
+            <span>{ gen_multi_lang(&piece.name) }</span>
+        </div>)
+    } else {
+        html!(<div>"-"</div>)
+    };
+    html!(<div>
+        { piece_name }
+    </div>)
+}
 
 pub fn gen_armor_list(serieses: &[ArmorSeries], root: &Path) -> Result<()> {
     let doc: DOMTree<String> = html!(
@@ -40,18 +58,8 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], root: &Path) -> Result<()> {
                             }</h2>
                             <ul class="mh-armor-list"> {
                                 series.pieces.iter().take(5).map(|piece| {
-                                    let piece_name = if let Some(piece) = piece {
-                                        let icon = format!("/resources/equip/{:03}",
-                                            piece.data.pl_armor_id.icon_index());
-                                        html!(<div class="mh-icon-text">
-                                            { gen_rared_icon(piece.data.rare, &icon) }
-                                            <span>{ gen_multi_lang(&piece.name) }</span>
-                                        </div>)
-                                    } else {
-                                        html!(<div>"-"</div>)
-                                    };
                                     html!(<li class="mh-armor-list">
-                                        { piece_name }
+                                        { gen_armor_label(piece.as_ref()) }
                                     </li>)
                                 })
                             } </ul>

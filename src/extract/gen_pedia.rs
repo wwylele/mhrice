@@ -1548,7 +1548,7 @@ where
     let mut name_map = weapon_list.name.get_name_map();
     let mut explain_map = weapon_list.explain.get_name_map();
 
-    let mut weapons = HashMap::new();
+    let mut weapons = BTreeMap::new();
     for param in &*weapon_list.base_data {
         let id = param.to_base().id;
         if id == WeaponId::None || id == WeaponId::Null {

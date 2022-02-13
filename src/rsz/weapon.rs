@@ -73,7 +73,7 @@ rsz_enum! {
 // snow.data.ContentsIdSystem.WeaponId
 rsz_enum! {
     #[rsz(u32)]
-    #[derive(Debug, Serialize, PartialEq, Eq, Clone, Copy, Hash)]
+    #[derive(Debug, Serialize, PartialEq, Eq, Clone, Copy, Hash, PartialOrd, Ord)]
     pub enum WeaponId {
         Null = 0, // Not in TDB but seen in data
         None = 0x08000000,

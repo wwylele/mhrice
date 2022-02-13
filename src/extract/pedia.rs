@@ -208,7 +208,7 @@ pub struct Weapon<'a, Param> {
 }
 
 pub struct WeaponTree<'a, Param> {
-    pub weapons: HashMap<WeaponId, Weapon<'a, Param>>,
+    pub weapons: BTreeMap<WeaponId, Weapon<'a, Param>>,
     pub roots: Vec<WeaponId>,
     pub unpositioned: Vec<WeaponId>,
 }

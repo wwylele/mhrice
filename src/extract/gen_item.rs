@@ -1,3 +1,7 @@
+use super::gen_armor::*;
+use super::gen_monster::*;
+use super::gen_quest::*;
+use super::gen_weapon::*;
 use super::gen_website::*;
 use super::pedia::*;
 use crate::rsz::*;
@@ -89,7 +93,266 @@ pub fn gen_category(
     html!(<td>{category}{text!("{} pt", material_category_num)}</td>)
 }
 
-pub fn gen_item(item: &Item, pedia_ex: &PediaEx<'_>, path: &Path) -> Result<()> {
+fn gen_item_source_monster(
+    item_id: ItemId,
+    pedia: &Pedia,
+    pedia_ex: &PediaEx,
+) -> Option<Box<div<String>>> {
+    let mut em_types: Vec<EmTypes> = pedia_ex
+        .monster_lot
+        .iter()
+        .filter(|(_, lot)| {
+            lot.target_reward_item_id_list.contains(&item_id)
+                || lot.hagitory_reward_item_id_list.contains(&item_id)
+                || lot.capture_reward_item_id_list.contains(&item_id)
+                || lot.parts_break_reward_item_id_list.contains(&item_id)
+                || lot.drop_reward_item_id_list.contains(&item_id)
+                || lot.otomo_reward_item_id_list.contains(&item_id)
+        })
+        .map(|((em_types, _), _)| *em_types)
+        .collect();
+    em_types.sort_unstable();
+    em_types.dedup();
+    if !em_types.is_empty() {
+        Some(html!(<div><h3>"From monsters, an their quests: "</h3>
+        <ul class="mh-list-item-in-out">
+            {
+                em_types.into_iter().map(|em_type|html!(<li class="mh-list-item-in-out">{
+                    gen_monster_tag(pedia, em_type, false)
+                }</li>))
+            }
+        </ul></div>))
+    } else {
+        None
+    }
+}
+
+fn gen_item_source_quest(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
+    let quests: Vec<_> = pedia_ex
+        .quests
+        .iter()
+        .filter(|quest| {
+            let reward = if let Some(reward) = &quest.reward {
+                reward
+            } else {
+                return false;
+            };
+            if let Some(r) = reward.common_material_reward {
+                if r.item_id_list.contains(&item_id) {
+                    return true;
+                }
+            }
+
+            if let Some(r) = reward.additional_target_reward {
+                if r.item_id_list.contains(&item_id) {
+                    return true;
+                }
+            }
+
+            if let Some(r) = reward.cloth_ticket {
+                if r.item_id_list.contains(&item_id) {
+                    return true;
+                }
+            }
+
+            for &r in &reward.additional_quest_reward {
+                if r.item_id_list.contains(&item_id) {
+                    return true;
+                }
+            }
+
+            false
+        })
+        .collect();
+
+    if !quests.is_empty() {
+        Some(html!(<div> <h3>"From quests: "</h3>
+        <ul class="mh-list-item-in-out">{
+            quests.into_iter().map(|quest| {
+                html!(<li class="mh-list-item-in-out">{gen_quest_tag(quest, false)}</li>)
+            })
+        }</ul> </div>))
+    } else {
+        None
+    }
+}
+
+fn gen_item_source_weapon(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
+    let mut htmls = vec![];
+    macro_rules! check_weapon {
+        ($weapon:ident) => {
+            let weapons = &pedia_ex.$weapon;
+            for (_, weapon) in &weapons.weapons {
+                let mut found = false;
+                if let Some(product) = &weapon.product {
+                    if product.output_item.contains(&item_id) {
+                        found = true;
+                    }
+                }
+
+                if let Some(process) = &weapon.process {
+                    if process.output_item.contains(&item_id) {
+                        found = true;
+                    }
+                }
+
+                if found {
+                    htmls.push(html!(<li class="mh-list-item-in-out">{
+                        gen_weapon_label(weapon)
+                    }</li>));
+                }
+            }
+        };
+    }
+
+    check_weapon!(great_sword);
+    check_weapon!(short_sword);
+    check_weapon!(hammer);
+    check_weapon!(lance);
+    check_weapon!(long_sword);
+    check_weapon!(slash_axe);
+    check_weapon!(gun_lance);
+    check_weapon!(dual_blades);
+    check_weapon!(horn);
+    check_weapon!(insect_glaive);
+    check_weapon!(charge_axe);
+    check_weapon!(light_bowgun);
+    check_weapon!(heavy_bowgun);
+    check_weapon!(bow);
+
+    if !htmls.is_empty() {
+        Some(html!(<div> <h3>"From crafting / upgrading weapons: "</h3>
+            <ul class="mh-list-item-in-out">{
+                htmls
+            }</ul> </div>))
+    } else {
+        None
+    }
+}
+
+fn gen_item_source_armor(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
+    let mut htmls = vec![];
+
+    for series in &pedia_ex.armors {
+        for piece in series.pieces.iter().flatten() {
+            if let Some(product) = piece.product {
+                if product.output_item.contains(&item_id) {
+                    htmls.push(html!(<li class="mh-list-item-in-out">
+                        <a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
+                            { gen_armor_label(Some(piece)) }
+                        </a>
+                    </li>))
+                }
+            }
+        }
+    }
+
+    if !htmls.is_empty() {
+        Some(html!(<div> <h3>"From crafting armors: "</h3>
+            <ul class="mh-list-item-in-out">{
+                htmls
+            }</ul> </div>))
+    } else {
+        None
+    }
+}
+
+fn gen_item_usage_weapon(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
+    let mut htmls = vec![];
+    macro_rules! check_weapon {
+        ($weapon:ident) => {
+            let weapons = &pedia_ex.$weapon;
+            for (_, weapon) in &weapons.weapons {
+                let mut found = false;
+                if let Some(product) = &weapon.product {
+                    if product.base.item.contains(&item_id) {
+                        found = true;
+                    }
+                }
+
+                if let Some(process) = &weapon.process {
+                    if process.base.item.contains(&item_id) {
+                        found = true;
+                    }
+                }
+
+                if let Some(change) = &weapon.change {
+                    if change.base.item.contains(&item_id) {
+                        found = true;
+                    }
+                }
+
+                if found {
+                    htmls.push(html!(<li class="mh-list-item-in-out">{
+                        gen_weapon_label(weapon)
+                    }</li>));
+                }
+            }
+        };
+    }
+
+    check_weapon!(great_sword);
+    check_weapon!(short_sword);
+    check_weapon!(hammer);
+    check_weapon!(lance);
+    check_weapon!(long_sword);
+    check_weapon!(slash_axe);
+    check_weapon!(gun_lance);
+    check_weapon!(dual_blades);
+    check_weapon!(horn);
+    check_weapon!(insect_glaive);
+    check_weapon!(charge_axe);
+    check_weapon!(light_bowgun);
+    check_weapon!(heavy_bowgun);
+    check_weapon!(bow);
+
+    if !htmls.is_empty() {
+        Some(html!(<div> <h3>"For crafting / upgrading weapons: "</h3>
+            <ul class="mh-list-item-in-out">{
+                htmls
+            }</ul> </div>))
+    } else {
+        None
+    }
+}
+
+fn gen_item_usage_armor(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
+    let mut htmls = vec![];
+
+    for series in &pedia_ex.armors {
+        for piece in series.pieces.iter().flatten() {
+            let mut found = false;
+            if let Some(product) = piece.product {
+                if product.item.contains(&item_id) {
+                    found = true;
+                }
+            }
+            if let Some(overwear_product) = piece.overwear_product {
+                if overwear_product.item.contains(&item_id) {
+                    found = true;
+                }
+            }
+            if found {
+                htmls.push(html!(<li class="mh-list-item-in-out">
+                    <a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
+                        { gen_armor_label(Some(piece)) }
+                    </a>
+                </li>))
+            }
+        }
+    }
+
+    if !htmls.is_empty() {
+        Some(html!(<div> <h3>"For crafting armors: "</h3>
+            <ul class="mh-list-item-in-out">{
+                htmls
+            }</ul> </div>))
+    } else {
+        None
+    }
+}
+
+pub fn gen_item(item: &Item, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path) -> Result<()> {
     let material_categories = item.param.material_category.iter().filter_map(|&category| {
         if category == MaterialCategory(0) {
             return None;
@@ -164,6 +427,20 @@ pub fn gen_item(item: &Item, pedia_ex: &PediaEx<'_>, path: &Path) -> Result<()> 
                 </div>
                 </section>
 
+                <section class="section">
+                <h2 class="title">"Where to get"</h2>
+                {gen_item_source_monster(item.param.id, pedia, pedia_ex)}
+                {gen_item_source_quest(item.param.id, pedia_ex)}
+                {gen_item_source_weapon(item.param.id, pedia_ex)}
+                {gen_item_source_armor(item.param.id, pedia_ex)}
+                </section>
+
+                <section class="section">
+                <h2 class="title">"Where to use"</h2>
+                {gen_item_usage_weapon(item.param.id, pedia_ex)}
+                {gen_item_usage_armor(item.param.id, pedia_ex)}
+                </section>
+
                 </div></div></main>
             </body>
         </html>
@@ -205,12 +482,12 @@ pub fn gen_item_list(pedia_ex: &PediaEx<'_>, root: &Path) -> Result<()> {
     Ok(())
 }
 
-pub fn gen_items(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
+pub fn gen_items(pedia: &Pedia, pedia_ex: &PediaEx, root: &Path) -> Result<()> {
     let item_path = root.join("item");
     create_dir(&item_path)?;
     for (&id, item) in &pedia_ex.items {
         let path = item_path.join(item_page(id));
-        gen_item(item, pedia_ex, &path)?
+        gen_item(item, pedia, pedia_ex, &path)?
     }
     Ok(())
 }

@@ -3,6 +3,7 @@ use crate::rsz_bitflags;
 use crate::rsz_enum;
 use crate::rsz_struct;
 use serde::*;
+use std::cmp::*;
 
 // snow.quest.QuestType
 rsz_bitflags! {
@@ -229,6 +230,27 @@ rsz_enum! {
     pub enum EmTypes {
         Em(u32) = 0x0000..=0x0FFF,
         Ems(u32) = 0x1000..=0x1FFF,
+    }
+}
+
+impl EmTypes {
+    fn order_index(&self) -> u32 {
+        match *self {
+            EmTypes::Em(i) => (i & 0xFF) << 16 | (i & 0xF00),
+            EmTypes::Ems(i) => (i & 0xFF) << 16 | (i & 0xF00) | 0x80000000,
+        }
+    }
+}
+
+impl PartialOrd<EmTypes> for EmTypes {
+    fn partial_cmp(&self, other: &EmTypes) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for EmTypes {
+    fn cmp(&self, other: &EmTypes) -> Ordering {
+        self.order_index().cmp(&other.order_index())
     }
 }
 

@@ -44,10 +44,9 @@ span.mh-extract-unknown {
 }
 
 .mh-quest-list-monster-icon {
-    width: 10%;
-    float:left;
+    width: 4em;
+    vertical-align: middle;
 }
-
 
 ul.mh-list-monster {
     margin: 0 auto;
@@ -309,4 +308,13 @@ img.mh-quest-icon {
 
 .mh-lot-rule {
     font-weight: normal;
+}
+
+ul.mh-list-item-in-out {
+    display: grid;
+    grid-template-columns: repeat( auto-fit, minmax(250px, 1fr) );
+}
+
+li.mh-list-item-in-out {
+    display: inline-block;
 }

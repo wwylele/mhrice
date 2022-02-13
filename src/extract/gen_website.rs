@@ -483,7 +483,7 @@ pub fn gen_website(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &str) -> Resul
     gen_armor_list(&pedia_ex.armors, &root)?;
     gen_monsters(pedia, pedia_ex, &root)?;
     gen_quest_list(&pedia_ex.quests, &root)?;
-    gen_items(pedia_ex, &root)?;
+    gen_items(pedia, pedia_ex, &root)?;
     gen_item_list(pedia_ex, &root)?;
     gen_weapons(pedia_ex, &root)?;
     gen_about(&root)?;

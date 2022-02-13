@@ -10,6 +10,44 @@ use std::fs::write;
 use std::path::*;
 use typed_html::{dom::*, elements::*, html, text};
 
+pub fn gen_monster_tag(pedia: &Pedia, em_type: EmTypes, is_target: bool) -> Box<div<String>> {
+    let (id, is_large) = match em_type {
+        EmTypes::Em(id) => (id, true),
+        EmTypes::Ems(id) => (id, false),
+    };
+
+    let monster = pedia.monsters.iter().find(|m| (m.id | m.sub_id << 8) == id);
+    let monster_name = (|| {
+        let name_name = format!("EnemyIndex{:03}", monster?.enemy_type?);
+        Some(gen_multi_lang(pedia.monster_names.get_entry(&name_name)?))
+    })()
+    .unwrap_or(html!(<span>{text!("Monster {0:03}_{1:02}",
+                                id & 0xFF, id >> 8)}</span>));
+
+    let icon_path = format!(
+        "/resources/{}{:03}_{:02}_icon.png",
+        if is_large { "em" } else { "ems" },
+        id & 0xFF,
+        id >> 8
+    );
+
+    let target_tag = if is_target {
+        html!(<span class="tag is-primary">"Target"</span>)
+    } else {
+        html!(<span />)
+    };
+    html!(<div>
+        <a href={format!("/{}/{:03}_{:02}.html",
+            if is_large { "monster" } else { "small-monster" }, id & 0xFF, id >> 8)}>
+            <img class="mh-quest-list-monster-icon" src=icon_path />
+            <span  class="mh-quest-list-monster-name">
+                {monster_name}
+            </span>
+        </a>
+        {target_tag}
+    </div>)
+}
+
 fn gen_extractive_type(extractive_type: ExtractiveType) -> Result<Box<span<String>>> {
     match extractive_type {
         ExtractiveType::Red => Ok(html!(<span class="mh-extract-red">"Red"</span>)),
@@ -767,29 +805,8 @@ pub fn gen_monster(
                         |&(i, em_type)|em_type == monster_em_type
                     )
                     .map(move |(i, em_type)|{
-
-                        let target_tag = if quest.param.has_target(em_type) {
-                            html!(<span class="tag is-primary">"Target"</span>)
-                        } else {
-                            html!(<span />)
-                        };
-
                         html!(<tr>
-                            <td>
-                                <span class="tag">{text!("{:?}-{:?}", quest.param.enemy_level, quest.param.quest_level)}</span>
-                                {
-                                    quest.is_dl.then(
-                                        ||html!(<span class="tag">{text!("Event")}</span>)
-                                    )
-                                }
-                                <a href={format!("/quest/{:06}.html", quest.param.quest_no)}>
-                                {quest.name.map_or(
-                                    html!(<span>{text!("Quest {:06}", quest.param.quest_no)}</span>),
-                                    gen_multi_lang
-                                )}
-                                </a>
-                                {target_tag}
-                            </td>
+                            <td> { gen_quest_tag(&quest, quest.param.has_target(em_type)) } </td>
                             { gen_quest_monster_data(quest.enemy_param.as_ref().map(|p|&p.param),
                                 em_type, i, pedia, pedia_ex) }
                         </tr>)
