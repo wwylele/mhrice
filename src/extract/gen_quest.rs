@@ -433,7 +433,7 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path) 
                         html!(<div class="mh-reward-box">
                         <table>
                             <thead><tr>
-                                <th>"Common rewards"<br/>{translate_rule(common_material_reward.lot_rule)}</th>
+                                <th>"Quest rewards"<br/>{translate_rule(common_material_reward.lot_rule)}</th>
                                 <th>"Probability"</th>
                             </tr></thead>
                             <tbody> {
@@ -467,11 +467,11 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path) 
                         html!(<div></div>)
                     }}
 
-                    { reward.additional_quest_reward.iter().enumerate().map(|(i, additional_quest_reward)| {
+                    { reward.additional_quest_reward.iter().map(|additional_quest_reward| {
                         html!(<div class="mh-reward-box">
                         <table>
                             <thead><tr>
-                                <th>{ text!("Addtional rewards {}", i) }<br/>{translate_rule(additional_quest_reward.lot_rule)}</th>
+                                <th>"Addtional rewards"<br/>{translate_rule(additional_quest_reward.lot_rule)}</th>
                                 <th>"Probability"</th>
                             </tr></thead>
                             <tbody> {

@@ -62,6 +62,7 @@ pub struct Pedia {
     pub discover_em_set_data: DiscoverEmSetData,
     pub quest_data_for_reward: QuestDataForRewardUserData,
     pub reward_id_lot_table: RewardIdLotTableUserData,
+    pub main_target_reward_lot_num: MainTargetRewardLotNumDefineUserData,
     pub quest_hall_msg: Msg,
     pub quest_village_msg: Msg,
     pub quest_tutorial_msg: Msg,

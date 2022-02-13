@@ -345,6 +345,10 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         pak,
         "data/Define/Quest/System/QuestRewardSystem/RewardIdLotTableData.user",
     )?;
+    let main_target_reward_lot_num = get_user(
+        pak,
+        "data/Define/Quest/System/QuestRewardSystem/MainTargetLotNumDefineData.user",
+    )?;
     let quest_hall_msg = get_msg(pak, "Message/Quest/QuestData_Hall.msg")?;
     let quest_village_msg = get_msg(pak, "Message/Quest/QuestData_Village.msg")?;
     let quest_tutorial_msg = get_msg(pak, "Message/Quest/QuestData_Tutorial.msg")?;
@@ -494,6 +498,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         discover_em_set_data,
         quest_data_for_reward,
         reward_id_lot_table,
+        main_target_reward_lot_num,
         quest_hall_msg,
         quest_village_msg,
         quest_tutorial_msg,
