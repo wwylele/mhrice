@@ -776,6 +776,12 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerPackage>> = Lazy::new(|| {
         EnemySizeListData,
         DiscoverEmSetDataParam,
         DiscoverEmSetData,
+        MainTargetRewardLotNumDefineUserDataParam,
+        MainTargetRewardLotNumDefineUserData,
+        QuestDataForRewardUserDataParam,
+        QuestDataForRewardUserData,
+        RewardIdLotTableUserDataParam,
+        RewardIdLotTableUserData,
     );
 
     r!(

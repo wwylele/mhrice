@@ -302,3 +302,7 @@ img.mh-quest-icon {
     display: block;
     padding: 1rem;
 }
+
+.mh-msg-place-holder {
+    background-color: yellow;
+}

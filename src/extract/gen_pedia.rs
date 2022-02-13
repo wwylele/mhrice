@@ -337,6 +337,14 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let random_scale = get_user(pak, "enemy/user_data/system_boss_random_scale_data.user")?;
     let size_list = get_user(pak, "enemy/user_data/system_enemy_sizelist_data.user")?;
     let discover_em_set_data = get_user(pak, "Quest/QuestData/DiscoverEmSetData.user")?;
+    let quest_data_for_reward = get_user(
+        pak,
+        "data/Define/Quest/System/QuestRewardSystem/QuestDataForRewardData.user",
+    )?;
+    let reward_id_lot_table = get_user(
+        pak,
+        "data/Define/Quest/System/QuestRewardSystem/RewardIdLotTableData.user",
+    )?;
     let quest_hall_msg = get_msg(pak, "Message/Quest/QuestData_Hall.msg")?;
     let quest_village_msg = get_msg(pak, "Message/Quest/QuestData_Village.msg")?;
     let quest_tutorial_msg = get_msg(pak, "Message/Quest/QuestData_Tutorial.msg")?;
@@ -484,6 +492,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         random_scale,
         size_list,
         discover_em_set_data,
+        quest_data_for_reward,
+        reward_id_lot_table,
         quest_hall_msg,
         quest_village_msg,
         quest_tutorial_msg,
@@ -964,6 +974,20 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
         )
         .collect();
 
+    let mut reward_params: HashMap<i32, &QuestDataForRewardUserDataParam> = pedia
+        .quest_data_for_reward
+        .param
+        .iter()
+        .map(|param| (param.quest_numer, param))
+        .collect();
+
+    let reward_lot: HashMap<u32, &RewardIdLotTableUserDataParam> = pedia
+        .reward_id_lot_table
+        .param
+        .iter()
+        .map(|param| (param.id, param))
+        .collect();
+
     pedia
         .normal_quest_data
         .param
@@ -984,6 +1008,78 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
             let detail_msg_name = format!("QN{:06}_03", param.quest_no);
             let target_msg_name = format!("QN{:06}_04", param.quest_no);
             let condition_msg_name = format!("QN{:06}_05", param.quest_no);
+
+            let reward = if let Some(reward) = reward_params.remove(&param.quest_no) {
+                let additional_target_reward = if reward.additional_target_reward_table_index != 0 {
+                    Some(
+                        *reward_lot
+                            .get(&reward.additional_target_reward_table_index)
+                            .with_context(|| {
+                                format!(
+                                    "Can't find additional_target_reward for quest {}, id {}",
+                                    param.quest_no, reward.additional_target_reward_table_index
+                                )
+                            })?,
+                    )
+                } else {
+                    None
+                };
+
+                let common_material_reward = if reward.common_material_reward_table_index != 0 {
+                    Some(
+                        *reward_lot
+                            .get(&reward.common_material_reward_table_index)
+                            .with_context(|| {
+                                format!(
+                                    "Can't find common_material_reward for quest {}, id {}",
+                                    param.quest_no, reward.common_material_reward_table_index
+                                )
+                            })?,
+                    )
+                } else {
+                    None
+                };
+
+                let additional_quest_reward = reward
+                    .additional_quest_reward_table_index
+                    .iter()
+                    .filter(|&&i| i != 0)
+                    .map(|i| {
+                        Ok(*reward_lot.get(&i).with_context(|| {
+                            format!(
+                                "Can't find additional_quest_reward for quest {}, id {}",
+                                param.quest_no, i
+                            )
+                        })?)
+                    })
+                    .collect::<Result<Vec<_>>>()?;
+
+                let cloth_ticket = if reward.cloth_ticket_index != 0 {
+                    Some(
+                        *reward_lot
+                            .get(&reward.cloth_ticket_index)
+                            .with_context(|| {
+                                format!(
+                                    "Can't find cloth_ticket for quest {}, id {}",
+                                    param.quest_no, reward.cloth_ticket_index
+                                )
+                            })?,
+                    )
+                } else {
+                    None
+                };
+
+                Some(QuestReward {
+                    param: reward,
+                    additional_target_reward,
+                    common_material_reward,
+                    additional_quest_reward,
+                    cloth_ticket,
+                })
+            } else {
+                None
+            };
+
             Ok(Quest {
                 param,
                 enemy_param: enemy_params.remove(&param.quest_no),
@@ -993,6 +1089,7 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
                 target: all_msg.remove(&target_msg_name),
                 condition: all_msg.remove(&condition_msg_name),
                 is_dl,
+                reward,
             })
         })
         .collect::<Result<Vec<_>>>()

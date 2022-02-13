@@ -60,6 +60,8 @@ pub struct Pedia {
     pub random_scale: EnemyBossRandomScaleData,
     pub size_list: EnemySizeListData,
     pub discover_em_set_data: DiscoverEmSetData,
+    pub quest_data_for_reward: QuestDataForRewardUserData,
+    pub reward_id_lot_table: RewardIdLotTableUserData,
     pub quest_hall_msg: Msg,
     pub quest_village_msg: Msg,
     pub quest_tutorial_msg: Msg,
@@ -124,6 +126,14 @@ pub struct Pedia {
     pub horn_melody: Msg,
 }
 
+pub struct QuestReward<'a> {
+    pub param: &'a QuestDataForRewardUserDataParam,
+    pub additional_target_reward: Option<&'a RewardIdLotTableUserDataParam>,
+    pub common_material_reward: Option<&'a RewardIdLotTableUserDataParam>,
+    pub additional_quest_reward: Vec<&'a RewardIdLotTableUserDataParam>,
+    pub cloth_ticket: Option<&'a RewardIdLotTableUserDataParam>,
+}
+
 pub struct Quest<'a> {
     pub param: &'a NormalQuestDataParam,
     pub enemy_param: Option<&'a NormalQuestDataForEnemyParam>,
@@ -133,6 +143,7 @@ pub struct Quest<'a> {
     pub target: Option<&'a MsgEntry>,
     pub condition: Option<&'a MsgEntry>,
     pub is_dl: bool,
+    pub reward: Option<QuestReward<'a>>,
 }
 
 pub struct Deco<'a> {

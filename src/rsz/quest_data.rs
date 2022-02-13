@@ -556,3 +556,88 @@ rsz_struct! {
         pub param: Vec<DiscoverEmSetDataParam>,
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.data.MainTargetRewardLotNumDefineUserData.Param",
+        0x266cce0b = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct MainTargetRewardLotNumDefineUserDataParam {
+        pub target_num: u32,
+        pub base_lot_num: u32,
+        pub max_lot_num: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.MainTargetRewardLotNumDefineUserData",
+        0x360c1a50 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct MainTargetRewardLotNumDefineUserData {
+        pub param: Vec<MainTargetRewardLotNumDefineUserDataParam>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.QuestDataForRewardUserData.Param",
+        0x5a13ba06 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct QuestDataForRewardUserDataParam {
+        pub quest_numer: i32,
+        pub target_reward_add_num: u32,
+        pub additional_target_reward_table_index: u32,
+        pub common_material_add_num: u32,
+        pub common_material_reward_table_index: u32,
+        pub additional_quest_reward_table_index: Vec<u32>,
+        pub cloth_ticket_index: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.QuestDataForRewardUserData",
+        0x424e2f4b = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct QuestDataForRewardUserData {
+        pub param: Vec<QuestDataForRewardUserDataParam>
+    }
+}
+
+// snow.data.ItemLotTable.LotRule
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize)]
+    pub enum LotRule {
+        Random = 0,
+        RandomOut1 = 1,
+        RandomOut2 = 2,
+        RandomOut3 = 3,
+        FirstFix = 4,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.RewardIdLotTableUserData.Param",
+        0x214bfede = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RewardIdLotTableUserDataParam {
+        pub id: u32,
+        pub lot_rule: LotRule,
+        pub item_id_list: Vec<ItemId>,
+        pub num_list: Vec<u32>,
+        pub probability_list: Vec<u32>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.RewardIdLotTableUserData",
+        0xdb631ed5 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RewardIdLotTableUserData {
+        pub param: Vec<RewardIdLotTableUserDataParam>
+    }
+}

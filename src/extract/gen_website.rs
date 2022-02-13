@@ -218,18 +218,21 @@ pub fn translate_msg(content: &str) -> Box<span<String>> {
             } else {
                 (tag, "")
             };
-            let tag = Tag {
+            let mut tag = Tag {
                 tag,
                 arg,
                 seq: Seq { nodes: vec![] },
             };
-            if tag.tag == "LSNR" {
+            if matches!(tag.tag, "LSNR" | "PL") {
                 let tag = Node::Tagged(tag);
                 if let Some(last) = stack.last_mut() {
                     last.seq.nodes.push(tag);
                 } else {
                     root.nodes.push(tag);
                 }
+            } else if tag.tag == "COLS" {
+                tag.tag = "COL";
+                stack.push(tag);
             } else {
                 stack.push(tag);
             }
@@ -260,11 +263,14 @@ pub fn translate_msg(content: &str) -> Box<span<String>> {
                     }
                     "LSNR" => {
                         // Gender selector
-                        html!(<span> {text!("{}", t.arg)} </span>)
+                        html!(<span class="mh-msg-place-holder"> {text!("{}", t.arg)} </span>)
                     }
                     "BSL" => {
                         // Text direction change?
                         html!(<span> {inner} </span>)
+                    }
+                    "PL" => {
+                        html!(<span class="mh-msg-place-holder"> "{Player}" </span>)
                     }
                     _ => {
                         eprintln!("Unknown tag: {}", t.tag);
