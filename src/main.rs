@@ -433,12 +433,18 @@ async fn cleanup_s3_old_files(path: &Path, bucket: String, client: &S3Client) ->
         }
     }
 
-    if !objects.is_empty() {
+    let mut objects = objects.into_iter();
+
+    loop {
+        let batch: Vec<_> = objects.by_ref().take(1000).collect();
+        if batch.is_empty() {
+            break;
+        }
         let request = DeleteObjectsRequest {
-            bucket,
+            bucket: bucket.clone(),
             bypass_governance_retention: None,
             delete: Delete {
-                objects,
+                objects: batch,
                 quiet: Some(true),
             },
             expected_bucket_owner: None,
