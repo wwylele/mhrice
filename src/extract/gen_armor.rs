@@ -90,6 +90,28 @@ fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, path: &Path) -> Result<()
         </div>)
     };
 
+    let gen_explain = |pieces: &[Option<Armor<'_>>]| {
+        html!(<table>
+            <thead><tr>
+                <th>"Name"</th>
+                <th>"Description"</th>
+            </tr></thead>
+            <tbody> {
+                pieces.iter().map(|piece| {
+                    let piece = if let Some(piece) = piece {
+                        piece
+                    } else {
+                        return html!(<tr><td colspan="2">"-"</td></tr>)
+                    };
+                    html!(<tr>
+                        <td>{gen_label(piece)}</td>
+                        <td>{gen_multi_lang(&piece.explain)}</td>
+                    </tr>)
+                })
+            } </tbody>
+        </table>)
+    };
+
     let gen_stat = |pieces: &[Option<Armor<'_>>]| {
         html!(<table>
             <thead><tr>
@@ -176,6 +198,12 @@ fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, path: &Path) -> Result<()
                         html!(<span>"<Unknown>"</span>)
                     }
                 } </h1>
+
+                <section class="section">
+                <h2 class="title">"Description"</h2>
+                { gen_explain(&series.pieces[0..5])}
+                </section>
+
                 <section class="section">
                 <h2 class="title">"Stat"</h2>
                 { gen_stat(&series.pieces[0..5])}
@@ -183,12 +211,19 @@ fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, path: &Path) -> Result<()
 
                 {
                     series.pieces[5..10].iter().any(|p|p.is_some()).then(||{
-                        html!(<section class="section">
-                            <h2 class="title">"EX Stat"</h2>
-                            { gen_stat(&series.pieces[5..10])}
-                            </section>
-                        )
-                    })
+                        [
+                            html!(<section class="section">
+                                <h2 class="title">"EX Description"</h2>
+                                { gen_explain(&series.pieces[5..10])}
+                                </section>
+                            ),
+                            html!(<section class="section">
+                                <h2 class="title">"EX Stat"</h2>
+                                { gen_stat(&series.pieces[5..10])}
+                                </section>
+                            )
+                        ]
+                    }).into_iter().flatten()
                 }
 
                 <section class="section">

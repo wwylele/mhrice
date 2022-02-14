@@ -79,6 +79,11 @@ pub struct Pedia {
     pub armor_arm_name_msg: Msg,
     pub armor_waist_name_msg: Msg,
     pub armor_leg_name_msg: Msg,
+    pub armor_head_explain_msg: Msg,
+    pub armor_chest_explain_msg: Msg,
+    pub armor_arm_explain_msg: Msg,
+    pub armor_waist_explain_msg: Msg,
+    pub armor_leg_explain_msg: Msg,
     pub armor_series_name_msg: Msg,
 
     pub equip_skill: PlEquipSkillBaseUserData,
@@ -170,6 +175,7 @@ pub struct HyakuryuSkill<'a> {
 
 pub struct Armor<'a> {
     pub name: &'a MsgEntry,
+    pub explain: &'a MsgEntry,
     pub data: &'a ArmorBaseUserDataParam,
     pub product: Option<&'a ArmorProductUserDataParam>,
     pub overwear: Option<&'a PlOverwearBaseUserDataParam>,

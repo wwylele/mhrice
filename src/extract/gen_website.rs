@@ -223,7 +223,7 @@ pub fn translate_msg(content: &str) -> Box<span<String>> {
                 arg,
                 seq: Seq { nodes: vec![] },
             };
-            if matches!(tag.tag, "LSNR" | "PL") {
+            if matches!(tag.tag, "LSNR" | "PL" | "ПУСТО") {
                 let tag = Node::Tagged(tag);
                 if let Some(last) = stack.last_mut() {
                     last.seq.nodes.push(tag);
@@ -271,6 +271,9 @@ pub fn translate_msg(content: &str) -> Box<span<String>> {
                     }
                     "PL" => {
                         html!(<span class="mh-msg-place-holder"> "{Player}" </span>)
+                    }
+                    "ПУСТО" => {
+                        html!(<span> "<ПУСТО>" </span>)
                     }
                     _ => {
                         eprintln!("Unknown tag: {}", t.tag);
