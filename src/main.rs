@@ -417,7 +417,7 @@ async fn cleanup_s3_old_files(path: &Path, bucket: String, client: &S3Client) ->
             } else {
                 continue;
             };
-            if !path.join(&key).is_file() {
+            if key.contains('\\') || !path.join(&key).is_file() {
                 println!("Deleting {}...", key);
                 objects.push(ObjectIdentifier {
                     key,
@@ -482,7 +482,7 @@ fn upload_s3_folder(path: &Path, bucket: String, client: &S3Client) -> Result<()
             .strip_prefix(path)?
             .to_str()
             .context("Path contain non UTF-8 character")?
-            .to_owned();
+            .replace('\\', "/");
 
         println!("Uploading {}...", key);
 
