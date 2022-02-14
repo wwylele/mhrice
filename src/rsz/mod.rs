@@ -38,7 +38,7 @@ pub use weapon::*;
 
 use crate::file_ext::*;
 use crate::hash::*;
-use anyhow::*;
+use anyhow::{anyhow, bail, Context, Result};
 use bitflags::*;
 use once_cell::sync::Lazy;
 use serde::*;

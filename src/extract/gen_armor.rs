@@ -4,7 +4,7 @@ use super::gen_skill::*;
 use super::gen_website::*;
 use super::pedia::*;
 use crate::rsz::*;
-use anyhow::*;
+use anyhow::Result;
 use std::fs::{create_dir, write};
 use std::path::*;
 use typed_html::{dom::*, elements::*, html, text};
@@ -17,7 +17,7 @@ pub fn gen_armor_label(piece: Option<&Armor>) -> Box<div<String>> {
         );
         html!(<div class="mh-icon-text">
             { gen_rared_icon(piece.data.rare, &icon) }
-            <span>{ gen_multi_lang(&piece.name) }</span>
+            <span>{ gen_multi_lang(piece.name) }</span>
         </div>)
     } else {
         html!(<div>"-"</div>)
@@ -44,7 +44,7 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], root: &Path) -> Result<()> {
                     </div>
                 </article>
                 <ul class="mh-armor-series-list">{
-                    serieses.into_iter().map(|series|{
+                    serieses.iter().map(|series|{
                         let series_name = if let Some(name) = series.name.as_ref() {
                             gen_multi_lang(name)
                         } else {
@@ -86,7 +86,7 @@ fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, path: &Path) -> Result<()
         );
         html!(<div class="mh-icon-text">
             { gen_rared_icon(piece.data.rare, &icon) }
-            <span>{ gen_multi_lang(&piece.name) }</span>
+            <span>{ gen_multi_lang(piece.name) }</span>
         </div>)
     };
 
@@ -105,7 +105,7 @@ fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, path: &Path) -> Result<()
                     };
                     html!(<tr>
                         <td>{gen_label(piece)}</td>
-                        <td>{gen_multi_lang(&piece.explain)}</td>
+                        <td>{gen_multi_lang(piece.explain)}</td>
                     </tr>)
                 })
             } </tbody>
@@ -144,7 +144,7 @@ fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, path: &Path) -> Result<()
                                 html!(<span><a href={format!("/skill/{}", skill_page(skill))}
                                     class="mh-icon-text">
                                     {gen_colored_icon(skill_data.icon_color, "/resources/skill", &[])}
-                                    {gen_multi_lang(&skill_data.name)}
+                                    {gen_multi_lang(skill_data.name)}
                                 </a></span>)
                             } else {
                                 html!(<span>"<UNKNOWN>"</span>)

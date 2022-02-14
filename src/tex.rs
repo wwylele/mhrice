@@ -1,7 +1,7 @@
 use crate::bitfield::*;
 use crate::file_ext::*;
 use crate::gpu::*;
-use anyhow::*;
+use anyhow::{bail, Result};
 use std::convert::{TryFrom, TryInto};
 use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;

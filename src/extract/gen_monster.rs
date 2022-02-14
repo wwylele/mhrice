@@ -3,7 +3,7 @@ use super::gen_quest::*;
 use super::gen_website::{gen_multi_lang, head_common, navbar};
 use super::pedia::*;
 use crate::rsz::*;
-use anyhow::*;
+use anyhow::{bail, Result};
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fs::write;
@@ -802,11 +802,11 @@ pub fn gen_monster(
             <tbody> {
                 pedia_ex.quests.iter().flat_map(|quest| {
                     quest.param.boss_em_type.iter().copied().enumerate().filter(
-                        |&(i, em_type)|em_type == monster_em_type
+                        |&(_, em_type)|em_type == monster_em_type
                     )
                     .map(move |(i, em_type)|{
                         html!(<tr>
-                            <td> { gen_quest_tag(&quest, quest.param.has_target(em_type)) } </td>
+                            <td> { gen_quest_tag(quest, quest.param.has_target(em_type)) } </td>
                             { gen_quest_monster_data(quest.enemy_param.as_ref().map(|p|&p.param),
                                 em_type, i, pedia, pedia_ex) }
                         </tr>)
@@ -926,7 +926,7 @@ pub fn gen_monster(
                                 </td>),
                             ]);
 
-                            let invalid = &meats.meat_group_info == &[
+                            let invalid = meats.meat_group_info == [
                                 MeatGroupInfo {
                                     slash: 0,
                                     strike: 0,
@@ -954,7 +954,7 @@ pub fn gen_monster(
                                         phase
                                     }).copied().map_or(html!(<span></span>), gen_multi_lang);
 
-                                    let mut tds = part_common.take().unwrap_or_else(||vec![]);
+                                    let mut tds = part_common.take().unwrap_or_else(Vec::new);
                                     tds.extend(vec![
                                         html!(<td>{text!("{}", phase)}</td>),
                                         html!(<td>{name}</td>),
@@ -968,7 +968,7 @@ pub fn gen_monster(
                                         html!(<td>{text!("{}", group_info.dragon)}</td>),
                                         html!(<td>{text!("{}", group_info.piyo)}</td>),
                                     ]);
-                                    html!(<tr class=hidden.clone()> {tds} </tr>)
+                                    html!(<tr class=hidden> {tds} </tr>)
                                 })
                         })
                     }</tbody>

@@ -102,7 +102,7 @@ impl RgbaImage {
     pub fn save_png(&self, output: &Path) -> anyhow::Result<()> {
         let output = std::fs::File::create(output)?;
         let mut encoder = png::Encoder::new(output, self.width, self.height);
-        encoder.set_color(png::ColorType::RGBA);
+        encoder.set_color(png::ColorType::Rgba);
         encoder.set_depth(png::BitDepth::Eight);
         let mut writer = encoder.write_header()?;
         writer.write_image_data(&self.data)?;

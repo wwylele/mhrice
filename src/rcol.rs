@@ -3,7 +3,7 @@ use crate::gpu::ColoredVertex;
 use crate::hash::hash_as_utf16;
 use crate::mesh::*;
 use crate::rsz::*;
-use anyhow::*;
+use anyhow::{bail, Context, Result};
 use nalgebra_glm::*;
 use std::collections::HashSet;
 use std::convert::{TryFrom, TryInto};
@@ -60,7 +60,7 @@ impl Shape {
             Shape::Sphere { p, r } => Ok(distance(p, point) / r),
             Shape::Capsule { p0, p1, r } => {
                 let l2 = distance2(p0, p1);
-                let t = RealField::clamp(dot(&(point - p0), &(p1 - p0)) / l2, 0.0, 1.0);
+                let t = clamp_scalar(dot(&(point - p0), &(p1 - p0)) / l2, 0.0, 1.0);
                 let projection = p0 + t * (p1 - p0);
                 Ok(distance(point, &projection) / r)
             }

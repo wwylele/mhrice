@@ -3,7 +3,7 @@ use crate::file_ext::*;
 use crate::get_config;
 use crate::hash::hash_as_utf16;
 use crate::suffix::SUFFIX_MAP;
-use anyhow::*;
+use anyhow::{bail, Context, Result};
 use compress::flate;
 use num_bigint::BigUint;
 use once_cell::sync::Lazy;

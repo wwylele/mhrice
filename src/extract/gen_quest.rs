@@ -3,7 +3,7 @@ use super::gen_monster::*;
 use super::gen_website::*;
 use super::pedia::*;
 use crate::rsz::*;
-use anyhow::*;
+use anyhow::Result;
 use std::collections::BTreeMap;
 use std::fs::{create_dir, write};
 use std::path::*;
@@ -65,7 +65,7 @@ pub fn gen_quest_list(quests: &[Quest], root: &Path) -> Result<()> {
                                         <ul>{
                                             quests.into_iter().map(|quest|{
                                                 let link = format!("/quest/{:06}.html", quest.param.quest_no);
-                                                let mut name = quest.name.map_or(
+                                                let name = quest.name.map_or(
                                                     html!(<span>{text!("Quest {:06}", quest.param.quest_no)}</span>),
                                                     gen_multi_lang
                                                 );
@@ -266,6 +266,7 @@ fn translate_rule(rule: LotRule) -> Box<span<String>> {
     html!(<span class="mh-lot-rule">{ text!("{}", desc) }</span>)
 }
 
+#[allow(clippy::vec_box)]
 fn gen_quest_monster_multi_player_data(
     enemy_param: Option<&SharedEnemyParam>,
     index: usize,

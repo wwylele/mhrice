@@ -5,7 +5,7 @@ use super::gen_weapon::*;
 use super::gen_website::*;
 use super::pedia::*;
 use crate::rsz::*;
-use anyhow::*;
+use anyhow::Result;
 use std::fs::{create_dir, write};
 use std::path::*;
 use typed_html::{dom::*, elements::*, html, text};
@@ -43,7 +43,7 @@ pub fn gen_item_label(item: &Item) -> Box<a<String>> {
     html!(
         <a href={link} class="mh-icon-text">
             {gen_item_icon(item)}
-            <span>{gen_multi_lang(&item.name)}</span>
+            <span>{gen_multi_lang(item.name)}</span>
         </a>
     )
 }
@@ -379,11 +379,11 @@ pub fn gen_item(item: &Item, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path)
                     {gen_item_icon(item)}
                 </div>
                 <h1 class="title">
-                    {gen_multi_lang(&item.name)}
+                    {gen_multi_lang(item.name)}
                 </h1>
 
                 <section class="section"><p>
-                    {gen_multi_lang(&item.explain)}
+                    {gen_multi_lang(item.explain)}
                 </p></section>
 
                 <section class="section">
@@ -463,11 +463,9 @@ pub fn gen_item_list(pedia_ex: &PediaEx<'_>, root: &Path) -> Result<()> {
                 <h1 class="title">"Item"</h1>
                 <ul class="mh-list-skill">
                 {
-                    pedia_ex.items.iter().map(|(&id, item)|{
-                        let link = format!("/item/{}", item_page(id));
-                        let icon = format!("/resources/item/{:03}", item.param.icon_chara);
+                    pedia_ex.items.iter().map(|(_, item)|{
                         html!(<li class="mh-list-skill">
-                            {gen_item_label(&item)}
+                            {gen_item_label(item)}
                         </li>)
                     })
                 }

@@ -10,7 +10,7 @@ use crate::rsz::*;
 use crate::tex::*;
 use crate::user::User;
 use crate::uvs::*;
-use anyhow::*;
+use anyhow::{bail, ensure, Context, Result};
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use std::collections::BTreeMap;

@@ -1,6 +1,6 @@
 use crate::file_ext::*;
 use crate::rsz::Rsz;
-use anyhow::*;
+use anyhow::{bail, Context, Result};
 use std::io::{Read, Seek};
 
 #[derive(Debug)]

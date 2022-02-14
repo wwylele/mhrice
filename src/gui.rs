@@ -1,7 +1,7 @@
 #![allow(unused_variables)]
 
 use crate::file_ext::*;
-use anyhow::*;
+use anyhow::{bail, Result};
 use serde::*;
 use std::io::{Read, Seek, SeekFrom};
 

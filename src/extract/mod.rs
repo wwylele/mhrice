@@ -1,3 +1,5 @@
+#![allow(unused_braces)]
+
 mod gen_armor;
 mod gen_common;
 mod gen_item;

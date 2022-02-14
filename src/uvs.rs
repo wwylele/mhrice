@@ -1,5 +1,5 @@
 use crate::file_ext::*;
-use anyhow::*;
+use anyhow::{bail, Result};
 use nalgebra_glm::*;
 use std::io::{Read, Seek};
 

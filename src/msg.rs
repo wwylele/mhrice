@@ -1,7 +1,7 @@
 use crate::file_ext::*;
 use crate::hash::hash_as_utf16;
 use crate::rsz::Guid;
-use anyhow::*;
+use anyhow::{bail, Result};
 use serde::*;
 use std::collections::HashMap;
 use std::convert::TryFrom;

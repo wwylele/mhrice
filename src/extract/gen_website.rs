@@ -8,7 +8,7 @@ use super::pedia::*;
 use crate::msg::*;
 use crate::part_color::*;
 use crate::rsz::*;
-use anyhow::*;
+use anyhow::Result;
 use chrono::prelude::*;
 use std::convert::TryInto;
 use std::fs::{create_dir, remove_dir_all, write, File};

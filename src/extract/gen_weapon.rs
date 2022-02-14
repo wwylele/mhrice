@@ -3,7 +3,7 @@ use super::gen_item::*;
 use super::gen_website::*;
 use super::pedia::*;
 use crate::rsz::*;
-use anyhow::*;
+use anyhow::Result;
 use std::collections::HashSet;
 use std::fs::{create_dir, write};
 use std::path::*;
@@ -23,7 +23,7 @@ where
     html!(
         <a href={link} class="mh-icon-text">
             {gen_weapon_icon(main)}
-            <span>{gen_multi_lang(&weapon.name)}</span>
+            <span>{gen_multi_lang(weapon.name)}</span>
         </a>
     )
 }
@@ -141,7 +141,7 @@ where
 {
     let param = weapon.param;
     let main = param.to_base();
-    let element = has_element(param);
+    let first_element = has_element(param);
     let second_element = has_second_element(param);
     let close_range = has_close_range(param);
     let horn = has_horn(param);
@@ -214,7 +214,7 @@ where
         <ul> {
             horn.horn_melody_type_list.iter().map(|id| {
                 html!(<li> {
-                    if let Some(name) = pedia_ex.horn_melody.get(&id) {
+                    if let Some(name) = pedia_ex.horn_melody.get(id) {
                         gen_multi_lang(name)
                     } else {
                         html!(<span>{ text!("[{}]", id) }</span>)
@@ -367,14 +367,14 @@ where
                 { navbar() }
                 <main> <div class="container"> <div class="content">
                 <div class="mh-title-icon">
-                    {gen_weapon_icon(&main)}
+                    {gen_weapon_icon(main)}
                 </div>
                 <h1 class="title">
-                    {gen_multi_lang(&weapon.name)}
+                    {gen_multi_lang(weapon.name)}
                 </h1>
 
                 <section class="section"><p>
-                    {gen_multi_lang(&weapon.explain)}
+                    {gen_multi_lang(weapon.explain)}
                 </p></section>
 
                 <section class="section">
@@ -389,12 +389,12 @@ where
                 <p class="mh-kv"><span>"Slot"</span>
                 <span>{gen_slot(&main.slot_num_list)}</span></p>
 
-                {element.map(|element| html!(
+                {first_element.map(|first_element| html!(
                     <p class="mh-kv"><span>"Element"</span>
                     <span>
                         <span>{text!("{:?} {}",
-                            element.main_element_type,
-                            element.main_element_val
+                            first_element.main_element_type,
+                            first_element.main_element_val
                         )}</span>
                         {
                             second_element.map(|second_element| html!(
@@ -476,7 +476,7 @@ where
                 <h2 class="title">"Upgrade"</h2>
                 <ul> {
                     weapon.children.iter().map(|child| {
-                        let weapon = weapon_tree.weapons.get(&child).unwrap();
+                        let weapon = weapon_tree.weapons.get(child).unwrap();
                         html!(<li>{gen_weapon_label(weapon)}</li>)
                     })
                 } </ul>
@@ -499,7 +499,7 @@ where
         list.iter().map(|id| {
             let weapon = weapon_tree.weapons.get(id).unwrap();
             html!(<li>
-                { gen_weapon_label(&weapon) }
+                { gen_weapon_label(weapon) }
                 { gen_tree_rec(weapon_tree, &weapon.children) }
             </li>)
         })

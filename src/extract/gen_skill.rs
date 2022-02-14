@@ -2,7 +2,7 @@ use super::gen_item::*;
 use super::gen_website::*;
 use super::pedia::*;
 use crate::rsz::*;
-use anyhow::*;
+use anyhow::Result;
 use std::collections::BTreeMap;
 use std::fs::{create_dir, write};
 use std::path::*;
@@ -32,7 +32,7 @@ pub fn gen_skill_list(skills: &BTreeMap<PlEquipSkillId, Skill>, root: &Path) -> 
                         html!(<li class="mh-list-skill">
                             <a href={format!("/skill/{}", skill_page(id))} class="mh-icon-text">
                             {gen_colored_icon(skill.icon_color, "/resources/skill", &[])}
-                            <span>{gen_multi_lang(&skill.name)}</span>
+                            <span>{gen_multi_lang(skill.name)}</span>
                             </a>
                         </li>)
                     })
@@ -89,9 +89,9 @@ pub fn gen_skill(skill: &Skill, path: &Path, pedia_ex: &PediaEx) -> Result<()> {
                     {gen_colored_icon(skill.icon_color, "/resources/skill", &[])}
                 </div>
                 <h1 class="title">
-                    {gen_multi_lang(&skill.name)}
+                    {gen_multi_lang(skill.name)}
                 </h1>
-                <div>{gen_multi_lang(&skill.explain)}</div>
+                <div>{gen_multi_lang(skill.explain)}</div>
                 <ul>{
                     skill.levels.iter().enumerate().map(|(level, detail)| {
                         html!(<li>
