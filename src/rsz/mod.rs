@@ -538,6 +538,26 @@ macro_rules! rsz_enum_arm {
 }
 
 #[macro_export]
+macro_rules! rsz_enum_arm_rev_left {
+    ($i: ident, $enum_name:ident, $variant:ident, $value:literal, $end_value:literal) => {
+        $enum_name::$variant($i)
+    };
+    ($i: ident, $enum_name:ident, $variant:ident, $value:literal) => {
+        $enum_name::$variant
+    };
+}
+
+#[macro_export]
+macro_rules! rsz_enum_arm_rev_right {
+    ($i: ident, $value:literal, $end_value:literal) => {
+        $i + $value
+    };
+    ($i: ident, $value:literal) => {
+        $value
+    };
+}
+
+#[macro_export]
 macro_rules! rsz_enum {
     (
         #[rsz($base:ty)]
@@ -560,6 +580,16 @@ macro_rules! rsz_enum {
                     )*
                     x => bail!("Unknown value {} for enum {}", x, stringify!($enum_name))
                 })
+            }
+
+            #[allow(dead_code)]
+            pub fn into_raw(self) -> $base {
+                match self {
+                    $(
+                        crate::rsz_enum_arm_rev_left!(i,$enum_name, $variant, $value $(, $end_value)?)
+                        => crate::rsz_enum_arm_rev_right!(i, $value $(, $end_value)?),
+                    )*
+                }
             }
         }
 

@@ -249,4 +249,6 @@ pub struct PediaEx<'a> {
     pub bow: WeaponTree<'a, BowBaseUserDataParam>,
 
     pub horn_melody: HashMap<i32, &'a MsgEntry>,
+
+    pub monster_order: HashMap<EmTypes, usize>,
 }

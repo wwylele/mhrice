@@ -10,6 +10,51 @@ window.onload = function () {
     hide_class("mh-invalid-meat");
     hide_class("mh-invalid-part");
     hide_class("mh-no-preset");
+
+    change_sort("monster", 1);
+    change_sort("item", 1);
+    change_sort("armor", 1);
+}
+
+function parse_sort_tag(node) {
+    var tag = node.dataset.sort;
+    return tag.split(',').map(n => parseInt(n))
+}
+
+function onChangeSort(select) {
+    change_sort(select.id.slice(7 /*scombo-*/), parseInt(select.value))
+}
+
+function change_sort(list_name, selecter) {
+    var ul = document.getElementById("slist-" + list_name);
+    if (ul) {
+        var new_ul = ul.cloneNode(false);
+
+        var l = [];
+        for (e of ul.childNodes) {
+            l.push(e);
+        }
+
+        l.sort(function (a, b) {
+            anode = parse_sort_tag(a);
+            bnode = parse_sort_tag(b);
+            if (anode[selecter] === bnode[selecter]) {
+                return anode[0] - bnode[0];
+            } else {
+                return anode[selecter] - bnode[selecter];
+            }
+        });
+
+        for (e of l) {
+            new_ul.appendChild(e);
+        }
+
+        ul.parentNode.replaceChild(new_ul, ul);
+    }
+    var select = document.getElementById("scombo-" + list_name);
+    if (select) {
+        select.value = selecter
+    }
 }
 
 function refresh_visibility(c) {

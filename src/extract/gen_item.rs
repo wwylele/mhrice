@@ -461,10 +461,16 @@ pub fn gen_item_list(pedia_ex: &PediaEx<'_>, root: &Path) -> Result<()> {
                 { navbar() }
                 <main> <div class="container">
                 <h1 class="title">"Item"</h1>
-                <ul class="mh-list-skill">
+                <div class="select"><select id="scombo-item" onchange="onChangeSort(this)">
+                    <option value="0">"Sort by internal ID"</option>
+                    <option value="1">"Sort by in-game order"</option>
+                </select></div>
+                <ul class="mh-list-skill" id="slist-item">
                 {
-                    pedia_ex.items.iter().map(|(_, item)|{
-                        html!(<li class="mh-list-skill">
+                    pedia_ex.items.iter().map(|(i, item)|{
+                        let sort_id = item.param.sort_id;
+                        let sort_tag = format!("{},{}", i.into_raw(), sort_id);
+                        html!(<li class="mh-list-skill" data-sort=sort_tag>
                             {gen_item_label(item)}
                         </li>)
                     })
@@ -472,7 +478,7 @@ pub fn gen_item_list(pedia_ex: &PediaEx<'_>, root: &Path) -> Result<()> {
                 </ul>
                 </div></main>
             </body>
-        </html>
+        </html>: String
     );
     let quests_path = root.join("item.html");
     write(&quests_path, doc.to_string())?;

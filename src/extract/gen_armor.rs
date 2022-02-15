@@ -43,15 +43,21 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], root: &Path) -> Result<()> {
                         "Armor names are probably incorrect."
                     </div>
                 </article>
-                <ul class="mh-armor-series-list">{
+                <div class="select"><select id="scombo-armor" onchange="onChangeSort(this)">
+                    <option value="0">"Sort by internal ID"</option>
+                    <option value="1">"Sort by in-game order"</option>
+                </select></div>
+                <ul class="mh-armor-series-list" id="slist-armor">{
                     serieses.iter().map(|series|{
+                        let sort_tag = format!("{},{}",
+                            series.series.armor_series.0, series.series.index);
                         let series_name = if let Some(name) = series.name.as_ref() {
                             gen_multi_lang(name)
                         } else {
                             html!(<span>"<Unknown>"</span>)
                         };
                         html!(
-                            <li class="mh-armor-series-list">
+                            <li class="mh-armor-series-list" data-sort=sort_tag>
                             <a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
                             <h2 class="title">{
                                 series_name
@@ -69,7 +75,7 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], root: &Path) -> Result<()> {
                 }</ul>
                 </div> </main>
             </body>
-        </html>
+        </html>: String
     );
 
     let armor_path = root.join("armor.html");

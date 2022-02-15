@@ -1788,6 +1788,14 @@ fn prepare_horn_melody(pedia: &Pedia) -> HashMap<i32, &'_ MsgEntry> {
 }
 
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
+    let monster_order = pedia
+        .monster_list
+        .data_list
+        .iter()
+        .enumerate()
+        .map(|(i, monster)| (monster.em_type, i))
+        .collect();
+
     Ok(PediaEx {
         sizes: prepare_size_map(&pedia.size_list)?,
         size_dists: prepare_size_dist_map(&pedia.random_scale)?,
@@ -1817,5 +1825,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         heavy_bowgun: prepare_weapon(&pedia.heavy_bowgun)?,
         bow: prepare_weapon(&pedia.bow)?,
         horn_melody: prepare_horn_melody(pedia),
+
+        monster_order,
     })
 }

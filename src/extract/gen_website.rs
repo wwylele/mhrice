@@ -341,13 +341,20 @@ pub fn gen_monsters(pedia: &Pedia, pedia_ex: &PediaEx<'_>, root: &Path) -> Resul
                 <h1 class="title">"Monsters"</h1>
                 <section class="section">
                 <h2 class="title">"Large monsters"</h2>
-                <ul class="mh-list-monster">{
+                <div class="select"><select id="scombo-monster" onchange="onChangeSort(this)">
+                    <option value="0">"Sort by internal ID"</option>
+                    <option value="1">"Sort by in-game order"</option>
+                </select></div>
+                <ul class="mh-list-monster" id="slist-monster">{
                     pedia.monsters.iter().filter_map(|monster| {
                         let icon_path = format!("/resources/em{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
                         let name_name = format!("EnemyIndex{:03}", monster.enemy_type?);
 
                         let name_entry = pedia.monster_names.get_entry(&name_name)?;
-                        Some(html!{<li class="mh-list-monster">
+                        let order = pedia_ex.monster_order.get(&EmTypes::Em(monster.id | (monster.sub_id << 8)))
+                            .cloned().unwrap_or(0);
+                        let sort_tag = format!("{},{}", monster.id << 16 | monster.sub_id, order);
+                        Some(html!{<li class="mh-list-monster" data-sort=sort_tag>
                             <a href={format!("/monster/{:03}_{:02}.html", monster.id, monster.sub_id)}>
                                 <img class="mh-list-monster-icon" src=icon_path />
                                 <div>{gen_multi_lang(name_entry)}</div>
@@ -375,7 +382,7 @@ pub fn gen_monsters(pedia: &Pedia, pedia_ex: &PediaEx<'_>, root: &Path) -> Resul
                 </section>
                 </div> </main>
             </body>
-        </html>
+        </html>: String
     );
 
     write(&monsters_path, doc.to_string())?;
