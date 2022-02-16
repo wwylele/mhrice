@@ -141,6 +141,30 @@ pub fn navbar() -> Box<div<String>> {
                         }
                         </div>
                     </div>
+
+                    <div class="navbar-item has-dropdown is-hoverable">
+                        <a class="navbar-link">
+                            "Cookie usage"
+                        </a>
+                        <div class="navbar-dropdown">
+                            <div class="navbar-item">
+                                "This website uses cookies to store personal preference. \
+                                Choose whether to consent the cookie usage."
+                            </div>
+                            <div class="navbar-item">
+                                <label class="radio">
+                                    <input type="radio" name="cookie-consent"
+                                        id="cookie-yes" onclick="enableCookie()"/>
+                                    "Yes"
+                                </label>
+                                <label class="radio">
+                                    <input type="radio" name="cookie-consent"
+                                        id="cookie-no" onclick="disableCookie()"/>
+                                    "No"
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div> </nav>

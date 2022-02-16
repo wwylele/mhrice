@@ -1,3 +1,4 @@
+var cookie_consent = false;
 var language_index = 1;
 
 var navbar_menu_active = false;
@@ -5,6 +6,7 @@ var navbar_menu_active = false;
 var classes_to_hide = new Set();
 
 window.onload = function () {
+    check_cookie();
     switchLanguage();
     hide_class("mh-ride-cond");
     hide_class("mh-invalid-meat");
@@ -14,6 +16,49 @@ window.onload = function () {
     change_sort("monster", 1);
     change_sort("item", 1);
     change_sort("armor", 1);
+}
+
+function check_cookie() {
+    const cookies = document.cookie.split(";");
+    for (const cookie of cookies) {
+        const s = cookie.trim().split("=");
+        cookie_name = s[0];
+        cookie_value = s[1];
+        if (cookie_name === null || cookie_value === null) {
+            continue;
+        }
+        if (cookie_name === "consent" && cookie_value === "yes") {
+            cookie_consent = true;
+        }
+
+        if (cookie_name === "language") {
+            language_index = parseInt(cookie_value)
+            if (!(Number.isInteger(language_index) && language_index >= 0 && language_index < 32)) {
+                language_index = 1;
+            }
+        }
+    }
+
+    if (cookie_consent) {
+        document.getElementById("cookie-yes").checked = true;
+    } else {
+        document.getElementById("cookie-no").checked = true;
+    }
+}
+
+function enableCookie() {
+    document.cookie = "consent=yes; path=/";
+}
+
+function disableCookie() {
+    delete_all_cookie();
+}
+
+function delete_all_cookie() {
+    const cookies = document.cookie.split(";");
+    for (const cookie of cookies) {
+        document.cookie = cookie.trim().split("=")[0] + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+    }
 }
 
 function parse_sort_tag(node) {
@@ -31,7 +76,7 @@ function change_sort(list_name, selecter) {
         var new_ul = ul.cloneNode(false);
 
         var l = [];
-        for (e of ul.childNodes) {
+        for (const e of ul.childNodes) {
             l.push(e);
         }
 
@@ -45,7 +90,7 @@ function change_sort(list_name, selecter) {
             }
         });
 
-        for (e of l) {
+        for (const e of l) {
             new_ul.appendChild(e);
         }
 
@@ -58,9 +103,9 @@ function change_sort(list_name, selecter) {
 }
 
 function refresh_visibility(c) {
-    for (element of document.getElementsByClassName(c)) {
+    for (const element of document.getElementsByClassName(c)) {
         matched = false;
-        for (let c of classes_to_hide) {
+        for (const c of classes_to_hide) {
             if (element.classList.contains(c)) {
                 matched = true;
                 break;
@@ -88,6 +133,9 @@ function show_class(c) {
 function selectLanguage(language) {
     language_index = language;
     switchLanguage();
+    if (cookie_consent) {
+        document.cookie = "language=" + language_index + "; path=/";
+    }
 }
 
 function switchLanguage() {
@@ -100,7 +148,7 @@ function switchLanguage() {
         }
 
         var c = "mh-lang-menu-" + i;
-        for (element of document.getElementsByClassName(c)) {
+        for (const element of document.getElementsByClassName(c)) {
             if (i === language_index) {
                 element.classList.add("has-text-weight-bold");
             } else {
