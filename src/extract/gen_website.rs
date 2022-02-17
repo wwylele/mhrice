@@ -1,4 +1,5 @@
 use super::gen_armor::*;
+use super::gen_hyakuryu_skill::*;
 use super::gen_item::*;
 use super::gen_monster::*;
 use super::gen_quest::*;
@@ -89,9 +90,21 @@ pub fn navbar() -> Box<div<String>> {
                     <a class="navbar-item" href="/quest.html">
                         "Quests"
                     </a>
-                    <a class="navbar-item" href="/skill.html">
+
+                    <div class="navbar-item has-dropdown is-hoverable">
+                    <a class="navbar-link">
                         "Skills"
                     </a>
+                    <div class="navbar-dropdown">
+                        <a class="navbar-item" href="/skill.html">
+                            "Armor skills"
+                        </a>
+                        <a class="navbar-item" href="/hyakuryu_skill.html">
+                            "Ramp-up skills"
+                        </a>
+                    </div>
+                    </div>
+
                     <a class="navbar-item" href="/armor.html">
                         "Armors"
                     </a>
@@ -513,6 +526,8 @@ pub fn gen_website(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &str) -> Resul
     gen_quests(pedia, pedia_ex, &root)?;
     gen_skills(pedia_ex, &root)?;
     gen_skill_list(&pedia_ex.skills, &root)?;
+    gen_hyakuryu_skills(pedia_ex, &root)?;
+    gen_hyakuryu_skill_list(&pedia_ex.hyakuryu_skills, &root)?;
     gen_armors(pedia_ex, &root)?;
     gen_armor_list(&pedia_ex.armors, &root)?;
     gen_monsters(pedia, pedia_ex, &root)?;

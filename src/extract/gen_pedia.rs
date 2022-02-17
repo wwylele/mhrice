@@ -785,6 +785,16 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
     skill_r.save_png(&root.join("skill.r.png"))?;
     skill_a.save_png(&root.join("skill.a.png"))?;
 
+    let rskill_icon = message_window_uvs.spriter_groups[0]
+        .spriters
+        .get(172)
+        .context("Ramp-up skill icon not found")?;
+    let (rskill_r, rskill_a) = message_window
+        .sub_image_f(rskill_icon.p0, rskill_icon.p1)?
+        .gen_double_mask();
+    rskill_r.save_png(&root.join("rskill.r.png"))?;
+    rskill_a.save_png(&root.join("rskill.a.png"))?;
+
     let equip_icon_path = root.join("equip");
     create_dir(&equip_icon_path)?;
     let equip_icon_uvs = pak.find_file("gui/70_UVSequence/EquipIcon.uvs")?;

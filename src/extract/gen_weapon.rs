@@ -1,4 +1,5 @@
 use super::gen_common::*;
+use super::gen_hyakuryu_skill::*;
 use super::gen_item::*;
 use super::gen_website::*;
 use super::pedia::*;
@@ -425,7 +426,9 @@ where
                     .filter(|&&skill|skill != PlHyakuryuSkillId::None)
                     .map(|skill|{
                         if let Some(skill) = pedia_ex.hyakuryu_skills.get(skill) {
-                            html!(<li>{ gen_multi_lang(skill.name) }</li>)
+                            html!(<li> {
+                                gen_hyakuryu_skill_label(skill)
+                            } </li>)
                         } else {
                             html!(<li>{ text!("Unknown {:?}", skill) }</li>)
                         }
