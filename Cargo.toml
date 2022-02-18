@@ -20,9 +20,7 @@ chrono = "0.4"
 rusoto_core = "0.47"
 rusoto_s3 = "0.47"
 futures = "0.3"
-walkdir = "2"
-tokio = { version = "1", features = ["fs"] }
-tokio-util = { version = "0.7", features = ["codec"] }
+tokio = { version = "1" }
 regex = "1.5"
 rayon = "1.5"
 bitflags = "1.2"

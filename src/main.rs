@@ -1,11 +1,9 @@
 #![recursion_limit = "4096"]
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, Context, Result};
 use minidump::*;
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
-use rusoto_core::{ByteStream, Region};
-use rusoto_s3::*;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fs::File;
@@ -13,7 +11,6 @@ use std::io::{BufRead, BufReader, Cursor, Read, Seek, SeekFrom, Write};
 use std::path::*;
 use std::sync::Mutex;
 use structopt::*;
-use walkdir::WalkDir;
 
 mod align;
 mod bitfield;
@@ -124,8 +121,6 @@ enum Mhrice {
         pak: Vec<String>,
         #[structopt(short, long)]
         output: String,
-        #[structopt(long)]
-        s3: Option<String>,
     },
 
     ReadTdb {
@@ -368,165 +363,23 @@ fn gen_json(pak: Vec<String>) -> Result<()> {
     Ok(())
 }
 
-async fn upload_s3(
-    path: PathBuf,
-    len: u64,
-    mime: &str,
-    bucket: String,
-    key: String,
-    client: &S3Client,
-) -> Result<()> {
-    use futures::StreamExt;
-    use tokio_util::codec;
-    let file = tokio::fs::File::open(path).await?;
-    let stream =
-        codec::FramedRead::new(file, codec::BytesCodec::new()).map(|r| r.map(|r| r.freeze()));
-    let request = PutObjectRequest {
-        bucket,
-        key,
-        body: Some(ByteStream::new(stream)),
-        content_length: Some(i64::try_from(len)?),
-        content_type: Some(mime.to_owned()),
-        ..PutObjectRequest::default()
-    };
-    client.put_object(request).await?;
-    Ok(())
-}
-
-async fn cleanup_s3_old_files(path: &Path, bucket: String, client: &S3Client) -> Result<()> {
-    let mut objects = vec![];
-    let mut continuation_token = None;
-    loop {
-        println!("Continue listing files..");
-        let request = ListObjectsV2Request {
-            bucket: bucket.clone(),
-            continuation_token: continuation_token.take(),
-            delimiter: None,
-            encoding_type: None,
-            expected_bucket_owner: None,
-            fetch_owner: None,
-            max_keys: None,
-            prefix: None,
-            request_payer: None,
-            start_after: None,
-        };
-        let result = client.list_objects_v2(request).await?;
-
-        for object in result.contents.into_iter().flatten() {
-            let key = if let Some(key) = object.key {
-                key
-            } else {
-                continue;
-            };
-            if key.contains('\\') || !path.join(&key).is_file() {
-                println!("Deleting {}...", key);
-                objects.push(ObjectIdentifier {
-                    key,
-                    version_id: None,
-                });
-            }
-        }
-
-        if result.is_truncated.unwrap_or(false) {
-            continuation_token = result.next_continuation_token;
-        } else {
-            break;
-        }
-    }
-
-    let mut objects = objects.into_iter();
-
-    loop {
-        let batch: Vec<_> = objects.by_ref().take(1000).collect();
-        if batch.is_empty() {
-            break;
-        }
-        let request = DeleteObjectsRequest {
-            bucket: bucket.clone(),
-            bypass_governance_retention: None,
-            delete: Delete {
-                objects: batch,
-                quiet: Some(true),
-            },
-            expected_bucket_owner: None,
-            mfa: None,
-            request_payer: None,
-        };
-
-        client.delete_objects(request).await?;
-    }
-
-    Ok(())
-}
-
-fn upload_s3_folder(path: &Path, bucket: String, client: &S3Client) -> Result<()> {
-    use futures::future::try_join_all;
-    use tokio::runtime::Runtime;
-    let rt = Runtime::new()?;
-    let mut futures = vec![];
-    for entry in WalkDir::new(path) {
-        let entry = entry?;
-        if !entry.file_type().is_file() {
-            continue;
-        }
-        let len = entry.metadata()?.len();
-        let mime = match entry
-            .path()
-            .extension()
-            .context("Missing extension")?
-            .to_str()
-            .context("Extension is not UTF-8")?
-        {
-            "html" => "text/html",
-            "css" => "text/css",
-            "js" => "text/javascript",
-            "png" => "image/png",
-            _ => bail!("Unknown extension"),
-        };
-
-        let key = entry
-            .path()
-            .strip_prefix(path)?
-            .to_str()
-            .context("Path contain non UTF-8 character")?
-            .replace('\\', "/");
-
-        println!("Uploading {}...", key);
-
-        futures.push(upload_s3(
-            entry.into_path(),
-            len,
-            mime,
-            bucket.clone(),
-            key,
-            client,
-        ));
-
-        if futures.len() > 10 {
-            rt.block_on(try_join_all(futures.drain(..)))?;
-        }
-    }
-
-    rt.block_on(try_join_all(futures))?;
-    println!("Finished uploading. Cleaning deleted files...");
-    rt.block_on(cleanup_s3_old_files(path, bucket, client))?;
-
-    Ok(())
-}
-
-fn gen_website(pak: Vec<String>, output: String, s3: Option<String>) -> Result<()> {
+fn gen_website_to_sink(pak: Vec<String>, sink: impl Sink) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
     let pedia = extract::gen_pedia(&mut pak)?;
     let pedia_ex = extract::gen_pedia_ex(&pedia)?;
-
-    let sink = DiskSink::init(Path::new(&output))?;
-
     extract::gen_website(&pedia, &pedia_ex, &sink)?;
     extract::gen_resources(&mut pak, &sink.sub_sink("resources")?)?;
-    if let Some(bucket) = s3 {
-        println!("Uploading to S3...");
-        let s3client = S3Client::new(Region::UsEast1);
-        upload_s3_folder(Path::new(&output), bucket, &s3client)?;
+
+    Ok(())
+}
+
+fn gen_website(pak: Vec<String>, output: String) -> Result<()> {
+    if let Some(bucket) = output.strip_prefix("S3://") {
+        let sink = S3Sink::init(bucket.to_string())?;
+        gen_website_to_sink(pak, sink)?;
+    } else {
+        let sink = DiskSink::init(Path::new(&output))?;
+        gen_website_to_sink(pak, sink)?;
     }
 
     Ok(())
@@ -1014,7 +867,7 @@ fn main() -> Result<()> {
         } => dump_index(pak, version, index, output),
         Mhrice::Scan { pak } => scan(pak),
         Mhrice::GenJson { pak } => gen_json(pak),
-        Mhrice::GenWebsite { pak, output, s3 } => gen_website(pak, output, s3),
+        Mhrice::GenWebsite { pak, output } => gen_website(pak, output),
         Mhrice::ReadTdb { tdb } => read_tdb(tdb),
         Mhrice::ReadMsg { msg } => read_msg(msg),
         Mhrice::ScanMsg { pak, output } => scan_msg(pak, output),
