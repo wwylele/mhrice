@@ -229,16 +229,22 @@ div.mh-logo-text {
     height: 1rem;
     background-color: black;
     border: solid gray;
+    vertical-align: middle;
+    position: relative;
 }
 
 .mh-sharpness {
+    position: absolute;
     display: inline-block;
-    height: 100%
+    height: 100%;
+    bottom: 0;
 }
 
 .mh-sharpness-half {
+    position: absolute;
     display: inline-block;
-    height: 50%
+    height: 50%;
+    bottom: 0;
 }
 
 .mh-sharpness-color-0 {
