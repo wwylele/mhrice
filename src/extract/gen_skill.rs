@@ -1,11 +1,11 @@
 use super::gen_item::*;
 use super::gen_website::*;
 use super::pedia::*;
+use super::sink::*;
 use crate::rsz::*;
 use anyhow::Result;
 use std::collections::BTreeMap;
-use std::fs::{create_dir, write};
-use std::path::*;
+use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
 
 pub fn skill_page(id: PlEquipSkillId) -> String {
@@ -15,7 +15,7 @@ pub fn skill_page(id: PlEquipSkillId) -> String {
     }
 }
 
-pub fn gen_skill_list(skills: &BTreeMap<PlEquipSkillId, Skill>, root: &Path) -> Result<()> {
+pub fn gen_skill_list(skills: &BTreeMap<PlEquipSkillId, Skill>, output: &impl Sink) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -42,8 +42,10 @@ pub fn gen_skill_list(skills: &BTreeMap<PlEquipSkillId, Skill>, root: &Path) -> 
             </body>
         </html>
     );
-    let quests_path = root.join("skill.html");
-    write(&quests_path, doc.to_string())?;
+
+    output
+        .create_html("skill.html")?
+        .write_all(doc.to_string().as_bytes())?;
 
     Ok(())
 }
@@ -56,7 +58,7 @@ pub fn gen_deco_label(deco: &Deco) -> Box<div<String>> {
     </div>)
 }
 
-pub fn gen_skill(skill: &Skill, path: &Path, pedia_ex: &PediaEx) -> Result<()> {
+pub fn gen_skill(skill: &Skill, pedia_ex: &PediaEx, mut output: impl Write) -> Result<()> {
     let deco = skill.deco.as_ref().map(|deco| {
         html!(<section class="section">
         <h2 class="title">"Decoration"</h2>
@@ -108,17 +110,16 @@ pub fn gen_skill(skill: &Skill, path: &Path, pedia_ex: &PediaEx) -> Result<()> {
         </html>
     );
 
-    write(&path, doc.to_string())?;
+    output.write_all(doc.to_string().as_bytes())?;
 
     Ok(())
 }
 
-pub fn gen_skills(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
-    let skill_path = root.join("skill");
-    create_dir(&skill_path)?;
+pub fn gen_skills(pedia_ex: &PediaEx, output: &impl Sink) -> Result<()> {
+    let skill_path = output.sub_sink("skill")?;
     for (&id, skill) in &pedia_ex.skills {
-        let path = skill_path.join(skill_page(id));
-        gen_skill(skill, &path, pedia_ex)?
+        let output = skill_path.create_html(&skill_page(id))?;
+        gen_skill(skill, pedia_ex, output)?
     }
     Ok(())
 }

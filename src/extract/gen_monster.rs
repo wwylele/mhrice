@@ -2,12 +2,12 @@ use super::gen_item::*;
 use super::gen_quest::*;
 use super::gen_website::{gen_multi_lang, head_common, navbar};
 use super::pedia::*;
+use super::sink::*;
 use crate::rsz::*;
 use anyhow::{bail, Result};
 use std::collections::HashMap;
 use std::convert::TryFrom;
-use std::fs::write;
-use std::path::*;
+use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
 
 pub fn gen_monster_tag(pedia: &Pedia, em_type: EmTypes, is_target: bool) -> Box<div<String>> {
@@ -751,7 +751,7 @@ pub fn gen_monster(
     monster: &Monster,
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
-    folder: &Path,
+    output: &impl Sink,
 ) -> Result<()> {
     let collider_mapping = &monster.collider_mapping;
     let enemy_parts_break_data_list = &monster.data_tune.enemy_parts_break_data_list;
@@ -1139,7 +1139,8 @@ pub fn gen_monster(
         </html>: String
     );
 
-    let file = PathBuf::from(folder).join(format!("{:03}_{:02}.html", monster.id, monster.sub_id));
-    write(file, doc.to_string())?;
+    output
+        .create_html(&format!("{:03}_{:02}.html", monster.id, monster.sub_id))?
+        .write_all(doc.to_string().as_bytes())?;
     Ok(())
 }

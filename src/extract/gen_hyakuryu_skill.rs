@@ -2,11 +2,11 @@ use super::gen_item::*;
 use super::gen_weapon::*;
 use super::gen_website::*;
 use super::pedia::*;
+use super::sink::*;
 use crate::rsz::*;
 use anyhow::Result;
 use std::collections::BTreeMap;
-use std::fs::{create_dir, write};
-use std::path::*;
+use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
 
 pub fn gen_hyakuryu_skill_label(skill: &HyakuryuSkill) -> Box<a<String>> {
@@ -25,7 +25,7 @@ pub fn hyakuryu_skill_page(id: PlHyakuryuSkillId) -> String {
 
 pub fn gen_hyakuryu_skill_list(
     skills: &BTreeMap<PlHyakuryuSkillId, HyakuryuSkill>,
-    root: &Path,
+    output: &impl Sink,
 ) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
@@ -50,8 +50,9 @@ pub fn gen_hyakuryu_skill_list(
             </body>
         </html>
     );
-    let quests_path = root.join("hyakuryu_skill.html");
-    write(&quests_path, doc.to_string())?;
+    output
+        .create_html("hyakuryu_skill.html")?
+        .write_all(doc.to_string().as_bytes())?;
 
     Ok(())
 }
@@ -100,7 +101,11 @@ fn gen_hyakuryu_source_weapon(
     }
 }
 
-pub fn gen_hyakuryu_skill(skill: &HyakuryuSkill, path: &Path, pedia_ex: &PediaEx) -> Result<()> {
+pub fn gen_hyakuryu_skill(
+    skill: &HyakuryuSkill,
+    pedia_ex: &PediaEx,
+    mut output: impl Write,
+) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -146,17 +151,16 @@ pub fn gen_hyakuryu_skill(skill: &HyakuryuSkill, path: &Path, pedia_ex: &PediaEx
         </html>
     );
 
-    write(&path, doc.to_string())?;
+    output.write_all(doc.to_string().as_bytes())?;
 
     Ok(())
 }
 
-pub fn gen_hyakuryu_skills(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
-    let skill_path = root.join("hyakuryu_skill");
-    create_dir(&skill_path)?;
+pub fn gen_hyakuryu_skills(pedia_ex: &PediaEx, output: &impl Sink) -> Result<()> {
+    let skill_path = output.sub_sink("hyakuryu_skill")?;
     for (&id, skill) in &pedia_ex.hyakuryu_skills {
-        let path = skill_path.join(hyakuryu_skill_page(id));
-        gen_hyakuryu_skill(skill, &path, pedia_ex)?
+        let output = skill_path.create_html(&hyakuryu_skill_page(id))?;
+        gen_hyakuryu_skill(skill, pedia_ex, output)?
     }
     Ok(())
 }

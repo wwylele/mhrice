@@ -9,7 +9,7 @@ use rusoto_s3::*;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Cursor, Read, Seek, SeekFrom};
+use std::io::{BufRead, BufReader, Cursor, Read, Seek, SeekFrom, Write};
 use std::path::*;
 use std::sync::Mutex;
 use structopt::*;
@@ -36,6 +36,7 @@ mod tex;
 mod user;
 mod uvs;
 
+use extract::sink::*;
 use gui::*;
 use mesh::*;
 use msg::*;
@@ -517,8 +518,11 @@ fn gen_website(pak: Vec<String>, output: String, s3: Option<String>) -> Result<(
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
     let pedia = extract::gen_pedia(&mut pak)?;
     let pedia_ex = extract::gen_pedia_ex(&pedia)?;
-    extract::gen_website(&pedia, &pedia_ex, &output)?;
-    extract::gen_resources(&mut pak, &Path::new(&output).to_owned().join("resources"))?;
+
+    let sink = DiskSink::init(Path::new(&output))?;
+
+    extract::gen_website(&pedia, &pedia_ex, &sink)?;
+    extract::gen_resources(&mut pak, &sink.sub_sink("resources")?)?;
     if let Some(bucket) = s3 {
         println!("Uploading to S3...");
         let s3client = S3Client::new(Region::UsEast1);
@@ -882,7 +886,7 @@ fn dump_rcol(rcol: String) -> Result<()> {
 
 fn dump_tex(tex: String, output: String) -> Result<()> {
     let tex = Tex::new(File::open(tex)?)?;
-    tex.save_png(0, 0, Path::new(&output))?;
+    tex.save_png(0, 0, std::fs::File::create(&output)?)?;
     Ok(())
 }
 
@@ -951,7 +955,7 @@ fn dump_meat(_mesh: String, _rcol: String, _output: String) -> Result<()> {
     unimplemented!()
 }
 
-fn gen_meat(pak: Vec<String>, index: u32, output: String) -> Result<()> {
+fn gen_meat(pak: Vec<String>, index: u32, output: impl Write) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
 
     let mesh_path = format!("enemy/em{0:03}/00/mod/em{0:03}_00.mesh", index);
@@ -968,7 +972,7 @@ fn gen_meat(pak: Vec<String>, index: u32, output: String) -> Result<()> {
 
     let gpu::HitzoneDiagram { meat, .. } = gpu::gen_hitzone_diagram(vertexs, indexs)?;
 
-    meat.save_png(Path::new(&output))?;
+    meat.save_png(output)?;
 
     Ok(())
 }
@@ -976,7 +980,8 @@ fn gen_meat(pak: Vec<String>, index: u32, output: String) -> Result<()> {
 fn gen_resources(pak: Vec<String>, output: String) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
 
-    extract::gen_resources(&mut pak, Path::new(&output))?;
+    let sink = DiskSink::init(Path::new(&output))?;
+    extract::gen_resources(&mut pak, &sink)?;
 
     Ok(())
 }
@@ -1027,7 +1032,9 @@ fn main() -> Result<()> {
         Mhrice::DumpMeat { mesh, rcol, output } => dump_meat(mesh, rcol, output),
         Mhrice::DumpTex { tex, output } => dump_tex(tex, output),
         Mhrice::DumpGui { gui } => dump_gui(gui),
-        Mhrice::GenMeat { pak, index, output } => gen_meat(pak, index, output),
+        Mhrice::GenMeat { pak, index, output } => {
+            gen_meat(pak, index, std::fs::File::create(output)?)
+        }
         Mhrice::GenResources { pak, output } => gen_resources(pak, output),
         Mhrice::Hash { input, utf16 } => {
             hash(input, utf16);

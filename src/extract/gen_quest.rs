@@ -2,11 +2,11 @@ use super::gen_item::*;
 use super::gen_monster::*;
 use super::gen_website::*;
 use super::pedia::*;
+use super::sink::*;
 use crate::rsz::*;
 use anyhow::Result;
 use std::collections::BTreeMap;
-use std::fs::{create_dir, write};
-use std::path::*;
+use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
 
 pub fn gen_quest_tag(quest: &Quest, is_target: bool) -> Box<div<String>> {
@@ -32,7 +32,7 @@ pub fn gen_quest_tag(quest: &Quest, is_target: bool) -> Box<div<String>> {
     </div>)
 }
 
-pub fn gen_quest_list(quests: &[Quest], root: &Path) -> Result<()> {
+pub fn gen_quest_list(quests: &[Quest], output: &impl Sink) -> Result<()> {
     let mut quests_ordered: BTreeMap<_, BTreeMap<_, Vec<&Quest>>> = BTreeMap::new();
     for quest in quests {
         quests_ordered
@@ -95,8 +95,9 @@ pub fn gen_quest_list(quests: &[Quest], root: &Path) -> Result<()> {
         </html>
     );
 
-    let quests_path = root.join("quest.html");
-    write(&quests_path, doc.to_string())?;
+    output
+        .create_html("quest.html")?
+        .write_all(doc.to_string().as_bytes())?;
 
     Ok(())
 }
@@ -302,7 +303,12 @@ fn gen_quest_monster_multi_player_data(
         .collect()
 }
 
-fn gen_quest(quest: &Quest, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path) -> Result<()> {
+fn gen_quest(
+    quest: &Quest,
+    pedia: &Pedia,
+    pedia_ex: &PediaEx<'_>,
+    mut output: impl Write,
+) -> Result<()> {
     let img = format!(
         "/resources/questtype_{}.png",
         quest.param.quest_type.icon_index()
@@ -507,16 +513,15 @@ fn gen_quest(quest: &Quest, pedia: &Pedia, pedia_ex: &PediaEx<'_>, path: &Path) 
         </html>
     );
 
-    write(&path, doc.to_string())?;
+    output.write_all(doc.to_string().as_bytes())?;
     Ok(())
 }
 
-pub fn gen_quests(pedia: &Pedia, pedia_ex: &PediaEx<'_>, root: &Path) -> Result<()> {
-    let quest_path = root.join("quest");
-    create_dir(&quest_path)?;
+pub fn gen_quests(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
+    let quest_path = output.sub_sink("quest")?;
     for quest in &pedia_ex.quests {
-        let path = quest_path.join(format!("{:06}.html", quest.param.quest_no));
-        gen_quest(quest, pedia, pedia_ex, &path)?
+        let path = quest_path.create_html(&format!("{:06}.html", quest.param.quest_no))?;
+        gen_quest(quest, pedia, pedia_ex, path)?
     }
     Ok(())
 }

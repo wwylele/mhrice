@@ -11,6 +11,7 @@ mod gen_skill;
 mod gen_weapon;
 mod gen_website;
 mod pedia;
+pub mod sink;
 
 pub use gen_pedia::gen_resources;
 pub use gen_pedia::{gen_pedia, gen_pedia_ex};

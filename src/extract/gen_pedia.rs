@@ -1,4 +1,5 @@
 use super::pedia::*;
+use super::sink::*;
 use crate::gpu::*;
 use crate::gui::*;
 use crate::mesh::*;
@@ -17,10 +18,8 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::{HashMap, HashSet};
 use std::convert::{TryFrom, TryInto};
-use std::fs::*;
 use std::io::{Cursor, Read, Seek, Write};
 use std::ops::Deref;
-use std::path::*;
 
 fn exactly_one<T>(mut iterator: impl Iterator<Item = T>) -> Result<T> {
     let next = iterator.next().context("No element found")?;
@@ -570,7 +569,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
 
 fn gen_monster_hitzones(
     pak: &mut PakReader<impl Read + Seek>,
-    output: &Path,
+    output: &impl Sink,
     collider_path_gen: fn(u32, u32) -> String,
     mesh_path_gen: fn(u32, u32) -> String,
     meat_file_name_gen: fn(u32, u32) -> String,
@@ -602,13 +601,13 @@ fn gen_monster_hitzones(
         .map(|(index, sub_id, mesh, collider)| {
             let mesh = Mesh::new(Cursor::new(mesh))?;
             let mut collider = Rcol::new(Cursor::new(collider), true)?;
-            let meat_path = output.join(meat_file_name_gen(index, sub_id));
-            let parts_group_path = output.join(parts_group_file_name_gen(index, sub_id));
+            let meat_path = output.create(&meat_file_name_gen(index, sub_id))?;
+            let parts_group_path = output.create(&parts_group_file_name_gen(index, sub_id))?;
             collider.apply_skeleton(&mesh)?;
             let (vertexs, indexs) = collider.color_monster_model(&mesh)?;
             let HitzoneDiagram { meat, parts_group } = gen_hitzone_diagram(vertexs, indexs)?;
-            meat.save_png(&meat_path)?;
-            parts_group.save_png(&parts_group_path)?;
+            meat.save_png(meat_path)?;
+            parts_group.save_png(parts_group_path)?;
             Ok(())
         })
         .collect::<Result<Vec<()>>>()?;
@@ -646,13 +645,7 @@ static EM_ICON_MAP: Lazy<HashMap<(i32, i32), &'static str>> = Lazy::new(|| {
     m
 });
 
-pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Result<()> {
-    let root = PathBuf::from(output);
-    if root.exists() {
-        remove_dir_all(&root)?;
-    }
-    create_dir(&root)?;
-
+pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) -> Result<()> {
     let mesh_path_gen = |id, mut sub_id| {
         if id == 99 && sub_id == 5 {
             sub_id = 0;
@@ -662,7 +655,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
 
     gen_monster_hitzones(
         pak,
-        &root,
+        output,
         gen_em_collider_path,
         mesh_path_gen,
         |id, sub_id| format!("em{0:03}_{1:02}_meat.png", id, sub_id),
@@ -671,7 +664,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
 
     gen_monster_hitzones(
         pak,
-        &root,
+        output,
         gen_ems_collider_path,
         |id, sub_id| {
             format!(
@@ -702,7 +695,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
             icon.save_png(
                 0,
                 0,
-                &root.join(format!("em{0:03}_{1:02}_icon.png", index, sub_id)),
+                output.create(&format!("em{0:03}_{1:02}_icon.png", index, sub_id))?,
             )?;
         }
     }
@@ -722,7 +715,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
             icon.save_png(
                 0,
                 0,
-                &root.join(format!("ems{0:03}_{1:02}_icon.png", index, sub_id)),
+                output.create(&format!("ems{0:03}_{1:02}_icon.png", index, sub_id))?,
             )?;
         }
     }
@@ -732,14 +725,13 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
 
     guild_card
         .sub_image(302, 397, 24, 24)?
-        .save_png(&root.join("king_crown.png"))?;
+        .save_png(output.create("king_crown.png")?)?;
 
     guild_card
         .sub_image(302, 453, 24, 24)?
-        .save_png(&root.join("small_crown.png"))?;
+        .save_png(output.create("small_crown.png")?)?;
 
-    let item_icon_path = root.join("item");
-    create_dir(&item_icon_path)?;
+    let item_icon_path = output.sub_sink("item")?;
     let item_icon_uvs = pak.find_file("gui/70_UVSequence/cmn_icon.uvs")?;
     let item_icon_uvs = Uvs::new(Cursor::new(pak.read_file(item_icon_uvs)?))?;
     if item_icon_uvs.textures.len() != 1 || item_icon_uvs.spriter_groups.len() != 1 {
@@ -751,8 +743,8 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
         let (item_icon_r, item_icon_a) = item_icon
             .sub_image_f(spriter.p0, spriter.p1)?
             .gen_double_mask();
-        item_icon_r.save_png(&item_icon_path.join(format!("{:03}.r.png", i)))?;
-        item_icon_a.save_png(&item_icon_path.join(format!("{:03}.a.png", i)))?;
+        item_icon_r.save_png(item_icon_path.create(&format!("{:03}.r.png", i))?)?;
+        item_icon_a.save_png(item_icon_path.create(&format!("{:03}.a.png", i))?)?;
     }
 
     let item_addon_uvs = pak.find_file("gui/70_UVSequence/Item_addonicon.uvs")?;
@@ -765,7 +757,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
     for (i, spriter) in item_addon_uvs.spriter_groups[0].spriters.iter().enumerate() {
         item_addon
             .sub_image_f(spriter.p0, spriter.p1)?
-            .save_png(&root.join(format!("item_addon_{}.png", i)))?;
+            .save_png(output.create(&format!("item_addon_{}.png", i))?)?;
     }
 
     let message_window_uvs = pak.find_file("gui/70_UVSequence/message_window.uvs")?;
@@ -782,8 +774,8 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
     let (skill_r, skill_a) = message_window
         .sub_image_f(skill_icon.p0, skill_icon.p1)?
         .gen_double_mask();
-    skill_r.save_png(&root.join("skill.r.png"))?;
-    skill_a.save_png(&root.join("skill.a.png"))?;
+    skill_r.save_png(output.create("skill.r.png")?)?;
+    skill_a.save_png(output.create("skill.a.png")?)?;
 
     let rskill_icon = message_window_uvs.spriter_groups[0]
         .spriters
@@ -792,11 +784,10 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
     let (rskill_r, rskill_a) = message_window
         .sub_image_f(rskill_icon.p0, rskill_icon.p1)?
         .gen_double_mask();
-    rskill_r.save_png(&root.join("rskill.r.png"))?;
-    rskill_a.save_png(&root.join("rskill.a.png"))?;
+    rskill_r.save_png(output.create("rskill.r.png")?)?;
+    rskill_a.save_png(output.create("rskill.a.png")?)?;
 
-    let equip_icon_path = root.join("equip");
-    create_dir(&equip_icon_path)?;
+    let equip_icon_path = output.sub_sink("equip")?;
     let equip_icon_uvs = pak.find_file("gui/70_UVSequence/EquipIcon.uvs")?;
     let equip_icon_uvs = Uvs::new(Cursor::new(pak.read_file(equip_icon_uvs)?))?;
     if equip_icon_uvs.textures.len() != 2 || equip_icon_uvs.spriter_groups.len() != 2 {
@@ -808,8 +799,8 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
         let (equip_icon_r, equip_icon_a) = equip_icon
             .sub_image_f(spriter.p0, spriter.p1)?
             .gen_double_mask();
-        equip_icon_r.save_png(&equip_icon_path.join(format!("{:03}.r.png", i)))?;
-        equip_icon_a.save_png(&equip_icon_path.join(format!("{:03}.a.png", i)))?;
+        equip_icon_r.save_png(equip_icon_path.create(&format!("{:03}.r.png", i))?)?;
+        equip_icon_a.save_png(equip_icon_path.create(&format!("{:03}.a.png", i))?)?;
     }
 
     let common_uvs = pak.find_file("gui/70_UVSequence/common.uvs")?;
@@ -822,7 +813,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
     for (i, spriter) in common_uvs.spriter_groups[1].spriters.iter().enumerate() {
         common
             .sub_image_f(spriter.p0, spriter.p1)?
-            .save_png(&root.join(format!("questtype_{}.png", i)))?;
+            .save_png(output.create(&format!("questtype_{}.png", i))?)?;
     }
 
     let common_uvs = pak.find_file("gui/70_UVSequence/Slot_Icon.uvs")?;
@@ -835,27 +826,26 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Re
     for (i, spriter) in common_uvs.spriter_groups[0].spriters.iter().enumerate() {
         common
             .sub_image_f(spriter.p0, spriter.p1)?
-            .save_png(&root.join(format!("slot_{}.png", i)))?;
+            .save_png(output.create(&format!("slot_{}.png", i))?)?;
     }
 
-    let item_colors_path = root.join("item_color.css");
-    gen_item_colors(pak, &item_colors_path)?;
+    let item_colors_path = output.create("item_color.css")?;
+    gen_item_colors(pak, item_colors_path)?;
 
-    let item_colors_path = root.join("rarity_color.css");
-    gen_rarity_colors(pak, &item_colors_path)?;
+    let item_colors_path = output.create("rarity_color.css")?;
+    gen_rarity_colors(pak, item_colors_path)?;
 
     Ok(())
 }
 
 fn gen_gui_colors(
     pak: &mut PakReader<impl Read + Seek>,
-    output: &Path,
+    mut file: impl Write,
     gui: &str,
     control_name: &str,
     prefix: &str,
     css_prefix: &str,
 ) -> Result<()> {
-    let mut file = File::create(output)?;
     let item_icon_gui = pak.find_file(gui)?;
     let item_icon_gui = Gui::new(Cursor::new(pak.read_file(item_icon_gui)?))?;
     let item_icon_color = item_icon_gui
@@ -894,7 +884,7 @@ fn gen_gui_colors(
     Ok(())
 }
 
-fn gen_item_colors(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Result<()> {
+fn gen_item_colors(pak: &mut PakReader<impl Read + Seek>, output: impl Write) -> Result<()> {
     gen_gui_colors(
         pak,
         output,
@@ -905,7 +895,7 @@ fn gen_item_colors(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Resu
     )
 }
 
-fn gen_rarity_colors(pak: &mut PakReader<impl Read + Seek>, output: &Path) -> Result<()> {
+fn gen_rarity_colors(pak: &mut PakReader<impl Read + Seek>, output: impl Write) -> Result<()> {
     gen_gui_colors(
         pak,
         output,

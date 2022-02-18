@@ -3,10 +3,10 @@ use super::gen_item::*;
 use super::gen_skill::*;
 use super::gen_website::*;
 use super::pedia::*;
+use super::sink::*;
 use crate::rsz::*;
 use anyhow::Result;
-use std::fs::{create_dir, write};
-use std::path::*;
+use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
 
 pub fn gen_armor_label(piece: Option<&Armor>) -> Box<div<String>> {
@@ -27,7 +27,7 @@ pub fn gen_armor_label(piece: Option<&Armor>) -> Box<div<String>> {
     </div>)
 }
 
-pub fn gen_armor_list(serieses: &[ArmorSeries], root: &Path) -> Result<()> {
+pub fn gen_armor_list(serieses: &[ArmorSeries], output: &impl Sink) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -78,13 +78,14 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], root: &Path) -> Result<()> {
         </html>: String
     );
 
-    let armor_path = root.join("armor.html");
-    write(&armor_path, doc.to_string())?;
+    output
+        .create_html("armor.html")?
+        .write_all(doc.to_string().as_bytes())?;
 
     Ok(())
 }
 
-fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, path: &Path) -> Result<()> {
+fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, mut output: impl Write) -> Result<()> {
     let gen_label = |piece: &Armor<'_>| {
         let icon = format!(
             "/resources/equip/{:03}",
@@ -310,16 +311,16 @@ fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, path: &Path) -> Result<()
         </html>
     );
 
-    write(&path, doc.to_string())?;
+    output.write_all(doc.to_string().as_bytes())?;
     Ok(())
 }
 
-pub fn gen_armors(pedia_ex: &PediaEx<'_>, root: &Path) -> Result<()> {
-    let armor_path = root.join("armor");
-    create_dir(&armor_path)?;
+pub fn gen_armors(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
+    let armor_path = output.sub_sink("armor")?;
     for series in &pedia_ex.armors {
-        let path = armor_path.join(format!("{:03}.html", series.series.armor_series.0));
-        gen_armor(series, pedia_ex, &path)?
+        let output =
+            armor_path.create_html(&format!("{:03}.html", series.series.armor_series.0))?;
+        gen_armor(series, pedia_ex, output)?
     }
     Ok(())
 }

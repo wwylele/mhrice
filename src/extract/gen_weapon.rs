@@ -3,11 +3,11 @@ use super::gen_hyakuryu_skill::*;
 use super::gen_item::*;
 use super::gen_website::*;
 use super::pedia::*;
+use super::sink::*;
 use crate::rsz::*;
 use anyhow::Result;
 use std::collections::HashSet;
-use std::fs::{create_dir, write};
-use std::path::*;
+use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
 
 pub fn gen_weapon_icon(weapon: &WeaponBaseData) -> Box<div<String>> {
@@ -127,7 +127,7 @@ fn gen_weapon<Param>(
     weapon: &Weapon<Param>,
     weapon_tree: &WeaponTree<'_, Param>,
     pedia_ex: &PediaEx,
-    path: &Path,
+    mut output: impl Write,
     has_element: fn(&Param) -> Option<&ElementWeaponBaseData>,
     has_second_element: fn(&Param) -> Option<&DualBladesBaseUserDataParam>,
     has_close_range: fn(&Param) -> Option<&CloseRangeWeaponBaseData>,
@@ -489,7 +489,7 @@ where
             </body>
         </html>
     );
-    write(&path, doc.to_string())?;
+    output.write_all(doc.to_string().as_bytes())?;
 
     Ok(())
 }
@@ -511,14 +511,14 @@ where
 
 fn gen_tree<Param>(
     weapon_tree: &WeaponTree<Param>,
-    weapon_path: &Path,
+    weapon_path: &impl Sink,
     tag: &str,
     name: &str,
 ) -> Result<()>
 where
     Param: ToBase<MainWeaponBaseData>,
 {
-    let list_path = weapon_path.join(format!("{}.html", tag));
+    let mut list_path = weapon_path.create_html(&format!("{}.html", tag))?;
 
     let doc: DOMTree<String> = html!(
         <html>
@@ -540,7 +540,7 @@ where
         </html>
     );
 
-    write(&list_path, doc.to_string())?;
+    list_path.write_all(doc.to_string().as_bytes())?;
 
     Ok(())
 }
@@ -587,9 +587,8 @@ fn heavy_bowgun(param: &HeavyBowgunBaseUserDataParam) -> Vec<Box<p<String>>> {
     </p>)]
 }
 
-pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
-    let path = root.join("weapon");
-    create_dir(&path)?;
+pub fn gen_weapons(pedia_ex: &PediaEx, output: &impl Sink) -> Result<()> {
+    let path = output.sub_sink("weapon")?;
 
     macro_rules! weapon {
         ($label:ident, $name:expr,
@@ -604,12 +603,12 @@ pub fn gen_weapons(pedia_ex: &PediaEx, root: &Path) -> Result<()> {
         ) => {{
             gen_tree(&pedia_ex.$label, &path, stringify!($label), $name)?;
             for (weapon_id, weapon) in &pedia_ex.$label.weapons {
-                let file_path = path.join(format!("{}.html", weapon_id.to_tag()));
+                let file_path = path.create_html(&format!("{}.html", weapon_id.to_tag()))?;
                 gen_weapon(
                     weapon,
                     &pedia_ex.$label,
                     pedia_ex,
-                    &file_path,
+                    file_path,
                     $element,
                     $second_element,
                     $close_range,

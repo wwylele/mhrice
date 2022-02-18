@@ -3,7 +3,8 @@ use crate::file_ext::*;
 use crate::gpu::*;
 use anyhow::{bail, Result};
 use std::convert::{TryFrom, TryInto};
-use std::io::{Read, Seek, SeekFrom};
+use std::fs::File;
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
 
 /*
@@ -588,7 +589,7 @@ impl Tex {
         ))
     }
 
-    pub fn save_png(&self, index: usize, mipmap: usize, output: &Path) -> anyhow::Result<()> {
+    pub fn save_png(&self, index: usize, mipmap: usize, output: impl Write) -> anyhow::Result<()> {
         self.to_rgba(index, mipmap)?.save_png(output)?;
 
         Ok(())
