@@ -1,5 +1,6 @@
-use anyhow::Result;
-use futures::StreamExt;
+use anyhow::{anyhow, bail, Context, Result};
+use futures::{StreamExt, TryStreamExt};
+use once_cell::sync::OnceCell;
 use rusoto_core::{ByteStream, Region};
 use rusoto_s3::*;
 use std::collections::HashSet;
@@ -21,6 +22,8 @@ pub trait Sink: Sync {
         file.write_all(b"<!DOCTYPE html>\n")?;
         Ok(file)
     }
+
+    fn finalize(self) -> Result<()>;
 }
 
 pub struct DiskSink {
@@ -55,6 +58,10 @@ impl Sink for DiskSink {
         fs::create_dir(&path)?;
         Ok(DiskSink { root: path })
     }
+
+    fn finalize(self) -> Result<()> {
+        Ok(())
+    }
 }
 
 struct S3SinkInner {
@@ -63,13 +70,13 @@ struct S3SinkInner {
 }
 
 impl S3SinkInner {
-    fn init(bucket: String) -> Result<S3SinkInner> {
+    fn init(bucket: String, error: Arc<OnceCell<anyhow::Error>>) -> Result<S3SinkInner> {
         let (sender, reciver) = futures::channel::mpsc::channel(10);
         let uploader = Some(spawn(move || {
             use tokio::runtime::Runtime;
             let rt = Runtime::new().unwrap();
 
-            rt.block_on(async move {
+            let result = rt.block_on(async move {
                 let client = S3Client::new(Region::UsEast1);
 
                 let mut existing_objects = HashSet::new();
@@ -88,10 +95,7 @@ impl S3SinkInner {
                         request_payer: None,
                         start_after: None,
                     };
-                    let result = client
-                        .list_objects_v2(request)
-                        .await
-                        .expect("Error listing files");
+                    let result = client.list_objects_v2(request).await?;
 
                     existing_objects
                         .extend(result.contents.into_iter().flatten().flat_map(|o| o.key));
@@ -134,16 +138,13 @@ impl S3SinkInner {
                             ..PutObjectRequest::default()
                         };
 
-                        client.put_object(request)
+                        let future = client.put_object(request);
+
+                        async { future.await.map(|_| ()).context("Failed to upload object") }
                     })
                     .buffer_unordered(10)
-                    .for_each(|result| {
-                        if let Err(e) = result {
-                            panic!("Failed to upload object: {e}")
-                        }
-                        std::future::ready(())
-                    })
-                    .await;
+                    .try_collect::<()>()
+                    .await?;
 
                 eprintln!("Finished uploading");
 
@@ -176,32 +177,53 @@ impl S3SinkInner {
                         request_payer: None,
                     };
 
-                    client.delete_objects(request).await.unwrap();
+                    client.delete_objects(request).await?;
                 }
-            })
+
+                Ok(())
+            });
+
+            if let Err(e) = result {
+                let _ = error.set(e);
+            }
         }));
 
         Ok(S3SinkInner { sender, uploader })
     }
 }
 
+impl S3SinkInner {
+    fn finalize(&mut self) -> Result<()> {
+        use futures::sink::SinkExt;
+        let uploader = std::mem::take(&mut self.uploader);
+        futures::executor::block_on(self.sender.send(Message::Finalize))?;
+        uploader
+            .unwrap()
+            .join()
+            .map_err(|_| anyhow!("uploader thread panic"))?;
+        Ok(())
+    }
+}
+
 impl Drop for S3SinkInner {
     fn drop(&mut self) {
-        use futures::sink::SinkExt;
-        futures::executor::block_on(self.sender.send(Message::Finalize)).unwrap();
-        std::mem::take(&mut self.uploader).unwrap().join().unwrap();
+        if self.uploader.is_some() {
+            eprintln!("S3SinkInner dropped without finalize")
+        }
     }
 }
 
 pub struct S3Sink {
     path: String,
     inner: Arc<S3SinkInner>,
+    error: Arc<OnceCell<anyhow::Error>>,
 }
 
 pub struct S3File {
     path: String,
     buffer: Vec<u8>,
     sender: futures::channel::mpsc::Sender<Message>,
+    error: Arc<OnceCell<anyhow::Error>>,
 }
 
 enum Message {
@@ -211,10 +233,12 @@ enum Message {
 
 impl S3Sink {
     pub fn init(bucket: String) -> Result<S3Sink> {
-        let inner = Arc::new(S3SinkInner::init(bucket)?);
+        let error = Arc::new(OnceCell::new());
+        let inner = Arc::new(S3SinkInner::init(bucket, error.clone())?);
         Ok(S3Sink {
             inner,
             path: String::new(),
+            error,
         })
     }
 }
@@ -223,12 +247,16 @@ impl Sink for S3Sink {
     type File = S3File;
 
     fn create(&self, name: &str) -> Result<Self::File> {
+        if let Some(e) = self.error.get() {
+            bail!("S3Sink detected error from previous operation: {e}");
+        }
         let path = self.path.clone() + name;
         let inner = self.inner.clone();
         Ok(S3File {
             path,
             buffer: vec![],
             sender: inner.sender.clone(),
+            error: self.error.clone(),
         })
     }
 
@@ -236,9 +264,34 @@ impl Sink for S3Sink {
     where
         Self: Sized,
     {
+        if let Some(e) = self.error.get() {
+            bail!("S3Sink detected error from previous operation: {e}");
+        }
         let path = self.path.clone() + name + "/";
         let inner = self.inner.clone();
-        Ok(S3Sink { path, inner })
+        Ok(S3Sink {
+            path,
+            inner,
+            error: self.error.clone(),
+        })
+    }
+
+    fn finalize(self) -> Result<()> {
+        Arc::try_unwrap(self.inner)
+            .map_err(|e| {
+                std::mem::forget(e);
+                anyhow!("S3Sink finalized with sub sink still open")
+            })?
+            .finalize()?;
+
+        let error = Arc::try_unwrap(self.error).map_err(|e| {
+            std::mem::forget(e);
+            anyhow!("S3Sink finalized with files still open")
+        })?;
+        if let Some(e) = error.get() {
+            bail!("S3Sink detected error from previous operation: {e}");
+        }
+        Ok(())
     }
 }
 
@@ -256,10 +309,12 @@ impl Write for S3File {
 impl Drop for S3File {
     fn drop(&mut self) {
         use futures::sink::SinkExt;
-        futures::executor::block_on(self.sender.send(Message::Request {
+        if let Err(e) = futures::executor::block_on(self.sender.send(Message::Request {
             name: std::mem::take(&mut self.path),
             data: std::mem::take(&mut self.buffer),
-        }))
-        .unwrap()
+        })) {
+            println!("Failed to send file because {e}");
+            let _ = self.error.set(anyhow!("{e}"));
+        }
     }
 }

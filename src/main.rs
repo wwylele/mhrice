@@ -369,7 +369,7 @@ fn gen_website_to_sink(pak: Vec<String>, sink: impl Sink) -> Result<()> {
     let pedia_ex = extract::gen_pedia_ex(&pedia)?;
     extract::gen_website(&pedia, &pedia_ex, &sink)?;
     extract::gen_resources(&mut pak, &sink.sub_sink("resources")?)?;
-
+    sink.finalize()?;
     Ok(())
 }
 
