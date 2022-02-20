@@ -920,6 +920,8 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerPackage>> = Lazy::new(|| {
         WeaponChangeUserData,
         WeaponUpdateTreeUserDataParam,
         WeaponUpdateTreeUserData,
+        HyakuryuWeaponHyakuryuBuildupUserDataParam,
+        HyakuryuWeaponHyakuryuBuildupUserData,
     );
 
     m

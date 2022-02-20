@@ -832,3 +832,25 @@ rsz_struct! {
         pub param: Vec<WeaponUpdateTreeUserDataParam>,
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.data.HyakuryuWeaponHyakuryuBuildupUserData.Param",
+        0x677a39c4 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct HyakuryuWeaponHyakuryuBuildupUserDataParam {
+        pub weapon_id: WeaponId,
+        pub slot_type: i32,
+        pub buildup_id_list: Vec<PlHyakuryuSkillId>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.HyakuryuWeaponHyakuryuBuildupUserData",
+        0x2ef478cd = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct HyakuryuWeaponHyakuryuBuildupUserData {
+        pub param: Vec<HyakuryuWeaponHyakuryuBuildupUserDataParam>
+    }
+}

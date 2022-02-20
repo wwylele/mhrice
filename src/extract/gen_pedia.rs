@@ -483,6 +483,10 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let bow = get_weapon_list(pak, "Bow")?;
 
     let horn_melody = get_msg(pak, "data/Define/Player/Weapon/Horn/Horn_UniqueParam.msg")?;
+    let hyakuryu_weapon_buildup = get_user(
+        pak,
+        "data/Define/Player/Weapon/HyakuryuWeaponHyakuryuBuildupData.user",
+    )?;
 
     Ok(Pedia {
         monsters,
@@ -564,6 +568,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         heavy_bowgun,
         bow,
         horn_melody,
+        hyakuryu_weapon_buildup,
     })
 }
 
@@ -1552,7 +1557,13 @@ fn prepare_material_categories(pedia: &Pedia) -> HashMap<MaterialCategory, &MsgE
         .collect()
 }
 
-fn prepare_weapon<T, Param>(weapon_list: &WeaponList<T>) -> Result<WeaponTree<'_, Param>>
+fn prepare_weapon<'a, 'b, T, Param>(
+    weapon_list: &'a WeaponList<T>,
+    hyakuryu_weapon_map: &'b mut HashMap<
+        WeaponId,
+        BTreeMap<i32, &'a HyakuryuWeaponHyakuryuBuildupUserDataParam>,
+    >,
+) -> Result<WeaponTree<'a, Param>>
 where
     T: Deref<Target = [Param]>,
     Param: ToBase<WeaponBaseData>,
@@ -1612,6 +1623,7 @@ where
             explain,
             children: vec![],
             parent: None,
+            hyakuryu_weapon_buildup: hyakuryu_weapon_map.remove(&id).unwrap_or_default(),
         };
         weapons.insert(param.to_base().id, weapon);
     }
@@ -1796,6 +1808,21 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         .map(|(i, monster)| (monster.em_type, i))
         .collect();
 
+    let mut hyakuryu_weapon_map: HashMap<
+        WeaponId,
+        BTreeMap<i32, &HyakuryuWeaponHyakuryuBuildupUserDataParam>,
+    > = HashMap::new();
+    for param in &pedia.hyakuryu_weapon_buildup.param {
+        let sub_map = hyakuryu_weapon_map.entry(param.weapon_id).or_default();
+        if sub_map.insert(param.slot_type, param).is_some() {
+            bail!(
+                "Multiple hyakuryu weapon buildup for weapon/slot {:?}/{}",
+                param.weapon_id,
+                param.slot_type
+            );
+        }
+    }
+
     Ok(PediaEx {
         sizes: prepare_size_map(&pedia.size_list)?,
         size_dists: prepare_size_dist_map(&pedia.random_scale)?,
@@ -1810,20 +1837,20 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         monster_lot: prepare_monster_lot(pedia)?,
         parts_dictionary: prepare_parts_dictionary(pedia)?,
 
-        great_sword: prepare_weapon(&pedia.great_sword)?,
-        short_sword: prepare_weapon(&pedia.short_sword)?,
-        hammer: prepare_weapon(&pedia.hammer)?,
-        lance: prepare_weapon(&pedia.lance)?,
-        long_sword: prepare_weapon(&pedia.long_sword)?,
-        slash_axe: prepare_weapon(&pedia.slash_axe)?,
-        gun_lance: prepare_weapon(&pedia.gun_lance)?,
-        dual_blades: prepare_weapon(&pedia.dual_blades)?,
-        horn: prepare_weapon(&pedia.horn)?,
-        insect_glaive: prepare_weapon(&pedia.insect_glaive)?,
-        charge_axe: prepare_weapon(&pedia.charge_axe)?,
-        light_bowgun: prepare_weapon(&pedia.light_bowgun)?,
-        heavy_bowgun: prepare_weapon(&pedia.heavy_bowgun)?,
-        bow: prepare_weapon(&pedia.bow)?,
+        great_sword: prepare_weapon(&pedia.great_sword, &mut hyakuryu_weapon_map)?,
+        short_sword: prepare_weapon(&pedia.short_sword, &mut hyakuryu_weapon_map)?,
+        hammer: prepare_weapon(&pedia.hammer, &mut hyakuryu_weapon_map)?,
+        lance: prepare_weapon(&pedia.lance, &mut hyakuryu_weapon_map)?,
+        long_sword: prepare_weapon(&pedia.long_sword, &mut hyakuryu_weapon_map)?,
+        slash_axe: prepare_weapon(&pedia.slash_axe, &mut hyakuryu_weapon_map)?,
+        gun_lance: prepare_weapon(&pedia.gun_lance, &mut hyakuryu_weapon_map)?,
+        dual_blades: prepare_weapon(&pedia.dual_blades, &mut hyakuryu_weapon_map)?,
+        horn: prepare_weapon(&pedia.horn, &mut hyakuryu_weapon_map)?,
+        insect_glaive: prepare_weapon(&pedia.insect_glaive, &mut hyakuryu_weapon_map)?,
+        charge_axe: prepare_weapon(&pedia.charge_axe, &mut hyakuryu_weapon_map)?,
+        light_bowgun: prepare_weapon(&pedia.light_bowgun, &mut hyakuryu_weapon_map)?,
+        heavy_bowgun: prepare_weapon(&pedia.heavy_bowgun, &mut hyakuryu_weapon_map)?,
+        bow: prepare_weapon(&pedia.bow, &mut hyakuryu_weapon_map)?,
         horn_melody: prepare_horn_melody(pedia),
 
         monster_order,

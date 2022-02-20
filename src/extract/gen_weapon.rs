@@ -429,13 +429,23 @@ where
                 <section class="section">
                 <h2 class="title">"Ramp-up skills"</h2>
                 <ul> {
-                    main.hyakuryu_skill_id_list.iter()
-                    .filter(|&&skill|skill != PlHyakuryuSkillId::None)
-                    .map(|skill|{
+                    let main_list = main.hyakuryu_skill_id_list.iter()
+                        .zip(std::iter::repeat(None));
+                    let ex_list = weapon.hyakuryu_weapon_buildup.iter()
+                        .flat_map(|(&slot_type, param)| {
+                            param.buildup_id_list.iter().zip(std::iter::repeat(Some(slot_type)))
+                        });
+
+                    main_list.chain(ex_list)
+                    .filter(|(&skill, _)|skill != PlHyakuryuSkillId::None)
+                    .map(|(skill, slot_type)|{
+                        let hyakuryu_tag = slot_type.map(|s|html!(
+                            <span class="tag">{text!("Slot {}", s)}</span>
+                        ));
                         if let Some(skill) = pedia_ex.hyakuryu_skills.get(skill) {
                             html!(<li> {
                                 gen_hyakuryu_skill_label(skill)
-                            } </li>)
+                            } {hyakuryu_tag} </li>)
                         } else {
                             html!(<li>{ text!("Unknown {:?}", skill) }</li>)
                         }

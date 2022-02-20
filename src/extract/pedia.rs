@@ -130,6 +130,7 @@ pub struct Pedia {
     pub bow: WeaponList<BowBaseUserData>,
 
     pub horn_melody: Msg,
+    pub hyakuryu_weapon_buildup: HyakuryuWeaponHyakuryuBuildupUserData,
 }
 
 pub struct QuestReward<'a> {
@@ -211,6 +212,7 @@ pub struct Weapon<'a, Param> {
     pub explain: &'a MsgEntry,
     pub children: Vec<WeaponId>,
     pub parent: Option<WeaponId>,
+    pub hyakuryu_weapon_buildup: BTreeMap<i32, &'a HyakuryuWeaponHyakuryuBuildupUserDataParam>,
 }
 
 pub struct WeaponTree<'a, Param> {

@@ -67,7 +67,9 @@ fn gen_hyakuryu_source_weapon(
             let weapons = &pedia_ex.$weapon;
             for (_, weapon) in &weapons.weapons {
                 let main: &MainWeaponBaseData = weapon.param.to_base();
-                if main.hyakuryu_skill_id_list.contains(&id) {
+                if main.hyakuryu_skill_id_list.contains(&id) ||
+                    weapon.hyakuryu_weapon_buildup.values()
+                        .any(|h|h.buildup_id_list.contains(&id)) {
                     htmls.push(html!(<li class="mh-list-item-in-out">{
                         gen_weapon_label(weapon)
                     }</li>));
@@ -92,10 +94,12 @@ fn gen_hyakuryu_source_weapon(
     check_weapon!(bow);
 
     if !htmls.is_empty() {
-        Some(html!(<section class="section"> <div> <h2 class="title">"Available on weapons"</h2>
+        Some(
+            html!(<section class="section"> <div> <h2 class="title">"Available on weapons"</h2>
             <ul class="mh-list-item-in-out">{
                 htmls
-            }</ul> </div> </section>))
+            }</ul> </div> </section>),
+        )
     } else {
         None
     }
