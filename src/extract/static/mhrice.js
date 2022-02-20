@@ -48,9 +48,11 @@ function check_cookie() {
 
 function enableCookie() {
     document.cookie = "consent=yes; path=/";
+    cookie_consent = true;
 }
 
 function disableCookie() {
+    cookie_consent = false;
     delete_all_cookie();
 }
 
