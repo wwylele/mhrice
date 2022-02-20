@@ -1,3 +1,4 @@
+use super::gen_armor::*;
 use super::gen_item::*;
 use super::gen_website::*;
 use super::pedia::*;
@@ -58,7 +59,39 @@ pub fn gen_deco_label(deco: &Deco) -> Box<div<String>> {
     </div>)
 }
 
-pub fn gen_skill(skill: &Skill, pedia_ex: &PediaEx, mut output: impl Write) -> Result<()> {
+fn gen_skill_source_gear(id: PlEquipSkillId, pedia_ex: &PediaEx) -> Option<Box<section<String>>> {
+    let mut htmls = vec![];
+
+    for series in &pedia_ex.armors {
+        for piece in series.pieces.iter().flatten() {
+            if piece.data.skill_list.contains(&id) {
+                htmls.push(html!(<li class="mh-list-item-in-out">
+                    <a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
+                        { gen_armor_label(Some(piece)) }
+                    </a>
+                </li>))
+            }
+        }
+    }
+
+    if !htmls.is_empty() {
+        Some(
+            html!(<section class="section"> <div> <h2 class="title">"Available on armors"</h2>
+            <ul class="mh-list-item-in-out">{
+                htmls
+            }</ul> </div> </section>),
+        )
+    } else {
+        None
+    }
+}
+
+pub fn gen_skill(
+    id: PlEquipSkillId,
+    skill: &Skill,
+    pedia_ex: &PediaEx,
+    mut output: impl Write,
+) -> Result<()> {
     let deco = skill.deco.as_ref().map(|deco| {
         html!(<section class="section">
         <h2 class="title">"Decoration"</h2>
@@ -105,6 +138,8 @@ pub fn gen_skill(skill: &Skill, pedia_ex: &PediaEx, mut output: impl Write) -> R
 
                 { deco }
 
+                { gen_skill_source_gear(id, pedia_ex) }
+
                 </div></div></main>
             </body>
         </html>
@@ -119,7 +154,7 @@ pub fn gen_skills(pedia_ex: &PediaEx, output: &impl Sink) -> Result<()> {
     let skill_path = output.sub_sink("skill")?;
     for (&id, skill) in &pedia_ex.skills {
         let output = skill_path.create_html(&skill_page(id))?;
-        gen_skill(skill, pedia_ex, output)?
+        gen_skill(id, skill, pedia_ex, output)?
     }
     Ok(())
 }

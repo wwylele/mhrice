@@ -60,7 +60,7 @@ pub fn gen_hyakuryu_skill_list(
 fn gen_hyakuryu_source_weapon(
     id: PlHyakuryuSkillId,
     pedia_ex: &PediaEx,
-) -> Option<Box<div<String>>> {
+) -> Option<Box<section<String>>> {
     let mut htmls = vec![];
     macro_rules! check_weapon {
         ($weapon:ident) => {
@@ -92,10 +92,10 @@ fn gen_hyakuryu_source_weapon(
     check_weapon!(bow);
 
     if !htmls.is_empty() {
-        Some(html!(<div> <h2 class="title">"Available on weapons"</h2>
+        Some(html!(<section class="section"> <div> <h2 class="title">"Available on weapons"</h2>
             <ul class="mh-list-item-in-out">{
                 htmls
-            }</ul> </div>))
+            }</ul> </div> </section>))
     } else {
         None
     }
@@ -142,9 +142,7 @@ pub fn gen_hyakuryu_skill(
                     </section>
                 ))}
 
-                <section class="section">
-                    { gen_hyakuryu_source_weapon(skill.data.id, pedia_ex) }
-                </section>
+                { gen_hyakuryu_source_weapon(skill.data.id, pedia_ex) }
 
                 </div></div></main>
             </body>
