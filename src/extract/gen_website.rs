@@ -259,18 +259,22 @@ pub fn translate_msg(content: &str) -> Box<span<String>> {
                 arg,
                 seq: Seq { nodes: vec![] },
             };
-            if matches!(tag.tag, "LSNR" | "PL" | "ПУСТО") {
+
+            if tag.tag == "COLS" {
+                tag.tag = "COL";
+                stack.push(tag);
+            } else if matches!(
+                tag.tag,
+                "COLOR" | "COL" | "BSL" | "LEFT" | "FONT" | "TCU" | "size"
+            ) {
+                stack.push(tag);
+            } else {
                 let tag = Node::Tagged(tag);
                 if let Some(last) = stack.last_mut() {
                     last.seq.nodes.push(tag);
                 } else {
                     root.nodes.push(tag);
                 }
-            } else if tag.tag == "COLS" {
-                tag.tag = "COL";
-                stack.push(tag);
-            } else {
-                stack.push(tag);
             }
         }
     }
@@ -288,7 +292,8 @@ pub fn translate_msg(content: &str) -> Box<span<String>> {
                     "COL" => {
                         let color = match t.arg {
                             "RED" => "red",
-                            "YEL" => "yellow",
+                            "YEL" | "YELLOW" => "yellow",
+                            "GRAY" => "gray",
                             _ => {
                                 eprintln!("Unknown color: {}", t.arg);
                                 "black"

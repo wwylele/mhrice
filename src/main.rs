@@ -519,6 +519,9 @@ fn scan_msg(pak: Vec<String>, output: String) -> Result<()> {
             continue;
         }
         let msg = Msg::new(Cursor::new(&file)).context(format!("at {:?}", i))?;
+        for e in &msg.entries {
+            extract::gen_multi_lang(e);
+        }
         std::fs::write(
             PathBuf::from(&output).join(format!("{}.txt", i.short_string())),
             serde_json::to_string_pretty(&msg)?,
