@@ -309,6 +309,11 @@ fn gen_quest(
     pedia_ex: &PediaEx<'_>,
     mut output: impl Write,
 ) -> Result<()> {
+    let has_normal_em = quest
+        .param
+        .boss_em_type
+        .iter()
+        .any(|&em_type| em_type != EmTypes::Em(0));
     let img = format!(
         "/resources/questtype_{}.png",
         quest.param.quest_type.icon_index()
@@ -356,7 +361,7 @@ fn gen_quest(
                         gen_multi_lang
                     )
                 }</span></p>
-                <section class="section">
+                { has_normal_em.then(||html!(<section class="section">
                 <h2 class="title">"Monster stats"</h2>
                 <table>
                     <thead><tr>
@@ -378,15 +383,16 @@ fn gen_quest(
                         .filter(|&(_, em_type)|em_type != EmTypes::Em(0))
                         .map(|(i, em_type)|{
                             html!(<tr>
-                                <td>{ gen_monster_tag(pedia, em_type, quest.param.has_target(em_type)) }</td>
+                                <td>{ gen_monster_tag(pedia, em_type, quest.param.has_target(em_type), false) }</td>
                                 { gen_quest_monster_data(quest.enemy_param.as_ref().map(|p|&p.param),
                                     em_type, i, pedia, pedia_ex) }
                             </tr>)
                         })
                     } </tbody>
                 </table>
-                </section>
-                <section class="section">
+                </section>))}
+
+                { has_normal_em.then(||html!(<section class="section">
                 <h2 class="title">"Multiplayer Factor"</h2>
 
                 <table>
@@ -410,7 +416,7 @@ fn gen_quest(
                         .filter(|&(_, em_type)|em_type != EmTypes::Em(0))
                         .map(|(i, em_type)|{
                             html!(<tr>
-                                <td>{ gen_monster_tag(pedia, em_type, quest.param.has_target(em_type)) }</td>
+                                <td>{ gen_monster_tag(pedia, em_type, quest.param.has_target(em_type), false)}</td>
                                 { gen_quest_monster_multi_player_data(
                                     quest.enemy_param.as_ref().map(|p|&p.param), i, pedia) }
                             </tr>)
@@ -418,8 +424,46 @@ fn gen_quest(
                     } </tbody>
                 </table>
 
-                </section>
-                <section>
+                </section>)) }
+
+                { quest.hyakuryu.map(|h| {
+                    html!(<section class="section">
+                    <h2 class="title">"Rampage data"</h2>
+
+                    <table>
+                    <thead><tr>
+                        <th>"Boss monster"</th>
+                        <th>"Sub type"</th>
+                        <th>"Boss scale table"</th>
+                        <th>"Other monsters"</th>
+                        <th>"Other scale table"</th>
+                        <th>"Order table"</th>
+                    </tr></thead>
+                    <tbody> {
+                        h.wave_data.iter()
+                        .filter(|wave|wave.boss_em != EmTypes::Em(0))
+                        .map(|wave| {
+                            html!(<tr>
+                                <td>{ gen_monster_tag(pedia, wave.boss_em, false, false) }</td>
+                                <td>{text!("{}", wave.boss_sub_type)}</td>
+                                <td>{text!("{}", wave.boss_em_nando_tbl_no)}</td>
+                                <td><ul class="mh-rampage-em-list"> {
+                                    wave.em_table.iter().filter(|&&em|em != EmTypes::Em(0))
+                                    .map(|&em|html!(<li class="mh-rampage-em-list">
+                                        { gen_monster_tag(pedia, em, false, true) }
+                                    </li>))
+                                } </ul></td>
+                                <td>{text!("{}", wave.wave_em_nando_tbl_no)}</td>
+                                <td>{text!("{}", wave.order_table_no)}</td>
+                            </tr>)
+                        })
+                    } </tbody>
+                    </table>
+
+                    </section>)
+                }) }
+
+                <section class="section">
                 <h2 class="title">"Rewards"</h2>
                 { if let Some(reward) = &quest.reward {
                     html!(<div>

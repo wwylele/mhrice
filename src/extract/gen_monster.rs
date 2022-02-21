@@ -10,19 +10,26 @@ use std::convert::TryFrom;
 use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
 
-pub fn gen_monster_tag(pedia: &Pedia, em_type: EmTypes, is_target: bool) -> Box<div<String>> {
+pub fn gen_monster_tag(
+    pedia: &Pedia,
+    em_type: EmTypes,
+    is_target: bool,
+    short: bool,
+) -> Box<div<String>> {
     let (id, is_large) = match em_type {
         EmTypes::Em(id) => (id, true),
         EmTypes::Ems(id) => (id, false),
     };
 
     let monster = pedia.monsters.iter().find(|m| (m.id | m.sub_id << 8) == id);
-    let monster_name = (|| {
-        let name_name = format!("EnemyIndex{:03}", monster?.enemy_type?);
-        Some(gen_multi_lang(pedia.monster_names.get_entry(&name_name)?))
-    })()
-    .unwrap_or(html!(<span>{text!("Monster {0:03}_{1:02}",
-                                id & 0xFF, id >> 8)}</span>));
+    let monster_name = (!short).then(|| {
+        (|| {
+            let name_name = format!("EnemyIndex{:03}", monster?.enemy_type?);
+            Some(gen_multi_lang(pedia.monster_names.get_entry(&name_name)?))
+        })()
+        .unwrap_or(html!(<span>{text!("Monster {0:03}_{1:02}",
+                                id & 0xFF, id >> 8)}</span>))
+    });
 
     let icon_path = format!(
         "/resources/{}{:03}_{:02}_icon.png",

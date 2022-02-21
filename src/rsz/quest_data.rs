@@ -663,3 +663,67 @@ rsz_struct! {
         pub param: Vec<RewardIdLotTableUserDataParam>
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.quest.HyakuryuQuestData.WaveData",
+        0xc4e69cfb = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct HyakuryuQuestDataWaveData {
+        pub boss_em: EmTypes,
+        pub boss_sub_type: u32,
+        pub order_table_no: i32,
+        pub em_table: [EmTypes; 4],
+        pub boss_em_nando_tbl_no: i32,
+        pub wave_em_nando_tbl_no: i32,
+    }
+}
+
+// snow.quest.nHyakuryuQuest.Attr
+rsz_bitflags! {
+    pub struct HyakuryuQuestAttr: u8 {
+        const FIX_WAVE_ORDER = 1;
+        const LOT_HIGH_EX = 2;
+        const LOT_TRUE_ED = 4;
+        const FINAL_BOSS_KILL = 8;
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.HyakuryuQuestData",
+        0x48e96a40 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct HyakuryuQuestData {
+        pub quest_no: i32,
+        pub random_seed: i32,
+        pub attr: HyakuryuQuestAttr,
+        pub wave_data: [HyakuryuQuestDataWaveData; 3],
+        pub quest_lv: QuestLevel,
+        pub map_no: i32, // snow.QuestMapManager.MapNoType
+        pub category: u8, // snow.quest.nHyakuryuQuest.Category
+        pub is_village: bool,
+        pub base_time: u8,
+        pub start_block_no: u8,
+        pub end_block_no: u8,
+        pub extra_em_wave_no: u8,
+        pub extra_em_nando_tbl_no: i8,
+        pub nushi_order_tbl_no: u8,
+        pub hm_unlock_tbl_no: u8,
+        pub sub_target: [QuestTargetType; 6],
+        pub sub_target5_wave_no: u8,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.HyakuryuQuestDataTbl",
+        0x9b163063 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct HyakuryuQuestDataTbl {
+        pub data_list: Vec<HyakuryuQuestData>,
+        pub data_list_310: Vec<HyakuryuQuestData>,
+        pub data_list_320: Vec<HyakuryuQuestData>,
+        pub data_list_350: Vec<HyakuryuQuestData>,
+    }
+}

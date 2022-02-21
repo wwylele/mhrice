@@ -348,6 +348,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         pak,
         "data/Define/Quest/System/QuestRewardSystem/MainTargetLotNumDefineData.user",
     )?;
+    let fixed_hyakuryu_quest = get_user(pak, "Quest/Hyakuryu/QuestData/FixHyakuryuQuestData.user")?;
     let quest_hall_msg = get_msg(pak, "Message/Quest/QuestData_Hall.msg")?;
     let quest_village_msg = get_msg(pak, "Message/Quest/QuestData_Village.msg")?;
     let quest_tutorial_msg = get_msg(pak, "Message/Quest/QuestData_Tutorial.msg")?;
@@ -509,6 +510,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         quest_data_for_reward,
         reward_id_lot_table,
         main_target_reward_lot_num,
+        fixed_hyakuryu_quest,
         quest_hall_msg,
         quest_village_msg,
         quest_tutorial_msg,
@@ -1010,6 +1012,21 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
         .map(|param| (param.id, param))
         .collect();
 
+    let hyakuryu_list = pedia
+        .fixed_hyakuryu_quest
+        .data_list
+        .iter()
+        .chain(pedia.fixed_hyakuryu_quest.data_list_310.iter())
+        .chain(pedia.fixed_hyakuryu_quest.data_list_320.iter())
+        .chain(pedia.fixed_hyakuryu_quest.data_list_350.iter());
+
+    let mut hyakuryus: HashMap<i32, &HyakuryuQuestData> = HashMap::new();
+    for hyakuryu in hyakuryu_list {
+        if hyakuryus.insert(hyakuryu.quest_no, hyakuryu).is_some() {
+            bail!("Multiple data for hyakyryu data {}", hyakuryu.quest_no)
+        }
+    }
+
     pedia
         .normal_quest_data
         .param
@@ -1112,6 +1129,7 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
                 condition: all_msg.remove(&condition_msg_name),
                 is_dl,
                 reward,
+                hyakuryu: hyakuryus.remove(&param.quest_no),
             })
         })
         .collect::<Result<Vec<_>>>()

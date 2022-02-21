@@ -120,7 +120,7 @@ fn gen_item_source_monster(
         <ul class="mh-list-item-in-out">
             {
                 em_types.into_iter().map(|em_type|html!(<li class="mh-list-item-in-out">{
-                    gen_monster_tag(pedia, em_type, false)
+                    gen_monster_tag(pedia, em_type, false, false)
                 }</li>))
             }
         </ul></div>))

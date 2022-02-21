@@ -63,6 +63,7 @@ pub struct Pedia {
     pub quest_data_for_reward: QuestDataForRewardUserData,
     pub reward_id_lot_table: RewardIdLotTableUserData,
     pub main_target_reward_lot_num: MainTargetRewardLotNumDefineUserData,
+    pub fixed_hyakuryu_quest: HyakuryuQuestDataTbl,
     pub quest_hall_msg: Msg,
     pub quest_village_msg: Msg,
     pub quest_tutorial_msg: Msg,
@@ -151,6 +152,7 @@ pub struct Quest<'a> {
     pub condition: Option<&'a MsgEntry>,
     pub is_dl: bool,
     pub reward: Option<QuestReward<'a>>,
+    pub hyakuryu: Option<&'a HyakuryuQuestData>,
 }
 
 pub struct Deco<'a> {

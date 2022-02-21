@@ -324,3 +324,12 @@ ul.mh-list-item-in-out {
 li.mh-list-item-in-out {
     display: inline-block;
 }
+
+ul.mh-rampage-em-list{
+    margin-left: 0;
+    margin-top: 0;
+}
+
+li.mh-rampage-em-list {
+    display: inline-block;
+}

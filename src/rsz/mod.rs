@@ -812,6 +812,9 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerPackage>> = Lazy::new(|| {
         QuestDataForRewardUserData,
         RewardIdLotTableUserDataParam,
         RewardIdLotTableUserData,
+        HyakuryuQuestDataWaveData,
+        HyakuryuQuestData,
+        HyakuryuQuestDataTbl,
     );
 
     r!(
