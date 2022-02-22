@@ -126,7 +126,7 @@ pub fn gen_skill(
                 <h1 class="title">
                     {gen_multi_lang(skill.name)}
                 </h1>
-                <div>{gen_multi_lang(skill.explain)}</div>
+                <pre>{gen_multi_lang(skill.explain)}</pre>
                 <ul>{
                     skill.levels.iter().enumerate().map(|(level, detail)| {
                         html!(<li>

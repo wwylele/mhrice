@@ -381,9 +381,9 @@ where
                     {gen_multi_lang(weapon.name)}
                 </h1>
 
-                <section class="section"><p>
+                <section class="section"><pre>
                     {gen_multi_lang(weapon.explain)}
-                </p></section>
+                </pre></section>
 
                 <section class="section">
                 <h2 class="title">"Stat"</h2>

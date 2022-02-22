@@ -437,9 +437,9 @@ pub fn gen_item(
                     {gen_multi_lang(item.name)}
                 </h1>
 
-                <section class="section"><p>
+                <section class="section"><pre>
                     {gen_multi_lang(item.explain)}
-                </p></section>
+                </pre></section>
 
                 <section class="section">
                 <h2 class="title">"Basic data"</h2>

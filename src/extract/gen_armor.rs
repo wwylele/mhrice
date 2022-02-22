@@ -112,7 +112,7 @@ fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, mut output: impl Write) -
                     };
                     html!(<tr>
                         <td>{gen_label(piece)}</td>
-                        <td>{gen_multi_lang(piece.explain)}</td>
+                        <td><pre>{gen_multi_lang(piece.explain)}</pre></td>
                     </tr>)
                 })
             } </tbody>

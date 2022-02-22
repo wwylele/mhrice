@@ -355,12 +355,12 @@ fn gen_quest(
                         gen_multi_lang
                     )
                 }</span></p>
-                <p><span>"Detail: "</span><span> {
+                <p><span>"Detail: "</span></p>{
                     quest.detail.map_or(
-                        html!(<span>"-"</span>),
-                        gen_multi_lang
+                        html!(<div>"-"</div>),
+                        |m|html!(<div><pre>{gen_multi_lang(m)}</pre></div>)
                     )
-                }</span></p>
+                }
                 { has_normal_em.then(||html!(<section class="section">
                 <h2 class="title">"Monster stats"</h2>
                 <table>
