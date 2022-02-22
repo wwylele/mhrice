@@ -305,6 +305,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
 
     let monster_names = get_msg(pak, "Message/Tag/Tag_EM_Name.msg")?;
     let monster_aliases = get_msg(pak, "Message/Tag/Tag_EM_Name_Alias.msg")?;
+    let monster_explains = get_msg(pak, "Message/HunterNote/HN_MonsterListMsg.msg")?;
 
     let condition_preset: EnemyConditionPresetData = get_user(
         pak,
@@ -494,6 +495,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         small_monsters,
         monster_names,
         monster_aliases,
+        monster_explains,
         condition_preset,
         monster_list,
         hunter_note_msg,

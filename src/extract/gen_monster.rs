@@ -788,6 +788,16 @@ pub fn gen_monster(
         if is_large { EmTypes::Em } else { EmTypes::Ems }(monster_id | (monster_sub_id << 8));
     let condition_preset = &pedia.condition_preset;
 
+    let explains = pedia.monster_explains.get_name_map();
+    let explain1 = monster
+        .enemy_type
+        .and_then(|e| explains.get(&format!("HN_MonsterListMsg_EnemyIndex{:03}_page1", e)))
+        .map(|m| html!(<pre> {gen_multi_lang(m)} </pre>));
+    let explain2 = monster
+        .enemy_type
+        .and_then(|e| explains.get(&format!("HN_MonsterListMsg_EnemyIndex{:03}_page2", e)))
+        .map(|m| html!(<pre> {gen_multi_lang(m)} </pre>));
+
     let quest_list = html!(
         <section class="section">
         <h2 class="title">"Quests"</h2>
@@ -868,6 +878,11 @@ pub fn gen_monster(
                         }
                     }</h1>
                 </div>
+                <section class="section">
+                <h2 class="title">"Description"</h2>
+                { explain1 }
+                { explain2 }
+                </section>
                 <section class="section">
                 <h2 class="title">"Basic data"</h2>
                 <p>{ text!("Base HP: {}", monster.data_tune.base_hp_vital) }</p>
