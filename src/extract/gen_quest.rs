@@ -303,6 +303,33 @@ fn gen_quest_monster_multi_player_data(
         .collect()
 }
 
+impl HyakuryuQuestData {
+    fn display(&self) -> String {
+        let mut list = vec![];
+        if self.attr.contains(HyakuryuQuestAttr::FIX_WAVE_ORDER) {
+            list.push("Fixed wave order")
+        }
+        if self.attr.contains(HyakuryuQuestAttr::LOT_HIGH_EX) {
+            list.push("Red 7* reward")
+        }
+        if self.attr.contains(HyakuryuQuestAttr::LOT_TRUE_ED) {
+            list.push("After true ending reward")
+        }
+        if self.attr.contains(HyakuryuQuestAttr::FINAL_BOSS_KILL) {
+            list.push("Requires true ending")
+        }
+        if self.category == HyakuryuQuestCategory::Nushi {
+            list.push("Has apex")
+        }
+        if self.is_village {
+            list.push("Village")
+        } else {
+            list.push("Hub")
+        }
+        list.join(" | ")
+    }
+}
+
 fn gen_quest(
     quest: &Quest,
     pedia: &Pedia,
@@ -429,6 +456,42 @@ fn gen_quest(
                 { quest.hyakuryu.map(|h| {
                     html!(<section class="section">
                     <h2 class="title">"Rampage data"</h2>
+
+                    <p>{ text!("Attribute: {}", h.display()) }</p>
+                    <p>{ text!("Base time: {}", h.base_time) }</p>
+                    <p>{ text!("Map block: {} - {}", h.start_block_no, h.end_block_no) }</p>
+                    <p>{ text!("Magnamalo appears at wave: {}", h.extra_em_wave_no) }</p>
+                    <p>{ text!("Magnamalo difficulty table: {}", h.extra_em_nando_tbl_no) }</p>
+                    <p>{ text!("Apex order table: {}", h.nushi_order_tbl_no) }</p>
+                    <p>{ text!("Siege weapon unlock table: {}", h.hm_unlock_tbl_no) }</p>
+                    <div>"Tasks:"<ul>{
+                        h.sub_target.iter().enumerate()
+                        .filter(|(_, target)|**target != QuestTargetType::None)
+                        .map(|(i, target)| {
+                            let extra_target = (i == 5).then(
+                                ||html!(<span>{
+                                    text!(" (appears on wave {})", h.sub_target5_wave_no)}
+                                </span>));
+                            let s = match target {
+                                QuestTargetType::HuntingMachine => "Install siege weapons",
+                                QuestTargetType::DropItem => "Collect drops",
+                                QuestTargetType::EmStun => "Stun monsters",
+                                QuestTargetType::EmElement => "Apply element blight",
+                                QuestTargetType::EmCondition => "Apply status",
+                                QuestTargetType::EmCntWeapon => "Repel using weapon",
+                                QuestTargetType::EmCntHmBallista  => "Repel using ballista",
+                                QuestTargetType::EmCntHmCannon  => "Repel using cannon",
+                                QuestTargetType::EmCntHmGatling => "Repel using gatling",
+                                QuestTargetType::EmCntHmTrap => "Repel using bomb trap",
+                                QuestTargetType::EmCntHmFlameThrower => "Repel using flamethrower",
+                                QuestTargetType::EmCntHmNpc => "Repel by NPC",
+                                QuestTargetType::EmCntHmDragnator => "Repel using dragonator",
+                                QuestTargetType::ExtraEmRunaway => "Repel Magnamalo",
+                                x => return html!(<li>{ text!("{}", *x as u8) }{extra_target}</li>)
+                            };
+                            html!(<li>{ text!("{}", s) }{extra_target}</li>)
+                        })
+                    }</ul></div>
 
                     <table>
                     <thead><tr>

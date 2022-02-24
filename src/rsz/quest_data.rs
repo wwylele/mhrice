@@ -689,6 +689,16 @@ rsz_bitflags! {
     }
 }
 
+// snow.quest.nHyakuryuQuest.Category
+rsz_enum! {
+    #[rsz(u8)]
+    #[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq)]
+    pub enum HyakuryuQuestCategory {
+        Normal = 0,
+        Nushi = 1,
+    }
+}
+
 rsz_struct! {
     #[rsz("snow.quest.HyakuryuQuestData",
         0x48e96a40 = 0
@@ -701,7 +711,7 @@ rsz_struct! {
         pub wave_data: [HyakuryuQuestDataWaveData; 3],
         pub quest_lv: QuestLevel,
         pub map_no: i32, // snow.QuestMapManager.MapNoType
-        pub category: u8, // snow.quest.nHyakuryuQuest.Category
+        pub category: HyakuryuQuestCategory,
         pub is_village: bool,
         pub base_time: u8,
         pub start_block_no: u8,
