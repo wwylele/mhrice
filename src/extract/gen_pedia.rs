@@ -1020,7 +1020,31 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
         .iter()
         .chain(pedia.fixed_hyakuryu_quest.data_list_310.iter())
         .chain(pedia.fixed_hyakuryu_quest.data_list_320.iter())
-        .chain(pedia.fixed_hyakuryu_quest.data_list_350.iter());
+        .chain(pedia.fixed_hyakuryu_quest.data_list_350.iter())
+        .chain(
+            pedia
+                .fixed_hyakuryu_quest
+                .data_list_370
+                .0
+                .iter()
+                .flat_map(|i| i.iter()),
+        )
+        .chain(
+            pedia
+                .fixed_hyakuryu_quest
+                .data_list_380
+                .0
+                .iter()
+                .flat_map(|i| i.iter()),
+        )
+        .chain(
+            pedia
+                .fixed_hyakuryu_quest
+                .data_list_390
+                .0
+                .iter()
+                .flat_map(|i| i.iter()),
+        );
 
     let mut hyakuryus: HashMap<i32, &HyakuryuQuestData> = HashMap::new();
     for hyakuryu in hyakuryu_list {

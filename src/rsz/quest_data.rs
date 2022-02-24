@@ -727,7 +727,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.HyakuryuQuestDataTbl",
-        0x9b163063 = 0
+        0x9b163063 = 0,
+        0xB0022BC2 = 2,
     )]
     #[derive(Debug, Serialize)]
     pub struct HyakuryuQuestDataTbl {
@@ -735,5 +736,8 @@ rsz_struct! {
         pub data_list_310: Vec<HyakuryuQuestData>,
         pub data_list_320: Vec<HyakuryuQuestData>,
         pub data_list_350: Vec<HyakuryuQuestData>,
+        pub data_list_370: Versioned<Vec<HyakuryuQuestData>, 2, {u32::MAX}>,
+        pub data_list_380: Versioned<Vec<HyakuryuQuestData>, 2, {u32::MAX}>,
+        pub data_list_390: Versioned<Vec<HyakuryuQuestData>, 2, {u32::MAX}>,
     }
 }
