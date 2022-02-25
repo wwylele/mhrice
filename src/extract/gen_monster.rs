@@ -976,7 +976,7 @@ pub fn gen_monster(
                                         phase
                                     }).copied().map_or(html!(<span></span>), gen_multi_lang);
 
-                                    let mut tds = part_common.take().unwrap_or_else(Vec::new);
+                                    let mut tds = part_common.take().unwrap_or_default();
                                     tds.extend(vec![
                                         html!(<td>{text!("{}", phase)}</td>),
                                         html!(<td>{name}</td>),
