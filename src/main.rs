@@ -367,6 +367,8 @@ fn gen_website_to_sink(pak: Vec<String>, sink: impl Sink) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
     let pedia = extract::gen_pedia(&mut pak)?;
     let pedia_ex = extract::gen_pedia_ex(&pedia)?;
+    sink.create("mhrice.json")?
+        .write_all(serde_json::to_string_pretty(&pedia)?.as_bytes())?;
     extract::gen_website(&pedia, &pedia_ex, &sink)?;
     extract::gen_resources(&mut pak, &sink.sub_sink("resources")?)?;
     sink.finalize()?;

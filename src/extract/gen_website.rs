@@ -479,6 +479,7 @@ pub fn gen_about(output: &impl Sink) -> Result<()> {
                 { navbar() }
                 <main> <div class="container"> <div class="content">
                 <h1 class="title">"About MHRice"</h1>
+                <section class="section">
                 <p>
                 "MHRice is an information site for Monster Hunter Rise, displaying data extracted from the game."
                 </p>
@@ -493,6 +494,21 @@ pub fn gen_about(output: &impl Sink) -> Result<()> {
                     <span>"Visit MHRice on Github"</span>
                 </a>
                 </p>
+                </section>
+                <section class="section">
+                <h2 class="title">"Download data"</h2>
+                <p>
+                "MHRice data is also available in JSON format."
+                </p>
+                <p>
+                <a class="button" href="/mhrice.json" download="mhrice.json">
+                    <span class="icon">
+                        <i class="fas fa-download"></i>
+                    </span>
+                    <span>"Download mhrice.json"</span>
+                </a>
+                </p>
+                </section>
                 <section class="section">
                 <h2 class="title">"Build information"</h2>
                 <ul>
