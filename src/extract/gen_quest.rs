@@ -345,6 +345,63 @@ fn gen_quest(
         "/resources/questtype_{}.png",
         quest.param.quest_type.icon_index()
     );
+
+    let target = quest
+        .param
+        .target_type
+        .iter()
+        .filter(|&&t| t != QuestTargetType::None)
+        .map(|t| match t {
+            QuestTargetType::ItemGet => "Collect".to_owned(),
+            QuestTargetType::Hunting => "Hunt".to_owned(),
+            QuestTargetType::Kill => "Slay".to_owned(),
+            QuestTargetType::Capture => "Capture".to_owned(),
+            QuestTargetType::AllMainEnemy => "Hunt all".to_owned(),
+            QuestTargetType::EmTotal => "Hunt small monsters".to_owned(),
+            QuestTargetType::FinalBarrierDefense => "Defend final barrier".to_owned(),
+            QuestTargetType::FortLevelUp => "Level up fort".to_owned(),
+            QuestTargetType::PlayerDown => "PlayerDown".to_owned(),
+            QuestTargetType::FinalBoss => "Final boss".to_owned(),
+            x => format!("{:?}", x),
+        })
+        .collect::<Vec<String>>()
+        .join(", ");
+
+    let requirement = quest
+        .param
+        .order_type
+        .iter()
+        .filter(|&&t| t != QuestOrderType::None)
+        .map(|t| format!("{:?}", t))
+        .collect::<Vec<String>>()
+        .join(", ");
+
+    let has_target_material = quest
+        .param
+        .tgt_item_id
+        .iter()
+        .any(|&item| item != ItemId::None);
+    let target_material = has_target_material.then(|| {
+        html!(<section class="section">
+        <h2 class="title">"Target material"</h2>
+        <ul>{
+        quest.param.tgt_item_id.iter().zip(quest.param.tgt_num.iter())
+            .filter(|&(&item, _)| item != ItemId::None)
+            .map(|(&item, num)|{
+            let item = if let Some(item) = pedia_ex.items.get(&item) {
+                html!(<span>{gen_item_label(item)}</span>)
+            } else {
+                html!(<span>{text!("{:?}", item)}</span>)
+            };
+            html!(<li>
+                {text!("{}x ", num)}
+                {item}
+            </li>)
+        })
+    }</ul>
+        </section>)
+    });
+
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -388,6 +445,44 @@ fn gen_quest(
                         |m|html!(<div><pre>{gen_multi_lang(m)}</pre></div>)
                     )
                 }
+
+                <section class="section">
+                <h2 class="title">"Basic data"</h2>
+                <div class="mh-kvlist">
+                <p class="mh-kv"><span>"Map"</span>
+                    <span>{ text!("{}", quest.param.map_no) }</span></p>
+                <p class="mh-kv"><span>"Base time"</span>
+                    <span>{ text!("{}", quest.param.base_time) }</span></p>
+                <p class="mh-kv"><span>"Time variation"</span>
+                    <span>{ text!("{}", quest.param.time_variation) }</span></p>
+                <p class="mh-kv"><span>"Time limit"</span>
+                    <span>{ text!("{}", quest.param.time_limit) }</span></p>
+                <p class="mh-kv"><span>"Carts"</span>
+                    <span>{ text!("{}", quest.param.quest_life) }</span></p>
+                <p class="mh-kv"><span>"Requirement"</span>
+                    <span>{ text!("{}", requirement) }</span></p>
+                <p class="mh-kv"><span>"Target"</span>
+                    <span>{ text!("{}", target) }</span></p>
+                <p class="mh-kv"><span>"Reward money"</span>
+                    <span>{ text!("{}", quest.param.rem_money) }</span></p>
+                <p class="mh-kv"><span>"Reward village point"</span>
+                    <span>{ text!("{}", quest.param.rem_village_point) }</span></p>
+                <p class="mh-kv"><span>"Reward rank point"</span>
+                    <span>{ text!("{}", quest.param.rem_rank_point) }</span></p>
+                <p class="mh-kv"><span>"Is tutorial"</span>
+                    <span>{ text!("{}", quest.param.is_tutorial) }</span></p>
+                <p class="mh-kv"><span>"Auto match HR"</span>
+                    <span>{ text!("{}", quest.param.auto_match_hr) }</span></p>
+                </div>
+                </section>
+
+                { target_material }
+
+                // TODO: monster spawn/swap behavior
+                // TODO: supply_tbl
+                // TODO: fence
+                // TODO is_use_pillar
+
                 { has_normal_em.then(||html!(<section class="section">
                 <h2 class="title">"Monster stats"</h2>
                 <table>
@@ -456,14 +551,22 @@ fn gen_quest(
                 { quest.hyakuryu.map(|h| {
                     html!(<section class="section">
                     <h2 class="title">"Rampage data"</h2>
-
-                    <p>{ text!("Attribute: {}", h.display()) }</p>
-                    <p>{ text!("Base time: {}", h.base_time) }</p>
-                    <p>{ text!("Map block: {} - {}", h.start_block_no, h.end_block_no) }</p>
-                    <p>{ text!("Magnamalo appears at wave: {}", h.extra_em_wave_no) }</p>
-                    <p>{ text!("Magnamalo difficulty table: {}", h.extra_em_nando_tbl_no) }</p>
-                    <p>{ text!("Apex order table: {}", h.nushi_order_tbl_no) }</p>
-                    <p>{ text!("Siege weapon unlock table: {}", h.hm_unlock_tbl_no) }</p>
+                    <div class="mh-kvlist">
+                    <p class="mh-kv"><span>"Attribute"</span>
+                        <span>{ text!("{}", h.display()) }</span></p>
+                    <p class="mh-kv"><span>"Base time"</span>
+                        <span>{ text!("{}", h.base_time) }</span></p>
+                    <p class="mh-kv"><span>"Map block"</span>
+                        <span>{ text!("{} - {}", h.start_block_no, h.end_block_no) }</span></p>
+                    <p class="mh-kv"><span>"Magnamalo appears at wave"</span>
+                        <span>{ text!("{}", h.extra_em_wave_no) }</span></p>
+                    <p class="mh-kv"><span>"Magnamalo difficulty table"</span>
+                        <span>{ text!("{}", h.extra_em_nando_tbl_no) }</span></p>
+                    <p class="mh-kv"><span>"Apex order table"</span>
+                        <span>{ text!("{}", h.nushi_order_tbl_no)}</span></p>
+                    <p class="mh-kv"><span>"Siege weapon unlock table"</span>
+                        <span>{ text!("{}", h.hm_unlock_tbl_no) }</span></p>
+                    </div>
                     <div>"Tasks:"<ul>{
                         h.sub_target.iter().enumerate()
                         .filter(|(_, target)|**target != QuestTargetType::None)

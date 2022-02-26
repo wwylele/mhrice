@@ -29,7 +29,7 @@ impl QuestType {
         if self.contains(QuestType::KILL) {
             return 1;
         }
-        if self.contains(QuestType::HUNTING) {
+        if self.contains(QuestType::CAPTURE) {
             return 2;
         }
         if self.contains(QuestType::BOSSRUSH) {
@@ -89,7 +89,7 @@ rsz_enum! {
 // snow.quest.QuestOrderType
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize, Clone, Copy)]
+    #[derive(Debug, Serialize, Clone, Copy, Eq, PartialEq)]
     pub enum QuestOrderType {
         None = 0,
         Under2 = 1,
@@ -272,7 +272,7 @@ rsz_struct! {
         pub order_type: Vec<QuestOrderType>,
         pub target_type: Vec<QuestTargetType>,
         pub tgt_em_type: Vec<EmTypes>,
-        pub tgt_item_id: Vec<u32>,
+        pub tgt_item_id: Vec<ItemId>,
         pub tgt_num: Vec<u32>,
         pub boss_em_type: Vec<EmTypes>,
         pub init_extra_em_num: u8,
