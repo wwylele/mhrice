@@ -522,6 +522,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "debugid"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d6ee87af31d84ef885378aebca32be3d682b0e0dc119d5b4860a2c5bb5046730"
+dependencies = [
+ "uuid",
+]
+
+[[package]]
 name = "deflate"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1400,8 +1409,9 @@ checksum = "2a60c7ce501c71e03a9c9c0d35b861413ae925bd979cc7a4e30d060069aaac8d"
 [[package]]
 name = "minidump"
 version = "0.9.6"
-source = "git+https://github.com/wwylele/rust-minidump.git#3c3632737ec12d0083a65981c20b6f12ebe997a2"
+source = "git+https://github.com/luser/rust-minidump.git#6808495b8eae53607477f0e80d843fdeacefbef4"
 dependencies = [
+ "debugid",
  "encoding",
  "log",
  "memmap2 0.5.3",
@@ -1411,14 +1421,16 @@ dependencies = [
  "scroll",
  "thiserror",
  "time 0.3.7",
+ "uuid",
 ]
 
 [[package]]
 name = "minidump-common"
 version = "0.9.6"
-source = "git+https://github.com/wwylele/rust-minidump.git#3c3632737ec12d0083a65981c20b6f12ebe997a2"
+source = "git+https://github.com/luser/rust-minidump.git#6808495b8eae53607477f0e80d843fdeacefbef4"
 dependencies = [
  "bitflags",
+ "debugid",
  "enum-primitive-derive",
  "log",
  "num-traits 0.2.14",
@@ -2859,6 +2871,12 @@ dependencies = [
  "matches",
  "percent-encoding",
 ]
+
+[[package]]
+name = "uuid"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
 
 [[package]]
 name = "vcpkg"

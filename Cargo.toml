@@ -33,7 +33,7 @@ compress = "0.2"
 astc-decode = "0.3"
 num-bigint = "0.4"
 base64 = "0.13"
-minidump = { git = "https://github.com/wwylele/rust-minidump.git" }
+minidump = { git = "https://github.com/luser/rust-minidump.git" }
 
 [build-dependencies]
 built = { version = "0.5", features = ["git2"] }
