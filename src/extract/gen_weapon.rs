@@ -461,6 +461,10 @@ where
 
                 <section class="section">
                 <h2 class="title">"Crafting"</h2>
+                <div class="mh-kvlist">
+                <p class="mh-kv"><span>"Cost (craft / buy)"</span>
+                    <span>{text!("{} / {}", main.base.base_val, main.base.buy_val)}</span></p>
+                </div>
                 <table>
                     <thead><tr>
                         <th>""</th>
