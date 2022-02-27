@@ -259,6 +259,11 @@ enum Mhrice {
         #[structopt(short, long)]
         map: Option<String>,
     },
+
+    DumpScn {
+        #[structopt(short, long)]
+        scn: String,
+    },
 }
 
 fn open_pak_files(mut pak: Vec<String>) -> Result<Vec<File>> {
@@ -860,6 +865,13 @@ fn read_user(user: String) -> Result<()> {
     Ok(())
 }
 
+fn dump_scn(scn: String) -> Result<()> {
+    let scn = Scn::new(File::open(scn)?)?;
+    scn.dump();
+
+    Ok(())
+}
+
 fn main() -> Result<()> {
     gpu::gpu_init();
     match Mhrice::from_args() {
@@ -900,5 +912,6 @@ fn main() -> Result<()> {
         }
         Mhrice::ReadUser { user } => read_user(user),
         Mhrice::ReadDmpTdb { dmp, map } => read_dmp_tdb(dmp, map),
+        Mhrice::DumpScn { scn } => dump_scn(scn),
     }
 }

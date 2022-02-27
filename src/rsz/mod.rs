@@ -14,6 +14,7 @@ mod meat_data;
 mod monster_list;
 mod parts_break_data;
 mod quest_data;
+mod scene;
 mod skill;
 mod weapon;
 
@@ -33,6 +34,7 @@ pub use meat_data::*;
 pub use monster_list::*;
 pub use parts_break_data::*;
 pub use quest_data::*;
+pub use scene::*;
 pub use skill::*;
 pub use weapon::*;
 
@@ -217,6 +219,10 @@ impl Rsz {
             bail!("Not a single-valued RSZ");
         }
         result.pop().unwrap().downcast().context("Type mismatch")
+    }
+
+    pub fn root_count(&self) -> usize {
+        self.roots.len()
     }
 }
 
@@ -926,6 +932,8 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerPackage>> = Lazy::new(|| {
         HyakuryuWeaponHyakuryuBuildupUserDataParam,
         HyakuryuWeaponHyakuryuBuildupUserData,
     );
+
+    r!(Folder, GameObject, Transform, WwiseMediaLoader,);
 
     m
 });
