@@ -1,16 +1,20 @@
 use crate::file_ext::*;
+use crate::pak::*;
+use crate::rsz;
 use crate::rsz::Rsz;
 use crate::user::UserChild;
 use anyhow::{bail, Context, Result};
 use std::collections::BTreeSet;
-use std::io::{Read, Seek};
+use std::collections::HashMap;
+use std::io::{Cursor, Read, Seek};
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct ScnGameObject {
     guid: [u8; 16],
     object_index: u32,
     parent_index: Option<u32>, // could be a game object or a folder
-    sub_object_count: u32,
+    component_count: u32,
     prefab_index: Option<u32>,
 }
 
@@ -64,14 +68,14 @@ impl Scn {
                 file.read_exact(&mut guid)?;
                 let object_index = file.read_u32()?;
                 let parent_index = scn_option(file.read_u32()?);
-                let sub_object_count = file.read_u32()?;
+                let component_count = file.read_u32()?;
                 let prefab_index = scn_option(file.read_u32()?);
                 if let Some(prefab_index) = prefab_index {
                     if prefab_index >= prefab_count {
                         bail!("Prefab index out of bound")
                     }
                 }
-                for index in object_index..=object_index + sub_object_count {
+                for index in object_index..=object_index + component_count {
                     if !index_footprint.insert(index) {
                         bail!("Multiple object referring to the same index")
                     }
@@ -80,7 +84,7 @@ impl Scn {
                     guid,
                     object_index,
                     parent_index,
-                    sub_object_count,
+                    component_count,
                     prefab_index,
                 })
             })
@@ -198,7 +202,7 @@ impl Scn {
         for n in &self.game_objects {
             println!(
                 "object={}, parent={:?}, sub={}, {:?}",
-                n.object_index, n.parent_index, n.sub_object_count, n.prefab_index
+                n.object_index, n.parent_index, n.component_count, n.prefab_index
             )
         }
         println!();
@@ -248,5 +252,153 @@ impl Scn {
                 }
             }
         }
+    }
+}
+
+#[derive(Debug)]
+struct GameObject {
+    object: rsz::GameObject,
+    components: Vec<rsz::AnyRsz>,
+    prefab: Option<Rc<String>>,
+    children: Vec<GameObject>,
+}
+
+#[derive(Debug)]
+struct Folder {
+    folder: rsz::Folder,
+    subscene: Result<Scene>,
+    children: Vec<GameObject>,
+    subfolders: Vec<Folder>,
+}
+
+#[derive(Debug)]
+pub struct Scene {
+    objects: Vec<GameObject>,
+    folders: Vec<Folder>,
+}
+
+impl Scene {
+    pub fn new<F: Read + Seek>(pak: &mut PakReader<F>, path: &str) -> Result<Scene> {
+        let index = pak.find_file(path)?;
+        let content = pak.read_file(index)?;
+        let scn = Scn::new(Cursor::new(content))?;
+        let mut data: Vec<Option<rsz::AnyRsz>> =
+            scn.rsz.deserialize()?.into_iter().map(Some).collect();
+        let prefabs: Vec<Rc<String>> = scn.prefab_paths.into_iter().map(|s| Rc::new(s)).collect();
+
+        let mut orphans: HashMap<Option<u32>, Vec<GameObject>> = HashMap::new();
+        let mut orphan_folders: HashMap<Option<u32>, Vec<Folder>> = HashMap::new();
+
+        for go in scn.game_objects.into_iter().rev() {
+            let object: rsz::GameObject = data
+                .get_mut(usize::try_from(go.object_index)?)
+                .context("game object index out of bound")?
+                .take()
+                .context("game object data already taken")?
+                .downcast()
+                .context("GameObject type mismatch")?;
+            let components: Vec<rsz::AnyRsz> = (go.object_index + 1
+                ..=go.object_index + go.component_count)
+                .map(|i| {
+                    data.get_mut(usize::try_from(i)?)
+                        .context("component index out of bound")?
+                        .take()
+                        .context("component data already taken")
+                })
+                .collect::<Result<_>>()?;
+            let prefab: Option<Rc<String>> = go
+                .prefab_index
+                .map(|i| -> Result<Rc<String>> {
+                    Ok(prefabs
+                        .get(usize::try_from(i)?)
+                        .context("prefab index out of bound")?
+                        .clone())
+                })
+                .transpose()?;
+            let children = orphans.remove(&Some(go.object_index)).map_or_else(
+                Vec::new,
+                |mut children: Vec<GameObject>| {
+                    children.reverse();
+                    children
+                },
+            );
+
+            let game_object = GameObject {
+                object,
+                components,
+                prefab,
+                children,
+            };
+
+            orphans
+                .entry(go.parent_index)
+                .or_default()
+                .push(game_object);
+        }
+
+        for f in scn.folders.into_iter().rev() {
+            let folder: rsz::Folder = data
+                .get_mut(usize::try_from(f.folder_object_index)?)
+                .context("folder index out of bound")?
+                .take()
+                .context("folder data already taken")?
+                .downcast()
+                .context("Folder type mismatch")?;
+            let subscene = Scene::new(pak, &folder.path);
+            let children = orphans.remove(&Some(f.folder_object_index)).map_or_else(
+                Vec::new,
+                |mut children: Vec<GameObject>| {
+                    children.reverse();
+                    children
+                },
+            );
+            let subfolders = orphan_folders
+                .remove(&Some(f.folder_object_index))
+                .map_or_else(Vec::new, |mut children: Vec<Folder>| {
+                    children.reverse();
+                    children
+                });
+            let folder = Folder {
+                folder,
+                subscene,
+                children,
+                subfolders,
+            };
+
+            orphan_folders
+                .entry(f.parent_index)
+                .or_default()
+                .push(folder);
+        }
+
+        if data.into_iter().any(|d| d.is_some()) {
+            bail!("Left over data")
+        }
+
+        let objects =
+            orphans
+                .remove(&None)
+                .map_or_else(Vec::new, |mut children: Vec<GameObject>| {
+                    children.reverse();
+                    children
+                });
+
+        let folders =
+            orphan_folders
+                .remove(&None)
+                .map_or_else(Vec::new, |mut children: Vec<Folder>| {
+                    children.reverse();
+                    children
+                });
+
+        if !orphans.is_empty() {
+            bail!("Found orphan game object")
+        }
+
+        if !orphan_folders.is_empty() {
+            bail!("Found orphan folder")
+        }
+
+        Ok(Scene { objects, folders })
     }
 }

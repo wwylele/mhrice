@@ -281,6 +281,12 @@ pub struct AnyRsz {
     to_json_fn: fn(&dyn Any) -> Result<String>,
 }
 
+impl std::fmt::Debug for AnyRsz {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "[AnyRsz]")
+    }
+}
+
 impl AnyRsz {
     pub fn new<T: Any + Serialize>(v: T) -> AnyRsz {
         let any = Box::new(v);
