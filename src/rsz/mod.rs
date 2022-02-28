@@ -47,6 +47,7 @@ use serde::*;
 use std::any::*;
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
+use std::fmt::Debug;
 use std::io::{Cursor, Read, Seek, SeekFrom};
 use std::ops::Deref;
 use std::rc::*;
@@ -279,22 +280,30 @@ impl<'a, 'b> Read for RszDeserializer<'a, 'b> {
 pub struct AnyRsz {
     any: Box<dyn Any>,
     to_json_fn: fn(&dyn Any) -> Result<String>,
+    debug: fn(&dyn Any, f: &mut std::fmt::Formatter) -> std::fmt::Result,
 }
 
-impl std::fmt::Debug for AnyRsz {
+impl Debug for AnyRsz {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "[AnyRsz]")
+        (self.debug)(&*self.any, f)
     }
 }
 
 impl AnyRsz {
-    pub fn new<T: Any + Serialize>(v: T) -> AnyRsz {
+    pub fn new<T: Any + Serialize + Debug>(v: T) -> AnyRsz {
         let any = Box::new(v);
         let to_json_fn = |any: &dyn Any| {
             serde_json::to_string_pretty(any.downcast_ref::<T>().unwrap())
                 .context("Failed to convert to json")
         };
-        AnyRsz { any, to_json_fn }
+        let debug = |any: &dyn Any, f: &mut std::fmt::Formatter| {
+            std::fmt::Debug::fmt(any.downcast_ref::<T>().unwrap(), f)
+        };
+        AnyRsz {
+            any,
+            to_json_fn,
+            debug,
+        }
     }
 
     pub fn downcast<T: Any>(self) -> Option<T> {
@@ -692,7 +701,9 @@ type RszDeserializerPackage = (
 static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerPackage>> = Lazy::new(|| {
     let mut m = HashMap::new();
 
-    fn register<T: 'static + FromRsz + Serialize>(m: &mut HashMap<u32, RszDeserializerPackage>) {
+    fn register<T: 'static + FromRsz + Serialize + Debug>(
+        m: &mut HashMap<u32, RszDeserializerPackage>,
+    ) {
         let hash = T::type_hash();
         let versions: HashMap<u32, u32> = T::VERSIONS.iter().copied().collect();
         let old = m.insert(hash, (|rsz| Ok(AnyRsz::new(T::from_rsz(rsz)?)), versions));
