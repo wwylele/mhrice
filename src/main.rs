@@ -1,6 +1,6 @@
 #![recursion_limit = "4096"]
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use minidump::*;
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
@@ -34,6 +34,7 @@ mod user;
 mod uvs;
 
 use extract::sink::*;
+use file_ext::*;
 use gui::*;
 use mesh::*;
 use msg::*;
@@ -271,6 +272,17 @@ enum Mhrice {
         #[structopt(short, long)]
         name: String,
     },
+
+    TypeInfo {
+        #[structopt(short, long)]
+        dmp: String,
+
+        #[structopt(short, long)]
+        hash: String,
+
+        #[structopt(short, long)]
+        crc: String,
+    },
 }
 
 fn open_pak_files(mut pak: Vec<String>) -> Result<Vec<File>> {
@@ -445,57 +457,56 @@ fn read_tdb(tdb: String) -> Result<()> {
     Ok(())
 }
 
+struct MinidumpReader<'a> {
+    memory_list: &'a MinidumpMemory64List<'a>,
+    pos: u64,
+}
+
+impl<'a> MinidumpReader<'a> {
+    fn new(memory_list: &'a MinidumpMemory64List<'a>) -> Self {
+        MinidumpReader {
+            memory_list,
+            pos: 0,
+        }
+    }
+}
+
+impl<'a> Read for MinidumpReader<'a> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        let mut offset = 0;
+        while offset != buf.len() as u64 {
+            if let Some(block) = self.memory_list.memory_at_address(self.pos) {
+                let available = std::cmp::min(
+                    buf.len() as u64 - offset,
+                    block.base_address + block.size - self.pos,
+                );
+                buf[offset as usize..][..available as usize].copy_from_slice(
+                    &block.bytes[(self.pos - block.base_address) as usize..][..available as usize],
+                );
+                self.pos += available;
+                offset += available;
+            } else {
+                buf[offset as usize] = 0xCC;
+                self.pos += 1;
+                offset += 1;
+            }
+        }
+        Ok(buf.len())
+    }
+}
+
+impl<'a> Seek for MinidumpReader<'a> {
+    fn seek(&mut self, pos: SeekFrom) -> std::io::Result<u64> {
+        match pos {
+            SeekFrom::Start(s) => self.pos = s,
+            SeekFrom::End(e) => self.pos = e as u64,
+            SeekFrom::Current(c) => self.pos = (self.pos as i64 + c) as u64,
+        }
+        Ok(self.pos)
+    }
+}
+
 fn read_dmp_tdb(dmp: String, map: Option<String>) -> Result<()> {
-    struct MinidumpReader<'a> {
-        memory_list: &'a MinidumpMemory64List<'a>,
-        pos: u64,
-    }
-
-    impl<'a> MinidumpReader<'a> {
-        fn new(memory_list: &'a MinidumpMemory64List<'a>) -> Self {
-            MinidumpReader {
-                memory_list,
-                pos: 0,
-            }
-        }
-    }
-
-    impl<'a> Read for MinidumpReader<'a> {
-        fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-            let mut offset = 0;
-            while offset != buf.len() as u64 {
-                if let Some(block) = self.memory_list.memory_at_address(self.pos) {
-                    let available = std::cmp::min(
-                        buf.len() as u64 - offset,
-                        block.base_address + block.size - self.pos,
-                    );
-                    buf[offset as usize..][..available as usize].copy_from_slice(
-                        &block.bytes[(self.pos - block.base_address) as usize..]
-                            [..available as usize],
-                    );
-                    self.pos += available;
-                    offset += available;
-                } else {
-                    buf[offset as usize] = 0xCC;
-                    self.pos += 1;
-                    offset += 1;
-                }
-            }
-            Ok(buf.len())
-        }
-    }
-
-    impl<'a> Seek for MinidumpReader<'a> {
-        fn seek(&mut self, pos: SeekFrom) -> std::io::Result<u64> {
-            match pos {
-                SeekFrom::Start(s) => self.pos = s,
-                SeekFrom::End(e) => self.pos = e as u64,
-                SeekFrom::Current(c) => self.pos = (self.pos as i64 + c) as u64,
-            }
-            Ok(self.pos)
-        }
-    }
-
     let dmp = Minidump::read_path(dmp).map_err(|e| anyhow!(e))?;
     let memory = dmp
         .get_stream::<MinidumpMemory64List>()
@@ -513,6 +524,61 @@ fn read_dmp_tdb(dmp: String, map: Option<String>) -> Result<()> {
 
             break;
         }
+    }
+
+    Ok(())
+}
+
+fn type_info(dmp: String, hash: String, crc: String) -> Result<()> {
+    let hash = u32::from_str_radix(&hash, 16)?;
+    let crc = u32::from_str_radix(&crc, 16)?;
+    let dmp = Minidump::read_path(dmp).map_err(|e| anyhow!(e))?;
+    let memory = dmp
+        .get_stream::<MinidumpMemory64List>()
+        .map_err(|e| anyhow!(e))?;
+
+    let mut address = 0;
+    'outer: for block in memory.iter() {
+        let mut offset = 0;
+        loop {
+            if offset + 0x2C > block.bytes.len() {
+                break;
+            }
+            let read_hash = u32::from_le_bytes(block.bytes[offset..][..4].try_into().unwrap());
+            if read_hash == hash {
+                let read_crc =
+                    u32::from_le_bytes(block.bytes[offset + 0x28..][..4].try_into().unwrap());
+                if read_crc == crc {
+                    address = block.base_address + u64::try_from(offset - 8)?;
+                    break 'outer;
+                }
+            }
+            offset += 4;
+        }
+    }
+
+    if address == 0 {
+        bail!("Not found")
+    }
+
+    println!("Found at 0x{address:016X}");
+
+    while address != 0 {
+        println!("----------------------------------------");
+        let mut memory = MinidumpReader::new(&memory);
+        memory.seek(SeekFrom::Start(address + 0x20))?;
+        let name_address = memory.read_u64()?;
+        memory.seek(SeekFrom::Start(name_address))?;
+        let name = memory.read_u8str()?;
+        println!("name: {name}");
+        memory.seek(SeekFrom::Start(address + 0x50))?;
+        let fields_offset = memory.read_u64()?;
+        memory.seek(SeekFrom::Start(fields_offset + 0x28))?;
+        let deserializer = memory.read_u64()?;
+        println!("Deserializer: 0x{deserializer:016X}");
+
+        memory.seek(SeekFrom::Start(address + 0x38))?;
+        address = memory.read_u64()?;
     }
 
     Ok(())
@@ -928,5 +994,6 @@ fn main() -> Result<()> {
         Mhrice::ReadDmpTdb { dmp, map } => read_dmp_tdb(dmp, map),
         Mhrice::DumpScn { scn } => dump_scn(scn),
         Mhrice::Scene { pak, name } => scene(pak, name),
+        Mhrice::TypeInfo { dmp, hash, crc } => type_info(dmp, hash, crc),
     }
 }
