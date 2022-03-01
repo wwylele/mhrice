@@ -125,6 +125,7 @@ impl S3SinkInner {
                             Some("css") => "text/css",
                             Some("js") => "text/javascript",
                             Some("png") => "image/png",
+                            Some("json") => "application/json",
                             _ => panic!("Unknown extension"),
                         };
                         let content_length = Some(i64::try_from(data.len()).unwrap());
