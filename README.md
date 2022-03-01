@@ -30,6 +30,10 @@ PAK_SUB_KEY_MOD = E9eciYiR...Cr2XYdwM=
  - Rust, cargo
  - OpenGL 3.3 if running any model-related command
 
+## Credits
+
+ - praydog, for [REFramework](https://github.com/praydog/REFramework)
+
 ## License
 
 Licensed under either of
