@@ -250,6 +250,7 @@ impl Scn {
                         i, self.rsz.type_descriptors[*root as usize]
                     )
                 }
+                Result::<()>::Err(e).unwrap()
             }
         }
     }

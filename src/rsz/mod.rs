@@ -63,16 +63,15 @@ Version list:
 ****/
 
 #[derive(Debug)]
-pub struct SlotString {
-    pub slot: u32,
+pub struct Extern {
     pub hash: u32,
-    pub string: String,
+    pub path: String,
 }
 
 #[derive(Debug)]
 pub struct Rsz {
     pub roots: Vec<u32>,
-    pub slot_strings: Vec<SlotString>,
+    pub extern_slots: HashMap<u32, Extern>,
     pub type_descriptors: Vec<u64>,
     pub data: Vec<u8>,
 }
@@ -92,7 +91,7 @@ impl Rsz {
 
         let root_count = file.read_u32()?;
         let type_descriptor_count = file.read_u32()?;
-        let string_count = file.read_u32()?;
+        let extern_count = file.read_u32()?;
         let padding = file.read_u32()?;
         if padding != 0 {
             bail!("Unexpected non-zero padding C: {}", padding);
@@ -119,7 +118,7 @@ impl Rsz {
         file.seek_assert_align_up(base + string_table_offset, 16)
             .context("Undiscovered data before string table")?;
 
-        let string_info = (0..string_count)
+        let extern_slot_info = (0..extern_count)
             .map(|_| {
                 let slot = file.read_u32()?;
                 let hash = file.read_u32()?;
@@ -128,13 +127,13 @@ impl Rsz {
             })
             .collect::<Result<Vec<_>>>()?;
 
-        let slot_strings = string_info
+        let extern_slots = extern_slot_info
             .into_iter()
             .map(|(slot, hash, offset)| {
                 file.seek_noop(base + offset)
                     .context("Undiscovered data in string table")?;
-                let string = file.read_u16str()?;
-                if !string.ends_with(".user") {
+                let path = file.read_u16str()?;
+                if !path.ends_with(".user") {
                     bail!("Non-USER slot string");
                 }
                 if u64::from(hash)
@@ -145,9 +144,9 @@ impl Rsz {
                 {
                     bail!("slot hash mismatch")
                 }
-                Ok(SlotString { slot, hash, string })
+                Ok((slot, Extern { hash, path }))
             })
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<Result<HashMap<u32, Extern>>>()?;
 
         file.seek_assert_align_up(base + data_offset, 16)
             .context("Undiscovered data before data")?;
@@ -157,7 +156,7 @@ impl Rsz {
 
         Ok(Rsz {
             roots,
-            slot_strings,
+            extern_slots,
             type_descriptors,
             data,
         })
@@ -167,12 +166,27 @@ impl Rsz {
         let mut node_buf: Vec<Option<AnyRsz>> = vec![None];
         let mut node_rc_buf: HashMap<u32, Rc<dyn Any>> = HashMap::new();
         let mut cursor = Cursor::new(&self.data);
-        for &td in self.type_descriptors.iter().skip(1) {
+        for (i, &td) in self.type_descriptors.iter().enumerate().skip(1) {
             let hash = u32::try_from(td & 0xFFFFFFFF).unwrap();
             let crc = u32::try_from(td >> 32).unwrap();
-            let (deserializer, versions) = RSZ_TYPE_MAP
-                .get(&hash)
-                .with_context(|| format!("Unsupported type {:08X}", hash))?;
+
+            if let Some(slot_extern) = self.extern_slots.get(&u32::try_from(i)?) {
+                if slot_extern.hash != hash {
+                    bail!("Extern hash mismatch")
+                }
+                node_buf.push(Some(AnyRsz::new_extern(slot_extern.path.clone())));
+                continue;
+            }
+
+            let (deserializer, versions) = RSZ_TYPE_MAP.get(&hash).with_context(|| {
+                let mut buffer = [0; 0x100];
+                let read = cursor.read(&mut buffer).unwrap();
+                format!(
+                    "Unsupported type {:08X}: {:02X?}...",
+                    hash,
+                    &buffer[0..read]
+                )
+            })?;
             let version = *versions
                 .get(&crc)
                 .with_context(|| format!("Unknown type CRC {:08X} for type {:08X}", crc, hash))?;
@@ -283,6 +297,9 @@ pub struct AnyRsz {
     debug: fn(&dyn Any, f: &mut std::fmt::Formatter) -> std::fmt::Result,
 }
 
+#[derive(Debug, Serialize)]
+pub struct ExternPath(String);
+
 impl Debug for AnyRsz {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         (self.debug)(&*self.any, f)
@@ -304,6 +321,10 @@ impl AnyRsz {
             to_json_fn,
             debug,
         }
+    }
+
+    pub fn new_extern(path: String) -> AnyRsz {
+        Self::new(ExternPath(path))
     }
 
     pub fn downcast<T: Any>(self) -> Option<T> {
@@ -459,12 +480,37 @@ impl FieldFromRsz for String {
     }
 }
 
+impl FieldFromRsz for Option<String> {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.cursor.seek_align_up(4)?;
+        let count = rsz.read_u32()?;
+        if count == 0 {
+            return Ok(None);
+        }
+        let mut utf16 = (0..count)
+            .map(|_| rsz.read_u16())
+            .collect::<Result<Vec<_>>>()?;
+        if utf16.pop() != Some(0) {
+            bail!("String not null-terminated");
+        }
+        Ok(Some(String::from_utf16(&utf16)?))
+    }
+}
+
 #[derive(Debug, Serialize)]
 pub struct Flatten<T>(pub T);
 
 impl<T: FromRsz> FieldFromRsz for Flatten<T> {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
         Ok(Flatten(T::from_rsz(rsz)?))
+    }
+}
+
+impl<T> Deref for Flatten<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -483,11 +529,17 @@ impl<T: FieldFromRsz, const MIN: u32, const MAX: u32> FieldFromRsz for Versioned
     }
 }
 
-impl<T> Deref for Flatten<T> {
-    type Target = T;
+#[derive(Debug, Serialize)]
+pub enum ExternUser<T> {
+    Path(String),
+    Loaded(T),
+}
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
+impl<T> FieldFromRsz for ExternUser<T> {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.cursor.seek_align_up(4)?;
+        let ExternPath(path) = rsz.get_child()?;
+        Ok(ExternUser::Path(path))
     }
 }
 
@@ -950,7 +1002,22 @@ static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerPackage>> = Lazy::new(|| {
         HyakuryuWeaponHyakuryuBuildupUserData,
     );
 
-    r!(Folder, GameObject, Transform, WwiseMediaLoader,);
+    r!(
+        Folder,
+        GameObject,
+        Transform,
+        WwiseMediaLoader,
+        RSCAPIWrapper,
+        RequestSetGroup,
+        RequestSetCollider,
+        AccessableDigree,
+        NpcFacilityPopMarker,
+        TentBehavior,
+        CampFindCheck,
+        SupplyBoxBehavior,
+        ViaGui,
+        GuiCommonNpcHeadMessage,
+    );
 
     m
 });
