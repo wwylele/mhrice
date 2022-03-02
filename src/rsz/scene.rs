@@ -37,9 +37,9 @@ rsz_struct! {
     pub struct Folder {
         pub name: String,
         pub tag: String,
-        pub c: u8,
-        pub d: u8,
-        pub e: u8,
+        pub update_self: bool,
+        pub draw_self: bool,
+        pub paolumu: bool,
         pub path: String,
     }
 }
@@ -52,8 +52,8 @@ rsz_struct! {
     pub struct GameObject {
         pub name: String,
         pub tag: String,
-        pub draw_self: bool,
-        pub update_self: bool,
+        pub update_self: bool, // 14
+        pub draw_self: bool, // 15
         pub time_scale: f32,
     }
 }
@@ -64,12 +64,12 @@ rsz_struct! {
     )]
     #[derive(Debug, Serialize)]
     pub struct Transform {
-        pub a: ViaVec4,
-        pub b: ViaVec4,
-        pub c: ViaVec4,
-        pub d: String,
-        pub e: u8,
-        pub f: u8
+        pub position: ViaVec4,
+        pub rotation: ViaVec4,
+        pub scale: ViaVec4,
+        pub zinogre: String,
+        pub same_joints_constraint: bool,
+        pub absolute_scaling: bool
     }
 }
 
@@ -125,14 +125,14 @@ rsz_struct! {
     )]
     #[derive(Debug, Serialize)]
     pub struct RequestSetCollider {
-        pub a: u8,
-        pub b: u8,
-        pub c: u32,
-        pub d: Vec<String>,
+        pub enabled: bool,
+        pub develop_draw: bool, // ? removed in code
+        pub develop_draw_fill_mode: i32, // via.physics.FillMode ? removed in code
+        pub barioth: Vec<String>, // +0x40
         pub rcol_file: Vec<RequestSetGroup>,
         pub fbx_skel_file: Option<String>,
-        pub f: u32,
-        pub g: u32,
+        pub num_execute_workers: i32,
+        pub skip_ids_mask: u32,
     }
 }
 
@@ -269,15 +269,15 @@ rsz_struct! {
     )]
     #[derive(Debug, Serialize)]
     pub struct ViaGui {
-        pub a: u8,
+        pub enabled: bool,
         pub path: String,
-        pub c: f32,
-        pub d: u32,
-        pub e: u32,
-        pub f: u32,
-        pub g: u32,
-        pub h: Option<String>,
-        pub i: Option<String>,
+        pub play_speed: f32,
+        pub segment: u32,
+        pub soft_particle_dist_type: i32, // via.gui.SoftParticleDistType
+        pub soft_particle_dist: f32,
+        pub render_output_id: u32,
+        pub render_target: Option<String>,
+        pub gui_sound: Option<String>,
     }
 }
 
