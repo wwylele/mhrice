@@ -19,6 +19,19 @@ rsz_struct! {
 rsz_struct! {
     #[rsz()]
     #[derive(Debug, Serialize)]
+    pub struct ViaQuaternion {
+        #[serde(skip)]
+        pub begin_align: Aligner<16>,
+        pub x: f32,
+        pub y: f32,
+        pub z: f32,
+        pub w: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz()]
+    #[derive(Debug, Serialize)]
     pub struct ViaVec3 {
         #[serde(skip)]
         pub begin_align: Aligner<16>,
@@ -289,5 +302,173 @@ rsz_struct! {
     pub struct GuiCommonNpcHeadMessage {
         pub enabled: bool,
         pub pos_data: ExternUser<()>, // snow.gui.userdata.GuiNpcHeadMessagePosData
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.render.MaterialParam",
+        0xf4ce7894 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct MaterialParam {
+        v0: String,
+        v1: String,
+        v2a: f32,
+        v2b: f32,
+        v2c: f32,
+        v2d: f32,
+        v3: String,
+        v4: u32,
+        v5: String,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.render.Mesh",
+        0x8b919d87 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ViaMesh {
+        render_output_id: u32, // 398
+        enabled: bool, // 12a
+        mesh_path: Option<String>,
+        mdf2_path: Option<String>,
+        static_mesh: bool, // 398 << 0x12
+        small_object_culling_factor: f32, // 364
+        draw_default: bool, // 398 << 9
+        frustum_culling: bool, // 398 << 0x11
+        occlusion_culling: bool, // << xf
+        occluder: bool, // << x10
+        occluder_by_lod: u8, // 128
+        draw_late_occluder: bool, // 398 << x14 RenderInFront: bool?
+        draw_voxelize: bool, // << 5
+        draw_envmap: bool, // << 6
+        draw_depth_blocker: bool, // << 7
+        draw_depth_occlusion: bool, // << 0x20
+        draw_raytracing: bool, // << x13
+        ignore_depth: bool, // <<xA
+        ignore_depth_transparent_correction: bool, // <<xB
+        view_spae_scaling: bool, // <<xD
+        mask_ignore_depth_mesh: bool, // <<xC
+        beauty_mask_flag: bool, // <<x1C
+        receive_sssss_flag: bool, // <<x1D
+        streaming_priority: u32, // 0x2e8
+        draw_priority_bias: i32, // 0x35c
+        transparent_bias: f32, // 0x360
+        stencil_value: u8, // 0x368
+        material: Vec<MaterialParam>, // 0x131, 0x3a0, 0x3a8 // via.render.MaterialParam?
+        use_stencil_value_priority: bool, // x398 << 0x1e
+        ignore_depth_stencil_value_write: bool, // < 0x1f
+        decal_recive_mode: i32, // 0x36c // via.landscape.DecalReciveMode
+        draw_pos_decal: bool, // 0x398 << 0xe
+        mesh_decal_priority: u32, // 0x2F0
+        draw_shadow_cast: bool, // 0x398 << 8
+        shadow_cast_mode: i32, // 0x398 << 0x15 // via.render.ShadowCastMode
+        real_mesh_shadow: bool, // 0x163
+        draw_far_cascade_shadow_cast: bool, // 0x398 << 4
+        lod_mode: i32, // 0x2f4 // via.render.LodMode
+        lod_level: u32, // 0x2f8
+        #[serde(skip)]
+        aligner: Aligner<8>,
+        lod_follow_target: Guid, // 0x300...
+        enable_lod_effective_range: bool, // 0x310
+        lod_effective_range_s: u32, // 0x314..
+        lod_effective_range_r: u32,
+        shadow_lod_mode: i32, // 0x31c // via.render.LodMode
+        shadow_lod_level: u32, // deci800
+        enable_shadow_lod_effective_range: bool, // 0x324
+        shadow_lod_effective_range_s: u32, // 0x328..
+        shadow_lod_effective_range_r: u32,
+        parts_enable: Vec<bool>, // ? 0x168?
+        parts_caching: bool, // 0x166
+        normal_recalculation_enable: bool, // 0x371
+        nr_edge_excluded: bool, // 0x372
+        use_blend_shape_normal: bool, // 0x118
+        blend_shape_channel_weights: Vec<f32>, // 0x1b8
+        draw_aabb: bool, // 0x12d
+        draw_occluder: bool, // 0x12e
+        v54: u8, // debug
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.props.PopMaterialController",
+        0x2748d05a = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct PopMaterialController {
+        pub enabled: bool,
+        pub ctrl_setting_data: ExternUser<()>, // snow.stage.props.PopMaterialControlSettingData
+        pub blink_cycle_span: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.access.PlayerInfluencePopMarker",
+        0x2b3d2c6c = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct PlayerInfluencePopMarker {
+        pub base: ObjectPopMarker,
+        pub test_bell_trigger: u32,
+        pub creeping_point_adjust_transform: ViaQuaternion,
+        pub map_floor_type: i32, // snow.stage.StageDef.MapFloorType
+
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.access.ItemPopBehavior",
+        0xdae0b08f = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ItemPopBehavior {
+        pub enabled: bool,
+        pub pop_id: i32, // snow.stage.StageDef.SaisyuPopId
+        pub pop_icon: i32, // snow.gui.SnowGuiCommonUtility.Icon.ItemIconPatternNo
+        pub pop_icon_color: i32, // snow.gui.SnowGuiCommonUtility.Icon.ItemIconColor
+        pub pop_category: i32, // snow.access.ItemPopMarker.ItemPopCategory
+        pub map_floor_type: i32, // snow.stage.StageDef.MapFloorType
+        pub action_target_point_offset: ViaVec3,
+        pub one_time_only_flag: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.access.ItemPopVisualController",
+        0x89989dcf = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ItemPopVisualController {
+        pub enabled: bool,
+        pub parts_no: i32,
+        pub dissolve_cluster_name: String,
+        pub dissolve_cluster_name_sub: String,
+        pub dissolve_time: f32,
+        pub dissolve_timer: f32,
+
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.StageRestrictObserver",
+        0xe8f69abc = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct StageRestrictObserver {
+        pub enabled: bool,
+        pub restrict_type: i32, // snow.RistrictTargetType
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.pop.RelicNoteUnlock",
+        0xf2852b01 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RelicNoteUnlock {
+        pub enabled: bool,
+        pub note_map_no: i32, // snow.QuestMapManager.MapNoType
+        pub relic_id: i32, // snow.stage.StageDef.RelicId
     }
 }

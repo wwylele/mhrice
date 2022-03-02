@@ -472,15 +472,7 @@ impl<T: FieldFromRsz + 'static, const N: usize> FieldFromRsz for [T; N] {
 
 impl FieldFromRsz for String {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
-        rsz.cursor.seek_align_up(4)?;
-        let count = rsz.read_u32()?;
-        let mut utf16 = (0..count)
-            .map(|_| rsz.read_u16())
-            .collect::<Result<Vec<_>>>()?;
-        if utf16.pop() != Some(0) {
-            bail!("String not null-terminated");
-        }
-        Ok(String::from_utf16(&utf16)?)
+        Option::<String>::field_from_rsz(rsz)?.context("Null String")
     }
 }
 
@@ -535,15 +527,15 @@ impl<T: FieldFromRsz, const MIN: u32, const MAX: u32> FieldFromRsz for Versioned
 
 #[derive(Debug, Serialize)]
 pub enum ExternUser<T> {
-    Path(String),
+    Path(Rc<ExternPath>),
     Loaded(T),
 }
 
 impl<T> FieldFromRsz for ExternUser<T> {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
         rsz.cursor.seek_align_up(4)?;
-        let ExternPath(path) = rsz.get_child()?;
-        Ok(ExternUser::Path(path))
+        let extern_path = rsz.get_child_rc()?;
+        Ok(ExternUser::Path(extern_path))
     }
 }
 
@@ -1024,6 +1016,14 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         SupplyBoxBehavior,
         ViaGui,
         GuiCommonNpcHeadMessage,
+        MaterialParam,
+        ViaMesh,
+        PopMaterialController,
+        PlayerInfluencePopMarker,
+        ItemPopBehavior,
+        ItemPopVisualController,
+        StageRestrictObserver,
+        RelicNoteUnlock,
     );
 
     m
