@@ -270,7 +270,7 @@ struct GameObject {
 #[derive(Debug)]
 struct Folder {
     folder: rsz::Folder,
-    subscene: Result<Scene>,
+    subscene: Option<Result<Scene>>,
     children: Vec<GameObject>,
     subfolders: Vec<Folder>,
 }
@@ -348,7 +348,7 @@ impl Scene {
                 .context("folder data already taken")?
                 .downcast()
                 .context("Folder type mismatch")?;
-            let subscene = Scene::new(pak, &folder.path);
+            let subscene = (!folder.path.is_empty()).then(|| Scene::new(pak, &folder.path));
             let children = orphans.remove(&Some(f.folder_object_index)).map_or_else(
                 Vec::new,
                 |mut children: Vec<GameObject>| {
