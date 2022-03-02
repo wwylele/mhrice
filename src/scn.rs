@@ -245,10 +245,13 @@ impl Scn {
             Err(e) => {
                 println!("Failed to serialize because {}", e);
                 for (i, root) in self.rsz.roots.iter().enumerate() {
-                    println!(
-                        " [{}] - {:016X}",
-                        i, self.rsz.type_descriptors[*root as usize]
-                    )
+                    let type_descriptor = self.rsz.type_descriptors[*root as usize];
+                    let hash = (type_descriptor & 0xFFFFFFFF) as u32;
+                    let symbol = rsz::RSZ_TYPE_MAP
+                        .get(&hash)
+                        .map(|t| t.symbol)
+                        .unwrap_or_default();
+                    println!(" [{}] - {:016X} - {}", i, type_descriptor, symbol)
                 }
                 Result::<()>::Err(e).unwrap()
             }

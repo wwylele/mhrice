@@ -178,7 +178,11 @@ impl Rsz {
                 continue;
             }
 
-            let (deserializer, versions) = RSZ_TYPE_MAP.get(&hash).with_context(|| {
+            let RszTypeInfo {
+                deserializer,
+                versions,
+                symbol,
+            } = RSZ_TYPE_MAP.get(&hash).with_context(|| {
                 let mut buffer = [0; 0x100];
                 let read = cursor.read(&mut buffer).unwrap();
                 format!(
@@ -198,7 +202,7 @@ impl Rsz {
                 version,
             };
             let node = deserializer(&mut rsz_deserializer).with_context(|| {
-                format!("Error deserializing for type {:08X} at {:08X}", hash, pos)
+                format!("Error deserializing for type {} at {:08X}", symbol, pos)
             })?;
             node_buf.push(Some(node));
         }
@@ -745,20 +749,23 @@ where
     (&arr[..]).serialize(s)
 }
 
-type RszDeserializerPackage = (
-    fn(&mut RszDeserializer) -> Result<AnyRsz>,
-    HashMap<u32, u32>,
-);
+pub struct RszTypeInfo {
+    deserializer: fn(&mut RszDeserializer) -> Result<AnyRsz>,
+    versions: HashMap<u32, u32>,
+    pub symbol: &'static str,
+}
 
-static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszDeserializerPackage>> = Lazy::new(|| {
+pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
     let mut m = HashMap::new();
 
-    fn register<T: 'static + FromRsz + Serialize + Debug>(
-        m: &mut HashMap<u32, RszDeserializerPackage>,
-    ) {
+    fn register<T: 'static + FromRsz + Serialize + Debug>(m: &mut HashMap<u32, RszTypeInfo>) {
         let hash = T::type_hash();
-        let versions: HashMap<u32, u32> = T::VERSIONS.iter().copied().collect();
-        let old = m.insert(hash, (|rsz| Ok(AnyRsz::new(T::from_rsz(rsz)?)), versions));
+        let package = RszTypeInfo {
+            deserializer: |rsz| Ok(AnyRsz::new(T::from_rsz(rsz)?)),
+            versions: T::VERSIONS.iter().copied().collect(),
+            symbol: T::SYMBOL,
+        };
+        let old = m.insert(hash, package);
         if old.is_some() {
             panic!("Multiple type reigstered for the same hash")
         }
