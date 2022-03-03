@@ -260,25 +260,25 @@ impl Scn {
 }
 
 #[derive(Debug)]
-struct GameObject {
-    object: rsz::GameObject,
-    components: Vec<rsz::AnyRsz>,
-    prefab: Option<Rc<String>>,
-    children: Vec<GameObject>,
+pub struct GameObject {
+    pub object: rsz::GameObject,
+    pub components: Vec<rsz::AnyRsz>,
+    pub prefab: Option<Rc<String>>,
+    pub children: Vec<GameObject>,
 }
 
 #[derive(Debug)]
-struct Folder {
-    folder: rsz::Folder,
-    subscene: Option<Result<Scene>>,
-    children: Vec<GameObject>,
-    subfolders: Vec<Folder>,
+pub struct Folder {
+    pub folder: rsz::Folder,
+    pub subscene: Option<Result<Scene>>,
+    pub children: Vec<GameObject>,
+    pub subfolders: Vec<Folder>,
 }
 
 #[derive(Debug)]
 pub struct Scene {
-    objects: Vec<GameObject>,
-    folders: Vec<Folder>,
+    pub objects: Vec<GameObject>,
+    pub folders: Vec<Folder>,
 }
 
 impl Scene {

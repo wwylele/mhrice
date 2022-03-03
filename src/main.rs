@@ -945,10 +945,84 @@ fn dump_scn(scn: String) -> Result<()> {
     Ok(())
 }
 
+fn scene_print_object(object: &GameObject, level: usize) {
+    let ident_unit = 2;
+    let ident = level * ident_unit;
+    let padding = "";
+    println!("{padding:ident$}Object {{");
+
+    let next_level = level + 1;
+    let next_ident = next_level * ident_unit;
+
+    if let Some(prefab) = &object.prefab {
+        println!("{padding:next_ident$}prefab = {prefab}");
+    }
+
+    let data = &object.object;
+    println!("{padding:next_ident$}data = {data:?}");
+
+    for component in &object.components {
+        println!("{padding:next_ident$}+ {component:?}");
+    }
+
+    println!("{padding:next_ident$}Children = {{");
+    for child in &object.children {
+        scene_print_object(child, next_level + 1);
+    }
+    println!("{padding:next_ident$}}}");
+
+    println!("{padding:ident$}}}");
+}
+
+fn scene_print_folder(folder: &Folder, level: usize) {
+    let ident_unit = 2;
+    let ident = level * ident_unit;
+    let padding = "";
+    println!("{padding:ident$}Folder {{");
+
+    let next_level = level + 1;
+    let next_ident = next_level * ident_unit;
+
+    let data = &folder.folder;
+    println!("{padding:next_ident$}data = {data:?}");
+
+    println!("{padding:next_ident$}Children = {{");
+    for child in &folder.children {
+        scene_print_object(child, next_level + 1);
+    }
+    println!("{padding:next_ident$}}}");
+
+    if let Some(subscene) = &folder.subscene {
+        match subscene {
+            Ok(subscene) => scene_print_scene(subscene, next_level),
+            Err(e) => println!("{padding:next_ident$}Scene = ! {e}"),
+        }
+    }
+
+    println!("{padding:ident$}}}");
+}
+
+fn scene_print_scene(scene: &Scene, level: usize) {
+    let ident_unit = 2;
+    let ident = level * ident_unit;
+    let padding = "";
+    println!("{padding:ident$}Scene {{");
+    let next_level = level + 1;
+    for object in &scene.objects {
+        scene_print_object(object, next_level)
+    }
+
+    for folder in &scene.folders {
+        scene_print_folder(folder, next_level)
+    }
+
+    println!("{padding:ident$}}}");
+}
+
 fn scene(pak: Vec<String>, name: String) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
     let scene = Scene::new(&mut pak, &name)?;
-    println!("{:#?}", scene);
+    scene_print_scene(&scene, 0);
     Ok(())
 }
 
