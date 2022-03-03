@@ -152,6 +152,9 @@ enum Mhrice {
         #[structopt(short, long)]
         pak: Vec<String>,
 
+        #[structopt(short, long)]
+        utf16: bool,
+
         pattern: String,
     },
 
@@ -695,9 +698,18 @@ fn scan_uvs(pak: Vec<String>) -> Result<()> {
     Ok(())
 }
 
-fn grep(pak: Vec<String>, pattern: String) -> Result<()> {
+fn grep(pak: Vec<String>, utf16: bool, mut pattern: String) -> Result<()> {
     use regex::bytes::*;
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
+    if utf16 {
+        pattern = pattern
+            .encode_utf16()
+            .map(|u| {
+                let b = u.to_le_bytes();
+                format!("\\x{:02X}\\x{:02X}", b[0], b[1])
+            })
+            .fold("".to_string(), |a, b| a + &b);
+    }
     println!("Searching for patterns \"{}\"", &pattern);
     let re = RegexBuilder::new(&pattern).unicode(false).build()?;
     for i in pak.all_file_indexs() {
@@ -1043,7 +1055,11 @@ fn main() -> Result<()> {
         Mhrice::ReadMsg { msg } => read_msg(msg),
         Mhrice::ScanMsg { pak, output } => scan_msg(pak, output),
         Mhrice::GrepMsg { pak, pattern } => grep_msg(pak, pattern),
-        Mhrice::Grep { pak, pattern } => grep(pak, pattern),
+        Mhrice::Grep {
+            pak,
+            utf16,
+            pattern,
+        } => grep(pak, utf16, pattern),
         Mhrice::SearchPath { pak } => search_path(pak),
         Mhrice::DumpTree { pak, list, output } => dump_tree(pak, list, output),
         Mhrice::ScanMesh { pak } => scan_mesh(pak),
