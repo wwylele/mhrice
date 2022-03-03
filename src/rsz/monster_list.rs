@@ -1,19 +1,7 @@
+use super::common::*;
 use super::*;
 use crate::rsz_struct;
 use serde::*;
-
-rsz_struct! {
-    #[rsz()]
-    #[derive(Debug, Serialize)]
-    pub struct ViaVec2 {
-        #[serde(skip)]
-        begin_align: Aligner<16>,
-        x: f32,
-        y: f32,
-        #[serde(skip)]
-        endn_align: Aligner<16>,
-    }
-}
 
 rsz_struct! {
     #[rsz("snow.data.monsterList.BossMonsterData.PartData",

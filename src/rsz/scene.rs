@@ -1,46 +1,8 @@
+use super::common::*;
 use super::*;
 use crate::rsz_enum;
 use crate::rsz_struct;
 use serde::*;
-
-rsz_struct! {
-    #[rsz()]
-    #[derive(Debug, Serialize)]
-    pub struct ViaVec4 {
-        #[serde(skip)]
-        pub begin_align: Aligner<16>,
-        pub x: f32,
-        pub y: f32,
-        pub z: f32,
-        pub w: f32,
-    }
-}
-
-rsz_struct! {
-    #[rsz()]
-    #[derive(Debug, Serialize)]
-    pub struct ViaQuaternion {
-        #[serde(skip)]
-        pub begin_align: Aligner<16>,
-        pub x: f32,
-        pub y: f32,
-        pub z: f32,
-        pub w: f32,
-    }
-}
-
-rsz_struct! {
-    #[rsz()]
-    #[derive(Debug, Serialize)]
-    pub struct ViaVec3 {
-        #[serde(skip)]
-        pub begin_align: Aligner<16>,
-        pub x: f32,
-        pub y: f32,
-        pub z: f32,
-        pub _w: f32,
-    }
-}
 
 rsz_struct! {
     #[rsz("via.Folder",
