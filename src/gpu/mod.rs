@@ -99,6 +99,19 @@ impl RgbaImage {
         }
     }
 
+    pub fn width(&self) -> u32 {
+        self.width
+    }
+
+    pub fn height(&self) -> u32 {
+        self.height
+    }
+
+    pub fn pixel(&mut self, x: u32, y: u32) -> &mut [u8; 4] {
+        let pos = usize::try_from(x + y * self.width).unwrap() * 4;
+        (&mut self.data[pos..][..4]).try_into().unwrap()
+    }
+
     pub fn save_png(&self, output: impl Write) -> anyhow::Result<()> {
         let mut encoder = png::Encoder::new(output, self.width, self.height);
         encoder.set_color(png::ColorType::Rgba);

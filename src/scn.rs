@@ -267,12 +267,48 @@ pub struct GameObject {
     pub children: Vec<GameObject>,
 }
 
+impl GameObject {
+    pub fn get_component<T: 'static>(&self) -> Result<&T> {
+        let mut component: Option<&T> = None;
+        for c in &self.components {
+            if let Some(c) = c.downcast_ref() {
+                if component.is_some() {
+                    bail!("Multiple components found")
+                }
+                component = Some(c)
+            }
+        }
+        component.context("No component found")
+    }
+}
+
 #[derive(Debug)]
 pub struct Folder {
     pub folder: rsz::Folder,
     pub subscene: Option<Result<Scene>>,
     pub children: Vec<GameObject>,
     pub subfolders: Vec<Folder>,
+}
+
+impl Folder {
+    pub fn for_each_free_object<F: FnMut(&GameObject) -> Result<()>>(
+        &self,
+        f: &mut F,
+    ) -> Result<()> {
+        for object in &self.children {
+            f(object)?
+        }
+
+        for folders in &self.subfolders {
+            folders.for_each_free_object(f)?
+        }
+
+        if let Some(Ok(subscene)) = &self.subscene {
+            subscene.for_each_free_object(f)?
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Debug)]
@@ -288,7 +324,7 @@ impl Scene {
         let scn = Scn::new(Cursor::new(content))?;
         let mut data: Vec<Option<rsz::AnyRsz>> =
             scn.rsz.deserialize()?.into_iter().map(Some).collect();
-        let prefabs: Vec<Rc<String>> = scn.prefab_paths.into_iter().map(|s| Rc::new(s)).collect();
+        let prefabs: Vec<Rc<String>> = scn.prefab_paths.into_iter().map(Rc::new).collect();
 
         let mut orphans: HashMap<Option<u32>, Vec<GameObject>> = HashMap::new();
         let mut orphan_folders: HashMap<Option<u32>, Vec<Folder>> = HashMap::new();
@@ -404,5 +440,20 @@ impl Scene {
         }
 
         Ok(Scene { objects, folders })
+    }
+
+    pub fn for_each_free_object<F: FnMut(&GameObject) -> Result<()>>(
+        &self,
+        f: &mut F,
+    ) -> Result<()> {
+        for object in &self.objects {
+            f(object)?
+        }
+
+        for folder in &self.folders {
+            folder.for_each_free_object(f)?;
+        }
+
+        Ok(())
     }
 }

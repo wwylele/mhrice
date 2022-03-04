@@ -286,6 +286,23 @@ enum Mhrice {
         #[structopt(short, long)]
         crc: String,
     },
+
+    Map {
+        #[structopt(short, long)]
+        pak: Vec<String>,
+
+        #[structopt(short, long)]
+        name: String,
+
+        #[structopt(short, long)]
+        scale: String,
+
+        #[structopt(short, long)]
+        tex: String,
+
+        #[structopt(short, long)]
+        output: String,
+    },
 }
 
 fn open_pak_files(mut pak: Vec<String>) -> Result<Vec<File>> {
@@ -1038,6 +1055,36 @@ fn scene(pak: Vec<String>, name: String) -> Result<()> {
     Ok(())
 }
 
+fn map(pak: Vec<String>, name: String, scale: String, tex: String, output: String) -> Result<()> {
+    let mut pak = PakReader::new(open_pak_files(pak)?)?;
+    let scene = Scene::new(&mut pak, &name)?;
+    let scale: rsz::GuiMapScaleDefineData =
+        User::new(File::open(scale)?)?.rsz.deserialize_single()?;
+    let tex = Tex::new(File::open(tex)?)?;
+    let mut rgba = tex.to_rgba(0, 0)?;
+
+    scene.for_each_free_object(&mut |object: &GameObject| {
+        if let Ok(_pop) = object.get_component::<rsz::ItemPopBehavior>() {
+            let transform = object.get_component::<rsz::Transform>()?;
+            let x = (transform.position.x + scale.map_wide_min_pos) / scale.map_scale;
+            let y = (transform.position.z + scale.map_height_min_pos) / scale.map_scale;
+            let x = (x * rgba.width() as f32) as i32;
+            let y = (y * rgba.height() as f32) as i32;
+            if x < 0 || y < 0 || x >= rgba.width() as i32 || y >= rgba.height() as i32 {
+                return Ok(());
+            }
+            let pixel = rgba.pixel(x as u32, y as u32);
+            pixel.copy_from_slice(&[255, 0, 0, 255]);
+        }
+
+        Ok(())
+    })?;
+
+    rgba.save_png(File::create(output)?)?;
+
+    Ok(())
+}
+
 fn main() -> Result<()> {
     gpu::gpu_init();
     match Mhrice::from_args() {
@@ -1085,5 +1132,12 @@ fn main() -> Result<()> {
         Mhrice::DumpScn { scn } => dump_scn(scn),
         Mhrice::Scene { pak, name } => scene(pak, name),
         Mhrice::TypeInfo { dmp, hash, crc } => type_info(dmp, hash, crc),
+        Mhrice::Map {
+            pak,
+            name,
+            scale,
+            tex,
+            output,
+        } => map(pak, name, scale, tex, output),
     }
 }
