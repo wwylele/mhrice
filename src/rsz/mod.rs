@@ -274,16 +274,24 @@ impl<'a, 'b> RszDeserializer<'a, 'b> {
     }
 
     pub fn get_child_rc<T: 'static>(&mut self) -> Result<Rc<T>> {
+        self.get_child_rc_opt()?.context("None child")
+    }
+
+    pub fn get_child_rc_opt<T: 'static>(&mut self) -> Result<Option<Rc<T>>> {
         let index = self.cursor.read_u32()?;
+        if index == 0 {
+            return Ok(None);
+        }
         if let Some(child) = self.node_rc_buf.get(&index) {
             child
                 .clone()
                 .downcast()
                 .map_err(|_| anyhow!("Type mismatch"))
+                .map(Option::Some)
         } else {
             let child = Rc::new(self.get_child_inner::<T>(index)?);
             self.node_rc_buf.insert(index, child.clone());
-            Ok(child)
+            Ok(Some(child))
         }
     }
 
@@ -394,6 +402,14 @@ impl<T> FieldFromRsz for ExternUser<T> {
         rsz.cursor.seek_align_up(4)?;
         let extern_path = rsz.get_child_rc()?;
         Ok(ExternUser::Path(extern_path))
+    }
+}
+
+impl<T> FieldFromRsz for Option<ExternUser<T>> {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.cursor.seek_align_up(4)?;
+        let extern_path = rsz.get_child_rc_opt()?;
+        Ok(extern_path.map(ExternUser::Path))
     }
 }
 
@@ -686,9 +702,24 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         ItemPopVisualController,
         StageRestrictObserver,
         RelicNoteUnlock,
+        GuiControl,
+        GuiPanel,
+        Prefab,
     );
 
-    r!(MaskSetting, GuiMapScaleDefineData);
+    r!(
+        MaskSetting,
+        GuiMapScaleDefineData,
+        GuiQuestStart,
+        GuiQuestEnd,
+        QuestUIManage,
+        GuiHoldBoxChange,
+        TrialNaviSignToTargetMonster,
+        ObstacleFilterInfo,
+        ObstacleFilterSet,
+        NavigationSurface,
+        ObjectEffectManager,
+    );
 
     m
 });

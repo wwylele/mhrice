@@ -434,3 +434,65 @@ rsz_struct! {
         pub relic_id: i32, // snow.stage.StageDef.RelicId
     }
 }
+
+rsz_struct! {
+    #[rsz("via.gui.Control",
+        0x2cf3efdb = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct GuiControl {
+        // PlayObject
+        v0: String,
+        v1: String,
+        v2: u8,
+        v3: u8,
+        v4: u16,
+        // TransformObject
+        v5: ViaVec4,
+        v6: ViaVec4,
+        v7: ViaVec4,
+        v8: u8,
+        v9: u32,
+        v10: u32,
+        v11: u32,
+        v12: u32,
+        v13: u8,
+        // Control
+        v14: u32,
+        v15: u32,
+        v16: u8,
+        v17a: u32,
+        v17b: u32,
+        v17c: u32,
+        v17d: u32,
+        v18: u8,
+        v19a: u32,
+        v19b: u32,
+        v19c: u32,
+        v20: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.gui.Panel",
+        0xfcc2b758 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct GuiPanel {
+        #[serde(flatten)]
+        pub base: Flatten<GuiControl>,
+        pub v21: u32,
+        pub v22: f32,
+        pub v23: String,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.Prefab",
+        0xa0e05e19 = 0
+    )]#[derive(Debug, Serialize)]
+    pub struct Prefab {
+        pub v0: u8,
+        pub v1: String,
+    }
+}

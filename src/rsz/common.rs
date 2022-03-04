@@ -293,6 +293,17 @@ impl<T: FieldFromRsz + 'static> FieldFromRsz for Vec<T> {
     }
 }
 
+impl FieldFromRsz for Vec<()> {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.cursor.seek_align_up(4)?;
+        let count = rsz.read_u32()?;
+        if count != 0 {
+            bail!("Placeholder array not empty")
+        }
+        Ok(vec![])
+    }
+}
+
 impl<T: FieldFromRsz + 'static, const N: usize> FieldFromRsz for [T; N] {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
         Vec::<T>::field_from_rsz(rsz)?
