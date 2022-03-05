@@ -33,10 +33,14 @@ fn gen_map(id: i32, map: &GameMap, mut output: impl Write) -> Result<()> {
             {map.pops.iter().map(|pop| {
                 let x = (pop.x + map.x_offset) / map.map_scale * 100.0;
                 let y = (pop.y + map.y_offset) / map.map_scale * 100.0;
-                html!(
-                    <span class="mh-map-pop icon has-text-warning" style={format!("left:{x}%;top:{y}%")}>
-                    <i class="fas fa-exclamation-triangle"/>
-                    </span>)
+
+                let icon_path = format!("/resources/item/{:03}", pop.pop_behavior.pop_icon);
+                let icon = gen_colored_icon(pop.pop_behavior.pop_icon_color, &icon_path, &[]);
+
+                html!(<div class="mh-map-pop"
+                    style={format!("left:{x}%;top:{y}%")}> {
+                        icon
+                }</div>)
             })}
 
             </div>

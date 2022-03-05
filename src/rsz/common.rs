@@ -259,7 +259,7 @@ impl FieldFromRsz for f32 {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct Aligner<const ALIGN: u64>;
 
 impl<const ALIGN: u64> FieldFromRsz for Aligner<ALIGN> {
@@ -422,7 +422,7 @@ impl From<Guid> for String {
 
 rsz_struct! {
     #[rsz()]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct ViaVec2 {
         #[serde(skip)]
         begin_align: Aligner<16>,
@@ -435,7 +435,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz()]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct ViaVec3 {
         #[serde(skip)]
         pub begin_align: Aligner<16>,
@@ -448,7 +448,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz()]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct ViaVec4 {
         #[serde(skip)]
         pub begin_align: Aligner<16>,
@@ -461,7 +461,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz()]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct ViaQuaternion {
         #[serde(skip)]
         pub begin_align: Aligner<16>,

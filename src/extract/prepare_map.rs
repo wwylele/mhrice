@@ -46,6 +46,7 @@ static MAP_FILES: [Option<MapFiles>; 15] = [
 #[derive(Debug, Serialize)]
 pub enum MapPopKind {
     Relic { id: i32, map: i32 },
+    Stuff,
 }
 
 #[derive(Debug, Serialize)]
@@ -53,6 +54,7 @@ pub struct MapPop {
     pub x: f32,
     pub y: f32,
     pub z: f32,
+    pub pop_behavior: rsz::ItemPopBehavior,
     pub kind: MapPopKind,
 }
 
@@ -76,7 +78,7 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<G
     let mut pops = vec![];
 
     scene.for_each_free_object(&mut |object: &GameObject| {
-        if let Ok(_pop) = object.get_component::<rsz::ItemPopBehavior>() {
+        if let Ok(pop_behavior) = object.get_component::<rsz::ItemPopBehavior>() {
             let transform = object
                 .get_component::<rsz::Transform>()
                 .context("Lack of transform")?;
@@ -91,11 +93,17 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<G
                     map: relic.note_map_no,
                 }
             } else {
-                return Ok(());
-                //MapPopKind::Stuff
+                //return Ok(());
+                MapPopKind::Stuff
             };
 
-            pops.push(MapPop { x, y, z, kind });
+            pops.push(MapPop {
+                x,
+                y,
+                z,
+                kind,
+                pop_behavior: pop_behavior.clone(),
+            });
         }
 
         Ok(())

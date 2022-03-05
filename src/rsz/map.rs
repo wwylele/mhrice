@@ -1,7 +1,238 @@
 use super::common::*;
 use super::*;
+use crate::rsz_enum;
 use crate::rsz_struct;
 use serde::*;
+
+rsz_struct! {
+    #[rsz("snow.stage.props.PopMaterialController",
+        0x2748d05a = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct PopMaterialController {
+        pub enabled: bool,
+        pub ctrl_setting_data: ExternUser<()>, // snow.stage.props.PopMaterialControlSettingData
+        pub blink_cycle_span: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.access.PlayerInfluencePopMarker",
+        0x2b3d2c6c = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct PlayerInfluencePopMarker {
+        pub base: ObjectPopMarker,
+        pub test_bell_trigger: u32,
+        pub creeping_point_adjust_transform: ViaQuaternion,
+        pub map_floor_type: i32, // snow.stage.StageDef.MapFloorType
+
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.access.ItemPopBehavior",
+        0xdae0b08f = 0
+    )]
+    #[derive(Debug, Serialize, Clone)]
+    pub struct ItemPopBehavior {
+        pub enabled: bool,
+        pub pop_id: i32, // snow.stage.StageDef.SaisyuPopId
+        pub pop_icon: i32, // snow.gui.SnowGuiCommonUtility.Icon.ItemIconPatternNo
+        pub pop_icon_color: i32, // snow.gui.SnowGuiCommonUtility.Icon.ItemIconColor
+        pub pop_category: i32, // snow.access.ItemPopMarker.ItemPopCategory
+        pub map_floor_type: i32, // snow.stage.StageDef.MapFloorType
+        pub action_target_point_offset: ViaVec3,
+        pub one_time_only_flag: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.access.ItemPopVisualController",
+        0x89989dcf = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ItemPopVisualController {
+        pub enabled: bool,
+        pub parts_no: i32,
+        pub dissolve_cluster_name: String,
+        pub dissolve_cluster_name_sub: String,
+        pub dissolve_time: f32,
+        pub dissolve_timer: f32,
+
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.StageRestrictObserver",
+        0xe8f69abc = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct StageRestrictObserver {
+        pub enabled: bool,
+        pub restrict_type: i32, // snow.RistrictTargetType
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.pop.RelicNoteUnlock",
+        0xf2852b01 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RelicNoteUnlock {
+        pub enabled: bool,
+        pub note_map_no: i32, // snow.QuestMapManager.MapNoType
+        pub relic_id: i32, // snow.stage.StageDef.RelicId
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.gui.GuiCommonNpcHeadMessage",
+        0xae15ae5b = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct GuiCommonNpcHeadMessage {
+        pub enabled: bool,
+        pub pos_data: ExternUser<()>, // snow.gui.userdata.GuiNpcHeadMessagePosData
+    }
+}
+
+// snow.access.ObjectPopMarker.AccessableDigree.DirectionType
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Clone, Copy)]
+    pub enum DirectionType {
+        Vertical = 0,
+        Horizontal = 1,
+        Undefined = -1,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.access.ObjectPopMarker.AccessableDigree",
+        0xa042b98d = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct AccessableDigree {
+        pub enable: bool,
+        pub direction: DirectionType,
+        pub start_degree: f32,
+        pub end_degree: f32,
+    }
+}
+
+// snow.access.ObjectPopSensor.DetectedInfo.RegisterRequirementType
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Clone, Copy)]
+    pub enum RegisterRequirementType {
+        MarkerCoreSensorOutline = 0,
+        SensorCoreMarkerOutline = 1,
+    }
+}
+
+// snow.access.ObjectPopMarker
+rsz_struct! {
+    #[rsz()]
+    #[derive(Debug, Serialize)]
+    pub struct ObjectPopMarker {
+        pub enabled: bool,
+        pub category: i32, // snow.access.ObjectPopMarker.MarkerCategory
+        pub id: u32,
+        pub control_id: u32,
+        pub is_detectable: bool,
+        pub is_accessible: bool,
+        pub accessible_degree_list: Vec<AccessableDigree>,
+        pub register_requirement: RegisterRequirementType,
+        pub permit_exceptional_access: bool,
+        pub permit_exceptional_access2: bool,
+        pub action_pos: ViaVec3,
+        pub action_dir: ViaVec3,
+
+    }
+}
+
+// snow.access.NpcFacilityPopMarker.FlowType
+rsz_enum! {
+    #[rsz(u32)]
+    #[derive(Debug, Serialize, Clone, Copy)]
+    pub enum FlowType {
+        Undefined = 0,
+        NpcOnly = 1,
+        NpcAndFacility = 2,
+        FacilityOnly = 3,
+        NpcAndFacilitySkipStart = 4,
+        NpcAndFacilitySkipBoth = 5,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.access.NpcFacilityPopMarker",
+        0x3ad748a3 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct NpcFacilityPopMarker {
+        pub base: ObjectPopMarker,
+        pub access_flow: FlowType,
+        pub focus_camera_flag: bool,
+        pub camera_distance: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.hit.RSCAPIWrapper",
+        0x0c8d525e = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RSCAPIWrapper {
+        pub enabled: bool,
+    }
+}
+
+// snow.stage.StageDef.CampType
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Clone, Copy)]
+    pub enum CampType {
+        BaseCamp = 0,
+        SubCamp1 = 1,
+        SubCamp2 = 2,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.props.TentBehavior",
+        0xee52e52d = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct TentBehavior {
+        pub enabled: bool,
+        pub camp_type: CampType,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.pop.CampFindCheck",
+        0x44a3363f = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct CampFindCheck {
+        pub enabled: bool,
+        pub camp_type: CampType,
+        pub check_hight: f32,
+        pub check_radius: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.access.SupplyBoxBehavior",
+        0x83471751 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct SupplyBoxBehavior {
+        pub enabled: bool,
+    }
+}
 
 rsz_struct! {
     #[rsz("snow.gui.userdata.GuiMapScaleDefineData.MaskSetting",
@@ -99,109 +330,6 @@ rsz_struct! {
 }
 
 rsz_struct! {
-    #[rsz("via.navigation.ObstacleFilterInfo",
-        0x727d8279 = 0
-    )]
-    #[derive(Debug, Serialize)]
-    pub struct ObstacleFilterInfo {
-        pub v0: u8,
-        pub v1: String,
-        pub v2: u32,
-    }
-}
-
-rsz_struct! {
-    #[rsz("via.navigation.ObstacleFilterSet",
-        0x3fc440e4 = 0
-    )]
-    #[derive(Debug, Serialize)]
-    pub struct ObstacleFilterSet {
-        pub v0: String,
-        pub filters: Vec<ObstacleFilterInfo>
-    }
-}
-
-rsz_struct! {
-    #[rsz("via.navigation.NavigationSurface",
-        0x2edbaa75 = 0
-    )]
-    #[derive(Debug, Serialize)]
-    pub struct NavigationSurface {
-        // Navigation
-        pub v0: String,
-        pub v1: ViaVec4,
-        pub v2a: u64,
-        pub v2b: u64,
-        pub v3: u8,
-        pub v4: u8,
-        pub v5: u8,
-        pub v6: u32,
-        pub v7: u32,
-        pub v8: u8,
-        pub v9: u8,
-        pub v10: u8,
-        pub v11: u8,
-        pub v12: Vec<()>, //? 0xd0 getFilters via.navigation.FilterInfo
-        pub v13: Vec<()>,//? 0xe0 getFilterGroups via.navigation.FilterSet
-        pub v14: u32,
-        pub v15: u32,
-        pub v16: u32,
-        pub v17: u8,
-        pub v18: u8,
-        pub v19: u8,
-        pub v20: u32,
-        pub v21: u32,
-        pub v22: u32,
-        pub v23: u32,
-        pub v24: u32,
-        pub v25: u8,
-        pub v26: u8,
-        pub v27: u8,
-        pub v28: u32,
-        pub v29: u8,
-        pub v30: u32,
-        pub v31: u8,
-        pub v32: u8,
-        pub v33: u32,
-        pub v34: u32,
-        pub v35: u32,
-        pub v36: Vec<ObstacleFilterSet>, // 0xf8
-        pub v37: u32,
-
-        // NavigationSurface
-        pub v38: u32,
-        pub v39: u32,
-        pub v40: u32,
-        pub v41: u32,
-        pub v42: u8,
-        pub v43: u32,
-        pub v44: u32,
-        pub v45: u32,
-        pub v46: u32,
-        pub v47: u32,
-        pub v48: u32,
-        pub v49: u32,
-        pub v50: u32,
-        pub v51: u32,
-        pub v52: u8,
-        pub v53: u32,
-        pub v54: u8,
-        pub v55: u8,
-        pub v56: u8,
-        pub v57: u8,
-        pub v58: u32,
-        pub v59: u8,
-        pub v60: u8,
-        pub v61: u32,
-        pub v62: u8,
-        pub v63: u8,
-        pub v64: u32,
-        pub v65: u8,
-        pub v66: u32,
-    }
-}
-
-rsz_struct! {
     #[rsz("via.effect.script.ObjectEffectManager",
         0xcb881936 = 0
     )]
@@ -221,5 +349,238 @@ rsz_struct! {
         pub vfx_range_track_use_highest_weight: bool,
         pub static_data_container: bool,
         pub disable_by_empty_data_container: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.ItemPopLotTableUserData.Param",
+        0x92603c1b = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ItemPopLotTableUserDataParam {
+        pub pop_id: i32, // snow.stage.StageDef.SaisyuPopId
+        pub field_type: i32, // snow.QuestMapManager.MapNoType // this can be -1 (None)
+        pub lot_count: u32,
+        pub lower_id: Vec<ItemId>,
+        pub lower_num: Vec<u32>,
+        pub lower_probability: Vec<u32>,
+        pub upper_id: Vec<ItemId>,
+        pub upper_num: Vec<u32>,
+        pub upper_probability: Vec<u32>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.ItemPopLotTableUserData",
+        0x4aa4200a = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ItemPopLotTableUserData {
+        pub param: Vec<ItemPopLotTableUserDataParam>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.pop.WireLongJumpUnlock",
+        0x618631a5 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct WireLongJumpUnlock {
+        pub enabled: bool,
+        pub wire_long_jump_id: i32,// snow.stage.StageDef.WireLongJumpId
+        pub unlock_cost: i32,
+        pub unlock_time_tag: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.effect.script.EnvironmentEffectManager",
+        0x96116d19 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EnvironmentEffectManager {
+        pub enabled: bool,
+        pub is_enable_auto_culling: bool,
+        pub is_auto_play: bool,
+        pub is_culling_not_affect_update: bool,
+        pub external_propertys: Vec<()>, // via.effect.script.EnvironmentEffectManager.ExternalProperty
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.effect.script.EPVDataElement.GroupInfo",
+        0xb09b23c6 = 0,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EPVDataElementGroupInfo {
+        pub group_type_lv0: i32, // via.effect.GroupType
+        pub group_type_lv1: i32, // via.effect.GroupType
+        pub user_variable_lv0: String,
+        pub user_variable_lv1: String,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.effect.script.EffectCustomExternParameter",
+        0xa5fc82a9 = 0,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EffectCustomExternParameter {
+        pub name: String,
+        pub v1: u32,
+        pub v2: u32,
+        pub v3: u32,
+        pub v4: u32,
+        pub resource_index: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.effect.script.GroupNameParameter",
+        0x13c0298b = 0,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct GroupNameParameter {
+        pub enable: bool,
+        pub group_name_lv0: String,
+        pub group_name_lv1: String,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.effect.script.EffectManager.LODInfo",
+        0x47bd3c89 = 0,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EffectManagerLODInfo {
+        pub level: i32, // via.effect.script.EffectManager.LODLevel
+        pub effect_light_off: bool,
+        pub effect_decal_off: bool,
+        pub effect_radial_blur_off: bool,
+        pub effect_color_correct_off: bool,
+        pub effect_camera_shake_off: bool,
+        pub effect_lensflare_off: bool,
+        pub effect_cloth_chain_mesh_off: bool,
+        pub spawn_volume_ratio: f32,
+        pub action_cut_off: bool,
+        pub collision_cut_off: bool,
+        pub down_level_lighting: bool,
+        pub soft_particle_cut_off: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.effect.script.EPVStandardData.Element",
+        0x46abcc6 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EPVStandardDataElement {
+        // via.effect.ProviderData
+        pub resources: Vec<String>,
+        // via.effect.script.EPVDataElement
+        pub trigger_id: u32,
+        pub stop_trigger_id: u32,
+        #[serde(skip)]
+        aligner: Aligner<8>,
+        pub guid: Guid,
+        pub effect_cache: bool,
+        pub group_info_list: Vec<EPVDataElementGroupInfo>,
+        // via.effect.script.EPVStandardData.Element
+        pub id: u32,
+        pub relation_type: i32, // via.effect.script.EPVDataBase.EffectRelationType
+        pub initialization_parent_scale: bool,
+        pub parent_degree: i32,
+        pub relation_child_id: i32,
+        pub joint_name: String,
+        pub unparent_frame: f32,
+        pub offset: ViaVec3,
+        pub rotation_order: i32, // via.math.RotationOrder
+        pub base_rotation: i32, // via.effect.script.EPVDataBase.RotateBase
+        pub relation_rotation_axis: u32,
+        pub rotation: ViaVec3,
+        pub scale: ViaVec3,
+        pub life_frame: f32,
+        pub end_type: i32, // via.effect.script.EffectManager.EffectEndType
+        pub action_on_provider_destroy: i32, // via.effect.script.EffectCommonDefine.EffectActionOnProviderDestroy
+        pub action_on_provider_disappear: i32, // via.effect.script.EffectCommonDefine.EffectActionOnParentDisappea
+        pub is_camera_direction: bool,
+        pub is_landing: bool,
+        pub is_use_terrain_normal: bool,
+        pub search_terrain_distance: f32,
+        pub cam_node_billbard_sec: f32,
+        pub separate_parent_scale: bool,
+        pub delay_frame: f32,
+        pub loop_frame: u32,
+        pub loop_dispersion_frame: u32,
+        pub play_speed: f32,
+        pub relation_motion_speed: bool,
+        pub is_relation_mirror: bool,
+        pub color_enable: bool,
+        pub color: u32, // via.Color
+        pub mask_enable: bool,
+        pub mask_bit: u32,
+        pub action_on_culling: i32, // via.effect.script.EffectCommonDefine.EffectActionOnCulling
+        pub extern_parameters: Vec<EffectCustomExternParameter>,
+        pub group_name_parameters: Vec<GroupNameParameter>,
+        pub custom_lod: bool,
+        pub lod_levels: Vec<EffectManagerLODInfo>,
+        pub user_bit: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.effect.script.EPVStandardData",
+        0x15efc35c = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EPVStandardData {
+        pub enabled: bool,
+        pub data: Vec<EPVStandardDataElement>,
+        pub version: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.EffectPlayerFadeByDepth.EffectPlayerFadeByDepthParam",
+        0xb8e54062 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EffectPlayerFadeByDepthParam {
+        pub enable: bool,
+        pub near_start: f32,
+        pub near_end: f32,
+        pub far_start: f32,
+        pub far_end: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.EffectPlayerFadeByDepthData",
+        0xefafe567 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EffectPlayerFadeByDepthData {
+        pub enabled: bool,
+        pub param: EffectPlayerFadeByDepthParam
+    }
+}
+rsz_struct! {
+    #[rsz("snow.EnvironmentEffectManagerHelper",
+        0xba1fd0c9 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EnvironmentEffectManagerHelper {
+        pub enabled: bool
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.effect.script.EPVStandard",
+        0xc66ae2d3 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EPVStandard {
+        pub enabled: bool,
+        pub follow_game_object: Zero // The type is GameObject, but always null?
     }
 }

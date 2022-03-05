@@ -116,7 +116,7 @@ fn gen_item_source_monster(
     em_types.sort_unstable();
     em_types.dedup();
     if !em_types.is_empty() {
-        Some(html!(<div><h3>"From monsters, an their quests: "</h3>
+        Some(html!(<div><h3>"From monsters, and their quests: "</h3>
         <ul class="mh-list-item-in-out">
             {
                 em_types.into_iter().map(|em_type|html!(<li class="mh-list-item-in-out">{
