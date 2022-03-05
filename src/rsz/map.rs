@@ -584,3 +584,15 @@ rsz_struct! {
         pub follow_game_object: Zero // The type is GameObject, but always null?
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.stage.props.UniqueBehavior_pop010",
+        0x2AC55689 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct UniqueBehaviorPop010 {
+        pub enabled: bool,
+        pub appearable_quest_no_list: Vec<i32>,
+        pub sync_id: i32,
+    }
+}

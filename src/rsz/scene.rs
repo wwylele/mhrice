@@ -10,12 +10,12 @@ rsz_struct! {
     )]
     #[derive(Debug, Serialize)]
     pub struct Folder {
-        pub name: String,
-        pub tag: String,
+        pub name: Option<String>,
+        pub tag: Option<String>,
         pub update_self: bool,
         pub draw_self: bool,
         pub paolumu: bool,
-        pub path: String,
+        pub path: Option<String>,
     }
 }
 
@@ -25,8 +25,8 @@ rsz_struct! {
     )]
     #[derive(Debug, Serialize)]
     pub struct GameObject {
-        pub name: String,
-        pub tag: String,
+        pub name: Option<String>,
+        pub tag: Option<String>,
         pub update_self: bool, // 14
         pub draw_self: bool, // 15
         pub time_scale: f32,
@@ -42,7 +42,7 @@ rsz_struct! {
         pub position: ViaVec4,
         pub rotation: ViaVec4,
         pub scale: ViaVec4,
-        pub zinogre: String,
+        pub zinogre: Option<String>,
         pub same_joints_constraint: bool,
         pub absolute_scaling: bool
     }
@@ -80,7 +80,7 @@ rsz_struct! {
     )]
     #[derive(Debug, Serialize)]
     pub struct RequestSetGroup {
-        pub path: String
+        pub path: Option<String>
     }
 }
 
@@ -108,7 +108,7 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct ViaGui {
         pub enabled: bool,
-        pub path: String,
+        pub path: Option<String>,
         pub play_speed: f32,
         pub segment: u32,
         pub soft_particle_dist_type: i32, // via.gui.SoftParticleDistType
@@ -125,15 +125,15 @@ rsz_struct! {
     )]
     #[derive(Debug, Serialize)]
     pub struct MaterialParam {
-        v0: String,
-        v1: String,
+        v0: Option<String>,
+        v1: Option<String>,
         v2a: f32,
         v2b: f32,
         v2c: f32,
         v2d: f32,
-        v3: String,
+        v3: Option<String>,
         v4: u32,
-        v5: String,
+        v5: Option<String>,
     }
 }
 
@@ -212,8 +212,8 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct GuiControl {
         // PlayObject
-        v0: String,
-        v1: String,
+        v0: Option<String>,
+        v1: Option<String>,
         v2: u8,
         v3: u8,
         v4: u16,
@@ -253,7 +253,7 @@ rsz_struct! {
         pub base: Flatten<GuiControl>,
         pub v21: u32,
         pub v22: f32,
-        pub v23: String,
+        pub v23: Option<String>,
     }
 }
 
@@ -263,7 +263,7 @@ rsz_struct! {
     )]#[derive(Debug, Serialize)]
     pub struct Prefab {
         pub v0: u8,
-        pub v1: String,
+        pub v1: Option<String>,
     }
 }
 
@@ -274,7 +274,7 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct ObstacleFilterInfo {
         pub v0: u8,
-        pub v1: String,
+        pub v1: Option<String>,
         pub v2: u32,
     }
 }
@@ -285,7 +285,7 @@ rsz_struct! {
     )]
     #[derive(Debug, Serialize)]
     pub struct ObstacleFilterSet {
-        pub v0: String,
+        pub v0: Option<String>,
         pub filters: Vec<ObstacleFilterInfo>
     }
 }
@@ -297,7 +297,7 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct NavigationSurface {
         // Navigation
-        pub v0: String,
+        pub v0: Option<String>,
         pub v1: ViaVec4,
         pub v2a: u64,
         pub v2b: u64,
@@ -367,5 +367,64 @@ rsz_struct! {
         pub v64: u32,
         pub v65: u8,
         pub v66: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.physics.MeshShape",
+        0x8fb90e73 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct MeshShape {
+        pub v0: Zero, // this should be a sub object?
+        pub v1: Option<String>,
+        pub v2: ViaMat4
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.physics.FilterInfo",
+        0xfdca9c46 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct PhysicsFilterInfo {
+        pub v0: u32,
+        pub v1: u32,
+        pub v2: u32,
+        pub v3: u32,
+        pub v4: u32
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.physics.Collider",
+        0x1eba41d0 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct Collider {
+        pub v0: u8,
+        pub v1: u8,
+        pub v2: MeshShape,
+        pub v3: PhysicsFilterInfo,
+        pub v4: PhysicsUserData,
+        pub v5: Option<String>,
+        pub v6: Option<String>,
+        pub v7: Option<String>,
+        pub v8: Option<String>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.physics.Colliders",
+        0x41d1c09a = 0,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct Colliders {
+        pub v0: u8,
+        pub v1: u8,
+        pub v2: u32,
+        pub v3: Vec<String>,
+        pub v4: u8,
+        pub v5: Vec<Collider>,
     }
 }

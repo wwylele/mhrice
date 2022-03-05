@@ -60,7 +60,7 @@ pub fn gen_collider_mapping(rcol: Rcol) -> Result<ColliderMapping> {
         }
         if let Some(data) = attachment.user_data.downcast::<EmHitDamageRsData>() {
             let entry = part_map.entry(data.parts_group.try_into()?).or_default();
-            entry.insert(data.base.name.clone());
+            entry.insert(data.name.clone());
             entry.insert(attachment.name);
             entry.insert(
                 rcol.collider_groups[attachment.collider_group_index]
@@ -77,7 +77,7 @@ pub fn gen_collider_mapping(rcol: Rcol) -> Result<ColliderMapping> {
             }
             if let Some(data) = collider.user_data.downcast::<EmHitDamageShapeData>() {
                 let entry = meat_map.entry(data.meat.try_into()?).or_default();
-                entry.insert(data.base.name.clone());
+                entry.insert(data.name.clone());
             }
         }
     }

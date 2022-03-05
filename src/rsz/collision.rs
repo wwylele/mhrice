@@ -19,7 +19,6 @@ rsz_struct! {
     )]
     #[derive(Debug, Serialize)]
     pub struct PhysicsUserData {
-        pub name: String,
     }
 }
 
@@ -29,6 +28,7 @@ rsz_struct! {
     )]
     #[derive(Debug, Serialize)]
     pub struct EmHitDamageRsData {
+        pub name: String,
         pub base: PhysicsUserData,
         pub parts_group: u16, // snow.enemy.EnemyDef.PartsGroup
     }
@@ -107,6 +107,7 @@ rsz_struct! {
     )]
     #[derive(Debug, Serialize)]
     pub struct EmHitDamageShapeData {
+        pub name: String,
         pub base: PhysicsUserData,
         pub custom_shape_type: CustomShapeType,
         pub ring_radius: f32,

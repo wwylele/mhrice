@@ -695,6 +695,10 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         ObstacleFilterInfo,
         ObstacleFilterSet,
         NavigationSurface,
+        MeshShape,
+        PhysicsFilterInfo,
+        Collider,
+        Colliders,
     );
 
     r!(
@@ -733,6 +737,7 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         EffectPlayerFadeByDepthData,
         EnvironmentEffectManagerHelper,
         EPVStandard,
+        UniqueBehaviorPop010,
     );
 
     m

@@ -18,6 +18,7 @@ macro_rules! rsz_inner_trait {
         impl crate::rsz::FromRsz for $struct_name {
             const SYMBOL: &'static str = $symbol;
             const VERSIONS: &'static [(u32, u32)] = &[$(($vhash, $version)),*];
+            #[allow(unused_variables)]
             fn from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
                 crate::rsz_inner!(rsz, $($field_name : $field_type,)*)
             }
@@ -456,6 +457,17 @@ rsz_struct! {
         pub y: f32,
         pub z: f32,
         pub w: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz()]
+    #[derive(Debug, Serialize, Clone)]
+    pub struct ViaMat4 {
+        pub a: ViaVec4,
+        pub b: ViaVec4,
+        pub c: ViaVec4,
+        pub d: ViaVec4
     }
 }
 

@@ -244,8 +244,8 @@ impl Scn {
             }
             Err(e) => {
                 println!("Failed to serialize because {}", e);
-                for (i, root) in self.rsz.roots.iter().enumerate() {
-                    let type_descriptor = self.rsz.type_descriptors[*root as usize];
+                for (i, &type_descriptor) in self.rsz.type_descriptors.iter().enumerate() {
+                    // let type_descriptor = self.rsz.type_descriptors[*root as usize];
                     let hash = (type_descriptor & 0xFFFFFFFF) as u32;
                     let symbol = rsz::RSZ_TYPE_MAP
                         .get(&hash)
@@ -384,7 +384,10 @@ impl Scene {
                 .context("folder data already taken")?
                 .downcast()
                 .context("Folder type mismatch")?;
-            let subscene = (!folder.path.is_empty()).then(|| Scene::new(pak, &folder.path));
+            let subscene = folder
+                .path
+                .as_ref()
+                .and_then(|p| (!p.is_empty()).then(|| Scene::new(pak, p)));
             let children = orphans.remove(&Some(f.folder_object_index)).map_or_else(
                 Vec::new,
                 |mut children: Vec<GameObject>| {
