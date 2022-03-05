@@ -1,6 +1,7 @@
 use super::gen_armor::*;
 use super::gen_hyakuryu_skill::*;
 use super::gen_item::*;
+use super::gen_map::*;
 use super::gen_monster::*;
 use super::gen_quest::*;
 use super::gen_skill::*;
@@ -573,6 +574,7 @@ pub fn gen_website(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &impl Sink) ->
     gen_items(pedia, pedia_ex, output)?;
     gen_item_list(pedia_ex, output)?;
     gen_weapons(pedia_ex, output)?;
+    gen_maps(pedia, pedia_ex, output)?;
     gen_about(output)?;
     gen_static(output)?;
     gen_part_color_css(output)?;

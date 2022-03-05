@@ -1,3 +1,4 @@
+use super::prepare_map::*;
 use crate::msg::*;
 use crate::rsz::*;
 use serde::*;
@@ -133,6 +134,8 @@ pub struct Pedia {
 
     pub horn_melody: Msg,
     pub hyakuryu_weapon_buildup: HyakuryuWeaponHyakuryuBuildupUserData,
+
+    pub maps: BTreeMap<i32, GameMap>,
 }
 
 pub struct QuestReward<'a> {

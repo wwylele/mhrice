@@ -333,3 +333,25 @@ ul.mh-rampage-em-list{
 li.mh-rampage-em-list {
     display: inline-block;
 }
+
+.mh-map {
+    position: relative;
+    width: 60vw;
+    height: 60vw;
+}
+
+.mh-map > .mh-map-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.mh-map > .mh-map-pop {
+    position: absolute;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-left: -0.75rem;
+    margin-top: -0.75rem;
+}

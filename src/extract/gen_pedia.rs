@@ -1,4 +1,5 @@
 use super::pedia::*;
+use super::prepare_map::*;
 use super::sink::*;
 use crate::gpu::*;
 use crate::gui::*;
@@ -490,6 +491,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         "data/Define/Player/Weapon/HyakuryuWeaponHyakuryuBuildupData.user",
     )?;
 
+    let maps = prepare_maps(pak)?;
+
     Ok(Pedia {
         monsters,
         small_monsters,
@@ -573,6 +576,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         bow,
         horn_melody,
         hyakuryu_weapon_buildup,
+        maps,
     })
 }
 
@@ -843,6 +847,8 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
 
     let item_colors_path = output.create("rarity_color.css")?;
     gen_rarity_colors(pak, item_colors_path)?;
+
+    gen_map_resource(pak, output)?;
 
     Ok(())
 }
