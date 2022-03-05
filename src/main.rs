@@ -764,7 +764,7 @@ fn search_path(pak: Vec<String>) -> Result<()> {
                             break;
                         }
                         let earlier = begin - 2;
-                        if !file[earlier].is_ascii_graphic() {
+                        if !file[earlier].is_ascii_graphic() && file[earlier] != b' ' {
                             break;
                         }
                         if file[earlier + 1] != 0 {
