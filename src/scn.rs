@@ -244,14 +244,17 @@ impl Scn {
             }
             Err(e) => {
                 println!("Failed to serialize because {}", e);
-                for (i, &type_descriptor) in self.rsz.type_descriptors.iter().enumerate() {
+                for (i, type_descriptor) in self.rsz.type_descriptors.iter().enumerate() {
                     // let type_descriptor = self.rsz.type_descriptors[*root as usize];
-                    let hash = (type_descriptor & 0xFFFFFFFF) as u32;
+                    let hash = type_descriptor.hash;
                     let symbol = rsz::RSZ_TYPE_MAP
                         .get(&hash)
                         .map(|t| t.symbol)
                         .unwrap_or_default();
-                    println!(" [{}] - {:016X} - {}", i, type_descriptor, symbol)
+                    println!(
+                        " [{}] - {:08X}, {:08X} - {}",
+                        i, hash, type_descriptor.crc, symbol
+                    )
                 }
                 Result::<()>::Err(e).unwrap()
             }

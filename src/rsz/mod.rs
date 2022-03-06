@@ -70,11 +70,17 @@ pub struct Extern {
     pub path: String,
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub struct TypeDescriptor {
+    pub hash: u32,
+    pub crc: u32,
+}
+
 #[derive(Debug)]
 pub struct Rsz {
     pub roots: Vec<u32>,
     pub extern_slots: HashMap<u32, Extern>,
-    pub type_descriptors: Vec<u64>,
+    pub type_descriptors: Vec<TypeDescriptor>,
     pub data: Vec<u8>,
 }
 
@@ -110,10 +116,14 @@ impl Rsz {
             .context("Undiscovered data before type descriptor")?;
 
         let type_descriptors = (0..type_descriptor_count)
-            .map(|_| file.read_u64())
+            .map(|_| {
+                let hash = file.read_u32()?;
+                let crc = file.read_u32()?;
+                Ok(TypeDescriptor { hash, crc })
+            })
             .collect::<Result<Vec<_>>>()?;
 
-        if type_descriptors.get(0) != Some(&0) {
+        if type_descriptors.get(0) != Some(&TypeDescriptor { hash: 0, crc: 0 }) {
             bail!("The first type descriptor should be 0")
         }
 
@@ -138,11 +148,11 @@ impl Rsz {
                 if !path.ends_with(".user") {
                     bail!("Non-USER slot string");
                 }
-                if u64::from(hash)
-                    != 0xFFFFFFFF
-                        & *type_descriptors
-                            .get(usize::try_from(slot)?)
-                            .context("slot out of bound")?
+                if hash
+                    != type_descriptors
+                        .get(usize::try_from(slot)?)
+                        .context("slot out of bound")?
+                        .hash
                 {
                     bail!("slot hash mismatch")
                 }
@@ -168,10 +178,7 @@ impl Rsz {
         let mut node_buf: Vec<Option<AnyRsz>> = vec![None];
         let mut node_rc_buf: HashMap<u32, Rc<dyn Any>> = HashMap::new();
         let mut cursor = Cursor::new(&self.data);
-        for (i, &td) in self.type_descriptors.iter().enumerate().skip(1) {
-            let hash = u32::try_from(td & 0xFFFFFFFF).unwrap();
-            let crc = u32::try_from(td >> 32).unwrap();
-
+        for (i, &TypeDescriptor { hash, crc }) in self.type_descriptors.iter().enumerate().skip(1) {
             if let Some(slot_extern) = self.extern_slots.get(&u32::try_from(i)?) {
                 if slot_extern.hash != hash {
                     bail!("Extern hash mismatch")
@@ -245,6 +252,21 @@ impl Rsz {
 
     pub fn root_count(&self) -> usize {
         self.roots.len()
+    }
+
+    pub fn verify_crc(&self) -> Result<()> {
+        for td in &self.type_descriptors {
+            if let Some(type_info) = RSZ_TYPE_MAP.get(&td.hash) {
+                if !type_info.versions.contains_key(&td.crc) {
+                    bail!(
+                        "Type {} has unregistered version CRC {:08X}",
+                        type_info.symbol,
+                        td.crc
+                    )
+                }
+            }
+        }
+        Ok(())
     }
 }
 

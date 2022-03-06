@@ -107,7 +107,7 @@ enum Mhrice {
         output: String,
     },
 
-    Scan {
+    ScanRsz {
         #[structopt(short, long)]
         pak: Vec<String>,
     },
@@ -173,11 +173,6 @@ enum Mhrice {
     },
 
     ScanMesh {
-        #[structopt(short, long)]
-        pak: Vec<String>,
-    },
-
-    ScanRcol {
         #[structopt(short, long)]
         pak: Vec<String>,
     },
@@ -374,26 +369,37 @@ fn visit_tree(nodes: &mut [TreeNode], current: usize, depth: i32) {
     nodes[current].visited = true;
 }*/
 
-fn scan(pak: Vec<String>) -> Result<()> {
+fn scan_rsz(pak: Vec<String>) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
 
     for index in pak.all_file_indexs() {
         let content = pak
             .read_file(index)
             .context(format!("Failed to open file at {:?}", index))?;
-        if content.len() < 3 {
+        if content.len() < 4 {
             continue;
         }
 
         if &content[0..3] == b"USR" {
-            let _ = User::new(Cursor::new(&content))
-                .context(format!("Failed to open USER at {:?}", index))?;
+            User::new(Cursor::new(&content))
+                .context(format!("Failed to open USER at {:?}", index))?
+                .rsz
+                .verify_crc()?;
         } else if &content[0..3] == b"PFB" {
-            let _ = Pfb::new(Cursor::new(&content))
-                .context(format!("Failed to open PFB at {:?}", index))?;
+            Pfb::new(Cursor::new(&content))
+                .context(format!("Failed to open PFB at {:?}", index))?
+                .rsz
+                .verify_crc()?;
         } else if &content[0..3] == b"SCN" {
-            let _ = Scn::new(Cursor::new(&content))
-                .context(format!("Failed to open SCN at {:?}", index))?;
+            Scn::new(Cursor::new(&content))
+                .context(format!("Failed to open SCN at {:?}", index))?
+                .rsz
+                .verify_crc()?;
+        } else if &content[0..4] == b"RCOL" {
+            Rcol::new(Cursor::new(&content), false)
+                .context(format!("Failed to open RCOL at {:?}", index))?
+                .rsz
+                .verify_crc()?;
         }
     }
     Ok(())
@@ -660,19 +666,6 @@ fn scan_mesh(pak: Vec<String>) -> Result<()> {
         }
         let _ = Mesh::new(Cursor::new(&file)).context(format!("at {:?}", i))?;
     }
-    Ok(())
-}
-
-fn scan_rcol(pak: Vec<String>) -> Result<()> {
-    let mut pak = PakReader::new(open_pak_files(pak)?)?;
-    for i in pak.all_file_indexs() {
-        let file = pak.read_file(i)?;
-        if file.len() < 4 || file[0..4] != b"RCOL"[..] {
-            continue;
-        }
-        let _ = Rcol::new(Cursor::new(&file), false).context(format!("at {:?}", i))?;
-    }
-
     Ok(())
 }
 
@@ -1095,7 +1088,7 @@ fn main() -> Result<()> {
             index,
             output,
         } => dump_index(pak, version, index, output),
-        Mhrice::Scan { pak } => scan(pak),
+        Mhrice::ScanRsz { pak } => scan_rsz(pak),
         Mhrice::GenJson { pak } => gen_json(pak),
         Mhrice::GenWebsite { pak, output } => gen_website(pak, output),
         Mhrice::ReadTdb { tdb } => read_tdb(tdb),
@@ -1110,7 +1103,6 @@ fn main() -> Result<()> {
         Mhrice::SearchPath { pak } => search_path(pak),
         Mhrice::DumpTree { pak, list, output } => dump_tree(pak, list, output),
         Mhrice::ScanMesh { pak } => scan_mesh(pak),
-        Mhrice::ScanRcol { pak } => scan_rcol(pak),
         Mhrice::ScanTex { pak } => scan_tex(pak),
         Mhrice::ScanGui { pak } => scan_gui(pak),
         Mhrice::ScanUvs { pak } => scan_uvs(pak),
