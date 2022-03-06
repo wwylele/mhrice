@@ -596,3 +596,26 @@ rsz_struct! {
         pub sync_id: i32,
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.stage.props.TentVisualController",
+        0xa2a80c76 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct TentVisualController {
+        pub enabled: bool,
+        pub camp_type: CampType,
+        pub model_type: i32, // snow.stage.props.TentVisualController.ModelType
+        pub map_floor_type: i32, // snow.stage.StageDef.MapFloorType
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.access.GimmickPopMarker",
+        0x23a2972 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct GimmickPopMarker {
+        pub base: ObjectPopMarker,
+    }
+}

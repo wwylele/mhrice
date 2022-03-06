@@ -29,15 +29,51 @@ static MAP_FILES: [Option<MapFiles>; 15] = [
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_002.user",
         scene_file: "scene/m02/normal/m02_normal.scn",
     }),
-    None, // 3
-    None, // 4
-    None, // 5
+    Some(MapFiles {
+        // 3
+        tex_files: &["gui/80_Texture/map/map_003_IAM.tex"],
+        scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_003.user",
+        scene_file: "scene/m03/normal/m03_normal.scn",
+    }),
+    Some(MapFiles {
+        // 4
+        tex_files: &["gui/80_Texture/map/map_004_IAM.tex"],
+        scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_004.user",
+        scene_file: "scene/m04/normal/m04_normal.scn",
+    }),
+    Some(MapFiles {
+        // 5
+        tex_files: &["gui/80_Texture/map/map_005_IAM.tex"],
+        scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_005.user",
+        scene_file: "scene/m05/normal/m05_normal.scn",
+    }),
     None, // 6
     None, // 7
+    /*Some(MapFiles {
+        // 7
+        tex_files: &["gui/80_Texture/map/map_007_IAM.tex"],
+        scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_007_sp.user", // special type
+        scene_file: "scene/m01/hyakuryu/m_01_hyakuryo_A.scn",
+    }),*/
     None, // 8
-    None, // 9
-    None, // 10
-    None, // 11
+    Some(MapFiles {
+        // 9
+        tex_files: &["gui/80_Texture/map/map_009_IAM.tex"],
+        scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_009.user",
+        scene_file: "scene/m20/normal/m20_normal.scn",
+    }),
+    Some(MapFiles {
+        // 10
+        tex_files: &["gui/80_Texture/map/map_010_IAM.tex"],
+        scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_010.user",
+        scene_file: "scene/m21/normal/m21_normal.scn",
+    }),
+    Some(MapFiles {
+        // 11
+        tex_files: &["gui/80_Texture/map/map_011_IAM.tex"],
+        scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_011.user",
+        scene_file: "scene/m22/normal/m22_normal.scn",
+    }),
     None, // 12
     None, // 13
     None, // 14

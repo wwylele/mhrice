@@ -19,6 +19,7 @@ fn gen_map(id: i32, map: &GameMap, mut output: impl Write) -> Result<()> {
                 { head_common() }
             </head>
             <body>
+            { navbar() }
             <main><div class="container"> <div class="content">
 
             <h1 class="title">
