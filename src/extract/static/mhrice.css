@@ -334,10 +334,16 @@ li.mh-rampage-em-list {
     display: inline-block;
 }
 
+.mh-map-container {
+    overflow: scroll;
+    width: 100%;
+    height: min(80vh, 70vw)
+}
+
 .mh-map {
     position: relative;
-    width: 60vw;
-    height: 60vw;
+    width: 100%;
+    padding-top: 100%;
 }
 
 .mh-map > .mh-map-layer {
@@ -357,4 +363,12 @@ li.mh-rampage-em-list {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.mh-map > .mh-map-pop:hover {
+    border: 1px solid yellow;
+}
+
+.mh-map > .mh-map-select {
+    border: 1px solid green;
 }

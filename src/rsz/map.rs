@@ -78,7 +78,7 @@ rsz_struct! {
     #[rsz("snow.stage.pop.RelicNoteUnlock",
         0xf2852b01 = 0
     )]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct RelicNoteUnlock {
         pub enabled: bool,
         pub note_map_no: i32, // snow.QuestMapManager.MapNoType

@@ -5,6 +5,10 @@ var navbar_menu_active = false;
 
 var classes_to_hide = new Set();
 
+var cur_map_explain = "default";
+
+var map_scale = 100
+
 window.onload = function () {
     check_cookie();
     switchLanguage();
@@ -183,4 +187,52 @@ function onToggleNavbarMenu() {
         document.getElementById("navbarBurger").classList.remove("is-active");
         document.getElementById("navbarMenu").classList.remove("is-active");
     }
+}
+
+function onShowMapExplain(id) {
+    if (cur_map_explain !== null) {
+        document.getElementById("mh-map-explain-" + cur_map_explain).classList.add("mh-hidden");
+        if (cur_map_explain !== "default") {
+            document.getElementById("mh-map-icon-" + cur_map_explain).classList.remove("mh-map-select");
+        }
+    }
+    cur_map_explain = id;
+    document.getElementById("mh-map-explain-" + cur_map_explain).classList.remove("mh-hidden");
+    document.getElementById("mh-map-icon-" + cur_map_explain).classList.add("mh-map-select");
+}
+
+function updateMapScale() {
+    let map = document.getElementById("mh-map");
+    map.style.width = map_scale + "%";
+    map.style.paddingTop = map_scale + "%";
+}
+
+function scaleUpMap() {
+    if (map_scale >= 500) {
+        return
+    }
+
+    map_scale += 50;
+
+    document.getElementById("button-scale-down").disabled = false;
+    if (map_scale >= 500) {
+        document.getElementById("button-scale-up").disabled = true;
+    }
+
+    updateMapScale()
+}
+
+function scaleDownMap() {
+    if (map_scale <= 100) {
+        return
+    }
+
+    map_scale -= 50
+
+    document.getElementById("button-scale-up").disabled = false;
+    if (map_scale <= 100) {
+        document.getElementById("button-scale-down").disabled = true;
+    }
+
+    updateMapScale()
 }

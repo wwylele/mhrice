@@ -492,6 +492,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     )?;
 
     let maps = prepare_maps(pak)?;
+    let map_name = get_msg(pak, "Message/Common_Msg/Stage_Name.msg")?;
+    let item_pop_lot = get_user(pak, "data/Define/Stage/ItemPop/ItemPopLotTableData.user")?;
 
     Ok(Pedia {
         monsters,
@@ -577,6 +579,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         horn_melody,
         hyakuryu_weapon_buildup,
         maps,
+        map_name,
+        item_pop_lot,
     })
 }
 
@@ -1849,6 +1853,25 @@ fn prepare_horn_melody(pedia: &Pedia) -> HashMap<i32, &'_ MsgEntry> {
     res
 }
 
+fn prepare_item_pop(
+    pedia: &Pedia,
+) -> Result<HashMap<(i32, i32), &'_ ItemPopLotTableUserDataParam>> {
+    let mut res = HashMap::new();
+    for param in &pedia.item_pop_lot.param {
+        if res
+            .insert((param.pop_id, param.field_type), param)
+            .is_some()
+        {
+            bail!(
+                "Multiple definition for item pop {} in map {}",
+                param.pop_id,
+                param.field_type
+            );
+        }
+    }
+    Ok(res)
+}
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     let monster_order = pedia
         .monster_list
@@ -1904,5 +1927,6 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         horn_melody: prepare_horn_melody(pedia),
 
         monster_order,
+        item_pop: prepare_item_pop(pedia)?,
     })
 }
