@@ -12,6 +12,17 @@ fn map_page(id: i32) -> String {
     format!("{id:02}.html")
 }
 
+fn gen_map_label(id: i32, pedia: &Pedia) -> Box<a<String>> {
+    let link = format!("/map/{}", map_page(id));
+    let name_name = format!("Stage_Name_{id:02}");
+    let name = pedia.map_name.get_entry(&name_name);
+    if let Some(name) = name {
+        html!(<a href={link}>{ gen_multi_lang(name) }</a>)
+    } else {
+        html!(<a href={link}>{ text!("Map {:02}", id) }</a>)
+    }
+}
+
 fn gen_map(
     id: i32,
     map: &GameMap,
@@ -113,9 +124,17 @@ fn gen_map(
             <div class="column is-two-thirds">
             <div class="mh-map-container">
             <div class="mh-map" id="mh-map">
-            {(0..map.layer_count).map(|j| html!(
-                <img class="mh-map-layer" src={format!("/resources/map{id:02}_{j}.png")}/>
-            ))}
+            {(0..map.layer_count).map(|j| {
+                let c = if j == 0 {
+                    "mh-map-layer"
+                } else {
+                    "mh-map-layer mh-hidden"
+                };
+                let html_id = format!("mh-map-layer-{}", j);
+                html!(
+                    <img class={c} id={html_id.as_str()} src={format!("/resources/map{id:02}_{j}.png")}/>
+                )
+            })}
             { map_icons }
             </div>
             </div>
@@ -124,11 +143,18 @@ fn gen_map(
             <div class="column">
             <div>
             <button class="button is-white" id="button-scale-down" onclick="scaleDownMap();" disabled=true>
-                <span class="icon is-small"><i class="fas fa-search-minus"></i></span>
+                <span class="icon"><i class="fas fa-search-minus"></i></span>
             </button>
             <button class="button is-white" id="button-scale-up" onclick="scaleUpMap();">
-                <span class="icon is-small"><i class="fas fa-search-plus"></i></span>
+                <span class="icon"><i class="fas fa-search-plus"></i></span>
             </button>
+            {
+                (map.layer_count > 1).then(||html!(
+                    <button class="button is-white" onclick="switchMapLayer();">
+                      <span class="icon"><i class="fas fa-layer-group"></i></span>
+                      <span>"Change Layer"</span>
+                    </button>: String))
+            }
             </div>
             { map_explains }
             <div id="mh-map-explain-default">"Click an icon on the map to learn the detail."</div>
@@ -152,5 +178,36 @@ pub fn gen_maps(pedia: &Pedia, pedia_ex: &PediaEx, output: &impl Sink) -> Result
         let path = map_path.create_html(&map_page(id))?;
         gen_map(id, map, pedia, pedia_ex, path)?
     }
+    Ok(())
+}
+
+pub fn gen_map_list(pedia: &Pedia, output: &impl Sink) -> Result<()> {
+    let doc: DOMTree<String> = html!(
+        <html>
+            <head>
+                <title>{text!("Maps - MHRice")}</title>
+                { head_common() }
+            </head>
+            <body>
+                { navbar() }
+                <main> <div class="container">
+                <h1 class="title">"Map"</h1>
+                <ul>
+                {
+                    pedia.maps.iter().map(|(&i, _)|{
+                        html!(<li>
+                            {gen_map_label(i, pedia)}
+                        </li>)
+                    })
+                }
+                </ul>
+                </div></main>
+            </body>
+        </html>: String
+    );
+    output
+        .create_html("map.html")?
+        .write_all(doc.to_string().as_bytes())?;
+
     Ok(())
 }

@@ -131,6 +131,10 @@ pub fn navbar() -> Box<div<String>> {
                     </div>
                     </div>
 
+                    <a class="navbar-item" href="/map.html">
+                        "Maps"
+                    </a>
+
                     <a class="navbar-item" href="/item.html">
                         "Items"
                     </a>
@@ -575,6 +579,7 @@ pub fn gen_website(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &impl Sink) ->
     gen_item_list(pedia_ex, output)?;
     gen_weapons(pedia_ex, output)?;
     gen_maps(pedia, pedia_ex, output)?;
+    gen_map_list(pedia, output)?;
     gen_about(output)?;
     gen_static(output)?;
     gen_part_color_css(output)?;

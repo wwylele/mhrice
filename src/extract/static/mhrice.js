@@ -8,6 +8,7 @@ var classes_to_hide = new Set();
 var cur_map_explain = "default";
 
 var map_scale = 100
+var map_layer = 0
 
 window.onload = function () {
     check_cookie();
@@ -235,4 +236,16 @@ function scaleDownMap() {
     }
 
     updateMapScale()
+}
+
+function switchMapLayer() {
+    let prev = document.getElementById("mh-map-layer-" + map_layer);
+    map_layer += 1;
+    let cur = document.getElementById("mh-map-layer-" + map_layer);
+    if (cur === null) {
+        map_layer = 0;
+        cur = document.getElementById("mh-map-layer-" + map_layer);
+    }
+    prev.classList.add("mh-hidden");
+    cur.classList.remove("mh-hidden");
 }

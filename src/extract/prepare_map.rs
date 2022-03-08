@@ -25,25 +25,37 @@ static MAP_FILES: [Option<MapFiles>; 15] = [
     }),
     Some(MapFiles {
         // 2
-        tex_files: &["gui/80_Texture/map/map_002_IAM.tex"],
+        tex_files: &[
+            "gui/80_Texture/map/map_002_IAM.tex",
+            "gui/80_Texture/map/map_002_2_IAM.tex",
+        ],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_002.user",
         scene_file: "scene/m02/normal/m02_normal.scn",
     }),
     Some(MapFiles {
         // 3
-        tex_files: &["gui/80_Texture/map/map_003_IAM.tex"],
+        tex_files: &[
+            "gui/80_Texture/map/map_003_IAM.tex",
+            "gui/80_Texture/map/map_003_2_IAM.tex",
+        ],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_003.user",
         scene_file: "scene/m03/normal/m03_normal.scn",
     }),
     Some(MapFiles {
         // 4
-        tex_files: &["gui/80_Texture/map/map_004_IAM.tex"],
+        tex_files: &[
+            "gui/80_Texture/map/map_004_IAM.tex",
+            "gui/80_Texture/map/map_004_2_IAM.tex",
+        ],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_004.user",
         scene_file: "scene/m04/normal/m04_normal.scn",
     }),
     Some(MapFiles {
         // 5
-        tex_files: &["gui/80_Texture/map/map_005_IAM.tex"],
+        tex_files: &[
+            "gui/80_Texture/map/map_005_IAM.tex",
+            "gui/80_Texture/map/map_005_2_IAM.tex",
+        ],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_005.user",
         scene_file: "scene/m05/normal/m05_normal.scn",
     }),
@@ -70,7 +82,10 @@ static MAP_FILES: [Option<MapFiles>; 15] = [
     }),
     Some(MapFiles {
         // 11
-        tex_files: &["gui/80_Texture/map/map_011_IAM.tex"],
+        tex_files: &[
+            "gui/80_Texture/map/map_011_IAM.tex",
+            "gui/80_Texture/map/map_011_2_IAM.tex",
+        ],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_011.user",
         scene_file: "scene/m22/normal/m22_normal.scn",
     }),
