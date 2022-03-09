@@ -22,6 +22,8 @@ use std::convert::{TryFrom, TryInto};
 use std::io::{Cursor, Read, Seek, Write};
 use std::ops::Deref;
 
+pub static ITEM_ICON_SPECIAL_COLOR: [i32; 7] = [93, 115, 121, 123, 178, 179, 189];
+
 fn exactly_one<T>(mut iterator: impl Iterator<Item = T>) -> Result<T> {
     let next = iterator.next().context("No element found")?;
     if iterator.next().is_some() {
@@ -757,11 +759,15 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
     let item_icon = pak.find_file(&item_icon_uvs.textures[0].path)?;
     let item_icon = Tex::new(Cursor::new(pak.read_file(item_icon)?))?.to_rgba(0, 0)?;
     for (i, spriter) in item_icon_uvs.spriter_groups[0].spriters.iter().enumerate() {
-        let (item_icon_r, item_icon_a) = item_icon
-            .sub_image_f(spriter.p0, spriter.p1)?
-            .gen_double_mask();
-        item_icon_r.save_png(item_icon_path.create(&format!("{:03}.r.png", i))?)?;
-        item_icon_a.save_png(item_icon_path.create(&format!("{:03}.a.png", i))?)?;
+        let item_icon = item_icon.sub_image_f(spriter.p0, spriter.p1)?;
+
+        if ITEM_ICON_SPECIAL_COLOR.contains(&(i as i32)) {
+            item_icon.save_png(item_icon_path.create(&format!("{:03}.png", i))?)?;
+        } else {
+            let (item_icon_r, item_icon_a) = item_icon.gen_double_mask();
+            item_icon_r.save_png(item_icon_path.create(&format!("{:03}.r.png", i))?)?;
+            item_icon_a.save_png(item_icon_path.create(&format!("{:03}.a.png", i))?)?;
+        }
     }
 
     let item_addon_uvs = pak.find_file("gui/70_UVSequence/Item_addonicon.uvs")?;

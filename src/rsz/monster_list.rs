@@ -1,6 +1,6 @@
-use super::common::*;
 use super::*;
 use crate::rsz_struct;
+use nalgebra_glm::*;
 use serde::*;
 
 rsz_struct! {
@@ -11,7 +11,7 @@ rsz_struct! {
     pub struct PartData {
         pub part: i32, // snow.data.monsterList.PartType
         pub circle_size: i32,
-        pub circle_pos: ViaVec2,
+        pub circle_pos: Vec2,
         pub em_meat: i32, // snow.enemy.EnemyDef.Meat
         pub em_meat_group_index: u32,
     }

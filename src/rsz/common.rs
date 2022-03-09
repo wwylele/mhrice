@@ -1,4 +1,5 @@
 use super::*;
+use nalgebra_glm::*;
 use serde::*;
 
 #[macro_export]
@@ -392,6 +393,7 @@ pub struct Guid {
 impl FieldFromRsz for Guid {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
         let mut bytes = [0; 16];
+        rsz.cursor.seek_align_up(8)?;
         rsz.read_exact(&mut bytes)?;
         Ok(Guid { bytes })
     }
@@ -421,7 +423,49 @@ impl From<Guid> for String {
     }
 }
 
-rsz_struct! {
+impl FieldFromRsz for Quat {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.cursor.seek_align_up(16)?;
+        let v = rsz.read_f32vec4()?;
+        Ok(Quat::from(v))
+    }
+}
+
+impl FieldFromRsz for Vec4 {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.cursor.seek_align_up(16)?;
+        let v = rsz.read_f32vec4()?;
+        Ok(v)
+    }
+}
+
+impl FieldFromRsz for Vec3 {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.cursor.seek_align_up(16)?;
+        let v = rsz.read_f32vec3()?;
+        rsz.cursor.seek_align_up(16)?;
+        Ok(v)
+    }
+}
+
+impl FieldFromRsz for Vec2 {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.cursor.seek_align_up(16)?;
+        let v = rsz.read_f32vec2()?;
+        rsz.cursor.seek_align_up(16)?;
+        Ok(v)
+    }
+}
+
+impl FieldFromRsz for Mat4x4 {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.cursor.seek_align_up(16)?;
+        let v = rsz.read_f32m4x4()?;
+        Ok(v)
+    }
+}
+
+/*rsz_struct! {
     #[rsz()]
     #[derive(Debug, Serialize, Clone)]
     pub struct ViaVec2 {
@@ -482,4 +526,4 @@ rsz_struct! {
         pub z: f32,
         pub w: f32,
     }
-}
+}*/

@@ -17,6 +17,7 @@ pub trait ReadExt {
     fn read_u16str(&mut self) -> Result<String>;
     fn read_u8str(&mut self) -> Result<String>;
     fn read_f32(&mut self) -> Result<f32>;
+    fn read_f32vec2(&mut self) -> Result<Vec2>;
     fn read_f32vec3(&mut self) -> Result<Vec3>;
     fn read_f32vec4(&mut self) -> Result<Vec4>;
     fn read_f32m4x4(&mut self) -> Result<Mat4x4>;
@@ -120,6 +121,10 @@ impl<T: Read + ?Sized> ReadExt for T {
 
     fn read_f32vec3(&mut self) -> Result<Vec3> {
         Ok(vec3(self.read_f32()?, self.read_f32()?, self.read_f32()?))
+    }
+
+    fn read_f32vec2(&mut self) -> Result<Vec2> {
+        Ok(vec2(self.read_f32()?, self.read_f32()?))
     }
 
     fn read_f32m4x4(&mut self) -> Result<Mat4x4> {

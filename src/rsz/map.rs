@@ -2,6 +2,7 @@ use super::common::*;
 use super::*;
 use crate::rsz_enum;
 use crate::rsz_struct;
+use nalgebra_glm::*;
 use serde::*;
 
 rsz_struct! {
@@ -24,7 +25,7 @@ rsz_struct! {
     pub struct PlayerInfluencePopMarker {
         pub base: ObjectPopMarker,
         pub test_bell_trigger: u32,
-        pub creeping_point_adjust_transform: ViaQuaternion,
+        pub creeping_point_adjust_transform: Quat,
         pub map_floor_type: i32, // snow.stage.StageDef.MapFloorType
 
     }
@@ -42,7 +43,7 @@ rsz_struct! {
         pub pop_icon_color: i32, // snow.gui.SnowGuiCommonUtility.Icon.ItemIconColor
         pub pop_category: i32, // snow.access.ItemPopMarker.ItemPopCategory
         pub map_floor_type: i32, // snow.stage.StageDef.MapFloorType
-        pub action_target_point_offset: ViaVec3,
+        pub action_target_point_offset: Vec3,
         pub one_time_only_flag: bool,
     }
 }
@@ -146,8 +147,8 @@ rsz_struct! {
         pub register_requirement: RegisterRequirementType,
         pub permit_exceptional_access: bool,
         pub permit_exceptional_access2: bool,
-        pub action_pos: ViaVec3,
-        pub action_dir: ViaVec3,
+        pub action_pos: Vec3,
+        pub action_dir: Vec3,
 
     }
 }
@@ -242,7 +243,7 @@ rsz_struct! {
     pub struct MaskSetting {
         pub is_mask_on: bool,
         pub type_: i32, // snow.gui.QuestUIManager.QuestMapFLMaskType
-        pub pos: ViaVec3,
+        pub pos: Vec3,
         pub s_size_w: f32,
         pub s_size_h: f32,
         pub rotation_z: f32,
@@ -338,8 +339,6 @@ rsz_struct! {
         pub enabled: bool,
         pub data_container: Prefab,
         pub external_data_containers: Vec<()>, // via.effect.script.ObjectEffectManager.ExternalDataContainer
-        #[serde(skip)]
-        aligner: Aligner<8>,
         pub target_game_object: Guid,
         pub external_propertys: Vec<()>, // via.effect.script.ObjectEffectManager.ExternalProperty
         pub disable_vfx_trigger_track: bool,
@@ -480,8 +479,6 @@ rsz_struct! {
         // via.effect.script.EPVDataElement
         pub trigger_id: u32,
         pub stop_trigger_id: u32,
-        #[serde(skip)]
-        aligner: Aligner<8>,
         pub guid: Guid,
         pub effect_cache: bool,
         pub group_info_list: Vec<EPVDataElementGroupInfo>,
@@ -493,12 +490,12 @@ rsz_struct! {
         pub relation_child_id: i32,
         pub joint_name: String,
         pub unparent_frame: f32,
-        pub offset: ViaVec3,
+        pub offset: Vec3,
         pub rotation_order: i32, // via.math.RotationOrder
         pub base_rotation: i32, // via.effect.script.EPVDataBase.RotateBase
         pub relation_rotation_axis: u32,
-        pub rotation: ViaVec3,
-        pub scale: ViaVec3,
+        pub rotation: Vec3,
+        pub scale: Vec3,
         pub life_frame: f32,
         pub end_type: i32, // via.effect.script.EffectManager.EffectEndType
         pub action_on_provider_destroy: i32, // via.effect.script.EffectCommonDefine.EffectActionOnProviderDestroy

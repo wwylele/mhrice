@@ -2,6 +2,7 @@ use super::common::*;
 use super::*;
 use crate::rsz_enum;
 use crate::rsz_struct;
+use nalgebra_glm::*;
 use serde::*;
 
 rsz_struct! {
@@ -39,9 +40,9 @@ rsz_struct! {
     )]
     #[derive(Debug, Serialize)]
     pub struct Transform {
-        pub position: ViaVec4,
-        pub rotation: ViaVec4,
-        pub scale: ViaVec4,
+        pub position: Vec4,
+        pub rotation: Vec4,
+        pub scale: Vec4,
         pub zinogre: Option<String>,
         pub same_joints_constraint: bool,
         pub absolute_scaling: bool
@@ -182,8 +183,6 @@ rsz_struct! {
         draw_far_cascade_shadow_cast: bool, // 0x398 << 4
         lod_mode: i32, // 0x2f4 // via.render.LodMode
         lod_level: u32, // 0x2f8
-        #[serde(skip)]
-        aligner: Aligner<8>,
         lod_follow_target: Guid, // 0x300...
         enable_lod_effective_range: bool, // 0x310
         lod_effective_range_s: u32, // 0x314..
@@ -218,9 +217,9 @@ rsz_struct! {
         v3: u8,
         v4: u16,
         // TransformObject
-        v5: ViaVec4,
-        v6: ViaVec4,
-        v7: ViaVec4,
+        v5: Vec4,
+        v6: Vec4,
+        v7: Vec4,
         v8: u8,
         v9: u32,
         v10: u32,
@@ -298,7 +297,7 @@ rsz_struct! {
     pub struct NavigationSurface {
         // Navigation
         pub v0: Option<String>,
-        pub v1: ViaVec4,
+        pub v1: Vec4,
         pub v2a: u64,
         pub v2b: u64,
         pub v3: u8,
@@ -378,7 +377,7 @@ rsz_struct! {
     pub struct MeshShape {
         pub v0: Zero, // this should be a sub object?
         pub v1: Option<String>,
-        pub v2: ViaMat4
+        pub v2: Mat4x4
     }
 }
 

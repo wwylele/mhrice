@@ -182,8 +182,6 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct PartsTypeTextUserDataTextInfo {
        pub enemy_type_list: Vec<EmTypes>,
-       #[serde(skip)]
-       aligner: Aligner<8>,
        pub text: Guid,
        pub text_for_monster_list: Guid,
     }

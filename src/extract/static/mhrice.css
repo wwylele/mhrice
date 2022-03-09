@@ -337,7 +337,8 @@ li.mh-rampage-em-list {
 .mh-map-container {
     overflow: scroll;
     width: 100%;
-    height: min(80vh, 70vw)
+    height: min(80vh, 70vw);
+    border: solid;
 }
 
 .mh-map {

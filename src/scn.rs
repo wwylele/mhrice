@@ -11,7 +11,7 @@ use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct ScnGameObject {
-    guid: [u8; 16],
+    guid: rsz::Guid,
     object_index: u32,
     parent_index: Option<u32>, // could be a game object or a folder
     component_count: u32,
@@ -66,6 +66,7 @@ impl Scn {
             .map(|_| {
                 let mut guid = [0; 16];
                 file.read_exact(&mut guid)?;
+                let guid = rsz::Guid { bytes: guid };
                 let object_index = file.read_u32()?;
                 let parent_index = scn_option(file.read_u32()?);
                 let component_count = file.read_u32()?;

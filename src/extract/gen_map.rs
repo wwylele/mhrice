@@ -1,4 +1,3 @@
-use super::gen_common::*;
 use super::gen_item::*;
 use super::gen_website::*;
 use super::pedia::*;
@@ -45,12 +44,28 @@ fn gen_map(
                     gen_colored_icon(behavior.pop_icon_color, &icon_path, &[])
                 });
 
+                let relic_explain = relic.as_ref().map(|relic| {
+                    let name_name = format!("Stage_Name_{:02}", relic.note_map_no);
+                    let name = pedia.map_name.get_entry(&name_name);
+                    let relic_map_name = if let Some(name) = name {
+                        gen_multi_lang(name)
+                    } else {
+                        html!(<span> "Unknown map" </span>)
+                    };
+
+                    html!(<div class="mh-reward-box">{
+                        text!("Unlock note {} for ", relic.relic_id + 1)
+                    } { relic_map_name} </div>)
+                });
+
                 if let Some(lot) = pedia_ex
                     .item_pop
                     .get(&(behavior.pop_id, id))
                     .or_else(|| pedia_ex.item_pop.get(&(behavior.pop_id, -1)))
                 {
-                    explain_inner = html!(<div class="mh-reward-tables">
+                    explain_inner = html!(
+                        <div class="mh-reward-tables">
+                        { relic_explain }
                         <div class="mh-reward-box"><table>
                             <thead><tr>
                             <th>"Low rank material"</th>
@@ -78,7 +93,10 @@ fn gen_map(
                         </table></div>
                     </div>);
                 } else {
-                    explain_inner = html!(<div>"No data"</div>)
+                    explain_inner = html!(<div class="mh-reward-tables">
+                        { relic_explain }
+                        <div class="mh-reward-box">"No material data"</div>
+                    </div>)
                 }
             }
         }
