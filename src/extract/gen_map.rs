@@ -99,6 +99,18 @@ fn gen_map(
                     </div>)
                 }
             }
+            MapPopKind::WireLongJump { behavior, angle: _ } => {
+                //let angle = *angle;
+                icon_inner = Box::new(move || {
+                    //let rotate = format!("transform:rotate({}rad);", angle);
+                    html!(<div class="mh-wire-long-jump-icon-container"><img src="/resources/item/115.png"
+                    class="mh-wire-long-jump-icon" /*style={rotate}*/ /></div>)
+                });
+
+                explain_inner = html!(<div class="mh-reward-tables">
+                    { text!("ID: {}", behavior.wire_long_jump_id) }
+                </div>)
+            }
         }
         let map_icon_id = format!("mh-map-icon-{i}");
         let map_explain_id = format!("mh-map-explain-{i}");

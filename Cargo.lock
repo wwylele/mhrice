@@ -1383,6 +1383,7 @@ dependencies = [
  "half",
  "minidump",
  "murmur3",
+ "nalgebra",
  "nalgebra-glm",
  "num-bigint 0.4.3",
  "once_cell",
@@ -1500,6 +1501,7 @@ checksum = "4fb2d0de08694bed883320212c18ee3008576bfe8c306f4c3c4a58b4876998be"
 dependencies = [
  "approx",
  "matrixmultiply",
+ "nalgebra-macros",
  "num-complex 0.4.0",
  "num-rational 0.4.0",
  "num-traits 0.2.14",
@@ -1518,6 +1520,17 @@ dependencies = [
  "nalgebra",
  "num-traits 0.2.14",
  "simba",
+]
+
+[[package]]
+name = "nalgebra-macros"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "01fcc0b8149b4632adc89ac3b7b31a12fb6099a0317a4eb2ebff574ef7de7218"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

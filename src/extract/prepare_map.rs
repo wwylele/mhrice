@@ -5,6 +5,8 @@ use crate::scn::*;
 use crate::tex::*;
 use crate::user::*;
 use anyhow::{Context, Result};
+use nalgebra::*;
+use nalgebra_glm::*;
 use serde::*;
 use std::collections::BTreeMap;
 use std::io::{Cursor, Read, Seek};
@@ -100,6 +102,10 @@ pub enum MapPopKind {
         behavior: rsz::ItemPopBehavior,
         relic: Option<rsz::RelicNoteUnlock>,
     },
+    WireLongJump {
+        behavior: rsz::WireLongJumpUnlock,
+        angle: f32,
+    },
 }
 
 #[derive(Debug, Serialize)]
@@ -143,6 +149,27 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<G
             let kind = MapPopKind::Item {
                 behavior: behavior.clone(),
                 relic: relic.cloned(),
+            };
+
+            pops.push(MapPop { x, y, z, kind });
+        } else if let Ok(behavior) = object.get_component::<rsz::WireLongJumpUnlock>() {
+            let transform = object
+                .get_component::<rsz::Transform>()
+                .context("Lack of transform")?;
+
+            let x = transform.position.x;
+            let y = transform.position.z;
+            let z = transform.position.y;
+
+            let mat = geometry::UnitQuaternion::new_normalize(Quat::from(transform.rotation))
+                .to_rotation_matrix();
+            let tester = make_vec3(&[1.0, 0.0, 0.0]);
+            let rotated = mat * tester;
+            let angle = f32::atan2(rotated.x, rotated.z);
+
+            let kind = MapPopKind::WireLongJump {
+                behavior: behavior.clone(),
+                angle,
             };
 
             pops.push(MapPop { x, y, z, kind });

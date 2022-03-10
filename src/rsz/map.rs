@@ -383,7 +383,7 @@ rsz_struct! {
     #[rsz("snow.stage.pop.WireLongJumpUnlock",
         0x618631a5 = 0
     )]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct WireLongJumpUnlock {
         pub enabled: bool,
         pub wire_long_jump_id: i32,// snow.stage.StageDef.WireLongJumpId

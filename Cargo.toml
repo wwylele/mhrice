@@ -25,6 +25,7 @@ regex = "1.5"
 rayon = "1.5"
 bitflags = "1.2"
 nalgebra-glm = { version = "0.16", features = ["serde-serialize"]}
+nalgebra = "*"
 glium = "0.31"
 png = "0.17"
 ordered-float = "2.1"

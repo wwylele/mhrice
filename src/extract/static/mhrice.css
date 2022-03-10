@@ -367,9 +367,21 @@ li.mh-rampage-em-list {
 }
 
 .mh-map > .mh-map-pop:hover {
-    border: 1px solid yellow;
+    outline: 1px solid yellow;
 }
 
 .mh-map > .mh-map-select {
-    border: 1px solid green;
+    outline: 1px solid green;
+}
+
+.mh-wire-long-jump-icon {
+    width: 2rem;
+    height: 2rem;
+}
+
+.mh-wire-long-jump-icon-container {
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
 }
