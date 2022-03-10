@@ -305,8 +305,28 @@ rsz_struct! {
 
 impl NormalQuestDataParam {
     pub fn has_target(&self, em_type: EmTypes) -> bool {
+        if self.target_type.get(0) == Some(&QuestTargetType::AllMainEnemy) {
+            let count = if let Some(&count) = self.tgt_num.get(0) {
+                count as usize
+            } else {
+                eprintln!("tgt_num empty for quest {}", self.quest_no);
+                return false;
+            };
+
+            let targets = if let Some(targets) = self.boss_em_type.get(0..count) {
+                targets
+            } else {
+                eprintln!(
+                    "tgt_num is larget than boss_em_type len for quest {}",
+                    self.quest_no
+                );
+                return false;
+            };
+
+            return targets.contains(&em_type);
+        }
+
         self.tgt_em_type.contains(&em_type)
-            || self.target_type.contains(&QuestTargetType::AllMainEnemy)
     }
 }
 
