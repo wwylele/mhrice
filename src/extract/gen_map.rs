@@ -3,6 +3,7 @@ use super::gen_website::*;
 use super::pedia::*;
 use super::prepare_map::*;
 use super::sink::*;
+use crate::rsz;
 use anyhow::Result;
 use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
@@ -32,8 +33,8 @@ fn gen_map(
     let mut map_icons = vec![];
     let mut map_explains = vec![];
     for (i, pop) in map.pops.iter().enumerate() {
-        let x = (pop.x + map.x_offset) / map.map_scale * 100.0;
-        let y = (pop.y + map.y_offset) / map.map_scale * 100.0;
+        let x = (pop.position.x + map.x_offset) / map.map_scale * 100.0;
+        let y = (pop.position.y + map.y_offset) / map.map_scale * 100.0;
 
         let icon_inner: Box<dyn Fn() -> Box<div<String>>>;
         let explain_inner;
@@ -103,12 +104,29 @@ fn gen_map(
                 //let angle = *angle;
                 icon_inner = Box::new(move || {
                     //let rotate = format!("transform:rotate({}rad);", angle);
-                    html!(<div class="mh-wire-long-jump-icon-container"><img src="/resources/item/115.png"
+                    html!(<div class="mh-icon-container"><img src="/resources/item/115.png"
                     class="mh-wire-long-jump-icon" /*style={rotate}*/ /></div>)
                 });
 
                 explain_inner = html!(<div class="mh-reward-tables">
                     { text!("ID: {}", behavior.wire_long_jump_id) }
+                </div>)
+            }
+            MapPopKind::Camp { behavior } => {
+                icon_inner = Box::new(|| {
+                    html!(<div class="mh-icon-container"> {
+                        if behavior.camp_type == rsz::CampType::BaseCamp {
+                            html!(<img src="/resources/main_camp.png"
+                                class="mh-main-camp"/>)
+                        } else {
+                            html!(<img src="/resources/sub_camp.png"
+                                class="mh-sub-camp"/>)
+                        }
+                    } </div>)
+                });
+
+                explain_inner = html!(<div class="mh-reward-tables">
+                    { text!("ID: {:?}", behavior.camp_type) }
                 </div>)
             }
         }
@@ -121,7 +139,7 @@ fn gen_map(
         ));
         map_explains.push(html!(<div class="mh-hidden" id={map_explain_id.as_str()}>
             {icon_inner()}
-            <p>{ text!("level: {}", pop.z) }</p>
+            <p>{ text!("level: {}", pop.position.z) }</p>
             {explain_inner}
         </div>))
     }

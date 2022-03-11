@@ -379,9 +379,19 @@ li.mh-rampage-em-list {
     height: 2rem;
 }
 
-.mh-wire-long-jump-icon-container {
+.mh-icon-container {
     width: 2rem;
     height: 2rem;
     display: grid;
     place-items: center;
+}
+
+.mh-main-camp {
+    width: 1.9375rem;
+    height: 2.0625rem;
+}
+
+.mh-sub-camp {
+    width: 1.9375rem;
+    height: 1.875rem;
 }

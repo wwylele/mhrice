@@ -750,6 +750,15 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
         .sub_image(302, 453, 24, 24)?
         .save_png(output.create("small_crown.png")?)?;
 
+    let map_icon = pak.find_file("gui/80_Texture/map/map_icon_IAM.tex")?;
+    let map_icon = Tex::new(Cursor::new(pak.read_file(map_icon)?))?.to_rgba(0, 0)?;
+    map_icon
+        .sub_image(0, 31, 31, 33)?
+        .save_png(output.create("main_camp.png")?)?;
+    map_icon
+        .sub_image(0, 64, 31, 30)?
+        .save_png(output.create("sub_camp.png")?)?;
+
     let item_icon_path = output.sub_sink("item")?;
     let item_icon_uvs = pak.find_file("gui/70_UVSequence/cmn_icon.uvs")?;
     let item_icon_uvs = Uvs::new(Cursor::new(pak.read_file(item_icon_uvs)?))?;

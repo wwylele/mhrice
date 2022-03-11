@@ -193,7 +193,7 @@ rsz_struct! {
 // snow.stage.StageDef.CampType
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize, Clone, Copy)]
+    #[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq)]
     pub enum CampType {
         BaseCamp = 0,
         SubCamp1 = 1,
@@ -205,7 +205,7 @@ rsz_struct! {
     #[rsz("snow.stage.props.TentBehavior",
         0xee52e52d = 0
     )]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct TentBehavior {
         pub enabled: bool,
         pub camp_type: CampType,

@@ -106,13 +106,14 @@ pub enum MapPopKind {
         behavior: rsz::WireLongJumpUnlock,
         angle: f32,
     },
+    Camp {
+        behavior: rsz::TentBehavior,
+    },
 }
 
 #[derive(Debug, Serialize)]
 pub struct MapPop {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
+    pub position: Vec3,
     pub kind: MapPopKind,
 }
 
@@ -141,25 +142,20 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<G
                 .get_component::<rsz::Transform>()
                 .context("Lack of transform")?;
 
-            let x = transform.position.x;
-            let y = transform.position.z; // swap the cursed y/z
-            let z = transform.position.y;
-
+            let position = transform.position.xzy();
             let relic = object.get_component::<rsz::RelicNoteUnlock>().ok();
             let kind = MapPopKind::Item {
                 behavior: behavior.clone(),
                 relic: relic.cloned(),
             };
 
-            pops.push(MapPop { x, y, z, kind });
+            pops.push(MapPop { position, kind });
         } else if let Ok(behavior) = object.get_component::<rsz::WireLongJumpUnlock>() {
             let transform = object
                 .get_component::<rsz::Transform>()
                 .context("Lack of transform")?;
 
-            let x = transform.position.x;
-            let y = transform.position.z;
-            let z = transform.position.y;
+            let position = transform.position.xzy();
 
             let mat = geometry::UnitQuaternion::new_normalize(Quat::from(transform.rotation))
                 .to_rotation_matrix();
@@ -172,7 +168,36 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<G
                 angle,
             };
 
-            pops.push(MapPop { x, y, z, kind });
+            pops.push(MapPop { position, kind });
+        } else if let Ok(behavior) = object.get_component::<rsz::TentBehavior>() {
+            let transform = object
+                .get_component::<rsz::Transform>()
+                .context("Lack of transform")?;
+            let position = transform.position.xzy();
+            pops.push(MapPop {
+                position,
+                kind: MapPopKind::Camp {
+                    behavior: behavior.clone(),
+                },
+            });
+        } else {
+            for child in &object.children {
+                if let Ok(behavior) = child.get_component::<rsz::TentBehavior>() {
+                    let transform = object
+                        .get_component::<rsz::Transform>()
+                        .context("Lack of transform")?;
+                    let sub_transform = child
+                        .get_component::<rsz::Transform>()
+                        .context("Lack of transform")?;
+                    let position = transform.position.xzy() + sub_transform.position.xzy();
+                    pops.push(MapPop {
+                        position,
+                        kind: MapPopKind::Camp {
+                            behavior: behavior.clone(),
+                        },
+                    });
+                }
+            }
         }
 
         Ok(())
