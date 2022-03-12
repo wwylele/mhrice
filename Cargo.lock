@@ -1409,8 +1409,9 @@ checksum = "2a60c7ce501c71e03a9c9c0d35b861413ae925bd979cc7a4e30d060069aaac8d"
 
 [[package]]
 name = "minidump"
-version = "0.9.6"
-source = "git+https://github.com/luser/rust-minidump.git#b6f69022333493a5981c6d639f36509a9d99faf5"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da059e37532e5950e6ec8dcf0a43f9164c287408dc8d5cde4f941b488a59af98"
 dependencies = [
  "debugid",
  "encoding",
@@ -1427,8 +1428,9 @@ dependencies = [
 
 [[package]]
 name = "minidump-common"
-version = "0.9.6"
-source = "git+https://github.com/luser/rust-minidump.git#b6f69022333493a5981c6d639f36509a9d99faf5"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d618971de3c26a0e3aaa89bb579e97bdc711cbfbb05761a2963dee38cec69444"
 dependencies = [
  "bitflags",
  "debugid",
@@ -2320,18 +2322,18 @@ checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 
 [[package]]
 name = "scroll"
-version = "0.10.2"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fda28d4b4830b807a8b43f7b0e6b5df875311b3e7621d84577188c175b6ec1ec"
+checksum = "04c565b551bafbef4157586fa379538366e4385d42082f255bfd96e4fe8519da"
 dependencies = [
  "scroll_derive",
 ]
 
 [[package]]
 name = "scroll_derive"
-version = "0.10.5"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aaaae8f38bb311444cfb7f1979af0bc9240d95795f75f9ceddf6a59b79ceffa0"
+checksum = "bdbda6ac5cd1321e724fa9cee216f3a61885889b896f073b8f82322789c5250e"
 dependencies = [
  "proc-macro2",
  "quote",
