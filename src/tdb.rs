@@ -1261,6 +1261,33 @@ impl Tdb {
             Ok(())
         };
 
+        let print_constant = |constant_index: usize, type_instance_index: usize| -> Result<()> {
+            let constant = constants[constant_index];
+            match constant {
+                Constant::Integral(offset) => {
+                    let field_type_instance = &type_instances[type_instance_index];
+                    let len = types[field_type_instance.type_index].len;
+                    let value = &heap[offset..][..len];
+                    match len {
+                        1 => print!(" = 0x{:02X}", value[0]),
+                        2 => print!(" = 0x{:04X}", u16::from_le_bytes(value.try_into().unwrap())),
+                        4 => print!(" = 0x{:08X}", u32::from_le_bytes(value.try_into().unwrap())),
+                        8 => print!(
+                            " = 0x{:016X}",
+                            u64::from_le_bytes(value.try_into().unwrap())
+                        ),
+                        _ => print!(" = {:?}", value),
+                    }
+                }
+                Constant::String(offset) => {
+                    let s = read_string(offset)?;
+                    print!(" = \"{}\"", s);
+                }
+            }
+
+            Ok(())
+        };
+
         let mut function_map: BTreeMap<u64, Vec<String>> = BTreeMap::new();
 
         let mut order: Vec<_> = (0..type_instances.len()).collect();
@@ -1410,20 +1437,7 @@ impl Tdb {
                     );
 
                     if param.default_const_index != 0 {
-                        let constant = constants[param.default_const_index];
-                        match constant {
-                            Constant::Integral(offset) => {
-                                let field_type_instance =
-                                    &type_instances[param.type_instance_index];
-                                let len = types[field_type_instance.type_index].len;
-                                let value = &heap[offset..][..len];
-                                print!(" = {:?}", value);
-                            }
-                            Constant::String(offset) => {
-                                let s = read_string(offset)?;
-                                print!(" = \"{}\"", s);
-                            }
-                        }
+                        print_constant(param.default_const_index, param.type_instance_index)?;
                     }
                     println!(",");
                 }
@@ -1471,19 +1485,7 @@ impl Tdb {
                 );
 
                 if field.constant_index != 0 {
-                    let constant = constants[field.constant_index];
-                    match constant {
-                        Constant::Integral(offset) => {
-                            let field_type_instance = &type_instances[field.type_instance_index];
-                            let len = types[field_type_instance.type_index].len;
-                            let value = &heap[offset..][..len];
-                            print!(" = {:?}", value);
-                        }
-                        Constant::String(offset) => {
-                            let s = read_string(offset)?;
-                            print!(" = \"{}\"", s);
-                        }
-                    }
+                    print_constant(field.constant_index, field.type_instance_index)?;
                 }
 
                 println!(";");
