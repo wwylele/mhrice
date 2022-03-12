@@ -12,7 +12,7 @@ fn map_page(id: i32) -> String {
     format!("{id:02}.html")
 }
 
-fn gen_map_label(id: i32, pedia: &Pedia) -> Box<a<String>> {
+pub fn gen_map_label(id: i32, pedia: &Pedia) -> Box<a<String>> {
     let link = format!("/map/{}", map_page(id));
     let name_name = format!("Stage_Name_{id:02}");
     let name = pedia.map_name.get_entry(&name_name);
