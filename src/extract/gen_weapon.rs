@@ -45,9 +45,15 @@ where
 fn gen_craft_row(
     pedia_ex: &PediaEx,
     label: Box<td<String>>,
+    cost: Option<u32>,
     data: &WeaponCraftingData,
     output: Option<(&[ItemId], &[u32])>,
 ) -> Box<tr<String>> {
+    let cost = if let Some(cost) = cost {
+        html!(<td>{text!("{}", cost)}</td>)
+    } else {
+        html!(<td></td>) // TODO: what this should be for layered?
+    };
     let category = gen_category(pedia_ex, data.material_category, data.material_category_num);
 
     let materials = gen_materials(pedia_ex, &data.item, &data.item_num, data.item_flag);
@@ -60,6 +66,7 @@ fn gen_craft_row(
 
     html!(<tr>
         {label}
+        {cost}
         {category}
         {materials}
         {output}
@@ -461,20 +468,24 @@ where
 
                 <section class="section">
                 <h2 class="title">"Crafting"</h2>
-                <div class="mh-kvlist">
-                <p class="mh-kv"><span>"Cost (craft / buy)"</span>
-                    <span>{text!("{} / {}", main.base.base_val, main.base.buy_val)}</span></p>
-                </div>
                 <table>
                     <thead><tr>
                         <th>""</th>
+                        <th>"Cost"</th>
                         <th>"Categorized Material"</th>
                         <th>"Material"</th>
                         <th>"Output"</th>
                     </tr></thead>
                     <tbody>
+                        { (main.base.buy_val != 0).then(|| {
+                            html!(<tr>
+                                <td>"Buy"</td>
+                                <td>{text!("{}", main.base.buy_val)}</td>
+                                <td/><td/><td/>
+                            </tr>)
+                        })}
                         {weapon.product.as_ref().map(|product| {
-                            gen_craft_row(pedia_ex, html!(<td>"Forge"</td>),
+                            gen_craft_row(pedia_ex, html!(<td>"Forge"</td>), Some(main.base.base_val * 3 / 2),
                                 &product.base, Some((&product.output_item, &product.output_item_num)))
                         })}
                         {weapon.process.as_ref().map(|process| {
@@ -485,11 +496,11 @@ where
                                 html!(<td>"Upgrade from unknown"</td>)
                             };
 
-                            gen_craft_row(pedia_ex, label,
+                            gen_craft_row(pedia_ex, label, Some(main.base.base_val),
                                 &process.base, Some((&process.output_item, &process.output_item_num)))
                         })}
                         {weapon.change.as_ref().map(|change| {
-                            gen_craft_row(pedia_ex, html!(<td>"As layered"</td>),
+                            gen_craft_row(pedia_ex, html!(<td>"As layered"</td>), None,
                                 &change.base, None)
                         })}
                     </tbody>
