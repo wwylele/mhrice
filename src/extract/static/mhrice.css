@@ -347,7 +347,7 @@ li.mh-rampage-em-list {
     padding-top: 100%;
 }
 
-.mh-map > .mh-map-layer {
+.mh-map-layer {
     position: absolute;
     left: 0;
     top: 0;
@@ -355,7 +355,7 @@ li.mh-rampage-em-list {
     height: 100%;
 }
 
-.mh-map > .mh-map-pop {
+.mh-map-pop {
     position: absolute;
     width: 2rem;
     height: 2rem;
@@ -366,11 +366,15 @@ li.mh-rampage-em-list {
     align-items: center;
 }
 
-.mh-map > .mh-map-pop:hover {
+.mh-map-pop.mh-hidden {
+    display: none;
+}
+
+.mh-map-pop:hover {
     outline: 1px solid yellow;
 }
 
-.mh-map > .mh-map-select {
+.mh-map-select {
     outline: 1px solid green;
 }
 

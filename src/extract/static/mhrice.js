@@ -249,3 +249,37 @@ function switchMapLayer() {
     prev.classList.add("mh-hidden");
     cur.classList.remove("mh-hidden");
 }
+
+var map_filter = new Map([
+    ["all", (pop) => true],
+    ["item", (pop) => pop.classList.contains("mh-map-tag-item")],
+    ["relic", (pop) => pop.classList.contains("mh-map-tag-relic")],
+    ["camp", (pop) => pop.classList.contains("mh-map-tag-camp")],
+    ["jump", (pop) => pop.classList.contains("mh-map-tag-jump")],
+]);
+
+var cur_map_filter = "all"
+
+function changeMapFilter(filter) {
+    let filter_fun = map_filter.get(filter);
+    for (const element of document.getElementsByClassName("mh-map-pop")) {
+        if (filter_fun(element)) {
+            element.classList.remove("mh-hidden");
+        } else {
+            element.classList.add("mh-hidden");
+        }
+    }
+
+    const filter_button_prefix = "mh-map-filter-";
+    let prev = document.getElementById(filter_button_prefix + cur_map_filter);
+    if (prev !== null) {
+        prev.classList.remove("is-primary")
+    }
+
+    cur_map_filter = filter;
+
+    let cur = document.getElementById(filter_button_prefix + cur_map_filter);
+    if (cur !== null) {
+        cur.classList.add("is-primary")
+    }
+}

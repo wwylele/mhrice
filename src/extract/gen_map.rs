@@ -38,6 +38,7 @@ fn gen_map(
 
         let icon_inner: Box<dyn Fn() -> Box<div<String>>>;
         let explain_inner;
+        let tag_list;
         match &pop.kind {
             MapPopKind::Item { behavior, relic } => {
                 icon_inner = Box::new(|| {
@@ -58,6 +59,12 @@ fn gen_map(
                         text!("Unlock note {} for ", relic.relic_id + 1)
                     } { relic_map_name} </div>)
                 });
+
+                if relic_explain.is_some() {
+                    tag_list = "mh-map-tag-relic";
+                } else {
+                    tag_list = "mh-map-tag-item";
+                }
 
                 if let Some(lot) = pedia_ex
                     .item_pop
@@ -110,7 +117,9 @@ fn gen_map(
 
                 explain_inner = html!(<div class="mh-reward-tables">
                     { text!("ID: {}", behavior.wire_long_jump_id) }
-                </div>)
+                </div>);
+
+                tag_list = "mh-map-tag-jump";
             }
             MapPopKind::Camp { behavior } => {
                 icon_inner = Box::new(|| {
@@ -127,14 +136,17 @@ fn gen_map(
 
                 explain_inner = html!(<div class="mh-reward-tables">
                     { text!("ID: {:?}", behavior.camp_type) }
-                </div>)
+                </div>);
+
+                tag_list = "mh-map-tag-camp";
             }
         }
         let map_icon_id = format!("mh-map-icon-{i}");
         let map_explain_id = format!("mh-map-explain-{i}");
         let map_explain_event = format!("onShowMapExplain('{i}');");
+        let map_icon_class_string = format!("mh-map-pop {}", tag_list);
 
-        map_icons.push(html!(<div class="mh-map-pop" id={map_icon_id.as_str()}
+        map_icons.push(html!(<div class={map_icon_class_string.as_str()} id={map_icon_id.as_str()}
             style={format!("left:{x}%;top:{y}%")} onclick={map_explain_event.as_str()}> {icon_inner()} </div>: String
         ));
         map_explains.push(html!(<div class="mh-hidden" id={map_explain_id.as_str()}>
@@ -189,26 +201,39 @@ fn gen_map(
             </div>
 
             <div class="column">
+
             <div>
-            <button class="button is-white" id="button-scale-down" onclick="scaleDownMap();" disabled=true>
+            <button id="mh-map-filter-all" class="button is-primary" onclick="changeMapFilter('all');">"All icons"</button>
+            <button id="mh-map-filter-item" class="button" onclick="changeMapFilter('item');">"Gathering"</button>
+            <button id="mh-map-filter-relic" class="button" onclick="changeMapFilter('relic');">"Relics"</button>
+            <button id="mh-map-filter-camp" class="button" onclick="changeMapFilter('camp');">"Camps"</button>
+            <button id="mh-map-filter-jump" class="button" onclick="changeMapFilter('jump');">"Jump points"</button>
+            </div>
+
+            <div>
+            <button class="button" id="button-scale-down" onclick="scaleDownMap();" disabled=true>
                 <span class="icon"><i class="fas fa-search-minus"></i></span>
             </button>
-            <button class="button is-white" id="button-scale-up" onclick="scaleUpMap();">
+            <button class="button" id="button-scale-up" onclick="scaleUpMap();">
                 <span class="icon"><i class="fas fa-search-plus"></i></span>
             </button>
             {
                 (map.layer_count > 1).then(||html!(
-                    <button class="button is-white" onclick="switchMapLayer();">
+                    <button class="button" onclick="switchMapLayer();">
                       <span class="icon"><i class="fas fa-layer-group"></i></span>
                       <span>"Change Layer"</span>
                     </button>: String))
             }
             </div>
+
+            <div>
             { map_explains }
             <div id="mh-map-explain-default">"Click an icon on the map to learn the detail."</div>
             </div>
 
-            </div>
+            </div> // right column
+
+            </div> // columns
 
             </div></div></main>
             </body>
