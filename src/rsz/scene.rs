@@ -427,3 +427,103 @@ rsz_struct! {
         pub v5: Vec<Collider>,
     }
 }
+
+rsz_struct! {
+    #[rsz("via.motion.TreeLayer",
+        0x5f9047f4 = 0,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct TreeLayer {
+        pub v0: u32,
+        pub v1: u32,
+        pub v2: u8,
+        pub v3: Option<String>,
+        pub v4: u32,
+        pub v5: u32,
+        pub v6: u32,
+        pub v7: u32,
+        pub v8: u32,
+        pub v9: u8,
+        pub v10: u8,
+        pub v11: u8,
+        pub v12: u32,
+        pub v13: u32,
+        pub v14: u8,
+        pub v15: u8,
+        pub v16: u8,
+        pub v17: u8,
+        pub v18: u32,
+        pub v19: u32,
+        pub v20: u32,
+        pub v21: u32,
+        pub v22: u8,
+    }
+}
+
+// untested
+rsz_struct! {
+    #[rsz("via.motion.MotionBank",
+        0xebf452c8 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct MotionBank {
+        v0: Option<String>,
+        v1: u32,
+        v2: u32,
+        v3: u32,
+    }
+}
+
+// untested
+rsz_struct! {
+    #[rsz("via.motion.DynamicMotionBank",
+        0xf0c2477a = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct DynamicMotionBank {
+        v0: u32,
+        v1: u8,
+        v2: u32,
+        v3: u8,
+        v4: u32,
+        v5: u8,
+        v6: u32,
+        v7: Option<String>,
+        v8: Option<String>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.motion.Motion",
+        0xb8e5e915 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct Motion {
+        pub v0: u8,
+        pub v1: u32,
+        pub v2: u32,
+        pub v3: u8,
+        pub v4: u8,
+
+        pub v5: u32,
+        pub v6: u8,
+        pub v7: u8,
+        pub v8: Option<String>,
+        pub v9: Option<String>,
+        pub v10: Option<String>,
+        pub v11: Option<String>,
+        pub v12: u32,
+        pub v13: u8,
+        pub v14: Vec<TreeLayer>, // 0x198 Layer
+        pub v15: Vec<MotionBank>, // 0x348
+        pub v16: Vec<DynamicMotionBank>, // 800 DynamicMotionBank
+        pub v17: u8,
+        pub v18: u32,
+        pub v19: u32,
+        pub v20: u8,
+        pub v21: u32,
+        pub v22: u32,
+        pub v23: u32,
+
+    }
+}

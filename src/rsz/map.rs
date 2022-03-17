@@ -616,3 +616,42 @@ rsz_struct! {
         pub base: ObjectPopMarker,
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.access.StageFacilityPopMarker",
+        0x00B54C4F = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct StageFacilityPopMarker {
+        pub base: ObjectPopMarker,
+        pub map_floor_type: i32, // snow.stage.StageDef.MapFloorType
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.pop.FishingPoint",
+        0xBC486085 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct FishingPoint {
+        pub enabled: bool,
+        pub fishing_point_data: ExternUser<()>, // snow.stage.pop.FishingPointData
+        pub camera_type: i32, // snow.camera.PlayerCamera.CameraDataType_Fishing
+        pub fish_spawn_data: ExternUser<()>, // snow.stage.pop.userdata.FishSpawnData
+        pub fish_territory_point: Vec3,
+        pub fish_territory_radius: f32,
+        pub fish_num_max: i32,
+        pub fishing_point_id: i32, // snow.stage.StageDef.FishingPointId
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.pop.FishingPointBuoy",
+        0x3e476f13 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct FishingPointBuoy {
+        pub enabled: bool,
+        pub bite_offset: f32,
+    }
+}

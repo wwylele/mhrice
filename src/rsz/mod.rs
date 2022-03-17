@@ -722,6 +722,10 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         PhysicsFilterInfo,
         Collider,
         Colliders,
+        TreeLayer,
+        MotionBank,
+        DynamicMotionBank,
+        Motion,
     );
 
     r!(
@@ -763,6 +767,9 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         UniqueBehaviorPop010,
         TentVisualController,
         GimmickPopMarker,
+        StageFacilityPopMarker,
+        FishingPoint,
+        FishingPointBuoy,
     );
 
     m
