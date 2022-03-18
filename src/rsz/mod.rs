@@ -407,10 +407,41 @@ fn rsz_debug<T: 'static + Debug>(any: &dyn Any, f: &mut std::fmt::Formatter) -> 
     std::fmt::Debug::fmt(any.downcast_ref::<T>().unwrap(), f)
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub enum ExternUser<T> {
     Path(Rc<ExternPath>),
     Loaded(T),
+}
+
+impl<T: 'static> ExternUser<T> {
+    pub fn load<'a, 'b>(
+        &'a mut self,
+        pak: &'b mut crate::pak::PakReader<impl Read + Seek>,
+    ) -> Result<&'a mut T> {
+        match self {
+            ExternUser::Path(path) => {
+                let index = pak.find_file(&path.0)?;
+                let file = pak.read_file(index)?;
+                let user = crate::user::User::new(Cursor::new(file))?;
+                *self = ExternUser::Loaded(user.rsz.deserialize_single()?);
+                if let ExternUser::Loaded(t) = self {
+                    Ok(t)
+                } else {
+                    unreachable!()
+                }
+            }
+            ExternUser::Loaded(t) => Ok(t),
+        }
+    }
+
+    pub fn unwrap(&self) -> &T {
+        match self {
+            ExternUser::Path(_) => {
+                panic!("ExternUser not loaded")
+            }
+            ExternUser::Loaded(t) => t,
+        }
+    }
 }
 
 fn extern_path_deserializer(
@@ -770,6 +801,9 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         StageFacilityPopMarker,
         FishingPoint,
         FishingPointBuoy,
+        FishSpawnRate,
+        FishSpawnGroupInfo,
+        FishSpawnData,
     );
 
     m

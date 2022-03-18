@@ -109,6 +109,9 @@ pub enum MapPopKind {
     Camp {
         behavior: rsz::TentBehavior,
     },
+    FishingPoint {
+        behavior: rsz::FishingPoint,
+    },
 }
 
 #[derive(Debug, Serialize)]
@@ -167,6 +170,18 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<G
                 behavior: behavior.clone(),
                 angle,
             };
+
+            pops.push(MapPop { position, kind });
+        } else if let Ok(behavior) = object.get_component::<rsz::FishingPoint>() {
+            let transform = object
+                .get_component::<rsz::Transform>()
+                .context("Lack of transform")?;
+
+            let position = transform.position.xzy();
+            let mut behavior = behavior.clone();
+            behavior.fish_spawn_data.load(pak)?;
+
+            let kind = MapPopKind::FishingPoint { behavior };
 
             pops.push(MapPop { position, kind });
         } else if let Ok(behavior) = object.get_component::<rsz::TentBehavior>() {

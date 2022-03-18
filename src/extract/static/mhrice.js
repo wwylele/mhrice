@@ -256,6 +256,7 @@ var map_filter = new Map([
     ["relic", (pop) => pop.classList.contains("mh-map-tag-relic")],
     ["camp", (pop) => pop.classList.contains("mh-map-tag-camp")],
     ["jump", (pop) => pop.classList.contains("mh-map-tag-jump")],
+    ["fish", (pop) => pop.classList.contains("mh-map-tag-fish")],
 ]);
 
 var cur_map_filter = "all"

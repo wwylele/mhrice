@@ -632,12 +632,12 @@ rsz_struct! {
     #[rsz("snow.stage.pop.FishingPoint",
         0xBC486085 = 0
     )]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct FishingPoint {
         pub enabled: bool,
         pub fishing_point_data: ExternUser<()>, // snow.stage.pop.FishingPointData
         pub camera_type: i32, // snow.camera.PlayerCamera.CameraDataType_Fishing
-        pub fish_spawn_data: ExternUser<()>, // snow.stage.pop.userdata.FishSpawnData
+        pub fish_spawn_data: ExternUser<FishSpawnData>, // snow.stage.pop.userdata.FishSpawnData
         pub fish_territory_point: Vec3,
         pub fish_territory_radius: f32,
         pub fish_num_max: i32,
@@ -655,3 +655,36 @@ rsz_struct! {
         pub bite_offset: f32,
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.stage.pop.userdata.FishSpawnData.FishSpawnRate",
+        0x167f3f35 = 0
+    )]
+    #[derive(Debug, Serialize, Clone)]
+    pub struct FishSpawnRate {
+        pub fish_id: i32, // snow.stage.StageDef.FishId
+        pub spawn_rate: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.pop.userdata.FishSpawnData.FishSpawnGroupInfo",
+        0xc64892d1 = 0
+    )]
+    #[derive(Debug, Serialize, Clone)]
+    pub struct FishSpawnGroupInfo {
+        pub fish_spawn_rate_list: Vec<FishSpawnRate>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.pop.userdata.FishSpawnData",
+        0x4ec4d134 = 0
+    )]
+    #[derive(Debug, Serialize, Clone)]
+    pub struct FishSpawnData {
+        pub spawn_group_list_info_low: Vec<FishSpawnGroupInfo>,
+        pub spawn_group_list_info_high: Vec<FishSpawnGroupInfo>,
+    }
+}
+

@@ -140,6 +140,47 @@ fn gen_map(
 
                 tag_list = "mh-map-tag-camp";
             }
+            MapPopKind::FishingPoint { behavior } => {
+                icon_inner = Box::new(|| gen_colored_icon(0, "/resources/item/046", &[]));
+
+                fn gen_fish_table(
+                    tag: &str,
+                    fishes: &[rsz::FishSpawnGroupInfo],
+                ) -> Box<div<String>> {
+                    html!( <div class="mh-reward-box"><table>
+                    <thead><tr>
+                    <th>""</th>
+                    <th>{text!("{}", tag)}</th>
+                    <th>"Probability"</th>
+                    </tr></thead>
+                    <tbody> {
+                        fishes.iter().enumerate().flat_map(|(i, fish)| {
+                            let mut is_first = true;
+                            let span = fish.fish_spawn_rate_list.len();
+                            fish.fish_spawn_rate_list.iter().map(move |f| {
+                                let first = is_first.then(|| -> Box<td<String>> {
+                                    html!(<td rowspan={span}>{text!("{}", i)}</td>)
+                                } );
+                                is_first = false;
+                                html!(<tr>
+                                    {first}
+                                    <td>{text!("{}", f.fish_id)}</td>
+                                    <td>{text!("{}", f.spawn_rate)}</td>
+                                </tr>)
+                            })
+                        })
+                    } </tbody></table></div>)
+                }
+
+                explain_inner = html!(<div class="mh-reward-tables">
+                    { gen_fish_table("Low rank fish",
+                        &behavior.fish_spawn_data.unwrap().spawn_group_list_info_low) }
+                    { gen_fish_table("High rank fish",
+                        &behavior.fish_spawn_data.unwrap().spawn_group_list_info_high) }
+                </div>);
+
+                tag_list = "mh-map-tag-fish";
+            }
         }
         let map_icon_id = format!("mh-map-icon-{i}");
         let map_explain_id = format!("mh-map-explain-{i}");
@@ -207,7 +248,8 @@ fn gen_map(
             <button id="mh-map-filter-item" class="button" onclick="changeMapFilter('item');">"Gathering"</button>
             <button id="mh-map-filter-relic" class="button" onclick="changeMapFilter('relic');">"Relics"</button>
             <button id="mh-map-filter-camp" class="button" onclick="changeMapFilter('camp');">"Camps"</button>
-            <button id="mh-map-filter-jump" class="button" onclick="changeMapFilter('jump');">"Jump points"</button>
+            <button id="mh-map-filter-jump" class="button" onclick="changeMapFilter('jump');">"Jumping points"</button>
+            <button id="mh-map-filter-fish" class="button" onclick="changeMapFilter('fish');">"Fishing points"</button>
             </div>
 
             <div>
