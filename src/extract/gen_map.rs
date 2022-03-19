@@ -23,6 +23,37 @@ pub fn gen_map_label(id: i32, pedia: &Pedia) -> Box<a<String>> {
     }
 }
 
+// This is unfortunately hardcoded in the game code
+// So let's also hard code it here
+//
+// class snow.stage.StageDef {
+//     snow.data.ContentsIdSystem.ItemId getFishItemId(snow.stage.StageDef.FishId);
+// }
+pub fn get_fish_item_id(fish_id: i32) -> Option<rsz::ItemId> {
+    match fish_id {
+        0 => Some(rsz::ItemId::Normal(0x1f3)),
+        1 => Some(rsz::ItemId::Normal(0x30e)),
+        2 => Some(rsz::ItemId::Normal(0x1d6)),
+        3 => Some(rsz::ItemId::Normal(0x30f)),
+        4 => Some(rsz::ItemId::Normal(0x310)),
+        5 => Some(rsz::ItemId::Normal(0x311)),
+        6 => Some(rsz::ItemId::Normal(0x312)),
+        7 => Some(rsz::ItemId::Normal(0x313)),
+        8 => Some(rsz::ItemId::Normal(0x314)),
+        9 => Some(rsz::ItemId::Normal(0x204)),
+        10 => Some(rsz::ItemId::Normal(0x205)),
+        11 => Some(rsz::ItemId::Normal(0x315)),
+        12 => Some(rsz::ItemId::Normal(0x316)),
+        13 => Some(rsz::ItemId::Normal(0x317)),
+        14 => Some(rsz::ItemId::Normal(0x318)),
+        15 => Some(rsz::ItemId::Normal(0x319)),
+        16 => Some(rsz::ItemId::Normal(0x31a)),
+        17 => Some(rsz::ItemId::Normal(0x31b)),
+        18 => Some(rsz::ItemId::Normal(0x367)),
+        _ => None,
+    }
+}
+
 fn gen_map(
     id: i32,
     map: &GameMap,
@@ -30,6 +61,44 @@ fn gen_map(
     pedia_ex: &PediaEx,
     mut output: impl Write,
 ) -> Result<()> {
+    let gen_fish_table = |tag: &str, fishes: &[rsz::FishSpawnGroupInfo]| -> Box<div<String>> {
+        html!( <div class="mh-reward-box"><table>
+        <thead><tr>
+        <th>""</th>
+        <th>{text!("{}", tag)}</th>
+        <th>"Probability"</th>
+        </tr></thead>
+        <tbody> {
+            fishes.iter().enumerate().flat_map(|(i, fish)| {
+                let mut is_first = true;
+                let span = fish.fish_spawn_rate_list.len();
+                fish.fish_spawn_rate_list.iter().map(move |f| {
+                    let first = is_first.then(|| -> Box<td<String>> {
+                        html!(<td rowspan={span}>{text!("{}", i)}</td>)
+                    } );
+                    is_first = false;
+
+                    let item_id = get_fish_item_id(f.fish_id);
+                    let item = if let Some(item) = item_id {
+                        if let Some(item) = pedia_ex.items.get(&item) {
+                            html!(<span>{gen_item_label(item)}</span>)
+                        } else {
+                            html!(<span>{text!("{:?}", item)}</span>)
+                        }
+                    } else {
+                        html!(<span>{text!("Unknown fish {}", f.fish_id)}</span>)
+                    };
+
+                    html!(<tr>
+                        {first}
+                        <td>{ item }</td>
+                        <td>{text!("{}%", f.spawn_rate)}</td>
+                    </tr>)
+                })
+            })
+        } </tbody></table></div>)
+    };
+
     let mut map_icons = vec![];
     let mut map_explains = vec![];
     for (i, pop) in map.pops.iter().enumerate() {
@@ -142,35 +211,6 @@ fn gen_map(
             }
             MapPopKind::FishingPoint { behavior } => {
                 icon_inner = Box::new(|| gen_colored_icon(0, "/resources/item/046", &[]));
-
-                fn gen_fish_table(
-                    tag: &str,
-                    fishes: &[rsz::FishSpawnGroupInfo],
-                ) -> Box<div<String>> {
-                    html!( <div class="mh-reward-box"><table>
-                    <thead><tr>
-                    <th>""</th>
-                    <th>{text!("{}", tag)}</th>
-                    <th>"Probability"</th>
-                    </tr></thead>
-                    <tbody> {
-                        fishes.iter().enumerate().flat_map(|(i, fish)| {
-                            let mut is_first = true;
-                            let span = fish.fish_spawn_rate_list.len();
-                            fish.fish_spawn_rate_list.iter().map(move |f| {
-                                let first = is_first.then(|| -> Box<td<String>> {
-                                    html!(<td rowspan={span}>{text!("{}", i)}</td>)
-                                } );
-                                is_first = false;
-                                html!(<tr>
-                                    {first}
-                                    <td>{text!("{}", f.fish_id)}</td>
-                                    <td>{text!("{}", f.spawn_rate)}</td>
-                                </tr>)
-                            })
-                        })
-                    } </tbody></table></div>)
-                }
 
                 explain_inner = html!(<div class="mh-reward-tables">
                     { gen_fish_table("Low rank fish",

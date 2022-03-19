@@ -411,19 +411,40 @@ fn gen_item_source_map(
 ) -> Option<Box<div<String>>> {
     let mut htmls = vec![];
     for (&id, map) in &pedia.maps {
+        let mut found = false;
         for pop in &map.pops {
-            if let MapPopKind::Item { behavior, .. } = &pop.kind {
-                if let Some(lot) = pedia_ex
-                    .item_pop
-                    .get(&(behavior.pop_id, id))
-                    .or_else(|| pedia_ex.item_pop.get(&(behavior.pop_id, -1)))
-                {
-                    if lot.lower_id.contains(&item_id) || lot.upper_id.contains(&item_id) {
-                        htmls.push(html!(<li> {gen_map_label(id, pedia)} </li>));
-                        break;
+            match &pop.kind {
+                MapPopKind::Item { behavior, .. } => {
+                    if let Some(lot) = pedia_ex
+                        .item_pop
+                        .get(&(behavior.pop_id, id))
+                        .or_else(|| pedia_ex.item_pop.get(&(behavior.pop_id, -1)))
+                    {
+                        if lot.lower_id.contains(&item_id) || lot.upper_id.contains(&item_id) {
+                            found = true;
+                            break;
+                        }
                     }
                 }
+                MapPopKind::FishingPoint { behavior } => {
+                    let spawn = behavior.fish_spawn_data.unwrap();
+                    let fishes = spawn
+                        .spawn_group_list_info_low
+                        .iter()
+                        .chain(spawn.spawn_group_list_info_high.iter())
+                        .flat_map(|f| f.fish_spawn_rate_list.iter());
+                    for fish in fishes {
+                        if get_fish_item_id(fish.fish_id) == Some(item_id) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                _ => (),
             }
+        }
+        if found {
+            htmls.push(html!(<li> {gen_map_label(id, pedia)} </li>));
         }
     }
 
