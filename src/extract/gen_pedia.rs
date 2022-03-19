@@ -24,6 +24,43 @@ use std::ops::Deref;
 
 pub static ITEM_ICON_SPECIAL_COLOR: [i32; 7] = [93, 115, 121, 123, 178, 179, 189];
 
+// This map is hardcoded in the game code, unfortunatley
+// class snow.enemy.EnemyManager {.cctor}
+pub static EMS_ID_LIST: &[(u32, i32)] = &[
+    (0x1003, 0x2f),
+    (0x1503, 0x30),
+    (0x1007, 0x31),
+    (0x1008, 0x32),
+    (0x100d, 0x33),
+    (0x100e, 0x34),
+    (0x1010, 0x35),
+    (0x1013, 0x36),
+    (0x1019, 0x37),
+    (0x101a, 0x38),
+    (0x101b, 0x39),
+    (0x101d, 0x3a),
+    (0x1022, 0x3b),
+    (0x1023, 0x3c),
+    (0x1024, 0x3d),
+    (0x1026, 0x3e),
+    (0x1027, 0x3f),
+    (0x1028, 0x40),
+    (0x1029, 0x41),
+    (0x102a, 0x42),
+    (0x102b, 0x43),
+    (0x102c, 0x44),
+    (0x1031, 0x45),
+    (0x1033, 0x46),
+    (0x1533, 0x47),
+    (0x105a, 0x48),
+    (0x105b, 0x49),
+    (0x155b, 0x4a),
+    (0x105c, 0x4b),
+];
+
+pub static EMS_ID_MAP: Lazy<HashMap<u32, i32>> =
+    Lazy::new(|| EMS_ID_LIST.iter().cloned().collect());
+
 fn exactly_one<T>(mut iterator: impl Iterator<Item = T>) -> Result<T> {
     let next = iterator.next().context("No element found")?;
     if iterator.next().is_some() {
@@ -159,6 +196,7 @@ pub fn gen_monsters(
                 boss_init_set_data
                     .as_ref()
                     .map(|b: &EnemyBossInitSetData| b.enemy_type)
+                    .or_else(|| EMS_ID_MAP.get(&(id + (sub_id << 8) + 0x1000)).cloned())
             };
 
             let rcol_path = collider_path_gen(id, sub_id);

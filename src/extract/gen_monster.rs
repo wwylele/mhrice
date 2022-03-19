@@ -21,7 +21,13 @@ pub fn gen_monster_tag(
         EmTypes::Ems(id) => (id, false),
     };
 
-    let monster = pedia.monsters.iter().find(|m| (m.id | m.sub_id << 8) == id);
+    let monster = (if is_large {
+        pedia.monsters.iter()
+    } else {
+        pedia.small_monsters.iter()
+    })
+    .find(|m| (m.id | m.sub_id << 8) == id);
+
     let monster_name = (!short).then(|| {
         (|| {
             let name_name = format!("EnemyIndex{:03}", monster?.enemy_type?);
