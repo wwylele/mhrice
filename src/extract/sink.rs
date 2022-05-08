@@ -3,12 +3,102 @@ use futures::{StreamExt, TryStreamExt};
 use once_cell::sync::OnceCell;
 use rusoto_core::{ByteStream, Region};
 use rusoto_s3::*;
+use serde::Serialize;
 use std::collections::HashSet;
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::thread::{spawn, JoinHandle};
+
+use crate::msg::MsgEntry;
+
+#[derive(Serialize, Clone)]
+struct OutputTocEntry<'a, 'b> {
+    title: &'a str,
+    path: &'b str,
+}
+
+struct TocEntry {
+    title: Vec<String>,
+    path: String,
+}
+
+pub struct Toc {
+    entries: Vec<TocEntry>,
+}
+
+impl Toc {
+    pub fn new() -> Toc {
+        Toc { entries: vec![] }
+    }
+
+    pub fn finalize(self, sink: &impl Sink) -> Result<()> {
+        let languages = self
+            .entries
+            .iter()
+            .map(|e| e.title.len())
+            .max()
+            .unwrap_or(0);
+        let mut toc_by_language = vec![vec![]; languages];
+        for entry in &self.entries {
+            for (i, title) in entry.title.iter().enumerate() {
+                let title = title.trim();
+                if title.is_empty() {
+                    continue;
+                }
+
+                toc_by_language[i].push(OutputTocEntry {
+                    title,
+                    path: &entry.path,
+                });
+            }
+        }
+
+        for (i, toc) in toc_by_language.into_iter().enumerate() {
+            serde_json::to_writer(sink.create(&format!("{}.json", i))?, &toc)?;
+        }
+
+        Ok(())
+    }
+}
+
+pub struct TocSink<'a> {
+    toc: &'a mut Toc,
+    path: String,
+    title: Vec<String>, // For each language
+}
+
+impl<'a> TocSink<'a> {
+    pub fn add(&mut self, title: &MsgEntry) {
+        if self.title.len() < title.content.len() {
+            self.title.resize_with(title.content.len(), String::default);
+        }
+
+        // When adding multiple language, join them for each language
+        for (i, t) in title.content.iter().enumerate() {
+            let t = t.trim();
+            if t.is_empty() {
+                continue;
+            }
+            if self.title[i].is_empty() {
+                self.title[i] = t.to_string();
+            } else {
+                self.title[i] += ", ";
+                self.title[i] += t;
+            }
+        }
+    }
+}
+
+impl<'a> Drop for TocSink<'a> {
+    fn drop(&mut self) {
+        self.toc.entries.push(TocEntry {
+            title: std::mem::take(&mut self.title),
+            path: std::mem::take(&mut self.path),
+        });
+    }
+}
 
 pub trait Sink: Sync {
     type File: Write;
@@ -23,21 +113,41 @@ pub trait Sink: Sync {
         Ok(file)
     }
 
+    fn create_html_with_toc<'toc>(
+        &self,
+        name: &str,
+        toc: &'toc mut Toc,
+    ) -> Result<(Self::File, TocSink<'toc>)> {
+        let file = self.create_html(name)?;
+        let toc_path = self.toc_path() + name;
+        Ok((
+            file,
+            TocSink {
+                toc,
+                path: toc_path,
+                title: vec![],
+            },
+        ))
+    }
+
     fn finalize(self) -> Result<()>;
+    fn toc_path(&self) -> String;
 }
 
 pub struct DiskSink {
     root: PathBuf,
+    toc_path: String,
 }
 
 impl DiskSink {
     pub fn init(root: &Path) -> Result<Self> {
         let root = PathBuf::from(root);
+        let toc_path = "/".to_string();
         if root.exists() {
             fs::remove_dir_all(&root)?;
         }
         fs::create_dir(&root)?;
-        Ok(DiskSink { root })
+        Ok(DiskSink { root, toc_path })
     }
 }
 
@@ -55,12 +165,20 @@ impl Sink for DiskSink {
         Self: Sized,
     {
         let path = self.root.join(name);
+        let toc_path = self.toc_path.clone() + name + "/";
         fs::create_dir(&path)?;
-        Ok(DiskSink { root: path })
+        Ok(DiskSink {
+            root: path,
+            toc_path,
+        })
     }
 
     fn finalize(self) -> Result<()> {
         Ok(())
+    }
+
+    fn toc_path(&self) -> String {
+        self.toc_path.clone()
     }
 }
 
@@ -293,6 +411,10 @@ impl Sink for S3Sink {
             bail!("S3Sink detected error from previous operation: {e}");
         }
         Ok(())
+    }
+
+    fn toc_path(&self) -> String {
+        "/".to_string() + &self.path
     }
 }
 

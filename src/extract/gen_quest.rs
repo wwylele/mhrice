@@ -335,7 +335,12 @@ fn gen_quest(
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
     mut output: impl Write,
+    mut toc_sink: TocSink<'_>,
 ) -> Result<()> {
+    if let Some(title) = quest.name {
+        toc_sink.add(title);
+    }
+
     let has_normal_em = quest
         .param
         .boss_em_type
@@ -727,11 +732,17 @@ fn gen_quest(
     Ok(())
 }
 
-pub fn gen_quests(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
+pub fn gen_quests(
+    pedia: &Pedia,
+    pedia_ex: &PediaEx<'_>,
+    output: &impl Sink,
+    toc: &mut Toc,
+) -> Result<()> {
     let quest_path = output.sub_sink("quest")?;
     for quest in &pedia_ex.quests {
-        let path = quest_path.create_html(&format!("{:06}.html", quest.param.quest_no))?;
-        gen_quest(quest, pedia, pedia_ex, path)?
+        let (path, toc_sink) =
+            quest_path.create_html_with_toc(&format!("{:06}.html", quest.param.quest_no), toc)?;
+        gen_quest(quest, pedia, pedia_ex, path, toc_sink)?
     }
     Ok(())
 }

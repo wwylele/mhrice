@@ -10,6 +10,8 @@ var cur_map_explain = "default";
 var map_scale = 100
 var map_layer = 0
 
+var toc = null;
+
 window.onload = function () {
     check_cookie();
     switchLanguage();
@@ -138,6 +140,7 @@ function show_class(c) {
 }
 
 function selectLanguage(language) {
+    toc = null;
     language_index = language;
     switchLanguage();
     if (cookie_consent) {
@@ -282,5 +285,96 @@ function changeMapFilter(filter) {
     let cur = document.getElementById(filter_button_prefix + cur_map_filter);
     if (cur !== null) {
         cur.classList.add("is-primary")
+    }
+}
+
+function doSearch() {
+    let text = document.getElementById("mh-search").value.trim();
+    if (text.length === 0) {
+        return;
+    }
+    let matchers = text.split(' ').filter(m => m.length > 0);
+    console.log(matchers);
+
+    let results = [];
+    for (var entry of toc) {
+        let matched = 0;
+        let matched_length = 0;
+        for (var matcher of matchers) {
+            if (entry.title.toLowerCase().includes(matcher.toLowerCase())) {
+                matched += 1;
+                matched_length += matcher.length;
+            }
+        }
+        if (matched === 0) {
+            continue;
+        }
+
+        let score = matched * 10 - (entry.title.length - matched_length);
+        let result = { score, ...entry };
+        results.push(result);
+    }
+
+    results = results.sort((a, b) => b.score - a.score);
+
+
+    let ul = document.getElementById("mh-search-result");
+    ul.replaceChildren();
+
+    for (var result of results) {
+        let link = document.createElement("a")
+        link.setAttribute("href", result.path);
+        link.appendChild(document.createTextNode(result.title));
+
+        let tag = "";
+        if (result.path.includes("monster")) {
+            tag = "Monster";
+        } else if (result.path.includes("armor")) {
+            tag = "Armor";
+        } else if (result.path.includes("skill")) {
+            tag = "Skill";
+        } else if (result.path.includes("item")) {
+            tag = "Item";
+        } else if (result.path.includes("map")) {
+            tag = "Map";
+        } else if (result.path.includes("quest")) {
+            tag = "Quest";
+        } else if (result.path.includes("weapon")) {
+            tag = "Weapon";
+        }
+
+        let li = document.createElement("li");
+        if (tag !== "") {
+            let tagElement = document.createElement("span");
+            tagElement.setAttribute("class", "tag");
+            tagElement.appendChild(document.createTextNode(tag));
+            li.appendChild(tagElement);
+        }
+        li.appendChild(link);
+        ul.appendChild(li);
+    }
+
+    if (results.length === 0) {
+        let li = document.createElement("li");
+        li.appendChild(document.createTextNode("No result."));
+        ul.appendChild(li);
+    }
+
+}
+
+function search() {
+    if (window.event.key !== 'Enter') {
+        return;
+    }
+
+    if (toc === null) {
+        fetch("/toc/" + language_index + ".json")
+            .then(response => response.json())
+            .then(json => {
+                toc = json;
+                doSearch();
+            })
+    } else {
+        doSearch();
     }
 }

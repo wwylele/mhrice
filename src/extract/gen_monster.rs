@@ -765,6 +765,7 @@ pub fn gen_monster(
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
     output: &impl Sink,
+    toc: &mut Toc,
 ) -> Result<()> {
     let collider_mapping = &monster.collider_mapping;
     let enemy_parts_break_data_list = &monster.data_tune.enemy_parts_break_data_list;
@@ -861,6 +862,13 @@ pub fn gen_monster(
         </section>
     );
 
+    let monster_alias = if let Some(enemy_type) = monster.enemy_type {
+        let name_name = format!("Alias_EnemyIndex{:03}", enemy_type);
+        pedia.monster_aliases.get_entry(&name_name)
+    } else {
+        None
+    };
+
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -873,12 +881,8 @@ pub fn gen_monster(
                 <div class="mh-monster-header">
                     <img src=icon />
                     <h1 class="title"> {
-                        if let Some(enemy_type) = monster.enemy_type {
-                            let name_name = format!("Alias_EnemyIndex{:03}", enemy_type);
-                            pedia.monster_aliases.get_entry(&name_name).map_or(
-                                html!(<span>{text!("Monster {:03}_{:02}", monster.id, monster.sub_id)}</span>),
-                                gen_multi_lang
-                            )
+                        if let Some(monster_alias) = monster_alias {
+                            gen_multi_lang(monster_alias)
                         } else {
                             html!(<span>{text!("Monster {:03}_{:02}", monster.id, monster.sub_id)}</span>)
                         }
@@ -1167,8 +1171,15 @@ pub fn gen_monster(
         </html>: String
     );
 
-    output
-        .create_html(&format!("{:03}_{:02}.html", monster.id, monster.sub_id))?
-        .write_all(doc.to_string().as_bytes())?;
+    let (mut output, mut toc_sink) = output.create_html_with_toc(
+        &format!("{:03}_{:02}.html", monster.id, monster.sub_id),
+        toc,
+    )?;
+    output.write_all(doc.to_string().as_bytes())?;
+
+    if let Some(monster_alias) = monster_alias {
+        toc_sink.add(monster_alias);
+    }
+
     Ok(())
 }

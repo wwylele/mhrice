@@ -70,9 +70,10 @@ pub fn navbar() -> Box<div<String>> {
     html!(<div>
         <nav class="navbar is-primary" role="navigation"> <div class="container">
             <div class="navbar-brand">
-                <a class="navbar-item" href="/">
+                <a class="navbar-item" href="/index.html">
                     <img src="/favicon.png"/>
-                    <div class="mh-logo-text">"MHRice"</div>
+                    <div class="mh-logo-text">"MHRice "</div>
+                    <i class="fas fa-search"/>
                 </a>
 
                 <a id="navbarBurger" class="navbar-burger" data-target="navbarMenu" onclick="onToggleNavbarMenu()">
@@ -400,7 +401,12 @@ fn gen_colored_icon_inner(color_class: &str, icon: &str, addons: &[&str]) -> Box
     </div>)
 }
 
-pub fn gen_monsters(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
+pub fn gen_monsters(
+    pedia: &Pedia,
+    pedia_ex: &PediaEx<'_>,
+    output: &impl Sink,
+    toc: &mut Toc,
+) -> Result<()> {
     let mut monsters_path = output.create_html("monster.html")?;
 
     let doc: DOMTree<String> = html!(
@@ -472,13 +478,48 @@ pub fn gen_monsters(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &impl Sink) -
 
     let monster_path = output.sub_sink("monster")?;
     for monster in &pedia.monsters {
-        gen_monster(true, monster, pedia, pedia_ex, &monster_path)?;
+        gen_monster(true, monster, pedia, pedia_ex, &monster_path, toc)?;
     }
 
     let monster_path = output.sub_sink("small-monster")?;
     for monster in &pedia.small_monsters {
-        gen_monster(false, monster, pedia, pedia_ex, &monster_path)?;
+        gen_monster(false, monster, pedia, pedia_ex, &monster_path, toc)?;
     }
+    Ok(())
+}
+
+pub fn gen_search(output: &impl Sink) -> Result<()> {
+    let doc: DOMTree<String> = html!(
+        <html>
+            <head>
+                <title>{text!("Monsters - MHRice")}</title>
+                { head_common() }
+            </head>
+            <body>
+                { navbar() }
+                <main> <div class="container"> <div class="content">
+                <section class="section">
+                    <div class="control has-icons-left">
+                        <input class="input is-large" type="text" placeholder="Search" id="mh-search"
+                            onkeydown="search()"/>
+                        <span class="icon is-large is-left">
+                            <i class="fas fa-search" />
+                        </span>
+                    </div>
+                </section>
+                <section>
+                <ul id="mh-search-result">
+                </ul>
+                </section>
+                </div> </div> </main>
+            </body>
+        </html>: String
+    );
+
+    output
+        .create_html("index.html")?
+        .write_all(doc.to_string().as_bytes())?;
+
     Ok(())
 }
 
@@ -575,22 +616,25 @@ pub fn gen_part_color_css(output: &impl Sink) -> Result<()> {
 }
 
 pub fn gen_website(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
-    gen_quests(pedia, pedia_ex, output)?;
+    let mut toc = Toc::new();
+    gen_quests(pedia, pedia_ex, output, &mut toc)?;
     gen_quest_list(&pedia_ex.quests, output)?;
-    gen_skills(pedia_ex, output)?;
+    gen_skills(pedia_ex, output, &mut toc)?;
     gen_skill_list(&pedia_ex.skills, output)?;
-    gen_hyakuryu_skills(pedia_ex, output)?;
+    gen_hyakuryu_skills(pedia_ex, output, &mut toc)?;
     gen_hyakuryu_skill_list(&pedia_ex.hyakuryu_skills, output)?;
-    gen_armors(pedia_ex, output)?;
+    gen_armors(pedia_ex, output, &mut toc)?;
     gen_armor_list(&pedia_ex.armors, output)?;
-    gen_monsters(pedia, pedia_ex, output)?;
-    gen_items(pedia, pedia_ex, output)?;
+    gen_monsters(pedia, pedia_ex, output, &mut toc)?;
+    gen_items(pedia, pedia_ex, output, &mut toc)?;
     gen_item_list(pedia_ex, output)?;
-    gen_weapons(pedia_ex, output)?;
-    gen_maps(pedia, pedia_ex, output)?;
+    gen_weapons(pedia_ex, output, &mut toc)?;
+    gen_maps(pedia, pedia_ex, output, &mut toc)?;
     gen_map_list(pedia, output)?;
     gen_about(output)?;
+    gen_search(output)?;
     gen_static(output)?;
     gen_part_color_css(output)?;
+    toc.finalize(&output.sub_sink("toc")?)?;
     Ok(())
 }

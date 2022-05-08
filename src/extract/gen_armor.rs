@@ -85,7 +85,21 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], output: &impl Sink) -> Result<()
     Ok(())
 }
 
-fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, mut output: impl Write) -> Result<()> {
+fn gen_armor(
+    series: &ArmorSeries,
+    pedia_ex: &PediaEx,
+    mut output: impl Write,
+    mut toc_sink: TocSink<'_>,
+) -> Result<()> {
+    if let Some(name) = series.name {
+        toc_sink.add(name);
+    }
+    for piece in &series.pieces {
+        if let Some(piece) = piece.as_ref() {
+            toc_sink.add(piece.name);
+        }
+    }
+
     let gen_label = |piece: &Armor<'_>| {
         let icon = format!(
             "/resources/equip/{:03}",
@@ -199,7 +213,7 @@ fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, mut output: impl Write) -
                 { gen_rared_icon(rarity, "/resources/equip/006") }
                 </div>
                 <h1 class="title"> {
-                    if let Some(name) = series.name.as_ref() {
+                    if let Some(name) = series.name {
                         gen_multi_lang(name)
                     } else {
                         html!(<span>"<Unknown>"</span>)
@@ -315,12 +329,12 @@ fn gen_armor(series: &ArmorSeries, pedia_ex: &PediaEx, mut output: impl Write) -
     Ok(())
 }
 
-pub fn gen_armors(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
+pub fn gen_armors(pedia_ex: &PediaEx<'_>, output: &impl Sink, toc: &mut Toc) -> Result<()> {
     let armor_path = output.sub_sink("armor")?;
     for series in &pedia_ex.armors {
-        let output =
-            armor_path.create_html(&format!("{:03}.html", series.series.armor_series.0))?;
-        gen_armor(series, pedia_ex, output)?
+        let (output, toc_sink) = armor_path
+            .create_html_with_toc(&format!("{:03}.html", series.series.armor_series.0), toc)?;
+        gen_armor(series, pedia_ex, output, toc_sink)?
     }
     Ok(())
 }

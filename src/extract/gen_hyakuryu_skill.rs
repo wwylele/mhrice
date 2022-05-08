@@ -109,7 +109,9 @@ pub fn gen_hyakuryu_skill(
     skill: &HyakuryuSkill,
     pedia_ex: &PediaEx,
     mut output: impl Write,
+    mut toc_sink: TocSink<'_>,
 ) -> Result<()> {
+    toc_sink.add(skill.name);
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -158,11 +160,11 @@ pub fn gen_hyakuryu_skill(
     Ok(())
 }
 
-pub fn gen_hyakuryu_skills(pedia_ex: &PediaEx, output: &impl Sink) -> Result<()> {
+pub fn gen_hyakuryu_skills(pedia_ex: &PediaEx, output: &impl Sink, toc: &mut Toc) -> Result<()> {
     let skill_path = output.sub_sink("hyakuryu_skill")?;
     for (&id, skill) in &pedia_ex.hyakuryu_skills {
-        let output = skill_path.create_html(&hyakuryu_skill_page(id))?;
-        gen_hyakuryu_skill(skill, pedia_ex, output)?
+        let (output, toc_sink) = skill_path.create_html_with_toc(&hyakuryu_skill_page(id), toc)?;
+        gen_hyakuryu_skill(skill, pedia_ex, output, toc_sink)?
     }
     Ok(())
 }

@@ -135,6 +135,7 @@ fn gen_weapon<Param>(
     weapon_tree: &WeaponTree<'_, Param>,
     pedia_ex: &PediaEx,
     mut output: impl Write,
+    mut toc_sink: TocSink<'_>,
     has_element: fn(&Param) -> Option<&ElementWeaponBaseData>,
     has_second_element: fn(&Param) -> Option<&DualBladesBaseUserDataParam>,
     has_close_range: fn(&Param) -> Option<&CloseRangeWeaponBaseData>,
@@ -147,6 +148,8 @@ fn gen_weapon<Param>(
 where
     Param: ToBase<MainWeaponBaseData>,
 {
+    toc_sink.add(weapon.name);
+
     let param = weapon.param;
     let main = param.to_base();
     let first_element = has_element(param);
@@ -619,7 +622,7 @@ fn heavy_bowgun(param: &HeavyBowgunBaseUserDataParam) -> Vec<Box<p<String>>> {
     </p>)]
 }
 
-pub fn gen_weapons(pedia_ex: &PediaEx, output: &impl Sink) -> Result<()> {
+pub fn gen_weapons(pedia_ex: &PediaEx, output: &impl Sink, toc: &mut Toc) -> Result<()> {
     let path = output.sub_sink("weapon")?;
 
     macro_rules! weapon {
@@ -635,12 +638,14 @@ pub fn gen_weapons(pedia_ex: &PediaEx, output: &impl Sink) -> Result<()> {
         ) => {{
             gen_tree(&pedia_ex.$label, &path, stringify!($label), $name)?;
             for (weapon_id, weapon) in &pedia_ex.$label.weapons {
-                let file_path = path.create_html(&format!("{}.html", weapon_id.to_tag()))?;
+                let (file_path, toc_sink) =
+                    path.create_html_with_toc(&format!("{}.html", weapon_id.to_tag()), toc)?;
                 gen_weapon(
                     weapon,
                     &pedia_ex.$label,
                     pedia_ex,
                     file_path,
+                    toc_sink,
                     $element,
                     $second_element,
                     $close_range,

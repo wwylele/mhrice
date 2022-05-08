@@ -463,6 +463,7 @@ pub fn gen_item(
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
     mut output: impl Write,
+    mut toc_sink: TocSink<'_>,
 ) -> Result<()> {
     let material_categories = item.param.material_category.iter().filter_map(|&category| {
         if category == MaterialCategory(0) {
@@ -476,6 +477,8 @@ pub fn gen_item(
             },
         )
     });
+
+    toc_sink.add(item.name);
 
     let doc: DOMTree<String> = html!(
         <html>
@@ -601,11 +604,16 @@ pub fn gen_item_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
     Ok(())
 }
 
-pub fn gen_items(pedia: &Pedia, pedia_ex: &PediaEx, output: &impl Sink) -> Result<()> {
+pub fn gen_items(
+    pedia: &Pedia,
+    pedia_ex: &PediaEx,
+    output: &impl Sink,
+    toc: &mut Toc,
+) -> Result<()> {
     let item_path = output.sub_sink("item")?;
     for (&id, item) in &pedia_ex.items {
-        let path = item_path.create_html(&item_page(id))?;
-        gen_item(item, pedia, pedia_ex, path)?
+        let (path, toc_sink) = item_path.create_html_with_toc(&item_page(id), toc)?;
+        gen_item(item, pedia, pedia_ex, path, toc_sink)?
     }
     Ok(())
 }

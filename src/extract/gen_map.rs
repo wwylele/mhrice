@@ -60,6 +60,7 @@ fn gen_map(
     pedia: &Pedia,
     pedia_ex: &PediaEx,
     mut output: impl Write,
+    mut toc_sink: TocSink<'_>,
 ) -> Result<()> {
     let gen_fish_table = |tag: &str, fishes: &[rsz::FishSpawnGroupInfo]| -> Box<div<String>> {
         html!( <div class="mh-reward-box"><table>
@@ -241,6 +242,7 @@ fn gen_map(
     let name = pedia.map_name.get_entry(&name_name);
 
     let title = if let Some(name) = name {
+        toc_sink.add(name);
         gen_multi_lang(name)
     } else {
         html!(<span>{ text!("Map {:02}", id) }</span>)
@@ -327,11 +329,16 @@ fn gen_map(
     Ok(())
 }
 
-pub fn gen_maps(pedia: &Pedia, pedia_ex: &PediaEx, output: &impl Sink) -> Result<()> {
+pub fn gen_maps(
+    pedia: &Pedia,
+    pedia_ex: &PediaEx,
+    output: &impl Sink,
+    toc: &mut Toc,
+) -> Result<()> {
     let map_path = output.sub_sink("map")?;
     for (&id, map) in &pedia.maps {
-        let path = map_path.create_html(&map_page(id))?;
-        gen_map(id, map, pedia, pedia_ex, path)?
+        let (path, toc_sink) = map_path.create_html_with_toc(&map_page(id), toc)?;
+        gen_map(id, map, pedia, pedia_ex, path, toc_sink)?
     }
     Ok(())
 }

@@ -28,11 +28,11 @@ span.mh-extract-unknown {
 
 .mh-spoiler {
     color: black;
-    background-color:black;
+    background-color: black;
 }
 
 .mh-spoiler:hover {
-    background-color:white;
+    background-color: white;
 }
 
 .mh-ride-cond {
@@ -82,7 +82,7 @@ div.mh-title-icon {
 ul.mh-list-skill {
     list-style: none;
     display: grid;
-    grid-template-columns: repeat( auto-fit, minmax(250px, 1fr) );
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 }
 
 li.mh-list-skill {
@@ -91,7 +91,7 @@ li.mh-list-skill {
 
 ul.mh-armor-series-list {
     display: grid;
-    grid-template-columns: repeat( auto-fit, minmax(250px, 1fr) );
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 }
 
 li.mh-armor-series-list {
@@ -116,6 +116,7 @@ ul.mh-multi-factor {
 div.mh-logo-text {
     font-weight: bold;
     margin-left: 1em;
+    margin-right: 1em;
 }
 
 .mh-colored-icon {
@@ -126,12 +127,12 @@ div.mh-logo-text {
     height: 2rem;
 }
 
-.mh-colored-icon > * {
+.mh-colored-icon>* {
     grid-column: 1 / 1;
     grid-row: 1 / 1;
 }
 
-.mh-colored-icon > *:nth-child(1)  {
+.mh-colored-icon>*:nth-child(1) {
     z-index: 2;
     width: 2rem;
     height: 2rem;
@@ -139,7 +140,7 @@ div.mh-logo-text {
     mask-size: contain;
 }
 
-.mh-colored-icon > *:nth-child(2) {
+.mh-colored-icon>*:nth-child(2) {
     background-color: black;
     z-index: 1;
     width: 2rem;
@@ -148,14 +149,14 @@ div.mh-logo-text {
     mask-size: contain;
 }
 
-.mh-colored-icon > *:nth-child(3) {
+.mh-colored-icon>*:nth-child(3) {
     z-index: 3;
     width: 2rem;
     height: 2rem;
     position: relative;
 }
 
-.mh-colored-icon > *:nth-child(3) > * {
+.mh-colored-icon>*:nth-child(3)>* {
     width: 1rem;
     height: 1rem;
     position: absolute;
@@ -192,11 +193,11 @@ div.mh-logo-text {
     background-image: url('/resources/item_addon_5.png');
 }
 
-.mh-icon-text > * {
+.mh-icon-text>* {
     vertical-align: middle;
 }
 
-.mh-kv > *:nth-child(1) {
+.mh-kv>*:nth-child(1) {
     font-weight: bold;
     margin-right: 2rem;
 }
@@ -250,26 +251,32 @@ div.mh-logo-text {
 .mh-sharpness-color-0 {
     background-color: red;
 }
+
 .mh-sharpness-color-1 {
     background-color: orange;
 }
+
 .mh-sharpness-color-2 {
     background-color: yellow;
 }
+
 .mh-sharpness-color-3 {
     background-color: green;
 }
+
 .mh-sharpness-color-4 {
     background-color: blue;
 }
+
 .mh-sharpness-color-5 {
     background-color: white;
 }
+
 .mh-sharpness-color-6 {
     background-color: blueviolet;
 }
 
-.mh-weapon-tree > ul > li {
+.mh-weapon-tree>ul>li {
     display: inline-block;
     vertical-align: top;
     border-radius: 6px;
@@ -280,7 +287,7 @@ div.mh-logo-text {
     padding: 0.5rem;
 }
 
-.mh-weapon-tree > ul > li li {
+.mh-weapon-tree>ul>li li {
     list-style-type: none;
     margin-left: 1rem;
 }
@@ -303,7 +310,7 @@ img.mh-quest-icon {
 
 .mh-reward-box {
     border-radius: 6px;
-    box-shadow: 0 0 1em -.125em rgba(10,10,10,.1),0 0 0 1px rgba(10,10,10,.02);
+    box-shadow: 0 0 1em -.125em rgba(10, 10, 10, .1), 0 0 0 1px rgba(10, 10, 10, .02);
     display: block;
     padding: 1rem;
 }
@@ -318,14 +325,14 @@ img.mh-quest-icon {
 
 ul.mh-list-item-in-out {
     display: grid;
-    grid-template-columns: repeat( auto-fit, minmax(250px, 1fr) );
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 }
 
 li.mh-list-item-in-out {
     display: inline-block;
 }
 
-ul.mh-rampage-em-list{
+ul.mh-rampage-em-list {
     margin-left: 0;
     margin-top: 0;
 }
@@ -398,4 +405,13 @@ li.mh-rampage-em-list {
 .mh-sub-camp {
     width: 1.9375rem;
     height: 1.875rem;
+}
+
+ul#mh-search-result {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+ul#mh-search-result>li {
+    display: inline-block;
 }
