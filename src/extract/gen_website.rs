@@ -602,6 +602,9 @@ pub fn gen_static(output: &impl Sink) -> Result<()> {
     output
         .create("favicon.png")?
         .write_all(include_bytes!("static/favicon.png"))?;
+    output
+        .create("error.html")?
+        .write_all(include_bytes!("static/error.html"))?;
     Ok(())
 }
 
