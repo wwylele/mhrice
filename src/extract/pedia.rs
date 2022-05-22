@@ -138,6 +138,16 @@ pub struct Pedia {
     pub maps: BTreeMap<i32, GameMap>,
     pub map_name: Msg,
     pub item_pop_lot: ItemPopLotTableUserData,
+
+    pub airou_armor: OtAirouArmorBaseUserData,
+    pub airou_armor_product: OtArmorProductUserData,
+    pub dog_armor: OtDogArmorBaseUserData,
+    pub dog_armor_product: OtArmorProductUserData,
+    pub airou_weapon: OtWeaponBaseUserData,
+    pub airou_weapon_product: OtWeaponProductUserData,
+    pub dog_weapon: OtWeaponBaseUserData,
+    pub dog_weapon_product: OtWeaponProductUserData,
+    pub ot_equip_series: OtEquipSeriesUserData,
 }
 
 pub struct QuestReward<'a> {
@@ -229,6 +239,23 @@ pub struct WeaponTree<'a, Param> {
     pub unpositioned: Vec<WeaponId>,
 }
 
+pub struct OtWeapon<'a> {
+    pub param: &'a OtWeaponBaseUserDataParam,
+    pub product: Option<&'a OtWeaponProductUserDataParam>,
+}
+
+pub struct OtArmor<'a> {
+    pub param: &'a OtArmorBase,
+    pub product: Option<&'a OtArmorProductUserDataParam>,
+}
+
+pub struct OtEquipSeries<'a> {
+    pub series: &'a OtEquipSeriesUserDataParam,
+    pub weapon: Option<OtWeapon<'a>>,
+    pub head: Option<OtArmor<'a>>,
+    pub chest: Option<OtArmor<'a>>,
+}
+
 pub struct PediaEx<'a> {
     pub sizes: HashMap<EmTypes, &'a SizeInfo>,
     pub size_dists: HashMap<i32, &'a [ScaleAndRateData]>,
@@ -262,4 +289,6 @@ pub struct PediaEx<'a> {
 
     pub monster_order: HashMap<EmTypes, usize>,
     pub item_pop: HashMap<(/*pop_id*/ i32, /*map*/ i32), &'a ItemPopLotTableUserDataParam>,
+
+    pub ot_equip: BTreeMap<OtEquipSeriesId, OtEquipSeries<'a>>,
 }

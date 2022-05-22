@@ -13,6 +13,7 @@ mod lot;
 mod map;
 mod meat_data;
 mod monster_list;
+mod otomo;
 mod parts_break_data;
 mod quest_data;
 mod scene;
@@ -34,6 +35,7 @@ pub use lot::*;
 pub use map::*;
 pub use meat_data::*;
 pub use monster_list::*;
+pub use otomo::*;
 pub use parts_break_data::*;
 pub use quest_data::*;
 pub use scene::*;
@@ -804,6 +806,21 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         FishSpawnRate,
         FishSpawnGroupInfo,
         FishSpawnData,
+    );
+
+    r!(
+        OtAirouArmorBaseUserDataParam,
+        OtAirouArmorBaseUserData,
+        OtDogArmorBaseUserDataParam,
+        OtDogArmorBaseUserData,
+        OtArmorProductUserDataParam,
+        OtArmorProductUserData,
+        OtWeaponProductUserDataParam,
+        OtWeaponProductUserData,
+        OtWeaponBaseUserDataParam,
+        OtWeaponBaseUserData,
+        OtEquipSeriesUserDataParam,
+        OtEquipSeriesUserData,
     );
 
     m
