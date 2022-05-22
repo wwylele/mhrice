@@ -11,6 +11,7 @@ use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct ScnGameObject {
+    #[allow(dead_code)]
     guid: rsz::Guid,
     object_index: u32,
     parent_index: Option<u32>, // could be a game object or a folder

@@ -366,10 +366,6 @@ impl AnyRsz {
     pub fn to_json(&self) -> Result<String> {
         (self.type_info.to_json)(&*self.any)
     }
-
-    pub fn type_info(&self) -> &'static RszTypeInfo {
-        self.type_info
-    }
 }
 
 pub trait FromRsz: Sized {

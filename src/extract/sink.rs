@@ -134,6 +134,31 @@ pub trait Sink: Sync {
     fn toc_path(&self) -> String;
 }
 
+pub struct NullSink;
+
+impl Sink for NullSink {
+    type File = std::io::Sink;
+
+    fn create(&self, _name: &str) -> Result<Self::File> {
+        Ok(std::io::sink())
+    }
+
+    fn sub_sink(&self, _name: &str) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        Ok(NullSink)
+    }
+
+    fn finalize(self) -> Result<()> {
+        Ok(())
+    }
+
+    fn toc_path(&self) -> String {
+        "".to_string()
+    }
+}
+
 pub struct DiskSink {
     root: PathBuf,
     toc_path: String,

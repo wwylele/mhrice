@@ -429,6 +429,9 @@ fn gen_website(pak: Vec<String>, output: String) -> Result<()> {
     if let Some(bucket) = output.strip_prefix("S3://") {
         let sink = S3Sink::init(bucket.to_string())?;
         gen_website_to_sink(pak, sink)?;
+    } else if output == "null://" {
+        let sink = NullSink;
+        gen_website_to_sink(pak, sink)?;
     } else {
         let sink = DiskSink::init(Path::new(&output))?;
         gen_website_to_sink(pak, sink)?;
