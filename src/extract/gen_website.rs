@@ -3,6 +3,7 @@ use super::gen_hyakuryu_skill::*;
 use super::gen_item::*;
 use super::gen_map::*;
 use super::gen_monster::*;
+use super::gen_otomo::*;
 use super::gen_quest::*;
 use super::gen_skill::*;
 use super::gen_weapon::*;
@@ -129,6 +130,16 @@ pub fn navbar() -> Box<div<String>> {
                         <a class="navbar-item" href="/weapon/light_bowgun.html">"Light bowgun"</a>
                         <a class="navbar-item" href="/weapon/heavy_bowgun.html">"Heavy bowgun"</a>
                         <a class="navbar-item" href="/weapon/bow.html">"Bow"</a>
+                    </div>
+                    </div>
+
+                    <div class="navbar-item has-dropdown is-hoverable">
+                    <a class="navbar-link">
+                        "Buddy"
+                    </a>
+                    <div class="navbar-dropdown">
+                        <a class="navbar-item" href="/airou.html">"Palico equipment"</a>
+                        <a class="navbar-item" href="/dog.html">"Palamute equipment"</a>
                     </div>
                     </div>
 
@@ -634,6 +645,8 @@ pub fn gen_website(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &impl Sink) ->
     gen_weapons(pedia_ex, output, &mut toc)?;
     gen_maps(pedia, pedia_ex, output, &mut toc)?;
     gen_map_list(pedia, output)?;
+    gen_otomo_equips(pedia_ex, output, &mut toc)?;
+    gen_otomo_equip_list(pedia_ex, output)?;
     gen_about(output)?;
     gen_search(output)?;
     gen_static(output)?;

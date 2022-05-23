@@ -17,6 +17,18 @@ rsz_enum! {
     }
 }
 
+impl OtArmorId {
+    pub fn icon_index(self) -> u32 {
+        match self {
+            OtArmorId::None => 0,
+            OtArmorId::AirouHead(_) => 13,
+            OtArmorId::AirouChest(_) => 14,
+            OtArmorId::DogHead(_) => 34,
+            OtArmorId::DogChest(_) => 35,
+        }
+    }
+}
+
 // snow.data.DataDef.OtEquipSeriesId
 rsz_enum! {
     #[rsz(i32)]
@@ -24,6 +36,15 @@ rsz_enum! {
     pub enum OtEquipSeriesId {
         Airou(i32) = 0x00000000..=0x0000FFFF,
         Dog(i32) = 0x00010000..=0x0001FFFF,
+    }
+}
+
+impl OtEquipSeriesId {
+    pub fn to_tag(self) -> String {
+        match self {
+            OtEquipSeriesId::Airou(i) => format!("Airou_{i:03}"),
+            OtEquipSeriesId::Dog(i) => format!("Dog_{i:03}"),
+        }
     }
 }
 
@@ -38,7 +59,7 @@ rsz_struct! {
         pub rare_type: RareTypes,
         pub model_id: u32, // snow.data.DataDef.OtEquipModelId
         pub def: i32,
-        pub element_regist_list: Vec<i32>, // official typo?
+        pub element_regist_list: [i32; 5],
         pub base_color_index: u32,
         pub sell_value: u32,
     }
@@ -148,7 +169,17 @@ rsz_enum! {
     pub enum OtAtkTypes {
         Smash = 0,
         Blow = 1,
-        Max = 2, // ehh
+    }
+}
+
+// snow.data.DataDef.OtSpecializeTypes
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Copy, Clone, PartialEq, Eq, Hash)]
+    pub enum OtSpecializeTypes {
+        Short = 0,
+        Balance = 1,
+        Long = 2,
     }
 }
 
@@ -163,13 +194,13 @@ rsz_struct! {
         pub series_id: OtEquipSeriesId,
         pub rare_type: RareTypes,
         pub model_id: u32, // snow.data.DataDef.OtEquipModelId
-        pub atk_type: u32, // snow.data.OtWeaponData.AtkTypes
+        pub atk_type: OtAtkTypes,
         pub element_type: super::skill::ElementType,
-        pub specilize_type: OtAtkTypes,
+        pub specilize_type: OtSpecializeTypes,
         pub def_bonus: i32,
-        pub atk_val_list: Vec<i32>,
-        pub element_val_list: Vec<u32>,
-        pub critical_rate_list: Vec<i32>,
+        pub atk_val_list: [i32; 2],
+        pub element_val_list: [u32; 2],
+        pub critical_rate_list: [i32; 2],
         pub throw_model_color_index: u32,
         pub sell_value: u32,
     }

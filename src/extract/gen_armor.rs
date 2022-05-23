@@ -59,7 +59,7 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], output: &impl Sink) -> Result<()
                         html!(
                             <li class="mh-armor-series-list" data-sort=sort_tag>
                             <a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
-                            <h2 class="title">{
+                            <h2>{
                                 series_name
                             }</h2>
                             <ul class="mh-armor-list"> {
@@ -100,17 +100,6 @@ fn gen_armor(
         }
     }
 
-    let gen_label = |piece: &Armor<'_>| {
-        let icon = format!(
-            "/resources/equip/{:03}",
-            piece.data.pl_armor_id.icon_index()
-        );
-        html!(<div class="mh-icon-text">
-            { gen_rared_icon(piece.data.rare, &icon) }
-            <span>{ gen_multi_lang(piece.name) }</span>
-        </div>)
-    };
-
     let gen_explain = |pieces: &[Option<Armor<'_>>]| {
         html!(<table>
             <thead><tr>
@@ -125,7 +114,7 @@ fn gen_armor(
                         return html!(<tr><td colspan="2">"-"</td></tr>)
                     };
                     html!(<tr>
-                        <td>{gen_label(piece)}</td>
+                        <td>{gen_armor_label(Some(piece))}</td>
                         <td><pre>{gen_multi_lang(piece.explain)}</pre></td>
                     </tr>)
                 })
@@ -137,7 +126,7 @@ fn gen_armor(
         html!(<table>
             <thead><tr>
                 <th>"Name"</th>
-                <th>"Value (Sell / Buy)"</th>
+                <th>"Buying cost"</th>
                 <th>"Defense"</th>
                 <th>"Fire"</th>
                 <th>"Water"</th>
@@ -178,8 +167,8 @@ fn gen_armor(
                     } </ul>);
 
                     html!(<tr>
-                        <td>{gen_label(piece)}</td>
-                        <td>{text!("{} / {}", piece.data.value, piece.data.buy_value)}</td>
+                        <td>{gen_armor_label(Some(piece))}</td>
+                        <td>{text!("{}", piece.data.buy_value)}</td>
                         <td>{text!("{}", piece.data.def_val)}</td>
                         <td>{text!("{}", piece.data.fire_reg_val)}</td>
                         <td>{text!("{}", piece.data.water_reg_val)}</td>
@@ -252,6 +241,7 @@ fn gen_armor(
                 <table>
                     <thead><tr>
                         <th>"Name"</th>
+                        <th>"Cost"</th>
                         <th>"Categorized Material"</th>
                         <th>"Material"</th>
                         <th>"Output"</th>
@@ -275,7 +265,8 @@ fn gen_armor(
                                 &product.output_item_num, ItemId::None);
 
                             html!(<tr>
-                                <td>{gen_label(armor)}</td>
+                                <td>{gen_armor_label(Some(armor))}</td>
+                                <td>{text!("{}", armor.data.value)}</td>
                                 {category}
                                 {materials}
                                 {output}
@@ -310,7 +301,7 @@ fn gen_armor(
                                 &product.item_num, product.item_flag);
 
                             html!(<tr>
-                                <td>{gen_label(armor)}</td>
+                                <td>{gen_armor_label(Some(armor))}</td>
                                 {category}
                                 {materials}
                             </tr>)

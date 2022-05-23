@@ -100,6 +100,11 @@ li.mh-armor-series-list {
     margin-top: 1rem;
 }
 
+li.mh-armor-series-list h2 {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
 ul.mh-armor-skill-list {
     list-style: none;
     margin-left: 0;
