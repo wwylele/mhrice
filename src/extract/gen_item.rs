@@ -2,6 +2,7 @@ use super::gen_armor::*;
 use super::gen_hyakuryu_skill::*;
 use super::gen_map::*;
 use super::gen_monster::*;
+use super::gen_otomo::*;
 use super::gen_quest::*;
 use super::gen_skill::*;
 use super::gen_weapon::*;
@@ -356,6 +357,55 @@ fn gen_item_usage_armor(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<S
     }
 }
 
+fn gen_item_usage_otomo(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
+    let mut htmls = vec![];
+
+    for (id, series) in &pedia_ex.ot_equip {
+        let href = format!("/otomo/{}.html", id.to_tag());
+
+        for armor in [&series.head, &series.chest].into_iter().flatten() {
+            if let piece @ OtArmor {
+                product: Some(product),
+                ..
+            } = armor
+            {
+                if product.item_list.contains(&item_id) {
+                    htmls.push(html!(<li class="mh-list-item-in-out">
+                    <a href={&href}>
+                        { gen_atomo_armor_label(piece) }
+                    </a>
+                </li>))
+                }
+            }
+        }
+
+        if let Some(
+            piece @ OtWeapon {
+                product: Some(product),
+                ..
+            },
+        ) = &series.weapon
+        {
+            if product.item_list.contains(&item_id) {
+                htmls.push(html!(<li class="mh-list-item-in-out">
+                <a href={&href}>
+                    { gen_atomo_weapon_label(piece) }
+                </a>
+            </li>))
+            }
+        }
+    }
+
+    if !htmls.is_empty() {
+        Some(html!(<div> <h3>"For crafting buddy equipements: "</h3>
+            <ul class="mh-list-item-in-out">{
+                htmls
+            }</ul> </div>))
+    } else {
+        None
+    }
+}
+
 fn gen_item_usage_hyakuryu(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
     let mut htmls = vec![];
 
@@ -554,6 +604,7 @@ pub fn gen_item(
                 <h2 class="title">"Where to use"</h2>
                 {gen_item_usage_weapon(item.param.id, pedia_ex)}
                 {gen_item_usage_armor(item.param.id, pedia_ex)}
+                {gen_item_usage_otomo(item.param.id, pedia_ex)}
                 {gen_item_usage_deco(item.param.id, pedia_ex)}
                 {gen_item_usage_hyakuryu(item.param.id, pedia_ex)}
                 </section>
