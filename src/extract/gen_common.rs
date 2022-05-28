@@ -18,7 +18,8 @@ pub fn gen_slot(decorations_num_list: &[u32; 3]) -> Box<span<String>> {
     html!(<span>
         {(0..placeholder).map(|_| html!(<span class="mh-slot" />))}
         {slot_list.into_iter().map(|s| {
-            html!(<img src={format!("/resources/slot_{}.png", s).as_str()} class="mh-slot" />)
+            let alt = format!("A level-{s} slot");
+            html!(<img alt={alt.as_str()} src={format!("/resources/slot_{}.png", s).as_str()} class="mh-slot" />)
         })}
     </span>)
 }

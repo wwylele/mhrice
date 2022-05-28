@@ -181,8 +181,9 @@ fn gen_map(
                 //let angle = *angle;
                 icon_inner = Box::new(move || {
                     //let rotate = format!("transform:rotate({}rad);", angle);
-                    html!(<div class="mh-icon-container"><img src="/resources/item/115.png"
-                    class="mh-wire-long-jump-icon" /*style={rotate}*/ /></div>)
+                    html!(<div class="mh-icon-container">
+                        <img alt="Wirebug jump point" src="/resources/item/115.png"
+                        class="mh-wire-long-jump-icon" /*style={rotate}*/ /></div>)
                 });
 
                 explain_inner = html!(<div class="mh-reward-tables">
@@ -195,10 +196,10 @@ fn gen_map(
                 icon_inner = Box::new(|| {
                     html!(<div class="mh-icon-container"> {
                         if behavior.camp_type == rsz::CampType::BaseCamp {
-                            html!(<img src="/resources/main_camp.png"
+                            html!(<img alt="Main camp" src="/resources/main_camp.png"
                                 class="mh-main-camp"/>)
                         } else {
-                            html!(<img src="/resources/sub_camp.png"
+                            html!(<img alt="Sub camp" src="/resources/sub_camp.png"
                                 class="mh-sub-camp"/>)
                         }
                     } </div>)
@@ -275,7 +276,7 @@ fn gen_map(
                 };
                 let html_id = format!("mh-map-layer-{}", j);
                 html!(
-                    <img class={c} id={html_id.as_str()} src={format!("/resources/map{id:02}_{j}.png")}/>
+                    <img alt="Map" class={c} id={html_id.as_str()} src={format!("/resources/map{id:02}_{j}.png")}/>
                 )
             })}
             { map_icons }

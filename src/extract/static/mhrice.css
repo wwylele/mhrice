@@ -69,8 +69,10 @@ li.mh-list-quest {
     margin: 1rem
 }
 
-div.mh-monster-header img {
-    float: right;
+@media(min-width:700px) {
+    div.mh-monster-header img {
+        float: right;
+    }
 }
 
 div.mh-title-icon {

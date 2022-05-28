@@ -55,6 +55,7 @@ pub const LANGUAGE_MAP: [Option<(&str, &str)>; 32] = [
 pub fn head_common() -> Vec<Box<dyn MetadataContent<String>>> {
     vec![
         html!(<meta charset="UTF-8" />),
+        html!(<meta name="viewport" content="width=device-width, initial-scale=1" />),
         html!(<link rel="icon" type="image/png" href="/favicon.png" />),
         html!(<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css" />),
         html!(<link rel="stylesheet" href="/mhrice.css" />),
@@ -69,10 +70,10 @@ pub fn head_common() -> Vec<Box<dyn MetadataContent<String>>> {
 
 pub fn navbar() -> Box<div<String>> {
     html!(<div>
-        <nav class="navbar is-primary" role="navigation"> <div class="container">
+        <nav class="navbar is-primary"> <div class="container">
             <div class="navbar-brand">
                 <a class="navbar-item" href="/index.html">
-                    <img src="/favicon.png"/>
+                    <img alt="Logo" src="/favicon.png"/>
                     <div class="mh-logo-text">"MHRice "</div>
                     <i class="fas fa-search"/>
                 </a>
@@ -448,7 +449,7 @@ pub fn gen_monsters(
                         let sort_tag = format!("{},{}", monster.id << 16 | monster.sub_id, order);
                         Some(html!{<li class="mh-list-monster" data-sort=sort_tag>
                             <a href={format!("/monster/{:03}_{:02}.html", monster.id, monster.sub_id)}>
-                                <img class="mh-list-monster-icon" src=icon_path />
+                                <img alt="Monster icon" class="mh-list-monster-icon" src=icon_path />
                                 <div>{gen_multi_lang(name_entry)}</div>
                             </a>
                         </li>})
@@ -474,7 +475,7 @@ pub fn gen_monsters(
 
                         html!{<li class="mh-list-monster">
                             <a href={format!("/small-monster/{:03}_{:02}.html", monster.id, monster.sub_id)}>
-                                <img class="mh-list-monster-icon" src=icon_path />
+                                <img alt="Monster icon" class="mh-list-monster-icon" src=icon_path />
                                 <div>{ name }</div>
                             </a>
                         </li>}

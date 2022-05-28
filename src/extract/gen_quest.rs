@@ -73,7 +73,7 @@ pub fn gen_quest_list(quests: &[Quest], output: &impl Sink) -> Result<()> {
                                                     quest.param.quest_type.icon_index());
                                                 html!{<li>
                                                     <a href={link} class="mh-icon-text">
-                                                    <img src={img} class="mh-quest-icon"/>
+                                                    <img alt="Quest icon" src={img} class="mh-quest-icon"/>
                                                     {
                                                         quest.is_dl.then(
                                                             ||html!(<span class="tag">{text!("Event")}</span>)
@@ -137,14 +137,14 @@ pub fn gen_quest_monster_data(
 
             let small = (small_chance != 0).then(|| {
                 html!(<span class="tag">
-                    <img src="/resources/small_crown.png" />
+                    <img alt="Small crown" src="/resources/small_crown.png" />
                     {text!("{}%", small_chance)}
                 </span>)
             });
 
             let large = (large_chance != 0).then(|| {
                 html!(<span class="tag">
-                    <img src="/resources/king_crown.png" />
+                    <img alt="Large crown" src="/resources/king_crown.png" />
                     {text!("{}%", large_chance)}
                 </span>)
             });
@@ -417,7 +417,7 @@ fn gen_quest(
                 { navbar() }
                 <main> <div class="container"> <div class="content">
                 <div class="mh-title-icon">
-                    <img src={img} class="mh-quest-icon"/>
+                    <img alt="Quest icon" src={img} class="mh-quest-icon"/>
                 </div>
                 <h1 class="title">
                 <span class="tag">{text!("{:?}-{:?}", quest.param.enemy_level, quest.param.quest_level)}</span>

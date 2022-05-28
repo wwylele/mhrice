@@ -52,8 +52,8 @@ pub fn gen_monster_tag(
     html!(<div>
         <a href={format!("/{}/{:03}_{:02}.html",
             if is_large { "monster" } else { "small-monster" }, id & 0xFF, id >> 8)}>
-            <img class="mh-quest-list-monster-icon" src=icon_path />
-            <span  class="mh-quest-list-monster-name">
+            <img alt="Monster icon" class="mh-quest-list-monster-icon" src=icon_path />
+            <span class="mh-quest-list-monster-name">
                 {monster_name}
             </span>
         </a>
@@ -879,7 +879,7 @@ pub fn gen_monster(
                 { navbar() }
                 <main> <div class="container"> <div class="content">
                 <div class="mh-monster-header">
-                    <img src=icon />
+                    <img alt="Monster icon" src=icon />
                     <h1 class="title"> {
                         if let Some(monster_alias) = monster_alias {
                             gen_multi_lang(monster_alias)
@@ -916,7 +916,7 @@ pub fn gen_monster(
 
                 <section class="section">
                 <h2 class="title">"Hitzone data"</h2>
-                <img src=meat_figure />
+                <img alt="Monster hitzone diagram" src=meat_figure />
                 <div>
                     <input type="checkbox" onclick="onCheckDisplay(this, 'mh-invalid-meat', null)" id="mh-invalid-meat-check"/>
                     <label for="mh-invalid-meat-check">"Display invalid parts"</label>
@@ -1010,7 +1010,7 @@ pub fn gen_monster(
                 <h2 class="title">
                     "Parts"
                 </h2>
-                <img src=parts_group_figure />
+                <img alt="Monster parts diagram" src=parts_group_figure />
                 <div>
                     <input type="checkbox" onclick="onCheckDisplay(this, 'mh-invalid-part', null)" id="mh-invalid-part-check"/>
                     <label for="mh-invalid-part-check">"Display invalid parts"</label>
