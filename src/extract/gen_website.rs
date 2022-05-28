@@ -14,33 +14,32 @@ use crate::part_color::*;
 use crate::rsz::*;
 use anyhow::Result;
 use chrono::prelude::*;
-use std::convert::TryInto;
 use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text, types::*};
 
-const LANGUAGE_MAP: [Option<&str>; 32] = [
-    Some("Japanese"),
-    Some("English"),
-    Some("French"),
-    Some("Italian"),
-    Some("German"),
-    Some("Spanish"),
-    Some("Russian"),
-    Some("Polish"),
+pub const LANGUAGE_MAP: [Option<(&str, &str)>; 32] = [
+    Some(("Japanese", "ja")),
+    Some(("English", "en")),
+    Some(("French", "fr")),
+    Some(("Italian", "it")),
+    Some(("German", "de")),
+    Some(("Spanish", "es")),
+    Some(("Russian", "ru")),
+    Some(("Polish", "pl")),
     None,
     None,
-    Some("Portuguese"),
-    Some("Korean"),
-    Some("Traditional Chinese"),
-    Some("Simplified Chinese"),
-    None,
-    None,
-    None,
+    Some(("Portuguese", "pt")),
+    Some(("Korean", "ko")),
+    Some(("Traditional Chinese", "zh-TW")),
+    Some(("Simplified Chinese", "zh-CN")),
     None,
     None,
     None,
     None,
-    Some("Arabic"),
+    None,
+    None,
+    None,
+    Some(("Arabic", "ar")),
     None,
     None,
     None,
@@ -64,6 +63,7 @@ pub fn head_common() -> Vec<Box<dyn MetadataContent<String>>> {
         html!(<link rel="stylesheet" href="/resources/rarity_color.css" />),
         html!(<script src="https://kit.fontawesome.com/ceb13a2ba1.js" crossorigin="anonymous" />),
         html!(<script src="/mhrice.js" crossorigin="anonymous" />),
+        html!(<style id="mh-lang-style">".mh-lang:not(.lang-default) { display:none; }"</style>),
     ]
 }
 
@@ -159,11 +159,10 @@ pub fn navbar() -> Box<div<String>> {
                         </a>
                         <div class="navbar-dropdown">{
                             (0..32).filter_map(|i| {
-                                let language_name = LANGUAGE_MAP[i]?;
-                                let onclick = format!("selectLanguage({})", i);
-                                let class_string = format!("navbar-item mh-lang-menu-{}", i);
-                                let c: SpacedSet<Class> = class_string.as_str().try_into().unwrap();
-                                Some(html!{ <a class=c onclick=onclick> {
+                                let (language_name, language_code) = LANGUAGE_MAP[i]?;
+                                let onclick = format!("selectLanguage(\"{language_code}\")");
+                                let id_string = format!("mh-lang-menu-{language_code}");
+                                Some(html!{ <a class="navbar-item" id={id_string.as_str()} onclick=onclick> {
                                     text!("{}", language_name)
                                 }</a>: String})
                             })
@@ -371,19 +370,21 @@ pub fn translate_msg(content: &str) -> (Box<span<String>>, bool) {
 
 pub fn gen_multi_lang(msg: &MsgEntry) -> Box<span<String>> {
     html!(<span> {
-        (0..32).filter(|&i|LANGUAGE_MAP[i].is_some()).map(|i|{
-            let hidden = if i == 1 {
-                ""
+        (0..32).filter_map(|i|{
+            let class_string = if i == 1 {
+                "mh-lang lang-default"
             } else {
-                " mh-hidden"
+                "mh-lang"
             };
+            let (_, language_code) = LANGUAGE_MAP[i]?;
+            let language_code: LanguageTag = language_code.parse().unwrap();
             let (msg, warning) = translate_msg(&msg.content[i]);
             let warning = warning.then(||html!(<span class="icon has-text-warning">
                 <i class="fas fa-exclamation-triangle" title="There is a parsing error"/>
             </span>));
-            html! (<span class={format!("mh-lang-{}{}", i, hidden).as_str()}>
+            Some(html! (<span class={class_string} lang={language_code} >
                 {msg} {warning}
-            </span>)
+            </span>))
         })
     } </span>)
 }
@@ -607,9 +608,24 @@ pub fn gen_static(output: &impl Sink) -> Result<()> {
     output
         .create("mhrice.css")?
         .write_all(include_bytes!("static/mhrice.css"))?;
-    output
-        .create("mhrice.js")?
-        .write_all(include_bytes!("static/mhrice.js"))?;
+
+    let mut js = output.create("mhrice.js")?;
+
+    js.write_all(b"var supported_mh_lang = [")?;
+    let mut first = false;
+    for (_, code) in LANGUAGE_MAP.into_iter().flatten() {
+        if first {
+            js.write_all(b",")?;
+        }
+        js.write_all(b"\"")?;
+        js.write_all(code.as_bytes())?;
+        js.write_all(b"\"")?;
+        first = true;
+    }
+    js.write_all(b"];\n")?;
+
+    js.write_all(include_bytes!("static/mhrice.js"))?;
+
     output
         .create("favicon.png")?
         .write_all(include_bytes!("static/favicon.png"))?;

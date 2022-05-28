@@ -203,6 +203,8 @@ fn gen_otomo_equip(
             </table>
             </section>
 
+            // TODO: how to unlock one
+
             </div> </div> </main>
         </body>
 

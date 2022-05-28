@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::thread::{spawn, JoinHandle};
 
+use super::gen_website::LANGUAGE_MAP;
 use crate::msg::MsgEntry;
 
 #[derive(Serialize, Clone)]
@@ -56,7 +57,12 @@ impl Toc {
         }
 
         for (i, toc) in toc_by_language.into_iter().enumerate() {
-            serde_json::to_writer(sink.create(&format!("{}.json", i))?, &toc)?;
+            let language_code = if let Some(&Some((_, code))) = LANGUAGE_MAP.get(i) {
+                code
+            } else {
+                continue;
+            };
+            serde_json::to_writer(sink.create(&format!("{language_code}.json"))?, &toc)?;
         }
 
         Ok(())
