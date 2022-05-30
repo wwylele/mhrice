@@ -89,6 +89,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.MonsterLotTableUserData",
+        path = "data/System/RewardSystem/LotTable/MonsterLotTableData.user",
         0xdda16506 = 0
     )]
     #[derive(Debug, Serialize)]
@@ -200,6 +201,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.PartsTypeTextUserData",
+    path = "data/Define/Quest/System/QuestRewardSystem/PartsTypeTextData.user",
         0x03a010a7 = 0
     )]
     #[derive(Debug, Serialize)]

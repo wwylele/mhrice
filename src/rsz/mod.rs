@@ -377,6 +377,12 @@ pub trait FromRsz: Sized {
     }
 }
 
+pub trait SingletonUser: Sized {
+    const PATH: &'static str;
+    type RszType: 'static;
+    fn from_rsz(value: Self::RszType) -> Self;
+}
+
 trait FieldFromRsz: Sized {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self>;
 }

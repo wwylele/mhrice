@@ -46,6 +46,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.AlchemyPatturnUserData",
+        path = "data/Define/Lobby/Facility/Alchemy/AlchemyPatturnData.user",
         0xcc163e12 = 0
     )]
     #[derive(Debug, Serialize)]
@@ -85,6 +86,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.AlchemyPlSkillTableUserData",
+        path = "data/Define/Lobby/Facility/Alchemy/AlchemyPlSkillTable.user",
         0x251e564f = 0
     )]
     #[derive(Debug, Serialize)]
@@ -106,6 +108,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.alchemy.GradeWorthTableUserData",
+        path = "data/Define/Lobby/Facility/Alchemy/GradeWorthTable.user",
         0x8f3edc1d = 0
     )]
     #[derive(Debug, Serialize)]
@@ -127,6 +130,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.alchemy.RareTypeTableUserData",
+        path = "data/Define/Lobby/Facility/Alchemy/RareTypeTable.user",
         0x3a39f3cd = 0
     )]
     #[derive(Debug, Serialize)]
@@ -148,6 +152,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.alchemy.SecondSkillLotRateTableUserData",
+    path = "data/Define/Lobby/Facility/Alchemy/SecondSkillLotRateTable.user",
         0x2b059c58 = 0
     )]
     #[derive(Debug, Serialize)]
@@ -171,6 +176,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.alchemy.SkillGradeLotRateTableUserData",
+        path = "data/Define/Lobby/Facility/Alchemy/SkillGradeLotRateTable.user",
         0x05992de0 = 0
     )]
     #[derive(Debug, Serialize)]
@@ -220,6 +226,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.alchemy.SlotNumTableUserData",
+        path = "data/Define/Lobby/Facility/Alchemy/SlotNumTable.user",
         0x4a3cbaa7 = 0
     )]
     #[derive(Debug, Serialize)]
@@ -240,6 +247,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.alchemy.SlotWorthTableUserData",
+        path = "data/Define/Lobby/Facility/Alchemy/SlotWorthTable.user",
         0xe2f54f75 = 0
     )]
     #[derive(Debug, Serialize)]

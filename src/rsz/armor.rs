@@ -84,6 +84,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.ArmorBaseUserData",
+        path = "data/Define/Player/Armor/ArmorBaseData.user",
         0x2b3920a5 = 0
     )]
     #[derive(Debug, Serialize)]
@@ -119,6 +120,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.ArmorSeriesUserData",
+        path = "data/Define/Player/Armor/ArmorSeriesData.user",
         0x45342000 = 0
     )]
     #[derive(Debug, Serialize)]
@@ -148,6 +150,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.ArmorProductUserData",
+        path = "data/Define/Player/Armor/ArmorProductData.user",
         0x0b84dd13 = 0
     )]
     #[derive(Debug, Serialize)]
@@ -191,6 +194,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.equip.PlOverwearBaseUserData",
+        path = "data/Define/Player/Armor/PlOverwearBaseData.user",
         0x495e0b7a = 0
     )]
     #[derive(Debug, Serialize)]
@@ -220,6 +224,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.equip.PlOverwearProductUserData",
+    path = "data/Define/Player/Armor/PlOverwearProductUserData.user",
         0x3d82ca7b = 0
     )]
     #[derive(Debug, Serialize)]

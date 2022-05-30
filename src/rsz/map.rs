@@ -371,6 +371,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.ItemPopLotTableUserData",
+        path = "data/Define/Stage/ItemPop/ItemPopLotTableData.user",
         0x4aa4200a = 0
     )]
     #[derive(Debug, Serialize)]
@@ -687,4 +688,3 @@ rsz_struct! {
         pub spawn_group_list_info_high: Vec<FishSpawnGroupInfo>,
     }
 }
-

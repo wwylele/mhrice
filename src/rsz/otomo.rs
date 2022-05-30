@@ -2,6 +2,7 @@ use super::item::*;
 use super::*;
 use crate::rsz_enum;
 use crate::rsz_struct;
+use crate::rsz_with_singleton;
 use serde::*;
 
 // snow.data.DataDef.OtArmorId
@@ -78,6 +79,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.OtAirouArmorBaseUserData",
+        path = "data/Define/Otomo/Equip/Armor/OtAirouArmorBaseData.user",
         0x63942732 = 0,
     )]
     #[derive(Debug, Serialize)]
@@ -99,6 +101,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.OtDogArmorBaseUserData",
+        path = "data/Define/Otomo/Equip/Armor/OtDogArmorBaseData.user",
         0xc1c7f588 = 0,
     )]
     #[derive(Debug, Serialize)]
@@ -127,6 +130,14 @@ rsz_struct! {
     pub struct OtArmorProductUserData {
         pub param: Vec<OtArmorProductUserDataParam>
     }
+}
+
+rsz_with_singleton! {
+    #[path("data/Define/Otomo/Equip/Armor/OtAirouArmorProductData.user")]
+    pub struct OtAirouArmorProductUserData(OtArmorProductUserData);
+
+    #[path("data/Define/Otomo/Equip/Armor/OtDogArmorProductData.user")]
+    pub struct OtDogArmorProductUserData(OtArmorProductUserData);
 }
 
 // snow.data.DataDef.OtWeaponId
@@ -160,6 +171,14 @@ rsz_struct! {
     pub struct OtWeaponProductUserData {
         pub param: Vec<OtWeaponProductUserDataParam>
     }
+}
+
+rsz_with_singleton! {
+    #[path("data/Define/Otomo/Equip/Weapon/OtAirouWeaponProductData.user")]
+    pub struct OtAirouWeaponProductUserData(OtWeaponProductUserData);
+
+    #[path("data/Define/Otomo/Equip/Weapon/OtDogWeaponProductData.user")]
+    pub struct OtDogWeaponProductUserData(OtWeaponProductUserData);
 }
 
 // snow.data.OtWeaponData.AtkTypes
@@ -216,6 +235,14 @@ rsz_struct! {
     }
 }
 
+rsz_with_singleton! {
+    #[path("data/Define/Otomo/Equip/Weapon/OtAirouWeaponBaseData.user")]
+    pub struct OtAirouWeaponBaseUserData(OtWeaponBaseUserData);
+
+    #[path("data/Define/Otomo/Equip/Weapon/OtDogWeaponBaseData.user")]
+    pub struct OtDogWeaponBaseUserData(OtWeaponBaseUserData);
+}
+
 // snow.data.OtEquipSeriesData.RankTypes
 rsz_enum! {
     #[rsz(i32)]
@@ -259,6 +286,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.OtEquipSeriesUserData",
+        path = "data/Define/Otomo/Equip/OtEquipSeriesData.user",
         0x6b5a7cf = 0,
     )]
     #[derive(Debug, Serialize)]

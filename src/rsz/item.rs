@@ -137,6 +137,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.ItemUserData",
+        path = "data/System/ContentsIdSystem/Item/Normal/ItemData.user",
         0x66200423 = 0
     )]
     #[derive(Debug, Serialize)]

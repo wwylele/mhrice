@@ -847,6 +847,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.HyakuryuWeaponHyakuryuBuildupUserData",
+        path = "data/Define/Player/Weapon/HyakuryuWeaponHyakuryuBuildupData.user",
         0x2ef478cd = 0
     )]
     #[derive(Debug, Serialize)]

@@ -244,6 +244,10 @@ fn get_user<T: 'static>(pak: &mut PakReader<impl Read + Seek>, path: &str) -> Re
         .with_context(|| path.to_string())
 }
 
+fn get_singleton<T: 'static + SingletonUser>(pak: &mut PakReader<impl Read + Seek>) -> Result<T> {
+    Ok(T::from_rsz(get_user(pak, T::PATH)?))
+}
+
 fn get_weapon_list<BaseData: 'static>(
     pak: &mut PakReader<impl Read + Seek>,
     weapon_class: &str,
@@ -348,63 +352,17 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let monster_aliases = get_msg(pak, "Message/Tag/Tag_EM_Name_Alias.msg")?;
     let monster_explains = get_msg(pak, "Message/HunterNote/HN_MonsterListMsg.msg")?;
 
-    let condition_preset: EnemyConditionPresetData = get_user(
-        pak,
-        "enemy/user_data/system_condition_damage_preset_data.user",
-    )?;
+    let condition_preset: EnemyConditionPresetData = get_singleton(pak)?;
     condition_preset.verify()?;
 
-    let monster_list = get_user(
-        pak,
-        "data/Define/Common/HunterNote/MonsterListBossData.user",
-    )?;
     let hunter_note_msg = get_msg(pak, "Message/HunterNote/HN_Hunternote_Menu.msg")?;
 
-    let monster_lot = get_user(
-        pak,
-        "data/System/RewardSystem/LotTable/MonsterLotTableData.user",
-    )?;
-    let parts_type = get_user(
-        pak,
-        "data/Define/Quest/System/QuestRewardSystem/PartsTypeTextData.user",
-    )?;
-
-    let normal_quest_data = get_user(pak, "Quest/QuestData/NormalQuestData.user")?;
-    let normal_quest_data_for_enemy =
-        get_user(pak, "Quest/QuestData/NormalQuestDataForEnemy.user")?;
-    let dl_quest_data = get_user(pak, "Quest/QuestData/DlQuestData.user")?;
-    let dl_quest_data_for_enemy = get_user(pak, "Quest/QuestData/DlQuestDataForEnemy.user")?;
-    let difficulty_rate = get_user(pak, "enemy/user_data/system_difficulty_rate_data.user")?;
-    let random_scale = get_user(pak, "enemy/user_data/system_boss_random_scale_data.user")?;
-    let size_list = get_user(pak, "enemy/user_data/system_enemy_sizelist_data.user")?;
-    let discover_em_set_data = get_user(pak, "Quest/QuestData/DiscoverEmSetData.user")?;
-    let quest_data_for_reward = get_user(
-        pak,
-        "data/Define/Quest/System/QuestRewardSystem/QuestDataForRewardData.user",
-    )?;
-    let reward_id_lot_table = get_user(
-        pak,
-        "data/Define/Quest/System/QuestRewardSystem/RewardIdLotTableData.user",
-    )?;
-    let main_target_reward_lot_num = get_user(
-        pak,
-        "data/Define/Quest/System/QuestRewardSystem/MainTargetLotNumDefineData.user",
-    )?;
-    let fixed_hyakuryu_quest = get_user(pak, "Quest/Hyakuryu/QuestData/FixHyakuryuQuestData.user")?;
     let quest_hall_msg = get_msg(pak, "Message/Quest/QuestData_Hall.msg")?;
     let quest_village_msg = get_msg(pak, "Message/Quest/QuestData_Village.msg")?;
     let quest_tutorial_msg = get_msg(pak, "Message/Quest/QuestData_Tutorial.msg")?;
     let quest_arena_msg = get_msg(pak, "Message/Quest/QuestData_Arena.msg")?;
     let quest_dlc_msg = get_msg(pak, "Message/Quest/QuestData_Dlc.msg")?;
 
-    let armor = get_user(pak, "data/Define/Player/Armor/ArmorBaseData.user")?;
-    let armor_series = get_user(pak, "data/Define/Player/Armor/ArmorSeriesData.user")?;
-    let armor_product = get_user(pak, "data/Define/Player/Armor/ArmorProductData.user")?;
-    let overwear = get_user(pak, "data/Define/Player/Armor/PlOverwearBaseData.user")?;
-    let overwear_product = get_user(
-        pak,
-        "data/Define/Player/Armor/PlOverwearProductUserData.user",
-    )?;
     let armor_head_name_msg = get_msg(pak, "data/Define/Player/Armor/Head/A_Head_Name.msg")?;
     let armor_chest_name_msg = get_msg(pak, "data/Define/Player/Armor/Chest/A_Chest_Name.msg")?;
     let armor_arm_name_msg = get_msg(pak, "data/Define/Player/Armor/Arm/A_Arm_Name.msg")?;
@@ -420,10 +378,6 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let armor_series_name_msg =
         get_msg(pak, "data/Define/Player/Armor/ArmorSeries_Hunter_Name.msg")?;
 
-    let equip_skill = get_user(
-        pak,
-        "data/Define/Player/Skill/PlEquipSkill/PlEquipSkillBaseData.user",
-    )?;
     let player_skill_detail_msg = get_msg(
         pak,
         "data/Define/Player/Skill/PlEquipSkill/PlayerSkill_Detail.msg",
@@ -437,14 +391,6 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         "data/Define/Player/Skill/PlEquipSkill/PlayerSkill_Name.msg",
     )?;
 
-    let hyakuryu_skill = get_user(
-        pak,
-        "data/Define/Player/Skill/PlHyakuryuSkill/PlHyakuryuSkillBaseData.user",
-    )?;
-    let hyakuryu_skill_recipe = get_user(
-        pak,
-        "data/Define/Player/Skill/PlHyakuryuSkill/HyakuryuSkillRecipeData.user",
-    )?;
     let hyakuryu_skill_name_msg = get_msg(
         pak,
         "data/Define/Player/Skill/PlHyakuryuSkill/HyakuryuSkill_Name.msg",
@@ -454,52 +400,11 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         "data/Define/Player/Skill/PlHyakuryuSkill/HyakuryuSkill_Explain.msg",
     )?;
 
-    let decorations = get_user(
-        pak,
-        "data/Define/Player/Equip/Decorations/DecorationsBaseData.user",
-    )?;
-
-    let decorations_product = get_user(
-        pak,
-        "data/Define/Player/Equip/Decorations/DecorationsProductData.user",
-    )?;
-
     let decorations_name_msg = get_msg(
         pak,
         "data/Define/Player/Equip/Decorations/Decorations_Name.msg",
     )?;
 
-    let alchemy_pattern = get_user(
-        pak,
-        "data/Define/Lobby/Facility/Alchemy/AlchemyPatturnData.user",
-    )?;
-    let alchemy_pl_skill = get_user(
-        pak,
-        "data/Define/Lobby/Facility/Alchemy/AlchemyPlSkillTable.user",
-    )?;
-    let alchemy_grade_worth = get_user(
-        pak,
-        "data/Define/Lobby/Facility/Alchemy/GradeWorthTable.user",
-    )?;
-    let alchemy_rare_type = get_user(pak, "data/Define/Lobby/Facility/Alchemy/RareTypeTable.user")?;
-    let alchemy_second_skill_lot = get_user(
-        pak,
-        "data/Define/Lobby/Facility/Alchemy/SecondSkillLotRateTable.user",
-    )?;
-    let alchemy_skill_grade_lot = get_user(
-        pak,
-        "data/Define/Lobby/Facility/Alchemy/SkillGradeLotRateTable.user",
-    )?;
-    let alchemy_slot_num = get_user(pak, "data/Define/Lobby/Facility/Alchemy/SlotNumTable.user")?;
-    let alchemy_slot_worth = get_user(
-        pak,
-        "data/Define/Lobby/Facility/Alchemy/SlotWorthTable.user",
-    )?;
-
-    let items = get_user(
-        pak,
-        "data/System/ContentsIdSystem/Item/Normal/ItemData.user",
-    )?;
     let items_name_msg = get_msg(pak, "data/System/ContentsIdSystem/Item/Normal/ItemName.msg")?;
     let items_explain_msg = get_msg(
         pak,
@@ -526,45 +431,9 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let bow = get_weapon_list(pak, "Bow")?;
 
     let horn_melody = get_msg(pak, "data/Define/Player/Weapon/Horn/Horn_UniqueParam.msg")?;
-    let hyakuryu_weapon_buildup = get_user(
-        pak,
-        "data/Define/Player/Weapon/HyakuryuWeaponHyakuryuBuildupData.user",
-    )?;
 
     let maps = prepare_maps(pak)?;
     let map_name = get_msg(pak, "Message/Common_Msg/Stage_Name.msg")?;
-    let item_pop_lot = get_user(pak, "data/Define/Stage/ItemPop/ItemPopLotTableData.user")?;
-
-    let airou_armor = get_user(
-        pak,
-        "data/Define/Otomo/Equip/Armor/OtAirouArmorBaseData.user",
-    )?;
-    let airou_armor_product = get_user(
-        pak,
-        "data/Define/Otomo/Equip/Armor/OtAirouArmorProductData.user",
-    )?;
-    let dog_armor = get_user(pak, "data/Define/Otomo/Equip/Armor/OtDogArmorBaseData.user")?;
-    let dog_armor_product = get_user(
-        pak,
-        "data/Define/Otomo/Equip/Armor/OtDogArmorProductData.user",
-    )?;
-    let airou_weapon = get_user(
-        pak,
-        "data/Define/Otomo/Equip/Weapon/OtAirouWeaponBaseData.user",
-    )?;
-    let airou_weapon_product = get_user(
-        pak,
-        "data/Define/Otomo/Equip/Weapon/OtAirouWeaponProductData.user",
-    )?;
-    let dog_weapon = get_user(
-        pak,
-        "data/Define/Otomo/Equip/Weapon/OtDogWeaponBaseData.user",
-    )?;
-    let dog_weapon_product = get_user(
-        pak,
-        "data/Define/Otomo/Equip/Weapon/OtDogWeaponProductData.user",
-    )?;
-    let ot_equip_series = get_user(pak, "data/Define/Otomo/Equip/OtEquipSeriesData.user")?;
 
     let airou_armor_head_name = get_msg(
         pak,
@@ -624,32 +493,32 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         monster_aliases,
         monster_explains,
         condition_preset,
-        monster_list,
+        monster_list: get_singleton(pak)?,
         hunter_note_msg,
-        monster_lot,
-        parts_type,
-        normal_quest_data,
-        normal_quest_data_for_enemy,
-        dl_quest_data,
-        dl_quest_data_for_enemy,
-        difficulty_rate,
-        random_scale,
-        size_list,
-        discover_em_set_data,
-        quest_data_for_reward,
-        reward_id_lot_table,
-        main_target_reward_lot_num,
-        fixed_hyakuryu_quest,
+        monster_lot: get_singleton(pak)?,
+        parts_type: get_singleton(pak)?,
+        normal_quest_data: get_singleton(pak)?,
+        normal_quest_data_for_enemy: get_singleton(pak)?,
+        dl_quest_data: get_singleton(pak)?,
+        dl_quest_data_for_enemy: get_singleton(pak)?,
+        difficulty_rate: get_singleton(pak)?,
+        random_scale: get_singleton(pak)?,
+        size_list: get_singleton(pak)?,
+        discover_em_set_data: get_singleton(pak)?,
+        quest_data_for_reward: get_singleton(pak)?,
+        reward_id_lot_table: get_singleton(pak)?,
+        main_target_reward_lot_num: get_singleton(pak)?,
+        fixed_hyakuryu_quest: get_singleton(pak)?,
         quest_hall_msg,
         quest_village_msg,
         quest_tutorial_msg,
         quest_arena_msg,
         quest_dlc_msg,
-        armor,
-        armor_series,
-        armor_product,
-        overwear,
-        overwear_product,
+        armor: get_singleton(pak)?,
+        armor_series: get_singleton(pak)?,
+        armor_product: get_singleton(pak)?,
+        overwear: get_singleton(pak)?,
+        overwear_product: get_singleton(pak)?,
         armor_head_name_msg,
         armor_chest_name_msg,
         armor_arm_name_msg,
@@ -661,26 +530,26 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         armor_waist_explain_msg,
         armor_leg_explain_msg,
         armor_series_name_msg,
-        equip_skill,
+        equip_skill: get_singleton(pak)?,
         player_skill_detail_msg,
         player_skill_explain_msg,
         player_skill_name_msg,
-        hyakuryu_skill,
-        hyakuryu_skill_recipe,
+        hyakuryu_skill: get_singleton(pak)?,
+        hyakuryu_skill_recipe: get_singleton(pak)?,
         hyakuryu_skill_name_msg,
         hyakuryu_skill_explain_msg,
-        decorations,
-        decorations_product,
+        decorations: get_singleton(pak)?,
+        decorations_product: get_singleton(pak)?,
         decorations_name_msg,
-        alchemy_pattern,
-        alchemy_pl_skill,
-        alchemy_grade_worth,
-        alchemy_rare_type,
-        alchemy_second_skill_lot,
-        alchemy_skill_grade_lot,
-        alchemy_slot_num,
-        alchemy_slot_worth,
-        items,
+        alchemy_pattern: get_singleton(pak)?,
+        alchemy_pl_skill: get_singleton(pak)?,
+        alchemy_grade_worth: get_singleton(pak)?,
+        alchemy_rare_type: get_singleton(pak)?,
+        alchemy_second_skill_lot: get_singleton(pak)?,
+        alchemy_skill_grade_lot: get_singleton(pak)?,
+        alchemy_slot_num: get_singleton(pak)?,
+        alchemy_slot_worth: get_singleton(pak)?,
+        items: get_singleton(pak)?,
         items_name_msg,
         items_explain_msg,
         material_category_msg,
@@ -699,19 +568,19 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         heavy_bowgun,
         bow,
         horn_melody,
-        hyakuryu_weapon_buildup,
+        hyakuryu_weapon_buildup: get_singleton(pak)?,
         maps,
         map_name,
-        item_pop_lot,
-        airou_armor,
-        airou_armor_product,
-        dog_armor,
-        dog_armor_product,
-        airou_weapon,
-        airou_weapon_product,
-        dog_weapon,
-        dog_weapon_product,
-        ot_equip_series,
+        item_pop_lot: get_singleton(pak)?,
+        airou_armor: get_singleton(pak)?,
+        airou_armor_product: get_singleton(pak)?,
+        dog_armor: get_singleton(pak)?,
+        dog_armor_product: get_singleton(pak)?,
+        airou_weapon: get_singleton(pak)?,
+        airou_weapon_product: get_singleton(pak)?,
+        dog_weapon: get_singleton(pak)?,
+        dog_weapon_product: get_singleton(pak)?,
+        ot_equip_series: get_singleton(pak)?,
         airou_armor_head_name,
         airou_armor_head_explain,
         airou_armor_chest_name,

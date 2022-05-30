@@ -15,7 +15,8 @@ macro_rules! rsz_inner {
 
 #[macro_export]
 macro_rules! rsz_inner_trait {
-    (rsz($symbol:literal $(,$vhash:literal=$version:literal)*), $struct_name:ident, $($field_name:ident : $field_type:ty,)*) => {
+    (rsz($symbol:literal $(,path=$singleton:literal)? $(,$vhash:literal=$version:literal)*),
+        $struct_name:ident, $($field_name:ident : $field_type:ty,)*) => {
         impl crate::rsz::FromRsz for $struct_name {
             const SYMBOL: &'static str = $symbol;
             const VERSIONS: &'static [(u32, u32)] = &[$(($vhash, $version)),*];
@@ -24,6 +25,14 @@ macro_rules! rsz_inner_trait {
                 crate::rsz_inner!(rsz, $($field_name : $field_type,)*)
             }
         }
+
+        $(impl crate::rsz::SingletonUser for $struct_name {
+            const PATH: &'static str = $singleton;
+            type RszType = Self;
+            fn from_rsz(value: Self::RszType) -> Self {
+                value
+            }
+        })?
     };
 
     (rsz(), $struct_name:ident, $($field_name:ident : $field_type:ty,)*) => {
@@ -38,8 +47,7 @@ macro_rules! rsz_inner_trait {
 #[macro_export]
 macro_rules! rsz_struct {
     (
-        #[rsz($($symbol:literal $(,$vhash:literal=$version:literal)* $(,)?)?)]
-        $(#[rsz_version($a:literal, $b:literal)])*
+        #[rsz($($symbol:literal $(,path=$singleton:literal)? $(,$vhash:literal=$version:literal)* $(,)?)?)]
         $(#[$outer_meta:meta])*
         $outer_vis:vis struct $struct_name:ident {
             $(
@@ -56,7 +64,8 @@ macro_rules! rsz_struct {
             )*
         }
 
-        crate::rsz_inner_trait!(rsz($($symbol $(,$vhash=$version)*)?), $struct_name, $($field_name : $field_type,)*);
+        crate::rsz_inner_trait!(rsz($($symbol $(,path=$singleton)? $(,$vhash=$version)*)?),
+            $struct_name, $($field_name : $field_type,)*);
     };
 }
 
@@ -188,6 +197,39 @@ macro_rules! rsz_newtype {
             }
         }
     )
+}
+
+#[macro_export]
+macro_rules! rsz_with_singleton {
+    (
+        $(
+            #[path($path:literal)]$
+            outer_vis:vis struct $name:ident($t:ty);
+        )*
+    ) => {
+        $(
+            #[derive(Serialize, Debug)]
+            pub struct $name {
+                #[serde(flatten)]
+                inner: $t,
+            }
+
+            impl Deref for $name {
+                type Target = $t;
+
+                fn deref(&self) -> &Self::Target {
+                    &self.inner
+                }
+            }
+            impl crate::rsz::SingletonUser for $name {
+                const PATH: &'static str = $path;
+                type RszType = $t;
+                fn from_rsz(value: Self::RszType) -> Self {
+                    Self {inner: value}
+                }
+            }
+        )*
+    };
 }
 
 impl FieldFromRsz for bool {
@@ -464,66 +506,3 @@ impl FieldFromRsz for Mat4x4 {
         Ok(v)
     }
 }
-
-/*rsz_struct! {
-    #[rsz()]
-    #[derive(Debug, Serialize, Clone)]
-    pub struct ViaVec2 {
-        #[serde(skip)]
-        begin_align: Aligner<16>,
-        x: f32,
-        y: f32,
-        #[serde(skip)]
-        endn_align: Aligner<16>,
-    }
-}
-
-rsz_struct! {
-    #[rsz()]
-    #[derive(Debug, Serialize, Clone)]
-    pub struct ViaVec3 {
-        #[serde(skip)]
-        pub begin_align: Aligner<16>,
-        pub x: f32,
-        pub y: f32,
-        pub z: f32,
-        pub _w: f32,
-    }
-}
-
-rsz_struct! {
-    #[rsz()]
-    #[derive(Debug, Serialize, Clone)]
-    pub struct ViaVec4 {
-        #[serde(skip)]
-        pub begin_align: Aligner<16>,
-        pub x: f32,
-        pub y: f32,
-        pub z: f32,
-        pub w: f32,
-    }
-}
-
-rsz_struct! {
-    #[rsz()]
-    #[derive(Debug, Serialize, Clone)]
-    pub struct ViaMat4 {
-        pub a: ViaVec4,
-        pub b: ViaVec4,
-        pub c: ViaVec4,
-        pub d: ViaVec4
-    }
-}
-
-rsz_struct! {
-    #[rsz()]
-    #[derive(Debug, Serialize, Clone)]
-    pub struct ViaQuaternion {
-        #[serde(skip)]
-        pub begin_align: Aligner<16>,
-        pub x: f32,
-        pub y: f32,
-        pub z: f32,
-        pub w: f32,
-    }
-}*/

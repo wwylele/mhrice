@@ -29,6 +29,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.PlEquipSkillBaseUserData",
+        path = "data/Define/Player/Skill/PlEquipSkill/PlEquipSkillBaseData.user",
         0x576909aa = 0
     )]
     #[derive(Debug, Serialize)]
@@ -317,6 +318,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.PlHyakuryuSkillBaseUserData",
+        path = "data/Define/Player/Skill/PlHyakuryuSkill/PlHyakuryuSkillBaseData.user",
         0xaa891f5b = 0
     )]
     #[derive(Debug, Serialize)]
@@ -341,6 +343,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.PlHyakuryuSkillRecipeUserData",
+        path = "data/Define/Player/Skill/PlHyakuryuSkill/HyakuryuSkillRecipeData.user",
         0x57557b64 = 0
     )]
     #[derive(Debug, Serialize)]
@@ -378,6 +381,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.DecorationsBaseUserData",
+        path = "data/Define/Player/Equip/Decorations/DecorationsBaseData.user",
         0x7a6f3daa = 0
     )]
     #[derive(Debug, Serialize)]
@@ -403,6 +407,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.DecorationsProductUserData",
+        path = "data/Define/Player/Equip/Decorations/DecorationsProductData.user",
         0x320514c0 = 0
     )]
     #[derive(Debug, Serialize)]

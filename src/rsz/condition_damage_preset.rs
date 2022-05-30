@@ -213,6 +213,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionPresetData",
+        path = "enemy/user_data/system_condition_damage_preset_data.user",
         0xe6f93283 = 0
     )]
     #[derive(Debug, Serialize)]

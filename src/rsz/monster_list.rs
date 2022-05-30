@@ -43,6 +43,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.monsterList.MonsterListBossData",
+        path = "data/Define/Common/HunterNote/MonsterListBossData.user",
         0x4a9edb4f = 0
     )]
     #[derive(Debug, Serialize)]

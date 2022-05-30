@@ -2,6 +2,7 @@ use super::*;
 use crate::rsz_bitflags;
 use crate::rsz_enum;
 use crate::rsz_struct;
+use crate::rsz_with_singleton;
 use serde::*;
 use std::cmp::*;
 
@@ -340,6 +341,14 @@ rsz_struct! {
     }
 }
 
+rsz_with_singleton! {
+    #[path("Quest/QuestData/NormalQuestData.user")]
+    pub struct BaseNormalQuestData(NormalQuestData);
+
+    #[path("Quest/QuestData/DlQuestData.user")]
+    pub struct DlNormalQuestData(NormalQuestData);
+}
+
 /*rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize, Clone, Copy)]
@@ -426,8 +435,17 @@ rsz_struct! {
     }
 }
 
+rsz_with_singleton! {
+    #[path("Quest/QuestData/NormalQuestDataForEnemy.user")]
+    pub struct BaseNormalQuestDataForEnemy(NormalQuestDataForEnemy);
+
+    #[path("Quest/QuestData/DlQuestDataForEnemy.user")]
+    pub struct DlNormalQuestDataForEnemy(NormalQuestDataForEnemy);
+}
+
 rsz_struct! {
     #[rsz("snow.quest.NormalQuestDataForEnemy",
+        path = "Quest/QuestData/NormalQuestDataForEnemy.user",
         0xd1f4bc61 = 0
     )]
     #[derive(Debug, Serialize)]
@@ -505,6 +523,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.enemy.SystemDifficultyRateData",
+        path = "enemy/user_data/system_difficulty_rate_data.user",
         0xed679ca7 = 0
     )]
     #[derive(Debug, Serialize)]
@@ -541,6 +560,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyBossRandomScaleData",
+        path = "enemy/user_data/system_boss_random_scale_data.user",
         0xc45db706 = 0
     )]
     #[derive(Debug, Serialize)]
@@ -566,6 +586,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.enemy.SystemEnemySizeListData",
+        path = "enemy/user_data/system_enemy_sizelist_data.user",
         0xab121e9c = 0
     )]
     #[derive(Debug, Serialize)]
@@ -591,6 +612,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.DiscoverEmSetData",
+        path = "Quest/QuestData/DiscoverEmSetData.user",
         0x250dcb35 = 0
     )]
     #[derive(Debug, Serialize)]
@@ -613,6 +635,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.MainTargetRewardLotNumDefineUserData",
+        path = "data/Define/Quest/System/QuestRewardSystem/MainTargetLotNumDefineData.user",
         0x360c1a50 = 0
     )]
     #[derive(Debug, Serialize)]
@@ -639,6 +662,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.QuestDataForRewardUserData",
+        path = "data/Define/Quest/System/QuestRewardSystem/QuestDataForRewardData.user",
         0x424e2f4b = 0
     )]
     #[derive(Debug, Serialize)]
@@ -676,6 +700,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.RewardIdLotTableUserData",
+        path = "data/Define/Quest/System/QuestRewardSystem/RewardIdLotTableData.user",
         0xdb631ed5 = 0
     )]
     #[derive(Debug, Serialize)]
@@ -747,6 +772,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.HyakuryuQuestDataTbl",
+        path = "Quest/Hyakuryu/QuestData/FixHyakuryuQuestData.user",
         0x9b163063 = 0,
         0xB0022BC2 = 2,
     )]
