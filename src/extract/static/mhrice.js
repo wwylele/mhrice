@@ -284,6 +284,34 @@ function changeMapFilter(filter) {
     }
 }
 
+var cur_item_filter = "all";
+
+function changeItemFilter(filter) {
+    let style = document.getElementById("mh-item-list-style");
+    if (style) {
+        if (filter == "all") {
+            style.innerHTML = "";
+        } else {
+            style.innerHTML =
+                ".mh-item-filter-item:not([data-filter=\""
+                + filter + "\"]) { display:none; }";
+        }
+    }
+
+    const filter_button_prefix = "mh-item-filter-button-";
+    let prev = document.getElementById(filter_button_prefix + cur_map_filter);
+    if (prev !== null) {
+        prev.classList.remove("is-primary")
+    }
+
+    cur_map_filter = filter;
+
+    let cur = document.getElementById(filter_button_prefix + cur_map_filter);
+    if (cur !== null) {
+        cur.classList.add("is-primary")
+    }
+}
+
 function doSearch() {
     let text = document.getElementById("mh-search").value.trim();
     if (text.length === 0) {

@@ -12,6 +12,8 @@ use super::prepare_map::MapPopKind;
 use super::sink::*;
 use crate::rsz::*;
 use anyhow::Result;
+use once_cell::sync::Lazy;
+use std::collections::BTreeMap;
 use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
 
@@ -508,6 +510,23 @@ fn gen_item_source_map(
     }
 }
 
+static ITEM_TYPES: Lazy<BTreeMap<ItemTypes, (&'static str, &'static str)>> = Lazy::new(|| {
+    BTreeMap::from_iter([
+        (ItemTypes::Consume, ("consume", "Consumable")),
+        (ItemTypes::Tool, ("tool", "Tool")),
+        (ItemTypes::Material, ("material", "Material")),
+        (ItemTypes::OffcutsMaterial, ("offcuts", "Scrap")),
+        (ItemTypes::Bullet, ("bullet", "Ammo")),
+        (ItemTypes::Bottle, ("bottle", "Bottle")),
+        (ItemTypes::Present, ("present", "Present")),
+        (ItemTypes::PayOff, ("payoff", "Account")),
+        (ItemTypes::CarryPayOff, ("carrypayoff", "Carrying Account")),
+        (ItemTypes::Carry, ("carry", "Carrying")),
+        (ItemTypes::Judge, ("judge", "Judge")),
+        (ItemTypes::Antique, ("antique", "Antique")),
+    ])
+});
+
 pub fn gen_item(
     item: &Item,
     pedia: &Pedia,
@@ -624,11 +643,24 @@ pub fn gen_item_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
             <head>
                 <title>{text!("Items - MHRice")}</title>
                 { head_common() }
+                <style id="mh-item-list-style">""</style>
             </head>
             <body>
                 { navbar() }
                 <main> <div class="container">
                 <h1 class="title">"Item"</h1>
+                <div>
+                    <button id="mh-item-filter-button-all" class="button is-primary" data-mh-item-filter="all"
+                        onclick="changeItemFilter('all');">"All items"</button>
+                    {
+                        ITEM_TYPES.iter().map(|(_, (symbol, name))| {
+                            let id = format!("mh-item-filter-button-{symbol}");
+                            let onclick = format!("changeItemFilter('{symbol}');");
+                            html!(<button id={id.as_str()} class="button"
+                                onclick={onclick}>{text!("{}", name)}</button>:String)
+                        })
+                    }
+                </div>
                 <div class="select"><select id="scombo-item" onchange="onChangeSort(this)">
                     <option value="0">"Sort by internal ID"</option>
                     <option value="1">"Sort by in-game order"</option>
@@ -638,7 +670,9 @@ pub fn gen_item_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
                     pedia_ex.items.iter().map(|(i, item)|{
                         let sort_id = item.param.sort_id;
                         let sort_tag = format!("{},{}", i.into_raw(), sort_id);
-                        html!(<li class="mh-list-skill" data-sort=sort_tag>
+                        let filter = ITEM_TYPES[&item.param.type_].0;
+                        html!(<li class="mh-list-skill mh-item-filter-item"
+                            data-sort=sort_tag data-filter={filter}>
                             {gen_item_label(item)}
                         </li>)
                     })

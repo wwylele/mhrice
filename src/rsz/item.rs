@@ -19,7 +19,7 @@ rsz_enum! {
 // snow.data.DataDef.ItemTypes
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
     pub enum ItemTypes {
         Consume = 0,
         Tool = 1,
