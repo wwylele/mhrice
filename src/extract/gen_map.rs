@@ -108,7 +108,7 @@ fn gen_map(
 
         let icon_inner: Box<dyn Fn() -> Box<div<String>>>;
         let explain_inner;
-        let tag_list;
+        let filter;
         match &pop.kind {
             MapPopKind::Item { behavior, relic } => {
                 icon_inner = Box::new(|| {
@@ -131,9 +131,9 @@ fn gen_map(
                 });
 
                 if relic_explain.is_some() {
-                    tag_list = "mh-map-tag-relic";
+                    filter = "relic";
                 } else {
-                    tag_list = "mh-map-tag-item";
+                    filter = "item";
                 }
 
                 if let Some(lot) = pedia_ex
@@ -190,7 +190,7 @@ fn gen_map(
                     { text!("ID: {}", behavior.wire_long_jump_id) }
                 </div>);
 
-                tag_list = "mh-map-tag-jump";
+                filter = "jump";
             }
             MapPopKind::Camp { behavior } => {
                 icon_inner = Box::new(|| {
@@ -209,7 +209,7 @@ fn gen_map(
                     { text!("ID: {:?}", behavior.camp_type) }
                 </div>);
 
-                tag_list = "mh-map-tag-camp";
+                filter = "camp";
             }
             MapPopKind::FishingPoint { behavior } => {
                 icon_inner = Box::new(|| gen_colored_icon(0, "/resources/item/046", &[]));
@@ -221,15 +221,14 @@ fn gen_map(
                         &behavior.fish_spawn_data.unwrap().spawn_group_list_info_high) }
                 </div>);
 
-                tag_list = "mh-map-tag-fish";
+                filter = "fish";
             }
         }
         let map_icon_id = format!("mh-map-icon-{i}");
         let map_explain_id = format!("mh-map-explain-{i}");
         let map_explain_event = format!("onShowMapExplain('{i}');");
-        let map_icon_class_string = format!("mh-map-pop {}", tag_list);
 
-        map_icons.push(html!(<div class={map_icon_class_string.as_str()} id={map_icon_id.as_str()}
+        map_icons.push(html!(<div class="mh-map-pop" id={map_icon_id.as_str()} data-filter={filter}
             style={format!("left:{x}%;top:{y}%")} onclick={map_explain_event.as_str()}> {icon_inner()} </div>: String
         ));
         map_explains.push(html!(<div class="mh-hidden" id={map_explain_id.as_str()}>
@@ -254,6 +253,7 @@ fn gen_map(
             <head>
                 <title>{text!("Map {:02}", id)}</title>
                 { head_common() }
+                <style id="mh-map-pop-style">""</style>
             </head>
             <body>
             { navbar() }
