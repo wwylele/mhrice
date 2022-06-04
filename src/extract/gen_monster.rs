@@ -918,7 +918,7 @@ pub fn gen_monster(
                 <h2 class="title">"Hitzone data"</h2>
                 <img alt="Monster hitzone diagram" src=meat_figure />
                 <div>
-                    <input type="checkbox" onclick="onCheckDisplay(this, 'mh-invalid-meat', null)" id="mh-invalid-meat-check"/>
+                    <input type="checkbox" id="mh-invalid-meat-check"/>
                     <label for="mh-invalid-meat-check">"Display invalid parts"</label>
                 </div>
                 <table>
@@ -1012,7 +1012,7 @@ pub fn gen_monster(
                 </h2>
                 <img alt="Monster parts diagram" src=parts_group_figure />
                 <div>
-                    <input type="checkbox" onclick="onCheckDisplay(this, 'mh-invalid-part', null)" id="mh-invalid-part-check"/>
+                    <input type="checkbox" id="mh-invalid-part-check"/>
                     <label for="mh-invalid-part-check">"Display invalid parts"</label>
                 </div>
                 <table>
@@ -1093,11 +1093,11 @@ pub fn gen_monster(
                     "Abnormal status"
                 </h2>
                 <div>
-                    <input type="checkbox" onclick="onCheckDisplay(this, 'mh-ride-cond', 'mh-default-cond')" id="mh-ride-cond-check"/>
+                    <input type="checkbox" id="mh-ride-cond-check"/>
                     <label for="mh-ride-cond-check">"Display data for riding"</label>
                 </div>
                 <div>
-                    <input type="checkbox" onclick="onCheckDisplay(this, 'mh-no-preset', 'mh-preset')" id="mh-preset-check"/>
+                    <input type="checkbox" id="mh-preset-check"/>
                     <label for="mh-preset-check">"Don't override with preset data"</label>
                 </div>
                 <table>
@@ -1168,7 +1168,7 @@ pub fn gen_monster(
                 {gen_lot(monster, monster_em_type, QuestRank::High, pedia_ex)}
                 </div> </div> </main>
             </body>
-        </html>: String
+        </html>
     );
 
     let (mut output, mut toc_sink) = output.create_html_with_toc(

@@ -43,7 +43,7 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], output: &impl Sink) -> Result<()
                         "Armor names are probably incorrect."
                     </div>
                 </article>
-                <div class="select"><select id="scombo-armor" onchange="onChangeSort(this)">
+                <div class="select"><select id="scombo-armor" class="mh-scombo">
                     <option value="0">"Sort by internal ID"</option>
                     <option value="1">"Sort by in-game order"</option>
                 </select></div>
@@ -75,7 +75,7 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], output: &impl Sink) -> Result<()
                 }</ul>
                 </div> </main>
             </body>
-        </html>: String
+        </html>
     );
 
     output

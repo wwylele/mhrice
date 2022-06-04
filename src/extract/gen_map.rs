@@ -226,11 +226,11 @@ fn gen_map(
         }
         let map_icon_id = format!("mh-map-icon-{i}");
         let map_explain_id = format!("mh-map-explain-{i}");
-        let map_explain_event = format!("onShowMapExplain('{i}');");
 
-        map_icons.push(html!(<div class="mh-map-pop" id={map_icon_id.as_str()} data-filter={filter}
-            style={format!("left:{x}%;top:{y}%")} onclick={map_explain_event.as_str()}> {icon_inner()} </div>: String
-        ));
+        map_icons.push(
+            html!(<div class="mh-map-pop" id={map_icon_id.as_str()} data-filter={filter}
+                style={format!("left:{x}%;top:{y}%")}> {icon_inner()} </div>),
+        );
         map_explains.push(html!(<div class="mh-hidden" id={map_explain_id.as_str()}>
             {icon_inner()}
             <p>{ text!("level: {}", pop.position.z) }</p>
@@ -266,7 +266,7 @@ fn gen_map(
             <div class="columns">
 
             <div class="column is-two-thirds">
-            <div class="mh-map-container" onmousedown="startDragMap(event)" id="mh-map-container">
+            <div class="mh-map-container" id="mh-map-container">
             <div class="mh-map" id="mh-map">
             {(0..map.layer_count).map(|j| {
                 let c = if j == 0 {
@@ -288,27 +288,27 @@ fn gen_map(
             <div class="column">
 
             <div>
-            <button id="mh-map-filter-all" class="button is-primary" onclick="changeMapFilter('all');">"All icons"</button>
-            <button id="mh-map-filter-item" class="button" onclick="changeMapFilter('item');">"Gathering"</button>
-            <button id="mh-map-filter-relic" class="button" onclick="changeMapFilter('relic');">"Relics"</button>
-            <button id="mh-map-filter-camp" class="button" onclick="changeMapFilter('camp');">"Camps"</button>
-            <button id="mh-map-filter-jump" class="button" onclick="changeMapFilter('jump');">"Jumping points"</button>
-            <button id="mh-map-filter-fish" class="button" onclick="changeMapFilter('fish');">"Fishing points"</button>
+            <button id="mh-map-filter-all" class="mh-map-filter button is-primary">"All icons"</button>
+            <button id="mh-map-filter-item" class="mh-map-filter button">"Gathering"</button>
+            <button id="mh-map-filter-relic" class="mh-map-filter button">"Relics"</button>
+            <button id="mh-map-filter-camp" class="mh-map-filter button">"Camps"</button>
+            <button id="mh-map-filter-jump" class="mh-map-filter button">"Jumping points"</button>
+            <button id="mh-map-filter-fish" class="mh-map-filter button">"Fishing points"</button>
             </div>
 
             <div>
-            <button class="button" id="button-scale-down" onclick="scaleDownMap();" disabled=true>
+            <button class="button" id="button-scale-down" disabled=true>
                 <span class="icon"><i class="fas fa-search-minus"></i></span>
             </button>
-            <button class="button" id="button-scale-up" onclick="scaleUpMap();">
+            <button class="button" id="button-scale-up">
                 <span class="icon"><i class="fas fa-search-plus"></i></span>
             </button>
             {
                 (map.layer_count > 1).then(||html!(
-                    <button class="button" onclick="switchMapLayer();">
+                    <button class="button" id="button-map-layer">
                       <span class="icon"><i class="fas fa-layer-group"></i></span>
                       <span>"Change Layer"</span>
-                    </button>: String))
+                    </button>))
             }
             </div>
 
@@ -323,7 +323,7 @@ fn gen_map(
 
             </div></div></main>
             </body>
-        </html>: String
+        </html>
     );
 
     output.write_all(doc.to_string().as_bytes())?;
@@ -367,7 +367,7 @@ pub fn gen_map_list(pedia: &Pedia, output: &impl Sink) -> Result<()> {
                 </ul>
                 </div></main>
             </body>
-        </html>: String
+        </html>
     );
     output
         .create_html("map.html")?

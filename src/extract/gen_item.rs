@@ -650,18 +650,17 @@ pub fn gen_item_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
                 <main> <div class="container">
                 <h1 class="title">"Item"</h1>
                 <div>
-                    <button id="mh-item-filter-button-all" class="button is-primary" data-mh-item-filter="all"
-                        onclick="changeItemFilter('all');">"All items"</button>
+                    <button id="mh-item-filter-button-all" class="button is-primary mh-item-filter-button">
+                        "All items"</button>
                     {
                         ITEM_TYPES.iter().map(|(_, (symbol, name))| {
                             let id = format!("mh-item-filter-button-{symbol}");
-                            let onclick = format!("changeItemFilter('{symbol}');");
-                            html!(<button id={id.as_str()} class="button"
-                                onclick={onclick}>{text!("{}", name)}</button>:String)
+                            html!(<button id={id.as_str()} class="button mh-item-filter-button">
+                                {text!("{}", name)}</button>)
                         })
                     }
                 </div>
-                <div class="select"><select id="scombo-item" onchange="onChangeSort(this)">
+                <div class="select"><select id="scombo-item" class="mh-scombo">
                     <option value="0">"Sort by internal ID"</option>
                     <option value="1">"Sort by in-game order"</option>
                 </select></div>
@@ -680,7 +679,7 @@ pub fn gen_item_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
                 </ul>
                 </div></main>
             </body>
-        </html>: String
+        </html>
     );
     output
         .create_html("item.html")?

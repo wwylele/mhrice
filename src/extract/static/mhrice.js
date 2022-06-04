@@ -1,5 +1,6 @@
 "use strict";
 
+let g_supported_mh_lang = [];
 let g_cookie_consent = false;
 let g_language_code = "en";
 
@@ -20,6 +21,10 @@ let g_toc = null;
 let g_map_pos = { top: 0, left: 0, x: 0, y: 0, container: null };
 
 document.addEventListener('DOMContentLoaded', function () {
+    for (const element of document.getElementsByClassName("mh-lang-menu")) {
+        g_supported_mh_lang.push(removePrefix(element.id, "mh-lang-menu-"));
+    }
+
     check_cookie();
     switchLanguage();
     hide_class("mh-ride-cond");
@@ -30,7 +35,50 @@ document.addEventListener('DOMContentLoaded', function () {
     change_sort("monster", 1);
     change_sort("item", 1);
     change_sort("armor", 1);
+
+    addEventListensers();
 });
+
+function addEventListensers() {
+    addEventListenerToClass("mh-lang-menu", "click", selectLanguage);
+    addEventListenerToId("cookie-yes", "click", enableCookie);
+    addEventListenerToId("cookie-no", "click", disableCookie);
+    addEventListenerToId("navbarBurger", "click", onToggleNavbarMenu);
+
+    addEventListenerToId("mh-search", "keydown", search);
+
+    addEventListenerToClass("mh-item-filter-button", "click", changeItemFilter);
+    addEventListenerToClass("mh-scombo", "change", onChangeSort);
+
+    addEventListenerToClass("mh-map-pop", "click", onShowMapExplain);
+    addEventListenerToClass("mh-map-filter", "click", changeMapFilter);
+    addEventListenerToId("button-scale-down", "click", scaleDownMap);
+    addEventListenerToId("button-scale-up", "click", scaleUpMap);
+    addEventListenerToId("button-map-layer", "click", switchMapLayer);
+    addEventListenerToId("mh-map-container", "mousedown", startDragMap);
+
+    addEventListenerToId("mh-invalid-part-check", "click",
+        e => onCheckDisplay(e.currentTarget, 'mh-invalid-part', null));
+    addEventListenerToId("mh-invalid-meat-check", "click",
+        e => onCheckDisplay(e.currentTarget, 'mh-invalid-meat', null));
+    addEventListenerToId("mh-ride-cond-check", "click",
+        e => onCheckDisplay(e.currentTarget, 'mh-ride-cond', 'mh-default-cond'));
+    addEventListenerToId("mh-preset-check", "click",
+        e => onCheckDisplay(e.currentTarget, 'mh-no-preset', 'mh-preset'));
+}
+
+function addEventListenerToClass(class_name, event_name, f) {
+    for (const element of document.getElementsByClassName(class_name)) {
+        element.addEventListener(event_name, f);
+    }
+}
+
+function addEventListenerToId(id, event_name, f) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.addEventListener(event_name, f);
+    }
+}
 
 function check_cookie() {
     const cookies = document.cookie.split(";");
@@ -47,7 +95,7 @@ function check_cookie() {
 
         if (cookie_name === "mh-language") {
             g_language_code = cookie_value
-            if (!(supported_mh_lang.includes(g_language_code))) {
+            if (!(g_supported_mh_lang.includes(g_language_code))) {
                 g_language_code = "en";
             }
         }
@@ -73,7 +121,8 @@ function disableCookie() {
 function delete_all_cookie() {
     const cookies = document.cookie.split(";");
     for (const cookie of cookies) {
-        document.cookie = cookie.trim().split("=")[0] + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+        const name = cookie.trim().split("=")[0];
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
     }
 }
 
@@ -82,12 +131,13 @@ function parse_sort_tag(node) {
     return tag.split(',').map(n => parseInt(n))
 }
 
-function onChangeSort(select) {
-    change_sort(select.id.slice(7 /*scombo-*/), parseInt(select.value))
+function onChangeSort(e) {
+    const select = e.currentTarget;
+    change_sort(removePrefix(select.id, "scombo-"), parseInt(select.value))
 }
 
 function change_sort(list_name, selecter) {
-    const ul = document.getElementById("slist-" + list_name);
+    const ul = document.getElementById(`slist-${list_name}`);
     if (ul) {
         const new_ul = ul.cloneNode(false);
 
@@ -112,7 +162,7 @@ function change_sort(list_name, selecter) {
 
         ul.parentNode.replaceChild(new_ul, ul);
     }
-    const select = document.getElementById("scombo-" + list_name);
+    const select = document.getElementById(`scombo-${list_name}`);
     if (select) {
         select.value = selecter
     }
@@ -146,21 +196,22 @@ function show_class(c) {
     refresh_visibility(c);
 }
 
-function selectLanguage(language) {
+function selectLanguage(e) {
+    const language = removePrefix(e.currentTarget.id, "mh-lang-menu-");
     g_toc = null;
     g_language_code = language;
     switchLanguage();
     if (g_cookie_consent) {
-        document.cookie = "mh-language=" + g_language_code + "; path=/";
+        document.cookie = `mh-language=${g_language_code}; path=/`;
     }
 }
 
 function switchLanguage() {
     document.getElementById("mh-lang-style").innerHTML =
-        ".mh-lang:not([lang=\"" + g_language_code + "\"]) { display:none; }";
+        `.mh-lang:not([lang="${g_language_code}"]) { display:none; }`;
 
-    for (const l of supported_mh_lang) {
-        const menu_option = document.getElementById("mh-lang-menu-" + l);
+    for (const l of g_supported_mh_lang) {
+        const menu_option = document.getElementById(`mh-lang-menu-${l}`);
         if (menu_option) {
             if (l === g_language_code) {
                 menu_option.classList.add("has-text-weight-bold");
@@ -196,22 +247,23 @@ function onToggleNavbarMenu() {
     }
 }
 
-function onShowMapExplain(id) {
+function onShowMapExplain(e) {
+    const id = removePrefix(e.currentTarget.id, "mh-map-icon-");
     if (g_cur_map_explain !== null) {
-        document.getElementById("mh-map-explain-" + g_cur_map_explain).classList.add("mh-hidden");
+        document.getElementById(`mh-map-explain-${g_cur_map_explain}`).classList.add("mh-hidden");
         if (g_cur_map_explain !== "default") {
-            document.getElementById("mh-map-icon-" + g_cur_map_explain).classList.remove("mh-map-select");
+            document.getElementById(`mh-map-icon-${g_cur_map_explain}`).classList.remove("mh-map-select");
         }
     }
     g_cur_map_explain = id;
-    document.getElementById("mh-map-explain-" + g_cur_map_explain).classList.remove("mh-hidden");
-    document.getElementById("mh-map-icon-" + g_cur_map_explain).classList.add("mh-map-select");
+    document.getElementById(`mh-map-explain-${g_cur_map_explain}`).classList.remove("mh-hidden");
+    document.getElementById(`mh-map-icon-${g_cur_map_explain}`).classList.add("mh-map-select");
 }
 
 function updateMapScale() {
     const map = document.getElementById("mh-map");
-    map.style.width = g_map_scale + "%";
-    map.style.paddingTop = g_map_scale + "%";
+    map.style.width = `${g_map_scale}%`;
+    map.style.paddingTop = `${g_map_scale}%`;
 }
 
 function scaleUpMap() {
@@ -245,26 +297,26 @@ function scaleDownMap() {
 }
 
 function switchMapLayer() {
-    const prev = document.getElementById("mh-map-layer-" + g_map_layer);
+    const prev = document.getElementById(`mh-map-layer-${g_map_layer}`);
     g_map_layer += 1;
-    let cur = document.getElementById("mh-map-layer-" + g_map_layer);
+    let cur = document.getElementById(`mh-map-layer-${g_map_layer}`);
     if (cur === null) {
         g_map_layer = 0;
-        cur = document.getElementById("mh-map-layer-" + g_map_layer);
+        cur = document.getElementById(`mh-map-layer-${g_map_layer}`);
     }
     prev.classList.add("mh-hidden");
     cur.classList.remove("mh-hidden");
 }
 
-function changeMapFilter(filter) {
+function changeMapFilter(e) {
+    const filter = removePrefix(e.currentTarget.id, "mh-map-filter-");
     const style = document.getElementById("mh-map-pop-style");
     if (style) {
         if (filter == "all") {
             style.innerHTML = "";
         } else {
             style.innerHTML =
-                ".mh-map-pop:not([data-filter*=\""
-                + filter + "\"]) { display:none; }";
+                `.mh-map-pop:not([data-filter*="${filter}"]) { display:none; }`;
         }
     }
 
@@ -282,27 +334,27 @@ function changeMapFilter(filter) {
     }
 }
 
-function changeItemFilter(filter) {
+function changeItemFilter(e) {
+    let filter = removePrefix(e.currentTarget.id, "mh-item-filter-button-");
     const style = document.getElementById("mh-item-list-style");
     if (style) {
         if (filter == "all") {
             style.innerHTML = "";
         } else {
             style.innerHTML =
-                ".mh-item-filter-item:not([data-filter=\""
-                + filter + "\"]) { display:none; }";
+                `.mh-item-filter-item:not([data-filter="${filter}"]) { display:none; }`;
         }
     }
 
     const filter_button_prefix = "mh-item-filter-button-";
-    const prev = document.getElementById(filter_button_prefix + g_cur_map_filter);
+    const prev = document.getElementById(filter_button_prefix + g_cur_item_filter);
     if (prev !== null) {
         prev.classList.remove("is-primary")
     }
 
-    g_cur_map_filter = filter;
+    g_cur_item_filter = filter;
 
-    const cur = document.getElementById(filter_button_prefix + g_cur_map_filter);
+    const cur = document.getElementById(filter_button_prefix + g_cur_item_filter);
     if (cur !== null) {
         cur.classList.add("is-primary")
     }
@@ -380,13 +432,13 @@ function doSearch() {
 
 }
 
-function search() {
-    if (window.event.key !== 'Enter') {
+function search(e) {
+    if (e.key !== 'Enter') {
         return;
     }
 
     if (g_toc === null) {
-        fetch("/toc/" + g_language_code + ".json")
+        fetch(`/toc/${g_language_code}.json`)
             .then(response => response.json())
             .then(json => {
                 g_toc = json;
@@ -423,7 +475,15 @@ function dragMap(e) {
     g_map_pos.container.scrollLeft = g_map_pos.left - dx;
 }
 
-function stopDragMap(e) {
+function stopDragMap() {
     document.removeEventListener('mousemove', dragMap);
     document.removeEventListener('mouseup', stopDragMap);
+}
+
+function removePrefix(s, prefix) {
+    if (!s.startsWith(prefix)) {
+        console.error(`String "${s}" doesn't have prefix "${prefix}"`);
+        return null;
+    }
+    return s.slice(prefix.length);
 }

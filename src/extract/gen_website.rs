@@ -78,7 +78,7 @@ pub fn navbar() -> Box<div<String>> {
                     <i class="fas fa-search"/>
                 </a>
 
-                <a id="navbarBurger" class="navbar-burger" data-target="navbarMenu" onclick="onToggleNavbarMenu()">
+                <a id="navbarBurger" class="navbar-burger" data-target="navbarMenu">
                     <span></span>
                     <span></span>
                     <span></span>
@@ -161,11 +161,10 @@ pub fn navbar() -> Box<div<String>> {
                         <div class="navbar-dropdown">{
                             (0..32).filter_map(|i| {
                                 let (language_name, language_code) = LANGUAGE_MAP[i]?;
-                                let onclick = format!("selectLanguage(\"{language_code}\")");
                                 let id_string = format!("mh-lang-menu-{language_code}");
-                                Some(html!{ <a class="navbar-item" id={id_string.as_str()} onclick=onclick> {
+                                Some(html!{ <a class="navbar-item mh-lang-menu" id={id_string.as_str()}> {
                                     text!("{}", language_name)
-                                }</a>: String})
+                                }</a>})
                             })
                         }
                         </div>
@@ -182,13 +181,11 @@ pub fn navbar() -> Box<div<String>> {
                             </div>
                             <div class="navbar-item">
                                 <label class="radio">
-                                    <input type="radio" name="cookie-consent"
-                                        id="cookie-yes" onclick="enableCookie()"/>
+                                    <input type="radio" name="cookie-consent" id="cookie-yes"/>
                                     "Yes"
                                 </label>
                                 <label class="radio">
-                                    <input type="radio" name="cookie-consent"
-                                        id="cookie-no" onclick="disableCookie()"/>
+                                    <input type="radio" name="cookie-consent" id="cookie-no"/>
                                     "No"
                                 </label>
                             </div>
@@ -197,7 +194,7 @@ pub fn navbar() -> Box<div<String>> {
                 </div>
             </div>
         </div> </nav>
-    </div>: String)
+    </div>)
 }
 
 pub fn translate_msg(content: &str) -> (Box<span<String>>, bool) {
@@ -434,7 +431,7 @@ pub fn gen_monsters(
                 <h1 class="title">"Monsters"</h1>
                 <section class="section">
                 <h2 class="title">"Large monsters"</h2>
-                <div class="select"><select id="scombo-monster" onchange="onChangeSort(this)">
+                <div class="select"><select id="scombo-monster" class="mh-scombo">
                     <option value="0">"Sort by internal ID"</option>
                     <option value="1">"Sort by in-game order"</option>
                 </select></div>
@@ -484,7 +481,7 @@ pub fn gen_monsters(
                 </section>
                 </div> </main>
             </body>
-        </html>: String
+        </html>
     );
 
     monsters_path.write_all(doc.to_string().as_bytes())?;
@@ -513,8 +510,7 @@ pub fn gen_search(output: &impl Sink) -> Result<()> {
                 <main> <div class="container"> <div class="content">
                 <section class="section">
                     <div class="control has-icons-left">
-                        <input class="input is-large" type="text" placeholder="Search" id="mh-search"
-                            onkeydown="search()"/>
+                        <input class="input is-large" type="text" placeholder="Search" id="mh-search"/>
                         <span class="icon is-large is-left">
                             <i class="fas fa-search" />
                         </span>
@@ -526,7 +522,7 @@ pub fn gen_search(output: &impl Sink) -> Result<()> {
                 </section>
                 </div> </div> </main>
             </body>
-        </html>: String
+        </html>
     );
 
     output
@@ -610,22 +606,9 @@ pub fn gen_static(output: &impl Sink) -> Result<()> {
         .create("mhrice.css")?
         .write_all(include_bytes!("static/mhrice.css"))?;
 
-    let mut js = output.create("mhrice.js")?;
-
-    js.write_all(b"var supported_mh_lang = [")?;
-    let mut first = false;
-    for (_, code) in LANGUAGE_MAP.into_iter().flatten() {
-        if first {
-            js.write_all(b",")?;
-        }
-        js.write_all(b"\"")?;
-        js.write_all(code.as_bytes())?;
-        js.write_all(b"\"")?;
-        first = true;
-    }
-    js.write_all(b"];\n")?;
-
-    js.write_all(include_bytes!("static/mhrice.js"))?;
+    output
+        .create("mhrice.js")?
+        .write_all(include_bytes!("static/mhrice.js"))?;
 
     output
         .create("favicon.png")?

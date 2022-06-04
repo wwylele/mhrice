@@ -242,7 +242,7 @@ pub fn gen_otomo_equip_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Resul
                     { navbar() }
                     <main> <div class="container">
                     <h1 class="title">{text!("{}", title)}</h1>
-                    <div class="select"><select id="scombo-armor" onchange="onChangeSort(this)">
+                    <div class="select"><select id="scombo-armor" class="mh-scombo">
                         <option value="0">"Sort by internal ID"</option>
                         <option value="1">"Sort by in-game order"</option>
                     </select></div>
@@ -278,7 +278,7 @@ pub fn gen_otomo_equip_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Resul
                     }</ul>
                     </div></main>
                 </body>
-            </html>: String
+            </html>
         );
         output
             .create_html(file_name)?
