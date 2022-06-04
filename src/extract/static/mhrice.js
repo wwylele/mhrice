@@ -15,6 +15,8 @@ let g_cur_item_filter = "all";
 
 let g_toc = null;
 
+let g_map_pos = { top: 0, left: 0, x: 0, y: 0, container: null };
+
 window.onload = function () {
     check_cookie();
     switchLanguage();
@@ -391,4 +393,35 @@ function search() {
     } else {
         doSearch();
     }
+}
+
+function startDragMap(e) {
+    const container = e.currentTarget;
+    g_map_pos = {
+        // The current scroll
+        left: container.scrollLeft,
+        top: container.scrollTop,
+        // Get the current mouse position
+        x: e.clientX,
+        y: e.clientY,
+        container
+    };
+
+    document.addEventListener('mousemove', dragMap);
+    document.addEventListener('mouseup', stopDragMap);
+}
+
+function dragMap(e) {
+    // How far the mouse has been moved
+    const dx = e.clientX - g_map_pos.x;
+    const dy = e.clientY - g_map_pos.y;
+
+    // Scroll the element
+    g_map_pos.container.scrollTop = g_map_pos.top - dy;
+    g_map_pos.container.scrollLeft = g_map_pos.left - dx;
+}
+
+function stopDragMap(e) {
+    document.removeEventListener('mousemove', dragMap);
+    document.removeEventListener('mouseup', stopDragMap);
 }

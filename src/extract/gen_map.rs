@@ -266,7 +266,7 @@ fn gen_map(
             <div class="columns">
 
             <div class="column is-two-thirds">
-            <div class="mh-map-container">
+            <div class="mh-map-container" onmousedown="startDragMap(event)" id="mh-map-container">
             <div class="mh-map" id="mh-map">
             {(0..map.layer_count).map(|j| {
                 let c = if j == 0 {
@@ -276,7 +276,8 @@ fn gen_map(
                 };
                 let html_id = format!("mh-map-layer-{}", j);
                 html!(
-                    <img alt="Map" class={c} id={html_id.as_str()} src={format!("/resources/map{id:02}_{j}.png")}/>
+                    <img alt="Map" class={c} id={html_id.as_str()} draggable=false
+                        src={format!("/resources/map{id:02}_{j}.png")}/>
                 )
             })}
             { map_icons }

@@ -353,12 +353,17 @@ li.mh-rampage-em-list {
     width: 100%;
     height: min(80vh, 70vw);
     border: solid;
+    cursor: grab;
 }
 
 .mh-map {
     position: relative;
     width: 100%;
     padding-top: 100%;
+}
+
+.mh-map>* {
+    user-select: none;
 }
 
 .mh-map-layer {
