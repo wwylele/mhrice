@@ -1,3 +1,5 @@
+"use strict";
+
 let g_cookie_consent = false;
 let g_language_code = "en";
 
@@ -17,7 +19,7 @@ let g_toc = null;
 
 let g_map_pos = { top: 0, left: 0, x: 0, y: 0, container: null };
 
-window.onload = function () {
+document.addEventListener('DOMContentLoaded', function () {
     check_cookie();
     switchLanguage();
     hide_class("mh-ride-cond");
@@ -28,7 +30,7 @@ window.onload = function () {
     change_sort("monster", 1);
     change_sort("item", 1);
     change_sort("armor", 1);
-}
+});
 
 function check_cookie() {
     const cookies = document.cookie.split(";");
