@@ -25,12 +25,12 @@ pub fn gen_skill_list(skills: &BTreeMap<PlEquipSkillId, Skill>, output: &impl Si
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container">
-                <h1 class="title">"Skill"</h1>
-                <ul class="mh-list-skill">
+                <main>
+                <header><h1>"Skill"</h1></header>
+                <ul class="mh-item-list">
                 {
                     skills.iter().map(|(&id, skill)|{
-                        html!(<li class="mh-list-skill">
+                        html!(<li>
                             <a href={format!("/skill/{}", skill_page(id))} class="mh-icon-text">
                             {gen_colored_icon(skill.icon_color, "/resources/skill", &[])}
                             <span>{gen_multi_lang(skill.name)}</span>
@@ -39,7 +39,7 @@ pub fn gen_skill_list(skills: &BTreeMap<PlEquipSkillId, Skill>, output: &impl Si
                     })
                 }
                 </ul>
-                </div></main>
+                </main>
             </body>
         </html>
     );
@@ -65,7 +65,7 @@ fn gen_skill_source_gear(id: PlEquipSkillId, pedia_ex: &PediaEx) -> Option<Box<s
     for series in &pedia_ex.armors {
         for piece in series.pieces.iter().flatten() {
             if piece.data.skill_list.contains(&id) {
-                htmls.push(html!(<li class="mh-list-item-in-out">
+                htmls.push(html!(<li>
                     <a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
                         { gen_armor_label(Some(piece)) }
                     </a>
@@ -75,12 +75,10 @@ fn gen_skill_source_gear(id: PlEquipSkillId, pedia_ex: &PediaEx) -> Option<Box<s
     }
 
     if !htmls.is_empty() {
-        Some(
-            html!(<section class="section"> <div> <h2 class="title">"Available on armors"</h2>
-            <ul class="mh-list-item-in-out">{
+        Some(html!(<section> <div> <h2 >"Available on armors"</h2>
+            <ul class="mh-item-list">{
                 htmls
-            }</ul> </div> </section>),
-        )
+            }</ul> </div> </section>))
     } else {
         None
     }
@@ -95,9 +93,9 @@ pub fn gen_skill(
 ) -> Result<()> {
     toc_sink.add(skill.name);
     let deco = skill.deco.as_ref().map(|deco| {
-        html!(<section class="section">
-        <h2 class="title">"Decoration"</h2>
-        <table>
+        html!(<section>
+        <h2 >"Decoration"</h2>
+        <div class="mh-table"><table>
             <thead><tr>
                 <th>"Name"</th>
                 <th>"Cost"</th>
@@ -111,7 +109,7 @@ pub fn gen_skill(
                     &deco.product.item_num_list, deco.product.item_flag) }
             </tr>
             </tbody>
-        </table>
+        </table></div>
         </section>)
     });
 
@@ -123,28 +121,30 @@ pub fn gen_skill(
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container"> <div class="content">
-                <div class="mh-title-icon">
-                    {gen_colored_icon(skill.icon_color, "/resources/skill", &[])}
-                </div>
-                <h1 class="title">
-                    {gen_multi_lang(skill.name)}
-                </h1>
-                <pre>{gen_multi_lang(skill.explain)}</pre>
-                <ul>{
-                    skill.levels.iter().enumerate().map(|(level, detail)| {
-                        html!(<li>
-                            <span>{text!("Level {}: ", level + 1)}</span>
-                            <span>{gen_multi_lang(detail)}</span>
-                        </li>)
-                    })
-                }</ul>
+                <main>
+                <header>
+                    <div class="mh-title-icon">
+                        {gen_colored_icon(skill.icon_color, "/resources/skill", &[])}
+                    </div>
+                    <h1> {gen_multi_lang(skill.name)} </h1>
+                </header>
+                <section>
+                    <pre>{gen_multi_lang(skill.explain)}</pre>
+                    <ul>{
+                        skill.levels.iter().enumerate().map(|(level, detail)| {
+                            html!(<li>
+                                <span>{text!("Level {}: ", level + 1)}</span>
+                                <span>{gen_multi_lang(detail)}</span>
+                            </li>)
+                        })
+                    }</ul>
+                </section>
 
                 { deco }
 
                 { gen_skill_source_gear(id, pedia_ex) }
 
-                </div></div></main>
+                </main>
             </body>
         </html>
     );

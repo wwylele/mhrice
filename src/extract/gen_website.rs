@@ -57,7 +57,6 @@ pub fn head_common() -> Vec<Box<dyn MetadataContent<String>>> {
         html!(<meta charset="UTF-8" />),
         html!(<meta name="viewport" content="width=device-width, initial-scale=1" />),
         html!(<link rel="icon" type="image/png" href="/favicon.png" />),
-        html!(<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css" />),
         html!(<link rel="stylesheet" href="/mhrice.css" />),
         html!(<link rel="stylesheet" href="/part_color.css" />),
         html!(<link rel="stylesheet" href="/resources/item_color.css" />),
@@ -68,133 +67,131 @@ pub fn head_common() -> Vec<Box<dyn MetadataContent<String>>> {
     ]
 }
 
-pub fn navbar() -> Box<div<String>> {
-    html!(<div>
-        <nav class="navbar is-primary"> <div class="container">
-            <div class="navbar-brand">
-                <a class="navbar-item" href="/index.html">
-                    <img alt="Logo" src="/favicon.png"/>
-                    <div class="mh-logo-text">"MHRice "</div>
-                    <i class="fas fa-search"/>
+pub fn navbar() -> Box<nav<String>> {
+    html!(<nav><div>
+        <div class="navbar-brand">
+            <a class="navbar-item" href="/index.html">
+                <img alt="Logo" src="/favicon.png"/>
+                <div class="mh-logo-text">"MHRice "</div>
+                <i class="fas fa-search"/>
+            </a>
+
+            <a id="navbarBurger" class="navbar-burger" data-target="navbarMenu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </a>
+        </div>
+
+        <div id="navbarMenu" class="navbar-menu">
+            <div class="navbar-start">
+                <a class="navbar-item" href="/monster.html">
+                    "Monsters"
+                </a>
+                <a class="navbar-item" href="/quest.html">
+                    "Quests"
                 </a>
 
-                <a id="navbarBurger" class="navbar-burger" data-target="navbarMenu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link">
+                    "Skills"
                 </a>
-            </div>
-
-            <div id="navbarMenu" class="navbar-menu">
-                <div class="navbar-start">
-                    <a class="navbar-item" href="/monster.html">
-                        "Monsters"
+                <div class="navbar-dropdown">
+                    <a class="navbar-item" href="/skill.html">
+                        "Armor skills"
                     </a>
-                    <a class="navbar-item" href="/quest.html">
-                        "Quests"
+                    <a class="navbar-item" href="/hyakuryu_skill.html">
+                        "Ramp-up skills"
                     </a>
+                </div>
+                </div>
 
-                    <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-item" href="/armor.html">
+                    "Armors"
+                </a>
+
+                <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link">
+                    "Weapon"
+                </a>
+                <div class="navbar-dropdown">
+                    <a class="navbar-item" href="/weapon/great_sword.html">"Great sword"</a>
+                    <a class="navbar-item" href="/weapon/long_sword.html">"Long sword"</a>
+                    <a class="navbar-item" href="/weapon/short_sword.html">"Sword & shield"</a>
+                    <a class="navbar-item" href="/weapon/dual_blades.html">"Dual blades"</a>
+                    <a class="navbar-item" href="/weapon/hammer.html">"Hammer"</a>
+                    <a class="navbar-item" href="/weapon/horn.html">"Hunting horn"</a>
+                    <a class="navbar-item" href="/weapon/lance.html">"Lance"</a>
+                    <a class="navbar-item" href="/weapon/gun_lance.html">"Gunlance"</a>
+                    <a class="navbar-item" href="/weapon/slash_axe.html">"Switch axe"</a>
+                    <a class="navbar-item" href="/weapon/charge_axe.html">"Charge blade"</a>
+                    <a class="navbar-item" href="/weapon/insect_glaive.html">"Insect glaive"</a>
+                    <a class="navbar-item" href="/weapon/light_bowgun.html">"Light bowgun"</a>
+                    <a class="navbar-item" href="/weapon/heavy_bowgun.html">"Heavy bowgun"</a>
+                    <a class="navbar-item" href="/weapon/bow.html">"Bow"</a>
+                </div>
+                </div>
+
+                <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link">
+                    "Buddy"
+                </a>
+                <div class="navbar-dropdown">
+                    <a class="navbar-item" href="/airou.html">"Palico equipment"</a>
+                    <a class="navbar-item" href="/dog.html">"Palamute equipment"</a>
+                </div>
+                </div>
+
+                <a class="navbar-item" href="/map.html">
+                    "Maps"
+                </a>
+
+                <a class="navbar-item" href="/item.html">
+                    "Items"
+                </a>
+                <a class="navbar-item" href="/about.html">
+                    "About"
+                </a>
+                <div class="navbar-item has-dropdown is-hoverable">
                     <a class="navbar-link">
-                        "Skills"
+                        "Data language"
+                    </a>
+                    <div class="navbar-dropdown">{
+                        (0..32).filter_map(|i| {
+                            let (language_name, language_code) = LANGUAGE_MAP[i]?;
+                            let id_string = format!("mh-lang-menu-{language_code}");
+                            Some(html!{ <a class="navbar-item mh-lang-menu" id={id_string.as_str()}> {
+                                text!("{}", language_name)
+                            }</a>})
+                        })
+                    }
+                    </div>
+                </div>
+
+                <div class="navbar-item has-dropdown is-hoverable">
+                    <a class="navbar-link">
+                        "Cookie usage"
                     </a>
                     <div class="navbar-dropdown">
-                        <a class="navbar-item" href="/skill.html">
-                            "Armor skills"
-                        </a>
-                        <a class="navbar-item" href="/hyakuryu_skill.html">
-                            "Ramp-up skills"
-                        </a>
-                    </div>
-                    </div>
-
-                    <a class="navbar-item" href="/armor.html">
-                        "Armors"
-                    </a>
-
-                    <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link">
-                        "Weapon"
-                    </a>
-                    <div class="navbar-dropdown">
-                        <a class="navbar-item" href="/weapon/great_sword.html">"Great sword"</a>
-                        <a class="navbar-item" href="/weapon/long_sword.html">"Long sword"</a>
-                        <a class="navbar-item" href="/weapon/short_sword.html">"Sword & shield"</a>
-                        <a class="navbar-item" href="/weapon/dual_blades.html">"Dual blades"</a>
-                        <a class="navbar-item" href="/weapon/hammer.html">"Hammer"</a>
-                        <a class="navbar-item" href="/weapon/horn.html">"Hunting horn"</a>
-                        <a class="navbar-item" href="/weapon/lance.html">"Lance"</a>
-                        <a class="navbar-item" href="/weapon/gun_lance.html">"Gunlance"</a>
-                        <a class="navbar-item" href="/weapon/slash_axe.html">"Switch axe"</a>
-                        <a class="navbar-item" href="/weapon/charge_axe.html">"Charge blade"</a>
-                        <a class="navbar-item" href="/weapon/insect_glaive.html">"Insect glaive"</a>
-                        <a class="navbar-item" href="/weapon/light_bowgun.html">"Light bowgun"</a>
-                        <a class="navbar-item" href="/weapon/heavy_bowgun.html">"Heavy bowgun"</a>
-                        <a class="navbar-item" href="/weapon/bow.html">"Bow"</a>
-                    </div>
-                    </div>
-
-                    <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link">
-                        "Buddy"
-                    </a>
-                    <div class="navbar-dropdown">
-                        <a class="navbar-item" href="/airou.html">"Palico equipment"</a>
-                        <a class="navbar-item" href="/dog.html">"Palamute equipment"</a>
-                    </div>
-                    </div>
-
-                    <a class="navbar-item" href="/map.html">
-                        "Maps"
-                    </a>
-
-                    <a class="navbar-item" href="/item.html">
-                        "Items"
-                    </a>
-                    <a class="navbar-item" href="/about.html">
-                        "About"
-                    </a>
-                    <div class="navbar-item has-dropdown is-hoverable">
-                        <a class="navbar-link">
-                            "Data language"
-                        </a>
-                        <div class="navbar-dropdown">{
-                            (0..32).filter_map(|i| {
-                                let (language_name, language_code) = LANGUAGE_MAP[i]?;
-                                let id_string = format!("mh-lang-menu-{language_code}");
-                                Some(html!{ <a class="navbar-item mh-lang-menu" id={id_string.as_str()}> {
-                                    text!("{}", language_name)
-                                }</a>})
-                            })
-                        }
+                        <div class="navbar-item">
+                            "This website uses cookies to store personal preference. \
+                            Choose whether to consent the cookie usage."
                         </div>
-                    </div>
-
-                    <div class="navbar-item has-dropdown is-hoverable">
-                        <a class="navbar-link">
-                            "Cookie usage"
-                        </a>
-                        <div class="navbar-dropdown">
-                            <div class="navbar-item">
-                                "This website uses cookies to store personal preference. \
-                                Choose whether to consent the cookie usage."
-                            </div>
-                            <div class="navbar-item">
-                                <label class="radio">
-                                    <input type="radio" name="cookie-consent" id="cookie-yes"/>
-                                    "Yes"
-                                </label>
-                                <label class="radio">
-                                    <input type="radio" name="cookie-consent" id="cookie-no"/>
-                                    "No"
-                                </label>
-                            </div>
+                        <div class="navbar-item">
+                            <label class="radio">
+                                <input type="radio" name="cookie-consent" id="cookie-yes"/>
+                                "Yes"
+                            </label>
+                            <label class="radio">
+                                <input type="radio" name="cookie-consent" id="cookie-no"/>
+                                "No"
+                            </label>
                         </div>
                     </div>
                 </div>
             </div>
-        </div> </nav>
-    </div>)
+        </div>
+    </div></nav>)
 }
 
 pub fn translate_msg(content: &str) -> (Box<span<String>>, bool) {
@@ -325,7 +322,7 @@ pub fn translate_msg(content: &str) -> (Box<span<String>>, bool) {
                     "COL" => {
                         let color = match t.arg {
                             "RED" => "red",
-                            "YEL" | "YELLOW" => "yellow",
+                            "YEL" | "YELLOW" => "orange",
                             "GRAY" => "gray",
                             _ => {
                                 eprintln!("Unknown color: {}", t.arg);
@@ -411,93 +408,6 @@ fn gen_colored_icon_inner(color_class: &str, icon: &str, addons: &[&str]) -> Box
     </div>)
 }
 
-pub fn gen_monsters(
-    pedia: &Pedia,
-    pedia_ex: &PediaEx<'_>,
-    output: &impl Sink,
-    toc: &mut Toc,
-) -> Result<()> {
-    let mut monsters_path = output.create_html("monster.html")?;
-
-    let doc: DOMTree<String> = html!(
-        <html>
-            <head>
-                <title>{text!("Monsters - MHRice")}</title>
-                { head_common() }
-            </head>
-            <body>
-                { navbar() }
-                <main> <div class="container">
-                <h1 class="title">"Monsters"</h1>
-                <section class="section">
-                <h2 class="title">"Large monsters"</h2>
-                <div class="select"><select id="scombo-monster" class="mh-scombo">
-                    <option value="0">"Sort by internal ID"</option>
-                    <option value="1">"Sort by in-game order"</option>
-                </select></div>
-                <ul class="mh-list-monster" id="slist-monster">{
-                    pedia.monsters.iter().filter_map(|monster| {
-                        let icon_path = format!("/resources/em{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
-                        let name_name = format!("EnemyIndex{:03}", monster.enemy_type?);
-
-                        let name_entry = pedia.monster_names.get_entry(&name_name)?;
-                        let order = pedia_ex.monster_order.get(&EmTypes::Em(monster.id | (monster.sub_id << 8)))
-                            .cloned().unwrap_or(0);
-                        let sort_tag = format!("{},{}", monster.id << 16 | monster.sub_id, order);
-                        Some(html!{<li class="mh-list-monster" data-sort=sort_tag>
-                            <a href={format!("/monster/{:03}_{:02}.html", monster.id, monster.sub_id)}>
-                                <img alt="Monster icon" class="mh-list-monster-icon" src=icon_path />
-                                <div>{gen_multi_lang(name_entry)}</div>
-                            </a>
-                        </li>})
-                    }).collect::<Vec<_>>()
-                }</ul>
-                </section>
-                <section class="section">
-                <h2 class="title">"Small monsters"</h2>
-                <ul class="mh-list-monster">{
-                    pedia.small_monsters.iter().filter(|monster|monster.sub_id == 0) // sub small monsters are b0rked
-                    .map(|monster| {
-                        let icon_path = format!("/resources/ems{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
-
-                        let name = if let Some(enemy_type) = monster.enemy_type {
-                            let name_name = format!("EnemyIndex{:03}", enemy_type);
-                            pedia.monster_names.get_entry(&name_name).map_or(
-                                html!(<span>{text!("Monster {:03}_{:02}", monster.id, monster.sub_id)}</span>),
-                                gen_multi_lang
-                            )
-                        } else {
-                            html!(<span>{text!("Monster {:03}_{:02}", monster.id, monster.sub_id)}</span>)
-                        };
-
-                        html!{<li class="mh-list-monster">
-                            <a href={format!("/small-monster/{:03}_{:02}.html", monster.id, monster.sub_id)}>
-                                <img alt="Monster icon" class="mh-list-monster-icon" src=icon_path />
-                                <div>{ name }</div>
-                            </a>
-                        </li>}
-                    })
-                }</ul>
-                </section>
-                </div> </main>
-            </body>
-        </html>
-    );
-
-    monsters_path.write_all(doc.to_string().as_bytes())?;
-
-    let monster_path = output.sub_sink("monster")?;
-    for monster in &pedia.monsters {
-        gen_monster(true, monster, pedia, pedia_ex, &monster_path, toc)?;
-    }
-
-    let monster_path = output.sub_sink("small-monster")?;
-    for monster in &pedia.small_monsters {
-        gen_monster(false, monster, pedia, pedia_ex, &monster_path, toc)?;
-    }
-    Ok(())
-}
-
 pub fn gen_search(output: &impl Sink) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
@@ -507,20 +417,17 @@ pub fn gen_search(output: &impl Sink) -> Result<()> {
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container"> <div class="content">
-                <section class="section">
-                    <div class="control has-icons-left">
-                        <input class="input is-large" type="text" placeholder="Search" id="mh-search"/>
-                        <span class="icon is-large is-left">
-                            <i class="fas fa-search" />
-                        </span>
-                    </div>
-                </section>
-                <section>
+                <main>
+                <header><h1>"Search"</h1></header>
+                <div class="control has-icons-left">
+                    <input class="input is-large" type="text" placeholder="Nargacuga" id="mh-search"/>
+                    <span class="icon is-large is-left">
+                        <i class="fas fa-search" />
+                    </span>
+                </div>
                 <ul id="mh-search-result">
                 </ul>
-                </section>
-                </div> </div> </main>
+                </main>
             </body>
         </html>
     );
@@ -541,9 +448,9 @@ pub fn gen_about(output: &impl Sink) -> Result<()> {
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container"> <div class="content">
-                <h1 class="title">"About MHRice"</h1>
-                <section class="section">
+                <main>
+                <header><h1>"About MHRice"</h1></header>
+                <section>
                 <p>
                 "MHRice is an information site for Monster Hunter Rise, displaying data extracted from the game."
                 </p>
@@ -559,8 +466,8 @@ pub fn gen_about(output: &impl Sink) -> Result<()> {
                 </a>
                 </p>
                 </section>
-                <section class="section">
-                <h2 class="title">"Download data"</h2>
+                <section>
+                <h2 >"Download data"</h2>
                 <p>
                 "MHRice data is also available in JSON format."
                 </p>
@@ -573,8 +480,8 @@ pub fn gen_about(output: &impl Sink) -> Result<()> {
                 </a>
                 </p>
                 </section>
-                <section class="section">
-                <h2 class="title">"Build information"</h2>
+                <section>
+                <h2 >"Build information"</h2>
                 <ul>
                     <li>"Git hash: " <span class="is-family-monospace">{
                         text!("{}{}",
@@ -589,7 +496,7 @@ pub fn gen_about(output: &impl Sink) -> Result<()> {
                     <li>{text!("Update time: {}", Utc::now())}</li>
                 </ul>
                 </section>
-                </div> </div> </main>
+                </main>
             </body>
         </html>
     );
@@ -623,7 +530,7 @@ pub fn gen_part_color_css(output: &impl Sink) -> Result<()> {
     let mut file = output.create("part_color.css")?;
 
     for (i, color) in PART_COLORS.iter().enumerate() {
-        writeln!(file, ".mh-part-{} {{color: {}}}", i, color)?;
+        writeln!(file, ".mh-part-{} {{background-color: {}}}", i, color)?;
     }
 
     Ok(())

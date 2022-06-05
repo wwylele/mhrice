@@ -35,18 +35,18 @@ pub fn gen_hyakuryu_skill_list(
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container">
-                <h1 class="title">"Ramp-up skill"</h1>
-                <ul class="mh-list-skill">
+                <main>
+                <header><h1>"Ramp-up skill"</h1></header>
+                <ul class="mh-item-list">
                 {
                     skills.iter().map(|(_, skill)|{
-                        html!(<li class="mh-list-skill"> {
+                        html!(<li> {
                             gen_hyakuryu_skill_label(skill)
                         } </li>)
                     })
                 }
                 </ul>
-                </div></main>
+                </main>
             </body>
         </html>
     );
@@ -70,7 +70,7 @@ fn gen_hyakuryu_source_weapon(
                 if main.hyakuryu_skill_id_list.contains(&id) ||
                     weapon.hyakuryu_weapon_buildup.values()
                         .any(|h|h.buildup_id_list.contains(&id)) {
-                    htmls.push(html!(<li class="mh-list-item-in-out">{
+                    htmls.push(html!(<li>{
                         gen_weapon_label(weapon)
                     }</li>));
                 }
@@ -94,12 +94,10 @@ fn gen_hyakuryu_source_weapon(
     check_weapon!(bow);
 
     if !htmls.is_empty() {
-        Some(
-            html!(<section class="section"> <div> <h2 class="title">"Available on weapons"</h2>
-            <ul class="mh-list-item-in-out">{
+        Some(html!(<section> <div> <h2 >"Available on weapons"</h2>
+            <ul class="mh-item-list">{
                 htmls
-            }</ul> </div> </section>),
-        )
+            }</ul> </div> </section>))
     } else {
         None
     }
@@ -120,19 +118,22 @@ pub fn gen_hyakuryu_skill(
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container"> <div class="content">
-                <div class="mh-title-icon">
-                    {gen_colored_icon(skill.data.item_color, "/resources/rskill", &[])}
-                </div>
-                <h1 class="title">
-                    {gen_multi_lang(skill.name)}
-                </h1>
-                <pre>{gen_multi_lang(skill.explain)}</pre>
+                <main>
+                <header>
+                    <div class="mh-title-icon">
+                        {gen_colored_icon(skill.data.item_color, "/resources/rskill", &[])}
+                    </div>
+                    <h1>{gen_multi_lang(skill.name)}</h1>
+                </header>
+
+                <section>
+                    <pre>{gen_multi_lang(skill.explain)}</pre>
+                </section>
 
                 {skill.recipe.map(|recipe| html!(
-                    <section class="section">
-                    <h2 class="title">"Crafting"</h2>
-                    <table>
+                    <section>
+                    <h2 >"Crafting"</h2>
+                    <div class="mh-table"><table>
                         <thead><tr>
                             <th>"Cost"</th>
                             <th>"Material"</th>
@@ -144,13 +145,13 @@ pub fn gen_hyakuryu_skill(
                                 &recipe.recipe_item_num_list, ItemId::None) }
                         </tr>
                         </tbody>
-                    </table>
+                    </table></div>
                     </section>
                 ))}
 
                 { gen_hyakuryu_source_weapon(skill.data.id, pedia_ex) }
 
-                </div></div></main>
+                </main>
             </body>
         </html>
     );

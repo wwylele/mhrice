@@ -121,14 +121,16 @@ fn gen_item_source_monster(
     em_types.sort_unstable();
     em_types.dedup();
     if !em_types.is_empty() {
-        Some(html!(<div><h3>"From monsters, and their quests: "</h3>
-        <ul class="mh-list-item-in-out">
-            {
-                em_types.into_iter().map(|em_type|html!(<li class="mh-list-item-in-out">{
-                    gen_monster_tag(pedia, em_type, false, false)
-                }</li>))
-            }
-        </ul></div>))
+        Some(
+            html!(<div class="mh-item-in-out"> <h3>"From monsters, and their quests: "</h3>
+            <ul class="mh-item-list">
+                {
+                    em_types.into_iter().map(|em_type|html!(<li>{
+                        gen_monster_tag(pedia, em_type, false, false)
+                    }</li>))
+                }
+            </ul></div>),
+        )
     } else {
         None
     }
@@ -173,10 +175,10 @@ fn gen_item_source_quest(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<
         .collect();
 
     if !quests.is_empty() {
-        Some(html!(<div> <h3>"From quests: "</h3>
-        <ul class="mh-list-item-in-out">{
+        Some(html!(<div class="mh-item-in-out"> <h3>"From quests: "</h3>
+        <ul class="mh-item-list">{
             quests.into_iter().map(|quest| {
-                html!(<li class="mh-list-item-in-out">{gen_quest_tag(quest, false)}</li>)
+                html!(<li>{gen_quest_tag(quest, false)}</li>)
             })
         }</ul> </div>))
     } else {
@@ -204,7 +206,7 @@ fn gen_item_source_weapon(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div
                 }
 
                 if found {
-                    htmls.push(html!(<li class="mh-list-item-in-out">{
+                    htmls.push(html!(<li>{
                         gen_weapon_label(weapon)
                     }</li>));
                 }
@@ -228,10 +230,12 @@ fn gen_item_source_weapon(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div
     check_weapon!(bow);
 
     if !htmls.is_empty() {
-        Some(html!(<div> <h3>"From crafting / upgrading weapons: "</h3>
-            <ul class="mh-list-item-in-out">{
+        Some(
+            html!(<div class="mh-item-in-out"> <h3>"From crafting / upgrading weapons: "</h3>
+            <ul class="mh-item-list">{
                 htmls
-            }</ul> </div>))
+            }</ul> </div>),
+        )
     } else {
         None
     }
@@ -244,7 +248,7 @@ fn gen_item_source_armor(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<
         for piece in series.pieces.iter().flatten() {
             if let Some(product) = piece.product {
                 if product.output_item.contains(&item_id) {
-                    htmls.push(html!(<li class="mh-list-item-in-out">
+                    htmls.push(html!(<li>
                         <a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
                             { gen_armor_label(Some(piece)) }
                         </a>
@@ -255,10 +259,12 @@ fn gen_item_source_armor(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<
     }
 
     if !htmls.is_empty() {
-        Some(html!(<div> <h3>"From crafting armors: "</h3>
-            <ul class="mh-list-item-in-out">{
+        Some(
+            html!(<div class="mh-item-in-out"> <h3>"From crafting armors: "</h3>
+            <ul class="mh-item-list">{
                 htmls
-            }</ul> </div>))
+            }</ul> </div>),
+        )
     } else {
         None
     }
@@ -290,7 +296,7 @@ fn gen_item_usage_weapon(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<
                 }
 
                 if found {
-                    htmls.push(html!(<li class="mh-list-item-in-out">{
+                    htmls.push(html!(<li>{
                         gen_weapon_label(weapon)
                     }</li>));
                 }
@@ -314,10 +320,12 @@ fn gen_item_usage_weapon(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<
     check_weapon!(bow);
 
     if !htmls.is_empty() {
-        Some(html!(<div> <h3>"For crafting / upgrading weapons: "</h3>
-            <ul class="mh-list-item-in-out">{
+        Some(
+            html!(<div class="mh-item-in-out"> <h3>"For crafting / upgrading weapons: "</h3>
+            <ul class="mh-item-list">{
                 htmls
-            }</ul> </div>))
+            }</ul> </div>),
+        )
     } else {
         None
     }
@@ -340,7 +348,7 @@ fn gen_item_usage_armor(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<S
                 }
             }
             if found {
-                htmls.push(html!(<li class="mh-list-item-in-out">
+                htmls.push(html!(<li>
                     <a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
                         { gen_armor_label(Some(piece)) }
                     </a>
@@ -350,10 +358,12 @@ fn gen_item_usage_armor(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<S
     }
 
     if !htmls.is_empty() {
-        Some(html!(<div> <h3>"For crafting armors: "</h3>
-            <ul class="mh-list-item-in-out">{
+        Some(
+            html!(<div class="mh-item-in-out"> <h3>"For crafting armors: "</h3>
+            <ul class="mh-item-list">{
                 htmls
-            }</ul> </div>))
+            }</ul> </div>),
+        )
     } else {
         None
     }
@@ -372,7 +382,7 @@ fn gen_item_usage_otomo(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<S
             } = armor
             {
                 if product.item_list.contains(&item_id) {
-                    htmls.push(html!(<li class="mh-list-item-in-out">
+                    htmls.push(html!(<li>
                     <a href={&href}>
                         { gen_atomo_armor_label(piece) }
                     </a>
@@ -389,7 +399,7 @@ fn gen_item_usage_otomo(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<S
         ) = &series.weapon
         {
             if product.item_list.contains(&item_id) {
-                htmls.push(html!(<li class="mh-list-item-in-out">
+                htmls.push(html!(<li>
                 <a href={&href}>
                     { gen_atomo_weapon_label(piece) }
                 </a>
@@ -399,10 +409,12 @@ fn gen_item_usage_otomo(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<S
     }
 
     if !htmls.is_empty() {
-        Some(html!(<div> <h3>"For crafting buddy equipements: "</h3>
-            <ul class="mh-list-item-in-out">{
+        Some(
+            html!(<div class="mh-item-in-out"> <h3>"For crafting buddy equipements: "</h3>
+            <ul class="mh-item-list">{
                 htmls
-            }</ul> </div>))
+            }</ul> </div>),
+        )
     } else {
         None
     }
@@ -414,7 +426,7 @@ fn gen_item_usage_hyakuryu(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<di
     for skill in pedia_ex.hyakuryu_skills.values() {
         if let Some(reciepe) = skill.recipe {
             if reciepe.recipe_item_id_list.contains(&item_id) {
-                htmls.push(html!(<li class="mh-list-item-in-out">
+                htmls.push(html!(<li>
                     { gen_hyakuryu_skill_label(skill) }
                 </li>))
             }
@@ -422,10 +434,12 @@ fn gen_item_usage_hyakuryu(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<di
     }
 
     if !htmls.is_empty() {
-        Some(html!(<div> <h3>"For enabling ramp-up skills: "</h3>
-            <ul class="mh-list-item-in-out">{
+        Some(
+            html!(<div class="mh-item-in-out"> <h3>"For enabling ramp-up skills: "</h3>
+            <ul class="mh-item-list">{
                 htmls
-            }</ul> </div>))
+            }</ul> </div>),
+        )
     } else {
         None
     }
@@ -437,7 +451,7 @@ fn gen_item_usage_deco(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<St
     for (&id, skill) in &pedia_ex.skills {
         if let Some(deco) = &skill.deco {
             if deco.product.item_id_list.contains(&item_id) {
-                htmls.push(html!(<li class="mh-list-item-in-out">
+                htmls.push(html!(<li>
                     <a href={format!("/skill/{}", skill_page(id))}>
                     { gen_deco_label(deco) }
                     </a>
@@ -447,10 +461,12 @@ fn gen_item_usage_deco(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<St
     }
 
     if !htmls.is_empty() {
-        Some(html!(<div> <h3>"For crafting decorations: "</h3>
-            <ul class="mh-list-item-in-out">{
+        Some(
+            html!(<div class="mh-item-in-out"> <h3>"For crafting decorations: "</h3>
+            <ul class="mh-item-list">{
                 htmls
-            }</ul> </div>))
+            }</ul> </div>),
+        )
     } else {
         None
     }
@@ -501,8 +517,8 @@ fn gen_item_source_map(
     }
 
     if !htmls.is_empty() {
-        Some(html!(<div> <h3>"From maps: "</h3>
-            <ul class="mh-list-item-in-out">{
+        Some(html!(<div class="mh-item-in-out"> <h3>"From maps: "</h3>
+            <ul class="mh-item-list">{
                 htmls
             }</ul> </div>))
     } else {
@@ -557,20 +573,20 @@ pub fn gen_item(
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container"> <div class="content">
-                <div class="mh-title-icon">
-                    {gen_item_icon(item)}
-                </div>
-                <h1 class="title">
-                    {gen_multi_lang(item.name)}
-                </h1>
+                <main>
+                <header>
+                    <div class="mh-title-icon">
+                        {gen_item_icon(item)}
+                    </div>
+                    <h1>{gen_multi_lang(item.name)}</h1>
+                </header>
 
-                <section class="section"><pre>
+                <section><pre>
                     {gen_multi_lang(item.explain)}
                 </pre></section>
 
-                <section class="section">
-                <h2 class="title">"Basic data"</h2>
+                <section>
+                <h2 >"Basic data"</h2>
                 <div class="mh-kvlist">
                 <p class="mh-kv"><span>"Carriable filter"</span>
                 <span>{text!("{:?}", item.param.cariable_filter)}</span></p>
@@ -610,8 +626,8 @@ pub fn gen_item(
                 </div>
                 </section>
 
-                <section class="section">
-                <h2 class="title">"Where to get"</h2>
+                <section>
+                <h2 >"Where to get"</h2>
                 {gen_item_source_monster(item.param.id, pedia, pedia_ex)}
                 {gen_item_source_quest(item.param.id, pedia_ex)}
                 {gen_item_source_map(item.param.id, pedia, pedia_ex)}
@@ -619,8 +635,8 @@ pub fn gen_item(
                 {gen_item_source_armor(item.param.id, pedia_ex)}
                 </section>
 
-                <section class="section">
-                <h2 class="title">"Where to use"</h2>
+                <section>
+                <h2 >"Where to use"</h2>
                 {gen_item_usage_weapon(item.param.id, pedia_ex)}
                 {gen_item_usage_armor(item.param.id, pedia_ex)}
                 {gen_item_usage_otomo(item.param.id, pedia_ex)}
@@ -628,7 +644,7 @@ pub fn gen_item(
                 {gen_item_usage_hyakuryu(item.param.id, pedia_ex)}
                 </section>
 
-                </div></div></main>
+                </main>
             </body>
         </html>
     );
@@ -647,37 +663,37 @@ pub fn gen_item_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container">
-                <h1 class="title">"Item"</h1>
-                <div>
-                    <button id="mh-item-filter-button-all" class="button is-primary mh-item-filter-button">
-                        "All items"</button>
+                <main>
+                <header><h1>"Item"</h1></header>
+                <div class="mh-filters"><ul>
+                    <li id="mh-item-filter-button-all" class="is-active mh-item-filter-button">
+                        <a>"All items"</a></li>
                     {
                         ITEM_TYPES.iter().map(|(_, (symbol, name))| {
                             let id = format!("mh-item-filter-button-{symbol}");
-                            html!(<button id={id.as_str()} class="button mh-item-filter-button">
-                                {text!("{}", name)}</button>)
+                            html!(<li id={id.as_str()} class="mh-item-filter-button">
+                                <a>{text!("{}", name)}</a></li>)
                         })
                     }
-                </div>
+                </ul></div>
                 <div class="select"><select id="scombo-item" class="mh-scombo">
                     <option value="0">"Sort by internal ID"</option>
                     <option value="1">"Sort by in-game order"</option>
                 </select></div>
-                <ul class="mh-list-skill" id="slist-item">
+                <ul class="mh-item-list" id="slist-item">
                 {
                     pedia_ex.items.iter().map(|(i, item)|{
                         let sort_id = item.param.sort_id;
                         let sort_tag = format!("{},{}", i.into_raw(), sort_id);
                         let filter = ITEM_TYPES[&item.param.type_].0;
-                        html!(<li class="mh-list-skill mh-item-filter-item"
+                        html!(<li class="mh-item-filter-item"
                             data-sort=sort_tag data-filter={filter}>
                             {gen_item_label(item)}
                         </li>)
                     })
                 }
                 </ul>
-                </div></main>
+                </main>
             </body>
         </html>
     );

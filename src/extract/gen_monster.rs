@@ -63,10 +63,10 @@ pub fn gen_monster_tag(
 
 fn gen_extractive_type(extractive_type: ExtractiveType) -> Result<Box<span<String>>> {
     match extractive_type {
-        ExtractiveType::Red => Ok(html!(<span class="mh-extract-red">"Red"</span>)),
-        ExtractiveType::White => Ok(html!(<span class="mh-extract-white">"White"</span>)),
-        ExtractiveType::Orange => Ok(html!(<span class="mh-extract-orange">"Orange"</span>)),
-        ExtractiveType::None => Ok(html!(<span class="mh-extract-unknown">"None"</span>)),
+        ExtractiveType::Red => Ok(html!(<span><span class="mh-extract-red"/>"Red"</span>)),
+        ExtractiveType::White => Ok(html!(<span><span class="mh-extract-white"/>"White"</span>)),
+        ExtractiveType::Orange => Ok(html!(<span><span class="mh-extract-orange"/>"Orange"</span>)),
+        ExtractiveType::None => Ok(html!(<span><span class="mh-extract-unknown"/>"None"</span>)),
     }
 }
 
@@ -594,11 +594,11 @@ pub fn gen_lot(
     };
 
     html!(<section>
-        <h2 class="title">{text!("{}", header)}</h2>
+        <h2 >{text!("{}", header)}</h2>
         <div class="mh-reward-tables">
 
         <div class="mh-reward-box">
-        <table>
+        <div class="mh-table"><table>
             <thead><tr>
                 <th>"Target rewards"</th>
                 <th>"Probability"</th>
@@ -609,11 +609,11 @@ pub fn gen_lot(
                     &lot.target_reward_num_list,
                     &lot.target_reward_probability_list)
             } </tbody>
-        </table>
+        </table></div>
         </div>
 
         <div class="mh-reward-box">
-        <table>
+        <div class="mh-table"><table>
             <thead><tr>
                 <th>"Part"</th>
                 <th>"Carves"</th>
@@ -627,11 +627,11 @@ pub fn gen_lot(
                     &lot.hagitory_reward_num_list,
                     &lot.hagitory_reward_probability_list)
             } </tbody>
-        </table>
+        </table></div>
         </div>
 
         <div class="mh-reward-box">
-        <table>
+        <div class="mh-table"><table>
             <thead><tr>
                 <th>"Capture rewards"</th>
                 <th>"Probability"</th>
@@ -642,11 +642,11 @@ pub fn gen_lot(
                     &lot.capture_reward_num_list,
                     &lot.capture_reward_probability_list)
             } </tbody>
-        </table>
+        </table></div>
         </div>
 
         <div class="mh-reward-box">
-        <table>
+        <div class="mh-table"><table>
             <thead><tr>
                 <th>"Part"</th>
                 <th>"Broken part rewards"</th>
@@ -684,10 +684,10 @@ pub fn gen_lot(
                                         .map(|pbr| {
                                             let conds = pbr.parts_break_condition_list.iter()
                                                 .map(|cond| {
-                                                    let part_color = format!("mh-part-{}", cond.parts_group);
+                                                    let part_color = format!("mh-part mh-part-{}", cond.parts_group);
                                                     html!(<li>
                                                         {text!("[{}]", cond.parts_group)}
-                                                        <span class=part_color.as_str()>"■"</span>
+                                                        <span class=part_color.as_str() />
                                                         {text!("(x{})", cond.parts_break_level)}
                                                     </li>)
                                                 });
@@ -719,11 +719,11 @@ pub fn gen_lot(
                             })
                     })
             } </tbody>
-        </table>
+        </table></div>
         </div>
 
         <div class="mh-reward-box">
-        <table>
+        <div class="mh-table"><table>
             <thead><tr>
                 <th>"Part"</th>
                 <th>"Dropped materials"</th>
@@ -737,11 +737,11 @@ pub fn gen_lot(
                     &lot.drop_reward_num_list,
                     &lot.drop_reward_probability_list)
             } </tbody>
-        </table>
+        </table></div>
         </div>
 
         <div class="mh-reward-box">
-        <table>
+        <div class="mh-table"><table>
             <thead><tr>
                 <th>"From buddy"</th>
                 <th>"Probability"</th>
@@ -752,7 +752,7 @@ pub fn gen_lot(
                     &lot.otomo_reward_num_list,
                     &lot.otomo_reward_probability_list)
             } </tbody>
-        </table>
+        </table></div>
         </div>
 
         </div>
@@ -806,12 +806,12 @@ pub fn gen_monster(
         .map(|m| html!(<pre> {gen_multi_lang(m)} </pre>));
 
     let quest_list = html!(
-        <section class="section">
-        <h2 class="title">"Quests"</h2>
-        <table>
+        <section>
+        <h2 >"Quests"</h2>
+        <div class="mh-table"><table>
             <thead><tr>
                 <th>"Quest"</th>
-                <th>"Size (?)"</th>
+                <th>"Size"</th>
                 <th>"HP"</th>
                 <th>"Attack"</th>
                 <th>"Parts"</th>
@@ -858,7 +858,7 @@ pub fn gen_monster(
                 }
             }
             </tbody>
-        </table>
+        </table></div>
         </section>
     );
 
@@ -877,24 +877,24 @@ pub fn gen_monster(
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container"> <div class="content">
-                <div class="mh-monster-header">
+                <main>
+                <header class="mh-monster-header">
                     <img alt="Monster icon" src=icon />
-                    <h1 class="title"> {
+                    <h1> {
                         if let Some(monster_alias) = monster_alias {
                             gen_multi_lang(monster_alias)
                         } else {
                             html!(<span>{text!("Monster {:03}_{:02}", monster.id, monster.sub_id)}</span>)
                         }
                     }</h1>
-                </div>
-                <section class="section">
-                <h2 class="title">"Description"</h2>
+                </header>
+                <section>
+                <h2 >"Description"</h2>
                 { explain1 }
                 { explain2 }
                 </section>
-                <section class="section">
-                <h2 class="title">"Basic data"</h2>
+                <section>
+                <h2 >"Basic data"</h2>
                 <p>{ text!("Base HP: {}", monster.data_tune.base_hp_vital) }</p>
                 <p>{ text!("Limping threshold: (village) {}% / (LR) {}% / (HR) {}%",
                     monster.data_tune.dying_village_hp_vital_rate,
@@ -914,14 +914,14 @@ pub fn gen_monster(
 
                 { quest_list }
 
-                <section class="section">
-                <h2 class="title">"Hitzone data"</h2>
+                <section>
+                <h2 >"Hitzone data"</h2>
                 <img alt="Monster hitzone diagram" src=meat_figure />
                 <div>
                     <input type="checkbox" id="mh-invalid-meat-check"/>
                     <label for="mh-invalid-meat-check">"Display invalid parts"</label>
                 </div>
-                <table>
+                <div class="mh-table"><table>
                     <thead>
                     <tr>
                         <th>"Part"</th>
@@ -948,12 +948,12 @@ pub fn gen_monster(
                                 format!("{}", part)
                             };
 
-                            let part_color = format!("mh-part-{}", part);
+                            let part_color = format!("mh-part mh-part-{}", part);
 
                             let span = meats.meat_group_info.len();
                             let mut part_common: Option<Vec<Box<td<String>>>> = Some(vec![
                                 html!(<td rowspan={span}>
-                                    <span class=part_color.as_str()>"■"</span>
+                                    <span class=part_color.as_str() />
                                     { text!("{}", part_name) }
                                 </td>),
                             ]);
@@ -1004,10 +1004,10 @@ pub fn gen_monster(
                                 })
                         })
                     }</tbody>
-                </table>
+                </table></div>
                 </section>
-                <section class="section">
-                <h2 class="title">
+                <section>
+                <h2 >
                     "Parts"
                 </h2>
                 <img alt="Monster parts diagram" src=parts_group_figure />
@@ -1015,7 +1015,7 @@ pub fn gen_monster(
                     <input type="checkbox" id="mh-invalid-part-check"/>
                     <label for="mh-invalid-part-check">"Display invalid parts"</label>
                 </div>
-                <table>
+                <div class="mh-table"><table>
                     <thead>
                         <tr>
                             <th>"Part"</th>
@@ -1033,7 +1033,7 @@ pub fn gen_monster(
                                 format!("{}", index)
                             };
 
-                            let part_color = format!("mh-part-{}", index);
+                            let part_color = format!("mh-part mh-part-{}", index);
 
                             let hidden = if part.extractive_type == ExtractiveType::None {
                                 "mh-invalid-part"
@@ -1075,7 +1075,7 @@ pub fn gen_monster(
                             Ok(html!(<tr class=hidden>
                                 <td>
                                     { text!("[{}]", index) }
-                                    <span class=part_color.as_str()>"■"</span>
+                                    <span class=part_color.as_str() />
                                     { text!("{}", part_name) }
                                 </td>
                                 <td>{ text!("{}", part.vital) }</td>
@@ -1085,11 +1085,11 @@ pub fn gen_monster(
                             </tr>))
                         }).collect::<Result<Vec<_>>>()?
                     }</tbody>
-                </table>
+                </table></div>
                 </section>
 
                 <section>
-                <h2 class="title">
+                <h2 >
                     "Abnormal status"
                 </h2>
                 <div>
@@ -1100,7 +1100,7 @@ pub fn gen_monster(
                     <input type="checkbox" id="mh-preset-check"/>
                     <label for="mh-preset-check">"Don't override with preset data"</label>
                 </div>
-                <table>
+                <div class="mh-table"><table>
                     <thead>
                         <tr>
                             <th></th>
@@ -1161,12 +1161,12 @@ pub fn gen_monster(
                         {gen_condition_dung(true, monster.condition_damage_data.koyashi_data.or_preset(condition_preset)?, monster.condition_damage_data.use_dung)}
                         {gen_condition_steel_fang(true, monster.condition_damage_data.steel_fang_data.or_preset(condition_preset)?, monster.condition_damage_data.use_steel_fang)}
                     </tbody>
-                </table>
+                </table></div>
                 </section>
 
                 {gen_lot(monster, monster_em_type, QuestRank::Low, pedia_ex)}
                 {gen_lot(monster, monster_em_type, QuestRank::High, pedia_ex)}
-                </div> </div> </main>
+                </main>
             </body>
         </html>
     );
@@ -1181,5 +1181,92 @@ pub fn gen_monster(
         toc_sink.add(monster_alias);
     }
 
+    Ok(())
+}
+
+pub fn gen_monsters(
+    pedia: &Pedia,
+    pedia_ex: &PediaEx<'_>,
+    output: &impl Sink,
+    toc: &mut Toc,
+) -> Result<()> {
+    let mut monsters_path = output.create_html("monster.html")?;
+
+    let doc: DOMTree<String> = html!(
+        <html>
+            <head>
+                <title>{text!("Monsters - MHRice")}</title>
+                { head_common() }
+            </head>
+            <body>
+                { navbar() }
+                <main>
+                <header><h1>"Monsters"</h1></header>
+                <section>
+                <h2 >"Large monsters"</h2>
+                <div class="select"><select id="scombo-monster" class="mh-scombo">
+                    <option value="0">"Sort by internal ID"</option>
+                    <option value="1">"Sort by in-game order"</option>
+                </select></div>
+                <ul class="mh-list-monster" id="slist-monster">{
+                    pedia.monsters.iter().filter_map(|monster| {
+                        let icon_path = format!("/resources/em{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
+                        let name_name = format!("EnemyIndex{:03}", monster.enemy_type?);
+
+                        let name_entry = pedia.monster_names.get_entry(&name_name)?;
+                        let order = pedia_ex.monster_order.get(&EmTypes::Em(monster.id | (monster.sub_id << 8)))
+                            .cloned().unwrap_or(0);
+                        let sort_tag = format!("{},{}", monster.id << 16 | monster.sub_id, order);
+                        Some(html!{<li data-sort=sort_tag>
+                            <a href={format!("/monster/{:03}_{:02}.html", monster.id, monster.sub_id)}>
+                                <img alt="Monster icon" class="mh-list-monster-icon" src=icon_path />
+                                <div>{gen_multi_lang(name_entry)}</div>
+                            </a>
+                        </li>})
+                    }).collect::<Vec<_>>()
+                }</ul>
+                </section>
+                <section>
+                <h2 >"Small monsters"</h2>
+                <ul class="mh-list-monster">{
+                    pedia.small_monsters.iter().filter(|monster|monster.sub_id == 0) // sub small monsters are b0rked
+                    .map(|monster| {
+                        let icon_path = format!("/resources/ems{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
+
+                        let name = if let Some(enemy_type) = monster.enemy_type {
+                            let name_name = format!("EnemyIndex{:03}", enemy_type);
+                            pedia.monster_names.get_entry(&name_name).map_or(
+                                html!(<span>{text!("Monster {:03}_{:02}", monster.id, monster.sub_id)}</span>),
+                                gen_multi_lang
+                            )
+                        } else {
+                            html!(<span>{text!("Monster {:03}_{:02}", monster.id, monster.sub_id)}</span>)
+                        };
+
+                        html!{<li>
+                            <a href={format!("/small-monster/{:03}_{:02}.html", monster.id, monster.sub_id)}>
+                                <img alt="Monster icon" class="mh-list-monster-icon" src=icon_path />
+                                <div>{ name }</div>
+                            </a>
+                        </li>}
+                    })
+                }</ul>
+                </section>
+                </main>
+            </body>
+        </html>
+    );
+
+    monsters_path.write_all(doc.to_string().as_bytes())?;
+
+    let monster_path = output.sub_sink("monster")?;
+    for monster in &pedia.monsters {
+        gen_monster(true, monster, pedia, pedia_ex, &monster_path, toc)?;
+    }
+
+    let monster_path = output.sub_sink("small-monster")?;
+    for monster in &pedia.small_monsters {
+        gen_monster(false, monster, pedia, pedia_ex, &monster_path, toc)?;
+    }
     Ok(())
 }

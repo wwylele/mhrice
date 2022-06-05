@@ -20,7 +20,10 @@ pub fn gen_armor_label(piece: Option<&Armor>) -> Box<div<String>> {
             <span>{ gen_multi_lang(piece.name) }</span>
         </div>)
     } else {
-        html!(<div>"-"</div>)
+        html!(<div class="mh-icon-text">
+            <div class="mh-colored-icon"/>
+            <span>"-"</span>
+        </div>)
     };
     html!(<div>
         { piece_name }
@@ -36,8 +39,8 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], output: &impl Sink) -> Result<()
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container">
-                <h1 class="title">"Armors"</h1>
+                <main>
+                <header><h1>"Armors"</h1></header>
                 <article class="message is-warning">
                     <div class="message-body">
                         "Armor names are probably incorrect."
@@ -57,14 +60,14 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], output: &impl Sink) -> Result<()
                             html!(<span>"<Unknown>"</span>)
                         };
                         html!(
-                            <li class="mh-armor-series-list" data-sort=sort_tag>
+                            <li data-sort=sort_tag>
                             <a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
                             <h2>{
                                 series_name
                             }</h2>
-                            <ul class="mh-armor-list"> {
+                            <ul> {
                                 series.pieces.iter().take(5).map(|piece| {
-                                    html!(<li class="mh-armor-list">
+                                    html!(<li>
                                         { gen_armor_label(piece.as_ref()) }
                                     </li>)
                                 })
@@ -73,7 +76,7 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], output: &impl Sink) -> Result<()
                         )
                     })
                 }</ul>
-                </div> </main>
+                </main>
             </body>
         </html>
     );
@@ -101,7 +104,7 @@ fn gen_armor(
     }
 
     let gen_explain = |pieces: &[Option<Armor<'_>>]| {
-        html!(<table>
+        html!(<div class="mh-table"><table>
             <thead><tr>
                 <th>"Name"</th>
                 <th>"Description"</th>
@@ -119,11 +122,11 @@ fn gen_armor(
                     </tr>)
                 })
             } </tbody>
-        </table>)
+        </table></div>)
     };
 
     let gen_stat = |pieces: &[Option<Armor<'_>>]| {
-        html!(<table>
+        html!(<div class="mh-table"><table>
             <thead><tr>
                 <th>"Name"</th>
                 <th>"Buying cost"</th>
@@ -180,7 +183,7 @@ fn gen_armor(
                     </tr>)
                 })
             } </tbody>
-        </table>)
+        </table></div>)
     };
 
     let rarity = series
@@ -197,38 +200,40 @@ fn gen_armor(
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container"> <div class="content">
-                <div class="mh-title-icon">
-                { gen_rared_icon(rarity, "/resources/equip/006") }
-                </div>
-                <h1 class="title"> {
-                    if let Some(name) = series.name {
-                        gen_multi_lang(name)
-                    } else {
-                        html!(<span>"<Unknown>"</span>)
-                    }
-                } </h1>
+                <main>
+                <header>
+                    <div class="mh-title-icon"> {
+                        gen_rared_icon(rarity, "/resources/equip/006")
+                    } </div>
+                    <h1> {
+                        if let Some(name) = series.name {
+                            gen_multi_lang(name)
+                        } else {
+                            html!(<span>"<Unknown>"</span>)
+                        }
+                    } </h1>
+                </header>
 
-                <section class="section">
-                <h2 class="title">"Description"</h2>
+                <section>
+                <h2 >"Description"</h2>
                 { gen_explain(&series.pieces[0..5])}
                 </section>
 
-                <section class="section">
-                <h2 class="title">"Stat"</h2>
+                <section>
+                <h2 >"Stat"</h2>
                 { gen_stat(&series.pieces[0..5])}
                 </section>
 
                 {
                     series.pieces[5..10].iter().any(|p|p.is_some()).then(||{
                         [
-                            html!(<section class="section">
-                                <h2 class="title">"EX Description"</h2>
+                            html!(<section>
+                                <h2 >"EX Description"</h2>
                                 { gen_explain(&series.pieces[5..10])}
                                 </section>
                             ),
-                            html!(<section class="section">
-                                <h2 class="title">"EX Stat"</h2>
+                            html!(<section>
+                                <h2 >"EX Stat"</h2>
                                 { gen_stat(&series.pieces[5..10])}
                                 </section>
                             )
@@ -236,9 +241,9 @@ fn gen_armor(
                     }).into_iter().flatten()
                 }
 
-                <section class="section">
-                <h2 class="title">"Crafting"</h2>
-                <table>
+                <section>
+                <h2 >"Crafting"</h2>
+                <div class="mh-table"><table>
                     <thead><tr>
                         <th>"Name"</th>
                         <th>"Cost"</th>
@@ -273,13 +278,13 @@ fn gen_armor(
                             </tr>)
                         })
                     } </tbody>
-                </table>
+                </table></div>
 
                 </section>
 
-                <section class="section">
-                <h2 class="title">"Layered crafting"</h2>
-                <table>
+                <section>
+                <h2 >"Layered crafting"</h2>
+                <div class="mh-table"><table>
                     <thead><tr>
                         <th>"Name"</th>
                         <th>"Categorized Material"</th>
@@ -307,11 +312,11 @@ fn gen_armor(
                             </tr>)
                         })
                     } </tbody>
-                </table>
+                </table></div>
 
                 </section>
 
-                </div> </div> </main>
+                </main>
             </body>
         </html>
     );

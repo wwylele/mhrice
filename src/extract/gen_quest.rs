@@ -51,46 +51,44 @@ pub fn gen_quest_list(quests: &[Quest], output: &impl Sink) -> Result<()> {
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container">
-                <h1 class="title">"Quests"</h1>
+                <main>
+                <header><h1>"Quests"</h1></header>
                 {
                     quests_ordered.into_iter().map(|(enemy_level, quests)|{
                         html!(<section>
-                         <h2 class="title">{text!("{:?}", enemy_level)}</h2>
-                         <ul class="mh-list-quest">{
-                            quests.into_iter().map(|(quest_level, quests)|{
-                                html!(
-                                    <li class="mh-list-quest">
-                                        <h3 class="title">{text!("{:?}", quest_level)}</h3>
-                                        <ul>{
-                                            quests.into_iter().map(|quest|{
-                                                let link = format!("/quest/{:06}.html", quest.param.quest_no);
-                                                let name = quest.name.map_or(
-                                                    html!(<span>{text!("Quest {:06}", quest.param.quest_no)}</span>),
-                                                    gen_multi_lang
-                                                );
-                                                let img = format!("/resources/questtype_{}.png",
-                                                    quest.param.quest_type.icon_index());
-                                                html!{<li>
-                                                    <a href={link} class="mh-icon-text">
-                                                    <img alt="Quest icon" src={img} class="mh-quest-icon"/>
-                                                    {
-                                                        quest.is_dl.then(
-                                                            ||html!(<span class="tag">{text!("Event")}</span>)
-                                                        )
-                                                    }
-                                                    {name}
-                                                    </a>
-                                                </li>}
-                                            })
-                                        }</ul>
-                                    </li>
-                                )
-                            })
-                        }</ul></section>)
+                        <h2>{text!("{:?}", enemy_level)}</h2>
+                        { quests.into_iter().map(|(quest_level, quests)|{
+                            html!(
+                                <section class="mh-quest-list">
+                                    <h3>{text!("{:?}", quest_level)}</h3>
+                                    <ul class="mh-quest-list">{
+                                        quests.into_iter().map(|quest|{
+                                            let link = format!("/quest/{:06}.html", quest.param.quest_no);
+                                            let name = quest.name.map_or(
+                                                html!(<span>{text!("Quest {:06}", quest.param.quest_no)}</span>),
+                                                gen_multi_lang
+                                            );
+                                            let img = format!("/resources/questtype_{}.png",
+                                                quest.param.quest_type.icon_index());
+                                            html!{<li>
+                                                <a href={link} class="mh-icon-text">
+                                                <img alt="Quest icon" src={img} class="mh-quest-icon"/>
+                                                {
+                                                    quest.is_dl.then(
+                                                        ||html!(<span class="tag">{text!("Event")}</span>)
+                                                    )
+                                                }
+                                                {name}
+                                                </a>
+                                            </li>}
+                                        })
+                                    }</ul>
+                                </section>
+                            )
+                        })}</section>)
                     })
                 }
-               </div> </main>
+                </main>
             </body>
         </html>
     );
@@ -136,20 +134,20 @@ pub fn gen_quest_monster_data(
             }
 
             let small = (small_chance != 0).then(|| {
-                html!(<span class="tag">
+                html!(<span>
                     <img alt="Small crown" src="/resources/small_crown.png" />
                     {text!("{}%", small_chance)}
                 </span>)
             });
 
             let large = (large_chance != 0).then(|| {
-                html!(<span class="tag">
+                html!(<span>
                     <img alt="Large crown" src="/resources/king_crown.png" />
                     {text!("{}%", large_chance)}
                 </span>)
             });
 
-            html!(<span>{small}{large}</span>)
+            html!(<span>{small} " " {large}</span>)
         } else {
             html!(<span>"-"</span>)
         }
@@ -387,8 +385,8 @@ fn gen_quest(
         .iter()
         .any(|&item| item != ItemId::None);
     let target_material = has_target_material.then(|| {
-        html!(<section class="section">
-        <h2 class="title">"Target material"</h2>
+        html!(<section>
+        <h2 >"Target material"</h2>
         <ul>{
         quest.param.tgt_item_id.iter().zip(quest.param.tgt_num.iter())
             .filter(|&(&item, _)| item != ItemId::None)
@@ -415,23 +413,26 @@ fn gen_quest(
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container"> <div class="content">
-                <div class="mh-title-icon">
-                    <img alt="Quest icon" src={img} class="mh-quest-icon"/>
-                </div>
-                <h1 class="title">
-                <span class="tag">{text!("{:?}-{:?}", quest.param.enemy_level, quest.param.quest_level)}</span>
-                {
-                    quest.is_dl.then(
-                        ||html!(<span class="tag">{text!("Event")}</span>)
-                    )
-                }
-                {
-                    quest.name.map_or(
-                        html!(<span>{text!("Quest {:06}", quest.param.quest_no)}</span>),
-                        gen_multi_lang
-                    )
-                }</h1>
+                <main>
+                <header>
+                    <div class="mh-title-icon">
+                        <img alt="Quest icon" src={img} class="mh-quest-icon"/>
+                    </div>
+                    <h1>
+                    <span class="tag">{text!("{:?}-{:?}", quest.param.enemy_level, quest.param.quest_level)}</span>
+                    {
+                        quest.is_dl.then(
+                            ||html!(<span class="tag">{text!("Event")}</span>)
+                        )
+                    }
+                    {
+                        quest.name.map_or(
+                            html!(<span>{text!("Quest {:06}", quest.param.quest_no)}</span>),
+                            gen_multi_lang
+                        )
+                    }</h1>
+                </header>
+                <section>
                 <p><span>"Objective: "</span><span> {
                     quest.target.map_or(
                         html!(<span>"-"</span>),
@@ -450,9 +451,10 @@ fn gen_quest(
                         |m|html!(<div><pre>{gen_multi_lang(m)}</pre></div>)
                     )
                 }
+                </section>
 
-                <section class="section">
-                <h2 class="title">"Basic data"</h2>
+                <section>
+                <h2 >"Basic data"</h2>
                 <div class="mh-kvlist">
                 <p class="mh-kv"><span>"Map"</span>
                     <span>{ text!("{}", quest.param.map_no) }</span></p>
@@ -488,9 +490,9 @@ fn gen_quest(
                 // TODO: fence
                 // TODO is_use_pillar
 
-                { has_normal_em.then(||html!(<section class="section">
-                <h2 class="title">"Monster stats"</h2>
-                <table>
+                { has_normal_em.then(||html!(<section>
+                <h2 >"Monster stats"</h2>
+                <div class="mh-table"><table>
                     <thead><tr>
                         <th>"Monster"</th>
                         <th>"Size"</th>
@@ -516,13 +518,13 @@ fn gen_quest(
                             </tr>)
                         })
                     } </tbody>
-                </table>
+                </table></div>
                 </section>))}
 
-                { has_normal_em.then(||html!(<section class="section">
-                <h2 class="title">"Multiplayer Factor"</h2>
+                { has_normal_em.then(||html!(<section>
+                <h2 >"Multiplayer Factor"</h2>
 
-                <table>
+                <div class="mh-table"><table>
                     <thead><tr>
                         <th>"Monster"</th>
                         <th>"HP"</th>
@@ -549,13 +551,13 @@ fn gen_quest(
                             </tr>)
                         })
                     } </tbody>
-                </table>
+                </table></div>
 
                 </section>)) }
 
                 { quest.hyakuryu.map(|h| {
-                    html!(<section class="section">
-                    <h2 class="title">"Rampage data"</h2>
+                    html!(<section>
+                    <h2 >"Rampage data"</h2>
                     <div class="mh-kvlist">
                     <p class="mh-kv"><span>"Attribute"</span>
                         <span>{ text!("{}", h.display()) }</span></p>
@@ -601,7 +603,7 @@ fn gen_quest(
                         })
                     }</ul></div>
 
-                    <table>
+                    <div class="mh-table"><table>
                     <thead><tr>
                         <th>"Boss monster"</th>
                         <th>"Sub type"</th>
@@ -620,7 +622,7 @@ fn gen_quest(
                                 <td>{text!("{}", wave.boss_em_nando_tbl_no)}</td>
                                 <td><ul class="mh-rampage-em-list"> {
                                     wave.em_table.iter().filter(|&&em|em != EmTypes::Em(0))
-                                    .map(|&em|html!(<li class="mh-rampage-em-list">
+                                    .map(|&em|html!(<li>
                                         { gen_monster_tag(pedia, em, false, true) }
                                     </li>))
                                 } </ul></td>
@@ -629,13 +631,13 @@ fn gen_quest(
                             </tr>)
                         })
                     } </tbody>
-                    </table>
+                    </table></div>
 
                     </section>)
                 }) }
 
-                <section class="section">
-                <h2 class="title">"Rewards"</h2>
+                <section>
+                <h2 >"Rewards"</h2>
                 { if let Some(reward) = &quest.reward {
                     html!(<div>
                     <p>{text!("Addtional target rewards: {}", reward.param.target_reward_add_num)}</p>
@@ -645,7 +647,7 @@ fn gen_quest(
 
                     { if let Some(common_material_reward) = &reward.common_material_reward {
                         html!(<div class="mh-reward-box">
-                        <table>
+                        <div class="mh-table"><table>
                             <thead><tr>
                                 <th>"Quest rewards"<br/>{translate_rule(common_material_reward.lot_rule)}</th>
                                 <th>"Probability"</th>
@@ -656,7 +658,7 @@ fn gen_quest(
                                     &common_material_reward.num_list,
                                     &common_material_reward.probability_list)
                             } </tbody>
-                        </table>
+                        </table></div>
                         </div>)
                     } else {
                         html!(<div></div>)
@@ -664,7 +666,7 @@ fn gen_quest(
 
                     { if let Some(additional_target_reward) = reward.additional_target_reward {
                         html!(<div class="mh-reward-box">
-                        <table>
+                        <div class="mh-table"><table>
                             <thead><tr>
                                 <th>"Addtional target rewards"<br/>{translate_rule(additional_target_reward.lot_rule)}</th>
                                 <th>"Probability"</th>
@@ -675,7 +677,7 @@ fn gen_quest(
                                     &additional_target_reward.num_list,
                                     &additional_target_reward.probability_list)
                             } </tbody>
-                        </table>
+                        </table></div>
                         </div>)
                     } else {
                         html!(<div></div>)
@@ -683,7 +685,7 @@ fn gen_quest(
 
                     { reward.additional_quest_reward.iter().map(|additional_quest_reward| {
                         html!(<div class="mh-reward-box">
-                        <table>
+                        <div class="mh-table"><table>
                             <thead><tr>
                                 <th>"Addtional rewards"<br/>{translate_rule(additional_quest_reward.lot_rule)}</th>
                                 <th>"Probability"</th>
@@ -694,13 +696,13 @@ fn gen_quest(
                                     &additional_quest_reward.num_list,
                                     &additional_quest_reward.probability_list)
                             } </tbody>
-                        </table>
+                        </table></div>
                         </div>)
                     })}
 
                     { if let Some(cloth_ticket) = &reward.cloth_ticket {
                         html!(<div class="mh-reward-box">
-                        <table>
+                        <div class="mh-table"><table>
                             <thead><tr>
                                 <th>"Outfit voucher"<br/>{translate_rule(cloth_ticket.lot_rule)}</th>
                                 <th>"Probability"</th>
@@ -711,7 +713,7 @@ fn gen_quest(
                                     &cloth_ticket.num_list,
                                     &cloth_ticket.probability_list)
                             } </tbody>
-                        </table>
+                        </table></div>
                         </div>)
                     } else {
                         html!(<div></div>)
@@ -723,7 +725,7 @@ fn gen_quest(
                     html!(<div>"No data"</div>)
                 }}
                 </section>
-                </div> </div> </main>
+                </main>
             </body>
         </html>
     );

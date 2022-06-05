@@ -316,21 +316,21 @@ function changeMapFilter(e) {
             style.innerHTML = "";
         } else {
             style.innerHTML =
-                `.mh-map-pop:not([data-filter*="${filter}"]) { display:none; }`;
+                `.mh-map-outer>.mh-map-container>.mh-map>.mh-map-pop:not([data-filter*="${filter}"]) { display:none; }`;
         }
     }
 
     const filter_button_prefix = "mh-map-filter-";
     const prev = document.getElementById(filter_button_prefix + g_cur_map_filter);
     if (prev !== null) {
-        prev.classList.remove("is-primary")
+        prev.classList.remove("is-active")
     }
 
     g_cur_map_filter = filter;
 
     const cur = document.getElementById(filter_button_prefix + g_cur_map_filter);
     if (cur !== null) {
-        cur.classList.add("is-primary")
+        cur.classList.add("is-active")
     }
 }
 
@@ -349,14 +349,14 @@ function changeItemFilter(e) {
     const filter_button_prefix = "mh-item-filter-button-";
     const prev = document.getElementById(filter_button_prefix + g_cur_item_filter);
     if (prev !== null) {
-        prev.classList.remove("is-primary")
+        prev.classList.remove("is-active")
     }
 
     g_cur_item_filter = filter;
 
     const cur = document.getElementById(filter_button_prefix + g_cur_item_filter);
     if (cur !== null) {
-        cur.classList.add("is-primary")
+        cur.classList.add("is-active")
     }
 }
 
@@ -411,6 +411,8 @@ function doSearch() {
             tag = "Quest";
         } else if (result.path.includes("weapon")) {
             tag = "Weapon";
+        } else if (result.path.includes("otomo")) {
+            tag = "Buddy";
         }
 
         const li = document.createElement("li");

@@ -82,17 +82,17 @@ fn gen_otomo_equip(
         </head>
         <body>
             { navbar() }
-            <main> <div class="container"> <div class="content">
-            <div class="mh-title-icon">
-            { gen_rared_icon(rarity, icon) }
-            </div>
-            <h1 class="title"> {
-                gen_multi_lang(series.name)
-            } </h1>
+            <main>
+            <header>
+                <div class="mh-title-icon">
+                { gen_rared_icon(rarity, icon) }
+                </div>
+                <h1> {gen_multi_lang(series.name)} </h1>
+            </header>
 
-            <section class="section">
-            <h2 class="title">"Description"</h2>
-            <table>
+            <section>
+            <h2 >"Description"</h2>
+            <div class="mh-table"><table>
                 <thead><tr>
                     <th>"Name"</th>
                     <th>"Description"</th>
@@ -111,12 +111,12 @@ fn gen_otomo_equip(
                         <td><pre>{gen_multi_lang(p.explain)}</pre></td>
                     </tr>)})}
                 </tbody>
-            </table>
+            </table></div>
             </section>
 
-            <section class="section">
-            <h2 class="title">"Stat"</h2>
-            <table>
+            <section>
+            <h2 >"Stat"</h2>
+            <div class="mh-table"><table>
                 <thead><tr>
                     <th>"Name"</th>
                     <th>"Sell value"</th>
@@ -157,12 +157,12 @@ fn gen_otomo_equip(
                     </ul></td>
                 </tr>)})}
                 </tbody>
-            </table>
+            </table></div>
             </section>
 
-            <section class="section">
-            <h2 class="title">"Crafting"</h2>
-            <table>
+            <section>
+            <h2 >"Crafting"</h2>
+            <div class="mh-table"><table>
                 <thead><tr>
                     <th>"Name"</th>
                     <th>"Cost"</th>
@@ -200,12 +200,12 @@ fn gen_otomo_equip(
 
 
                 </tbody>
-            </table>
+            </table></div>
             </section>
 
             // TODO: how to unlock one
 
-            </div> </div> </main>
+            </main>
         </body>
 
     </html>);
@@ -240,8 +240,8 @@ pub fn gen_otomo_equip_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Resul
                 </head>
                 <body>
                     { navbar() }
-                    <main> <div class="container">
-                    <h1 class="title">{text!("{}", title)}</h1>
+                    <main>
+                    <header><h1>{text!("{}", title)}</h1></header>
                     <div class="select"><select id="scombo-armor" class="mh-scombo">
                         <option value="0">"Sort by internal ID"</option>
                         <option value="1">"Sort by in-game order"</option>
@@ -256,19 +256,19 @@ pub fn gen_otomo_equip_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Resul
                             let sort_tag = format!("{},{}", index, sort_id);
                             let series_name = gen_multi_lang(series.name);
                             html!(
-                                <li class="mh-armor-series-list" data-sort=sort_tag>
+                                <li data-sort=sort_tag>
                                 <a href={format!("/otomo/{}.html", id.to_tag())}>
                                 <h2>{
                                     series_name
                                 }</h2>
-                                <ul class="mh-armor-list">
-                                    {series.head.as_ref().map(|p|html!(<li class="mh-armor-list">{
+                                <ul>
+                                    {series.head.as_ref().map(|p|html!(<li>{
                                         gen_atomo_armor_label(p)
                                     }</li>))}
-                                    {series.chest.as_ref().map(|p|html!(<li class="mh-armor-list">{
+                                    {series.chest.as_ref().map(|p|html!(<li>{
                                         gen_atomo_armor_label(p)
                                     }</li>))}
-                                    {series.weapon.as_ref().map(|p|html!(<li class="mh-armor-list">{
+                                    {series.weapon.as_ref().map(|p|html!(<li>{
                                         gen_atomo_weapon_label(p)
                                     }</li>))}
                                 </ul>
@@ -276,7 +276,7 @@ pub fn gen_otomo_equip_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Resul
                             )
                         })
                     }</ul>
-                    </div></main>
+                    </main>
                 </body>
             </html>
         );

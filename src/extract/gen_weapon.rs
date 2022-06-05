@@ -227,8 +227,8 @@ where
     });
 
     let horn = horn.map(|horn| {
-        html!(<section class="section">
-        <h2 class="title">"Melody"</h2>
+        html!(<section>
+        <h2 >"Melody"</h2>
         <ul> {
             horn.horn_melody_type_list.iter().map(|id| {
                 html!(<li> {
@@ -280,8 +280,8 @@ where
     ];
 
     let bow = bow.map(|bow| {
-        html!(<section class="section">
-        <h2 class="title">"Bottle"</h2>
+        html!(<section>
+        <h2 >"Bottle"</h2>
         <ul> {
             BOW_BOTTLE_MAP.iter().enumerate().filter(|&(i,_)| {
                 bow.bow_bottle_equip_flag_list[i]
@@ -322,9 +322,9 @@ where
     let rapid = lbg.map_or(&[][..], |lbg| &lbg.rapid_shot_list[..]);
 
     let bullet = bullet.map(|bullet| {
-        html!(<section class="section">
-        <h2 class="title">"Ammo list"</h2>
-        <table>
+        html!(<section>
+        <h2 >"Ammo list"</h2>
+        <div class="mh-table"><table>
         <thead><tr>
             <th>"Ammo Type"</th>
             <th>"Capacity"</th>
@@ -371,7 +371,7 @@ where
             html!(<tr><td>{ text!("{}", display_bullet_type(lbg.unique_bullet)) }</td></tr>)
         }) }
         </tbody>
-        </table>
+        </table></div>
         </section>)
     });
 
@@ -383,20 +383,20 @@ where
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container"> <div class="content">
-                <div class="mh-title-icon">
-                    {gen_weapon_icon(main)}
-                </div>
-                <h1 class="title">
-                    {gen_multi_lang(weapon.name)}
-                </h1>
+                <main>
+                <header>
+                    <div class="mh-title-icon">
+                        {gen_weapon_icon(main)}
+                    </div>
+                    <h1> {gen_multi_lang(weapon.name)} </h1>
+                </header>
 
-                <section class="section"><pre>
+                <section><pre>
                     {gen_multi_lang(weapon.explain)}
                 </pre></section>
 
-                <section class="section">
-                <h2 class="title">"Stat"</h2>
+                <section>
+                <h2 >"Stat"</h2>
                 <div class="mh-kvlist">
                 <p class="mh-kv"><span>"Attack"</span>
                 <span>{text!("{}", main.atk)}</span></p>
@@ -436,8 +436,8 @@ where
                 </div>
                 </section>
 
-                <section class="section">
-                <h2 class="title">"Ramp-up skills"</h2>
+                <section>
+                <h2 >"Ramp-up skills"</h2>
                 <ul> {
                     let main_list = main.hyakuryu_skill_id_list.iter()
                         .zip(std::iter::repeat(None));
@@ -469,9 +469,9 @@ where
 
                 { bow }
 
-                <section class="section">
-                <h2 class="title">"Crafting"</h2>
-                <table>
+                <section>
+                <h2 >"Crafting"</h2>
+                <div class="mh-table"><table>
                     <thead><tr>
                         <th>""</th>
                         <th>"Cost"</th>
@@ -507,11 +507,11 @@ where
                                 &change.base, None)
                         })}
                     </tbody>
-                </table>
+                </table></div>
                 </section>
 
-                <section class="section">
-                <h2 class="title">"Upgrade"</h2>
+                <section>
+                <h2 >"Upgrade"</h2>
                 <ul> {
                     weapon.children.iter().map(|child| {
                         let weapon = weapon_tree.weapons.get(child).unwrap();
@@ -520,7 +520,7 @@ where
                 } </ul>
                 </section>
 
-                </div></div></main>
+                </main>
             </body>
         </html>
     );
@@ -563,14 +563,12 @@ where
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container">
-                <h1 class="title">
-                    {text!("{}", name)}
-                </h1>
+                <main>
+                <header><h1> {text!("{}", name)} </h1></header>
                 <div class="mh-weapon-tree">
                 { gen_tree_rec(weapon_tree, &weapon_tree.roots) }
                 </div>
-                </div></main>
+                </main>
             </body>
         </html>
     );

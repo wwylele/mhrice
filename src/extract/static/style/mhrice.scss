@@ -1,0 +1,574 @@
+@charset "utf-8";
+
+@import "bulma/sass/utilities/_all";
+@import "bulma/sass/base/_all.sass";
+@import "bulma/sass/components/message.sass";
+@import "bulma/sass/components/navbar.sass";
+@import "bulma/sass/components/tabs.sass";
+@import "bulma/sass/elements/button.sass";
+@import "bulma/sass/elements/container.sass";
+@import "bulma/sass/elements/content.sass";
+@import "bulma/sass/elements/icon.sass";
+@import "bulma/sass/elements/tag.sass";
+@import "bulma/sass/form/_all.sass";
+@import "bulma/sass/grid/columns.sass";
+@import "bulma/sass/helpers/_all.sass";
+
+$select-background-color: $grey-lightest;
+
+/** Page layout **/
+div.mh-logo-text {
+    font-weight: bold;
+    margin-left: 1em;
+    margin-right: 1em;
+}
+
+nav {
+    @extend .navbar, .is-primary;
+
+    >div {
+        @extend .container;
+    }
+}
+
+main {
+    @extend .content, .container;
+
+    >header {
+        display: flex;
+        align-items: center;
+
+        >.mh-title-icon {
+            padding-left: 1rem;
+            padding-right: 1rem;
+
+            >* {
+                vertical-align: middle;
+            }
+        }
+
+        >h1 {
+            margin-top: 1em;
+            margin-bottom: 1em;
+        }
+    }
+
+    >header.mh-monster-header {
+        display: block;
+
+        @media(min-width:700px) {
+            img {
+                float: right;
+            }
+        }
+    }
+
+    >section {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+        padding-left: 1rem;
+        border-bottom: solid 2px $border;
+    }
+
+}
+
+/** common interactive helper **/
+.mh-hidden {
+    display: none;
+}
+
+.mh-disabled {
+    text-decoration: line-through;
+}
+
+.mh-spoiler {
+    color: black;
+    background-color: black;
+}
+
+.mh-spoiler:hover {
+    background-color: white;
+}
+
+.mh-ride-cond {
+    color: red;
+}
+
+/** colored icon **/
+
+.mh-colored-icon {
+    display: inline-grid;
+    grid-template: 1fr / 1fr;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+
+    >* {
+        grid-column: 1 / 1;
+        grid-row: 1 / 1;
+    }
+
+    >*:nth-child(1) {
+        z-index: 2;
+        width: 2rem;
+        height: 2rem;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+    }
+
+    >*:nth-child(2) {
+        background-color: black;
+        z-index: 1;
+        width: 2rem;
+        height: 2rem;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+    }
+
+    >*:nth-child(3) {
+        z-index: 3;
+        width: 2rem;
+        height: 2rem;
+        position: relative;
+
+        >* {
+            width: 1rem;
+            height: 1rem;
+            position: absolute;
+            background-size: contain;
+        }
+
+        >.mh-addon-great {
+            left: -0.35rem;
+            top: -0.35rem;
+            background-image: url('/resources/item_addon_1.png');
+        }
+
+        >.mh-addon-supply {
+            left: 1.3rem;
+            top: -0.2rem;
+            background-image: url('/resources/item_addon_2.png');
+        }
+
+        >.mh-addon-lv1 {
+            left: -0.25rem;
+            top: -0.2rem;
+            background-image: url('/resources/item_addon_3.png');
+        }
+
+        >.mh-addon-lv2 {
+            left: -0.25rem;
+            top: -0.2rem;
+            background-image: url('/resources/item_addon_4.png');
+        }
+
+        >.mh-addon-lv3 {
+            left: -0.25rem;
+            top: -0.2rem;
+            background-image: url('/resources/item_addon_5.png');
+        }
+    }
+}
+
+.mh-icon-text>* {
+    vertical-align: middle;
+}
+
+/** Armor series list **/
+
+ul.mh-armor-series-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+
+    >li {
+        display: inline-block;
+        vertical-align: top;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+        margin-right: 1rem;
+
+        &:hover {
+            background-color: $select-background-color;
+        }
+
+        h2 {
+            margin-bottom: 0.5rem;
+        }
+
+        ul {
+            list-style: none;
+            margin-left: 0;
+        }
+    }
+}
+
+/** Generic grid list **/
+ul.mh-item-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+
+    >li {
+        margin-top: 0.5rem;
+        margin-right: 1rem;
+    }
+}
+
+/** Table horizontal scroll **/
+.mh-table {
+    display: block;
+    overflow-x: auto;
+}
+
+/** Filter buttons **/
+.mh-filters {
+    @extend .tabs;
+}
+
+/** key-value pairs */
+.mh-kvlist {
+    column-width: 20rem;
+    column-count: 3;
+
+    >.mh-kv>*:nth-child(1) {
+        font-weight: bold;
+        margin-right: 2rem;
+    }
+}
+
+/** Armor page **/
+ul.mh-armor-skill-list {
+    list-style: none;
+    margin-left: 0;
+    margin-top: 0;
+}
+
+/** Slot icons **/
+.mh-slot {
+    display: inline-block;
+    width: 1.65rem;
+    height: 1.25rem;
+}
+
+/** Sharpness bar **/
+.mh-sharpness-bar {
+    display: inline-block;
+    white-space: nowrap;
+    width: 10rem;
+    height: 1rem;
+    background-color: black;
+    border: solid gray;
+    vertical-align: middle;
+    position: relative;
+
+    >.mh-sharpness {
+        position: absolute;
+        display: inline-block;
+        height: 100%;
+        bottom: 0;
+    }
+
+    >.mh-sharpness-half {
+        position: absolute;
+        display: inline-block;
+        height: 50%;
+        bottom: 0;
+    }
+
+    .mh-sharpness-color-0 {
+        background-color: red;
+    }
+
+    .mh-sharpness-color-1 {
+        background-color: orange;
+    }
+
+    .mh-sharpness-color-2 {
+        background-color: yellow;
+    }
+
+    .mh-sharpness-color-3 {
+        background-color: green;
+    }
+
+    .mh-sharpness-color-4 {
+        background-color: blue;
+    }
+
+    .mh-sharpness-color-5 {
+        background-color: white;
+    }
+
+    .mh-sharpness-color-6 {
+        background-color: blueviolet;
+    }
+}
+
+/** Map **/
+.mh-map-outer {
+    border: solid;
+    position: relative;
+    width: 100%;
+    height: calc(min(80vh, 70vw));
+
+    >.mh-map-buttons {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 10;
+    }
+
+    >.mh-map-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        overflow: scroll;
+        width: 100%;
+        height: 100%;
+        cursor: grab;
+
+        >.mh-map {
+            position: relative;
+            width: 100%;
+            padding-top: 100%;
+
+            * {
+                user-select: none;
+            }
+
+            >.mh-map-layer {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+            }
+
+            >.mh-map-pop {
+                position: absolute;
+                width: 2rem;
+                height: 2rem;
+                margin-left: -1rem;
+                margin-top: -1rem;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+
+                &:hover {
+                    outline: 1px solid yellow;
+                }
+
+                &.mh-map-select {
+                    outline: 1px solid green;
+                }
+
+                .mh-wire-long-jump-icon {
+                    width: 2rem;
+                    height: 2rem;
+                }
+
+                .mh-icon-container {
+                    width: 2rem;
+                    height: 2rem;
+                    display: grid;
+                    place-items: center;
+                }
+
+                .mh-main-camp {
+                    width: 1.9375rem;
+                    height: 2.0625rem;
+                }
+
+                .mh-sub-camp {
+                    width: 1.9375rem;
+                    height: 1.875rem;
+                }
+            }
+        }
+    }
+}
+
+/** Monster list **/
+
+.mh-list-monster-icon {
+    width: 8rem;
+}
+
+ul.mh-list-monster {
+    margin: 0 auto;
+    text-align: center;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+
+    >li {
+        display: inline-block;
+        vertical-align: top;
+        margin-bottom: 1rem;
+
+        &:hover {
+            background-color: $select-background-color;
+        }
+    }
+
+}
+
+/** Quest list **/
+section.mh-quest-list {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    padding-left: 1rem;
+}
+
+ul.mh-quest-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+
+    >li {
+        margin-top: 0.5rem;
+        margin-right: 1rem;
+    }
+}
+
+img.mh-quest-icon {
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
+}
+
+/** Monster part color **/
+span.mh-part {
+    display: inline-block;
+    height: 1.5rem;
+    width: 1.5rem;
+    border-radius: 2px;
+    box-shadow: 0 2px 3px 0 $grey, inset 0 0 0 1px $grey;
+    margin-right: 0.5rem;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+}
+
+/** Monster extract color **/
+span.mh-extract {
+    display: inline-block;
+    height: 1.5rem;
+    width: 1.5rem;
+    border-radius: 50%;
+    box-shadow: 0 2px 3px 0 $grey, inset 0 0 0 1px $grey;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+}
+
+span.mh-extract-red {
+    @extend span.mh-extract;
+    background-color: red;
+}
+
+span.mh-extract-orange {
+    @extend span.mh-extract;
+    background-color: orange;
+}
+
+span.mh-extract-white {
+    @extend span.mh-extract;
+    background-color: white;
+}
+
+span.mh-extract-unknown {
+    @extend span.mh-extract;
+    background-color: black;
+}
+
+/** Quest monsters **/
+.mh-quest-list-monster-icon {
+    width: 4em;
+    vertical-align: middle;
+}
+
+ul.mh-multi-factor {
+    list-style: none;
+    margin-left: 0;
+    margin-top: 0;
+    white-space: nowrap;
+}
+
+/** Rampage **/
+ul.mh-rampage-em-list {
+    margin-left: 0;
+    margin-top: 0;
+
+    >li {
+        display: inline-block;
+    }
+}
+
+/** Weapon list **/
+.mh-weapon-tree>ul>li {
+    display: inline-block;
+    vertical-align: top;
+    border-radius: 6px;
+    border-width: thin;
+    border-color: gray;
+    border-style: solid;
+    margin: 0.5rem;
+    padding: 0.5rem;
+
+    ul {
+        list-style-type: none;
+        margin-top: 0;
+        margin-left: 1rem;
+    }
+}
+
+
+/** Search page **/
+ul#mh-search-result {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+
+    >li {
+        display: inline-block;
+    }
+}
+
+/** Reward table **/
+.mh-reward-tables {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.mh-reward-box {
+    border-radius: 6px;
+    box-shadow: 0 0 1em -.125em rgba(10, 10, 10, .1), 0 0 0 1px rgba(10, 10, 10, .02);
+    display: block;
+    padding: 1rem;
+}
+
+.mh-lot-rule {
+    font-weight: normal;
+}
+
+.mh-part-rule {
+    border: 1px black dotted;
+}
+
+.mh-part-rule ul {
+    list-style: none;
+    margin-top: 0;
+    margin-left: 1rem;
+}
+
+/** Message **/
+.mh-msg-place-holder {
+    background-color: yellow;
+}
+
+/** Item source / usage **/
+.mh-item-in-out {
+    margin-left: 1rem;
+    margin-bottom: 1rem;
+}

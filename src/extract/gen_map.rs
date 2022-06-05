@@ -63,7 +63,7 @@ fn gen_map(
     mut toc_sink: TocSink<'_>,
 ) -> Result<()> {
     let gen_fish_table = |tag: &str, fishes: &[rsz::FishSpawnGroupInfo]| -> Box<div<String>> {
-        html!( <div class="mh-reward-box"><table>
+        html!(<div class="mh-reward-box"><div class="mh-table"><table>
         <thead><tr>
         <th>""</th>
         <th>{text!("{}", tag)}</th>
@@ -97,7 +97,7 @@ fn gen_map(
                     </tr>)
                 })
             })
-        } </tbody></table></div>)
+        } </tbody></table></div></div>)
     };
 
     let mut map_icons = vec![];
@@ -144,7 +144,7 @@ fn gen_map(
                     explain_inner = html!(
                         <div class="mh-reward-tables">
                         { relic_explain }
-                        <div class="mh-reward-box"><table>
+                        <div class="mh-reward-box"><div class="mh-table"><table>
                             <thead><tr>
                             <th>"Low rank material"</th>
                             <th>"Probability"</th>
@@ -155,9 +155,9 @@ fn gen_map(
                                     &lot.lower_num,
                                     &lot.lower_probability)
                             } </tbody>
-                        </table></div>
+                        </table></div></div>
 
-                        <div class="mh-reward-box"><table>
+                        <div class="mh-reward-box"><div class="mh-table"><table>
                             <thead><tr>
                             <th>"High rank material"</th>
                             <th>"Probability"</th>
@@ -168,7 +168,7 @@ fn gen_map(
                                     &lot.upper_num,
                                     &lot.upper_probability)
                             } </tbody>
-                        </table></div>
+                        </table></div></div>
                     </div>);
                 } else {
                     explain_inner = html!(<div class="mh-reward-tables">
@@ -183,7 +183,7 @@ fn gen_map(
                     //let rotate = format!("transform:rotate({}rad);", angle);
                     html!(<div class="mh-icon-container">
                         <img alt="Wirebug jump point" src="/resources/item/115.png"
-                        class="mh-wire-long-jump-icon" /*style={rotate}*/ /></div>)
+                        class="mh-wire-long-jump-icon" /*style={rotate}*/ draggable=false/></div>)
                 });
 
                 explain_inner = html!(<div class="mh-reward-tables">
@@ -197,10 +197,10 @@ fn gen_map(
                     html!(<div class="mh-icon-container"> {
                         if behavior.camp_type == rsz::CampType::BaseCamp {
                             html!(<img alt="Main camp" src="/resources/main_camp.png"
-                                class="mh-main-camp"/>)
+                                class="mh-main-camp" draggable=false/>)
                         } else {
                             html!(<img alt="Sub camp" src="/resources/sub_camp.png"
-                                class="mh-sub-camp"/>)
+                                class="mh-sub-camp" draggable=false/>)
                         }
                     } </div>)
                 });
@@ -257,60 +257,60 @@ fn gen_map(
             </head>
             <body>
             { navbar() }
-            <main><div class="container"> <div class="content">
+            <main>
 
-            <h1 class="title">
-            {title}
-            </h1>
+            <header><h1>{title}</h1></header>
+
+            <div class="mh-filters"><ul>
+            <li id="mh-map-filter-all" class="mh-map-filter is-active"><a>"All icons"</a></li>
+            <li id="mh-map-filter-item" class="mh-map-filter"><a>"Gathering"</a></li>
+            <li id="mh-map-filter-relic" class="mh-map-filter"><a>"Relics"</a></li>
+            <li id="mh-map-filter-camp" class="mh-map-filter"><a>"Camps"</a></li>
+            <li id="mh-map-filter-jump" class="mh-map-filter"><a>"Jumping points"</a></li>
+            <li id="mh-map-filter-fish" class="mh-map-filter"><a>"Fishing points"</a></li>
+            </ul></div>
 
             <div class="columns">
 
             <div class="column is-two-thirds">
-            <div class="mh-map-container" id="mh-map-container">
-            <div class="mh-map" id="mh-map">
-            {(0..map.layer_count).map(|j| {
-                let c = if j == 0 {
-                    "mh-map-layer"
-                } else {
-                    "mh-map-layer mh-hidden"
-                };
-                let html_id = format!("mh-map-layer-{}", j);
-                html!(
-                    <img alt="Map" class={c} id={html_id.as_str()} draggable=false
-                        src={format!("/resources/map{id:02}_{j}.png")}/>
-                )
-            })}
-            { map_icons }
-            </div>
+            <div class="mh-map-outer">
+                <div class="mh-map-container" id="mh-map-container">
+                    <div class="mh-map" id="mh-map">
+                    {(0..map.layer_count).map(|j| {
+                        let c = if j == 0 {
+                            "mh-map-layer"
+                        } else {
+                            "mh-map-layer mh-hidden"
+                        };
+                        let html_id = format!("mh-map-layer-{}", j);
+                        html!(
+                            <img alt="Map" class={c} id={html_id.as_str()} draggable=false
+                                src={format!("/resources/map{id:02}_{j}.png")}/>
+                        )
+                    })}
+                    { map_icons }
+                    </div>
+                </div>
+
+                <div class="mh-map-buttons">
+                    <button class="button" id="button-scale-down" disabled=true>
+                        <span class="icon"><i class="fas fa-search-minus"></i></span>
+                    </button>
+                    <button class="button" id="button-scale-up">
+                        <span class="icon"><i class="fas fa-search-plus"></i></span>
+                    </button>
+                    {
+                        (map.layer_count > 1).then(||html!(
+                            <button class="button" id="button-map-layer">
+                            <span class="icon"><i class="fas fa-layer-group"></i></span>
+                            <span>"Change Layer"</span>
+                            </button>))
+                    }
+                </div>
             </div>
             </div>
 
             <div class="column">
-
-            <div>
-            <button id="mh-map-filter-all" class="mh-map-filter button is-primary">"All icons"</button>
-            <button id="mh-map-filter-item" class="mh-map-filter button">"Gathering"</button>
-            <button id="mh-map-filter-relic" class="mh-map-filter button">"Relics"</button>
-            <button id="mh-map-filter-camp" class="mh-map-filter button">"Camps"</button>
-            <button id="mh-map-filter-jump" class="mh-map-filter button">"Jumping points"</button>
-            <button id="mh-map-filter-fish" class="mh-map-filter button">"Fishing points"</button>
-            </div>
-
-            <div>
-            <button class="button" id="button-scale-down" disabled=true>
-                <span class="icon"><i class="fas fa-search-minus"></i></span>
-            </button>
-            <button class="button" id="button-scale-up">
-                <span class="icon"><i class="fas fa-search-plus"></i></span>
-            </button>
-            {
-                (map.layer_count > 1).then(||html!(
-                    <button class="button" id="button-map-layer">
-                      <span class="icon"><i class="fas fa-layer-group"></i></span>
-                      <span>"Change Layer"</span>
-                    </button>))
-            }
-            </div>
 
             <div>
             { map_explains }
@@ -321,7 +321,7 @@ fn gen_map(
 
             </div> // columns
 
-            </div></div></main>
+            </main>
             </body>
         </html>
     );
@@ -354,8 +354,8 @@ pub fn gen_map_list(pedia: &Pedia, output: &impl Sink) -> Result<()> {
             </head>
             <body>
                 { navbar() }
-                <main> <div class="container">
-                <h1 class="title">"Map"</h1>
+                <main>
+                <header><h1>"Map"</h1></header>
                 <ul>
                 {
                     pedia.maps.iter().map(|(&i, _)|{
@@ -365,7 +365,7 @@ pub fn gen_map_list(pedia: &Pedia, output: &impl Sink) -> Result<()> {
                     })
                 }
                 </ul>
-                </div></main>
+                </main>
             </body>
         </html>
     );
