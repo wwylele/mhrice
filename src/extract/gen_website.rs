@@ -152,9 +152,11 @@ pub fn navbar() -> Box<nav<String>> {
                 <a class="navbar-item" href="/about.html">
                     "About"
                 </a>
+            </div>
+            <div class="navbar-end">
                 <div class="navbar-item has-dropdown is-hoverable">
                     <a class="navbar-link">
-                        "Data language"
+                        "Language"
                     </a>
                     <div class="navbar-dropdown">{
                         (0..32).filter_map(|i| {
@@ -165,28 +167,17 @@ pub fn navbar() -> Box<nav<String>> {
                             }</a>})
                         })
                     }
+                    <hr class="navbar-divider"/>
+                    <div class="navbar-item">
+                        "Use cookie to save preference"
                     </div>
-                </div>
+                    <div class="navbar-item">
+                        <div class="buttons has-addons">
+                            <button id="cookie-yes" class="button is-small">"Yes"</button>
+                            <button id="cookie-no" class="button is-small is-selected is-danger">"No"</button>
+                        </div>
+                    </div>
 
-                <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link">
-                        "Cookie usage"
-                    </a>
-                    <div class="navbar-dropdown">
-                        <div class="navbar-item">
-                            "This website uses cookies to store personal preference. \
-                            Choose whether to consent the cookie usage."
-                        </div>
-                        <div class="navbar-item">
-                            <label class="radio">
-                                <input type="radio" name="cookie-consent" id="cookie-yes"/>
-                                "Yes"
-                            </label>
-                            <label class="radio">
-                                <input type="radio" name="cookie-consent" id="cookie-no"/>
-                                "No"
-                            </label>
-                        </div>
                     </div>
                 </div>
             </div>

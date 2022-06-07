@@ -21,6 +21,8 @@ let g_toc = null;
 let g_map_pos = { top: 0, left: 0, x: 0, y: 0, container: null };
 
 document.addEventListener('DOMContentLoaded', function () {
+    addEventListensers();
+
     for (const element of document.getElementsByClassName("mh-lang-menu")) {
         g_supported_mh_lang.push(removePrefix(element.id, "mh-lang-menu-"));
     }
@@ -35,8 +37,6 @@ document.addEventListener('DOMContentLoaded', function () {
     change_sort("monster", 1);
     change_sort("item", 1);
     change_sort("armor", 1);
-
-    addEventListensers();
 });
 
 function addEventListensers() {
@@ -101,21 +101,34 @@ function check_cookie() {
         }
     }
 
-    if (g_cookie_consent) {
-        document.getElementById("cookie-yes").checked = true;
-    } else {
-        document.getElementById("cookie-no").checked = true;
+    updateCookieButtons();
+}
+
+function updateCookieButtons() {
+    const yes = document.getElementById("cookie-yes");
+    const no = document.getElementById("cookie-no");
+    if (yes && no) {
+        if (g_cookie_consent) {
+            yes.classList.add("is-selected", "is-success");
+            no.classList.remove("is-selected", "is-danger");
+        } else {
+            yes.classList.remove("is-selected", "is-success");
+            no.classList.add("is-selected", "is-danger");
+        }
     }
+
 }
 
 function enableCookie() {
     document.cookie = "consent=yes; path=/";
     g_cookie_consent = true;
+    updateCookieButtons();
 }
 
 function disableCookie() {
     g_cookie_consent = false;
     delete_all_cookie();
+    updateCookieButtons();
 }
 
 function delete_all_cookie() {
