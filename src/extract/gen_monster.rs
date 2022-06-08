@@ -1200,6 +1200,12 @@ pub fn gen_monsters(
             </head>
             <body>
                 { navbar() }
+                <article class="message is-warning">
+                    <div class="message-body">
+                        "This website won't get update within the first two weeks after Sunbreak release."
+                    </div>
+                </article>
+
                 <main>
                 <header><h1>"Monsters"</h1></header>
                 <section>
