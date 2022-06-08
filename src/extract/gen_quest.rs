@@ -556,8 +556,8 @@ fn gen_quest(
                 </section>)) }
 
                 { quest.hyakuryu.map(|h| {
-                    html!(<section>
-                    <h2 >"Rampage data"</h2>
+                    [html!(<section>
+                    <h2 >"Rampage information"</h2>
                     <div class="mh-kvlist">
                     <p class="mh-kv"><span>"Attribute"</span>
                         <span>{ text!("{}", h.display()) }</span></p>
@@ -574,7 +574,9 @@ fn gen_quest(
                     <p class="mh-kv"><span>"Siege weapon unlock table"</span>
                         <span>{ text!("{}", h.hm_unlock_tbl_no) }</span></p>
                     </div>
-                    <div>"Tasks:"<ul>{
+                    </section>),
+
+                    html!(<section><h2>"Rampage Tasks"</h2><ul>{
                         h.sub_target.iter().enumerate()
                         .filter(|(_, target)|**target != QuestTargetType::None)
                         .map(|(i, target)| {
@@ -601,9 +603,9 @@ fn gen_quest(
                             };
                             html!(<li>{ text!("{}", s) }{extra_target}</li>)
                         })
-                    }</ul></div>
+                    }</ul></section>),
 
-                    <div class="mh-table"><table>
+                    html!(<section><h2>"Rampage Waves"</h2><div class="mh-table"><table>
                     <thead><tr>
                         <th>"Boss monster"</th>
                         <th>"Sub type"</th>
@@ -633,8 +635,8 @@ fn gen_quest(
                     } </tbody>
                     </table></div>
 
-                    </section>)
-                }) }
+                    </section>)]
+                }).into_iter().flatten() }
 
                 <section>
                 <h2 >"Rewards"</h2>
