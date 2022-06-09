@@ -686,8 +686,8 @@ pub fn gen_lot(
                                                 .map(|cond| {
                                                     let part_color = format!("mh-part mh-part-{}", cond.parts_group);
                                                     html!(<li>
-                                                        {text!("[{}]", cond.parts_group)}
                                                         <span class=part_color.as_str() />
+                                                        {text!("[{}]", cond.parts_group)}
                                                         {text!("(x{})", cond.parts_break_level)}
                                                     </li>)
                                                 });
@@ -1074,8 +1074,8 @@ pub fn gen_monster(
 
                             Ok(html!(<tr class=hidden>
                                 <td>
-                                    { text!("[{}]", index) }
                                     <span class=part_color.as_str() />
+                                    { text!("[{}]", index) }
                                     { text!("{}", part_name) }
                                 </td>
                                 <td>{ text!("{}", part.vital) }</td>
