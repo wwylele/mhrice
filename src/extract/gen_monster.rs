@@ -3,6 +3,7 @@ use super::gen_quest::*;
 use super::gen_website::{gen_multi_lang, head_common, navbar};
 use super::pedia::*;
 use super::sink::*;
+use crate::part_color::PART_COLORS;
 use crate::rsz::*;
 use anyhow::{bail, Result};
 use std::collections::HashMap;
@@ -916,7 +917,10 @@ pub fn gen_monster(
 
                 <section>
                 <h2 >"Hitzone data"</h2>
-                <img alt="Monster hitzone diagram" src=meat_figure />
+                <div class="mh-color-diagram">
+                    <img id="mh-hitzone-img" alt="Monster hitzone diagram" src=meat_figure />
+                    <canvas id="mh-hitzone-canvas" width=1 height=1 />
+                </div>
                 <div>
                     <input type="checkbox" id="mh-invalid-meat-check"/>
                     <label for="mh-invalid-meat-check">"Display invalid parts"</label>
@@ -938,9 +942,9 @@ pub fn gen_monster(
                         <th>"Dizzy"</th>
                     </tr>
                     </thead>
-                    <tbody>{
+                    {
                         monster.meat_data.meat_container.iter()
-                            .enumerate().flat_map(|(part, meats)| {
+                            .enumerate().map(|(part, meats)| {
 
                             let part_name = if let Some(names) = collider_mapping.meat_map.get(&part) {
                                 names.iter().map(|s|s.as_str()).collect::<Vec<&str>>().join(", ")
@@ -953,7 +957,7 @@ pub fn gen_monster(
                             let span = meats.meat_group_info.len();
                             let mut part_common: Option<Vec<Box<td<String>>>> = Some(vec![
                                 html!(<td rowspan={span}>
-                                    <span class=part_color.as_str() />
+                                    <span class=part_color.as_str()/>
                                     { text!("{}", part_name) }
                                 </td>),
                             ]);
@@ -978,7 +982,12 @@ pub fn gen_monster(
                                 ""
                             };
 
-                            meats.meat_group_info.iter().enumerate()
+                            let id = format!("mh-hitzone-dt-{part}");
+
+                            html!(<tbody id={id.as_str()} class="mh-color-diagram-switch"
+                                data-color={ PART_COLORS[part] } data-diagram="mh-hitzone"> {
+
+                                meats.meat_group_info.iter().enumerate()
                                 .map(move |(phase, group_info)| {
                                     let name = pedia_ex.meat_names.get(&MeatKey {
                                         em_type: monster_em_type,
@@ -1002,15 +1011,19 @@ pub fn gen_monster(
                                     ]);
                                     html!(<tr class=hidden> {tds} </tr>)
                                 })
+                            } </tbody>)
                         })
-                    }</tbody>
+                    }
                 </table></div>
                 </section>
                 <section>
                 <h2 >
                     "Parts"
                 </h2>
-                <img alt="Monster parts diagram" src=parts_group_figure />
+                <div class="mh-color-diagram">
+                    <img id="mh-part-img" alt="Monster parts diagram" src=parts_group_figure />
+                    <canvas id="mh-part-canvas" width=1 height=1 />
+                </div>
                 <div>
                     <input type="checkbox" id="mh-invalid-part-check"/>
                     <label for="mh-invalid-part-check">"Display invalid parts"</label>
@@ -1035,10 +1048,10 @@ pub fn gen_monster(
 
                             let part_color = format!("mh-part mh-part-{}", index);
 
-                            let hidden = if part.extractive_type == ExtractiveType::None {
-                                "mh-invalid-part"
+                            let class_str = if part.extractive_type == ExtractiveType::None {
+                                "mh-invalid-part mh-color-diagram-switch"
                             } else {
-                                ""
+                                "mh-color-diagram-switch"
                             };
 
                             let index_u16 = u16::try_from(index)?;
@@ -1072,9 +1085,12 @@ pub fn gen_monster(
                                 "".to_string()
                             };
 
-                            Ok(html!(<tr class=hidden>
+                            let id = format!("mh-part-dt-{index}");
+
+                            Ok(html!(<tr id = {id.as_str()} class=class_str data-color={ PART_COLORS[index] }
+                                data-diagram="mh-part">
                                 <td>
-                                    <span class=part_color.as_str() />
+                                    <span class=part_color.as_str()/>
                                     { text!("[{}]", index) }
                                     { text!("{}", part_name) }
                                 </td>

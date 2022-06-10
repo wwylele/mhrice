@@ -15,6 +15,7 @@
 @import "bulma/sass/helpers/_all.sass";
 
 $select-background-color: $grey-lightest;
+$active-background-color: hsl(40, 84%, 90%);
 
 /** Page layout **/
 div.mh-logo-text {
@@ -219,6 +220,12 @@ ul.mh-item-list {
 .mh-table {
     display: block;
     overflow-x: auto;
+
+    td {
+        // Bulma's buggy last border erasing
+        // Let's just add it back
+        border-bottom-width: 1px !important;
+    }
 }
 
 /** Filter buttons **/
@@ -439,6 +446,28 @@ img.mh-quest-icon {
 }
 
 /** Monster part color **/
+div.mh-color-diagram {
+    display: grid;
+    grid-template: 1fr / 1fr;
+
+    >* {
+        grid-column: 1 / 1;
+        grid-row: 1 / 1;
+    }
+}
+
+.mh-color-diagram-switch {
+    cursor: pointer;
+}
+
+.mh-color-diagram-switch:hover {
+    background-color: $select-background-color;
+}
+
+.mh-color-diagram-switch.mh-active {
+    background-color: $active-background-color;
+}
+
 span.mh-part {
     display: inline-block;
     height: 1.5rem;

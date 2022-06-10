@@ -20,6 +20,8 @@ let g_toc = null;
 
 let g_map_pos = { top: 0, left: 0, x: 0, y: 0, container: null };
 
+let g_diagram_current = new Map();
+
 document.addEventListener('DOMContentLoaded', function () {
     addEventListensers();
 
@@ -65,6 +67,8 @@ function addEventListensers() {
         e => onCheckDisplay(e.currentTarget, 'mh-ride-cond', 'mh-default-cond'));
     addEventListenerToId("mh-preset-check", "click",
         e => onCheckDisplay(e.currentTarget, 'mh-no-preset', 'mh-preset'));
+
+    addEventListenerToClass("mh-color-diagram-switch", "click", onChangeDiagramColor);
 }
 
 function addEventListenerToClass(class_name, event_name, f) {
@@ -501,4 +505,53 @@ function removePrefix(s, prefix) {
         return null;
     }
     return s.slice(prefix.length);
+}
+
+function onChangeDiagramColor(e) {
+    const colorButton = e.currentTarget;
+    const id = colorButton.id;
+    const diagram_name = colorButton.getAttribute("data-diagram");
+    const img = document.getElementById(diagram_name + "-img");
+    const canvas = document.getElementById(diagram_name + "-canvas");
+
+    const previous_id = g_diagram_current.get(diagram_name);
+    if (previous_id === id) {
+        g_diagram_current.delete(diagram_name);
+        const context = canvas.getContext('2d');
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        colorButton.classList.remove("mh-active");
+        return;
+    }
+
+    if (previous_id != null) {
+        const previousButton = document.getElementById(previous_id);
+        previousButton.classList.remove("mh-active");
+    }
+    colorButton.classList.add("mh-active");
+    g_diagram_current.set(diagram_name, id);
+
+    const color = colorButton.getAttribute("data-color");
+    const r = parseInt(color.slice(1, 3), 16);
+    const g = parseInt(color.slice(3, 5), 16);
+    const b = parseInt(color.slice(5, 7), 16);
+    canvas.width = img.clientWidth;
+    canvas.height = img.clientHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+        if (data[i + 0] === 0 && data[i + 1] === 0 && data[i + 2] === 0) {
+            continue;
+        }
+        if (data[i + 0] === 255 && data[i + 1] === 255 && data[i + 2] === 255) {
+            continue;
+        }
+        const diff = Math.abs(data[i] - r) + Math.abs(data[i + 1] - g) + Math.abs(data[i + 2] - b);
+        if (diff > 5) {
+            data[i + 0] = data[i + 1] = data[i + 2] = 230;
+        }
+    }
+    context.putImageData(imageData, 0, 0);
 }
