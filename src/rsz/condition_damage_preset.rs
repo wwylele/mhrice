@@ -247,18 +247,31 @@ pub trait ConditionDamage<ConditionPresetType>: Sized {
     fn get_preset_index(&self) -> u32;
     fn preset_from_package(package: &EnemyConditionPresetData) -> &[ConditionPresetType];
 
-    fn or_preset<'a>(&'a self, package: &'a EnemyConditionPresetData) -> Result<&'a Self>
+    fn or_preset<'a>(&'a self, package: &'a EnemyConditionPresetData) -> &'a Self
     where
         ConditionPresetType: 'static,
     {
-        let index = usize::try_from(self.get_preset_index())?;
+        let index = if let Ok(index) = usize::try_from(self.get_preset_index()) {
+            index
+        } else {
+            eprintln!(
+                "Very large preset index in {}",
+                std::any::type_name::<ConditionPresetType>()
+            );
+            return self;
+        };
         if index > Self::UNIQUE_INDEX {
-            bail!("Unknown index");
+            eprintln!(
+                "Unknown preset index {} in {}",
+                index,
+                std::any::type_name::<ConditionPresetType>()
+            );
+            return self;
         }
-        Ok(Self::preset_from_package(package)
+        Self::preset_from_package(package)
             .get(index)
             .map(|p| Self::preset_get_inner(p))
-            .unwrap_or(self))
+            .unwrap_or(self)
     }
 
     fn verify(package: &EnemyConditionPresetData) -> Result<()> {
