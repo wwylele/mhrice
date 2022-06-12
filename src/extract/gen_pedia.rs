@@ -952,28 +952,48 @@ fn gen_rarity_colors(pak: &mut PakReader<impl Read + Seek>, output: impl Write) 
     )
 }
 
-fn prepare_size_map(size_data: &EnemySizeListData) -> Result<HashMap<EmTypes, &SizeInfo>> {
+fn hash_map_unique<T, K: Eq + std::hash::Hash + std::fmt::Debug, V>(
+    iter: impl IntoIterator<Item = T>,
+    kv: impl Fn(T) -> (K, V),
+    ignore_duplicate: bool,
+) -> Result<HashMap<K, V>> {
+    use std::collections::hash_map::Entry;
     let mut result = HashMap::new();
-    for size_info in &size_data.size_info_list {
-        if result.insert(size_info.em_type, size_info).is_some() {
-            bail!("Duplicate size info for {:?}", size_info.em_type);
+    for t in iter {
+        let (k, v) = kv(t);
+        match result.entry(k) {
+            Entry::Occupied(slot) => {
+                let message = format!(
+                    "Duplicate {} record with key {:?}",
+                    std::any::type_name::<V>(),
+                    slot.key()
+                );
+                if ignore_duplicate {
+                    eprintln!("{}", message);
+                } else {
+                    bail!("{}", message);
+                }
+            }
+            Entry::Vacant(slot) => {
+                slot.insert(v);
+            }
         }
     }
     Ok(result)
 }
 
+fn prepare_size_map(size_data: &EnemySizeListData) -> Result<HashMap<EmTypes, &SizeInfo>> {
+    hash_map_unique(&size_data.size_info_list, |e| (e.em_type, e), false)
+}
+
 fn prepare_size_dist_map(
     size_dist_data: &EnemyBossRandomScaleData,
 ) -> Result<HashMap<i32, &[ScaleAndRateData]>> {
-    let mut result = HashMap::new();
-    for size_info in &size_dist_data.random_scale_table_data_list {
-        if result
-            .insert(size_info.type_, &size_info.scale_and_rate_data[..])
-            .is_some()
-        {
-            bail!("Duplicate size dist for {}", size_info.type_);
-        }
-    }
+    let mut result = hash_map_unique(
+        &size_dist_data.random_scale_table_data_list,
+        |e| (e.type_, &e.scale_and_rate_data[..]),
+        false,
+    )?;
     if result.contains_key(&0) {
         bail!("Defined size dist for 0");
     }
@@ -988,68 +1008,36 @@ fn prepare_size_dist_map(
 }
 
 fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
-    let mut all_msg: HashMap<&String, &MsgEntry> = pedia
+    let all_msg = pedia
         .quest_hall_msg
         .entries
         .iter()
-        .map(|entry| (&entry.name, entry))
-        .chain(
-            pedia
-                .quest_village_msg
-                .entries
-                .iter()
-                .map(|entry| (&entry.name, entry)),
-        )
-        .chain(
-            pedia
-                .quest_tutorial_msg
-                .entries
-                .iter()
-                .map(|entry| (&entry.name, entry)),
-        )
-        .chain(
-            pedia
-                .quest_arena_msg
-                .entries
-                .iter()
-                .map(|entry| (&entry.name, entry)),
-        )
-        .chain(
-            pedia
-                .quest_dlc_msg
-                .entries
-                .iter()
-                .map(|entry| (&entry.name, entry)),
-        )
-        .collect();
+        .chain(&pedia.quest_village_msg.entries)
+        .chain(&pedia.quest_tutorial_msg.entries)
+        .chain(&pedia.quest_arena_msg.entries)
+        .chain(&pedia.quest_dlc_msg.entries);
 
-    let mut enemy_params: HashMap<i32, &NormalQuestDataForEnemyParam> = pedia
+    let mut all_msg = hash_map_unique(all_msg, |e| (&e.name, e), false)?;
+
+    let enemy_params = pedia
         .normal_quest_data_for_enemy
         .param
         .iter()
-        .map(|param| (param.quest_no, param))
-        .chain(
-            pedia
-                .dl_quest_data_for_enemy
-                .param
-                .iter()
-                .map(|param| (param.quest_no, param)),
-        )
-        .collect();
+        .chain(&pedia.dl_quest_data_for_enemy.param);
 
-    let mut reward_params: HashMap<i32, &QuestDataForRewardUserDataParam> = pedia
-        .quest_data_for_reward
-        .param
-        .iter()
-        .map(|param| (param.quest_numer, param))
-        .collect();
+    let mut enemy_params = hash_map_unique(enemy_params, |param| (param.quest_no, param), false)?;
 
-    let reward_lot: HashMap<u32, &RewardIdLotTableUserDataParam> = pedia
-        .reward_id_lot_table
-        .param
-        .iter()
-        .map(|param| (param.id, param))
-        .collect();
+    let mut reward_params = hash_map_unique(
+        &pedia.quest_data_for_reward.param,
+        |param| (param.quest_numer, param),
+        false,
+    )?;
+
+    let reward_lot = hash_map_unique(
+        &pedia.reward_id_lot_table.param,
+        |param| (param.id, param),
+        false,
+    )?;
 
     let hyakuryu_list = pedia
         .fixed_hyakuryu_quest
@@ -1083,12 +1071,11 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
                 .flat_map(|i| i.iter()),
         );
 
-    let mut hyakuryus: HashMap<i32, &HyakuryuQuestData> = HashMap::new();
-    for hyakuryu in hyakuryu_list {
-        if hyakuryus.insert(hyakuryu.quest_no, hyakuryu).is_some() {
-            bail!("Multiple data for hyakyryu data {}", hyakuryu.quest_no)
-        }
-    }
+    let mut hyakuryus = hash_map_unique(
+        hyakuryu_list,
+        |hyakuryu| (hyakuryu.quest_no, hyakuryu),
+        false,
+    )?;
 
     pedia
         .normal_quest_data
@@ -1273,15 +1260,15 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> 
     }
 
     let mut deco_name_msg = pedia.decorations_name_msg.get_name_map();
-    let mut deco_product = HashMap::new();
-    for product in &pedia.decorations_product.param {
-        if product.id == DecorationsId::None {
-            continue;
-        }
-        if deco_product.insert(product.id, product).is_some() {
-            bail!("Multiple product for deco {:?}", product.id)
-        }
-    }
+    let mut deco_product = hash_map_unique(
+        pedia
+            .decorations_product
+            .param
+            .iter()
+            .filter(|p| p.id != DecorationsId::None),
+        |product| (product.id, product),
+        false,
+    )?;
 
     for deco in &pedia.decorations.param {
         let inner_id = if let DecorationsId::Deco(id) = deco.id {
@@ -1322,16 +1309,16 @@ fn prepare_hyakuryu_skills(
 ) -> Result<BTreeMap<PlHyakuryuSkillId, HyakuryuSkill<'_>>> {
     let mut names = pedia.hyakuryu_skill_name_msg.get_name_map();
     let mut explains = pedia.hyakuryu_skill_explain_msg.get_name_map();
+    let mut recipes = hash_map_unique(
+        pedia
+            .hyakuryu_skill_recipe
+            .param
+            .iter()
+            .filter(|r| r.skill_id != PlHyakuryuSkillId::None),
+        |r| (r.skill_id, r),
+        false,
+    )?;
     let mut result = BTreeMap::new();
-    let mut recipes = HashMap::new();
-    for recipe in &pedia.hyakuryu_skill_recipe.param {
-        if recipe.skill_id == PlHyakuryuSkillId::None {
-            continue;
-        }
-        if recipes.insert(recipe.skill_id, recipe).is_some() {
-            bail!("Multiple recipe for hyakuryu skill {:?}", recipe.skill_id);
-        }
-    }
     for skill in &pedia.hyakuryu_skill.param {
         let raw_id = if let PlHyakuryuSkillId::Skill(id) = skill.id {
             id
@@ -1360,13 +1347,11 @@ fn prepare_hyakuryu_skills(
 }
 
 fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
-    let mut product_map: HashMap<PlArmorId, &ArmorProductUserDataParam> = HashMap::new();
-    for product in &pedia.armor_product.param {
-        if product_map.insert(product.id, product).is_some() {
-            bail!("Multiple definition for armor product {:?}", product.id);
-        }
-    }
-
+    let mut product_map = hash_map_unique(
+        &pedia.armor_product.param,
+        |product| (product.id, product),
+        false,
+    )?;
     let mut series_map: BTreeMap<PlArmorSeriesTypes, ArmorSeries> = BTreeMap::new();
 
     for armor_series in &pedia.armor_series.param {
@@ -1649,35 +1634,35 @@ where
     T: Deref<Target = [Param]>,
     Param: ToBase<WeaponBaseData>,
 {
-    let mut product_map = HashMap::new();
-    for product in &weapon_list.product.param {
-        if product.base.id == WeaponId::None || product.base.id == WeaponId::Null {
-            continue;
-        }
-        if product_map.insert(product.base.id, product).is_some() {
-            bail!("Multiple product for weapon {:?}", product.base.id);
-        }
-    }
+    let mut product_map = hash_map_unique(
+        weapon_list
+            .product
+            .param
+            .iter()
+            .filter(|p| p.base.id != WeaponId::None && p.base.id != WeaponId::Null),
+        |p| (p.base.id, p),
+        false,
+    )?;
 
-    let mut change_map = HashMap::new();
-    for change in &weapon_list.change.param {
-        if change.base.id == WeaponId::None || change.base.id == WeaponId::Null {
-            continue;
-        }
-        if change_map.insert(change.base.id, change).is_some() {
-            bail!("Multiple change for weapon {:?}", change.base.id);
-        }
-    }
+    let mut change_map = hash_map_unique(
+        weapon_list
+            .change
+            .param
+            .iter()
+            .filter(|p| p.base.id != WeaponId::None && p.base.id != WeaponId::Null),
+        |p| (p.base.id, p),
+        false,
+    )?;
 
-    let mut process_map = HashMap::new();
-    for process in &weapon_list.process.param {
-        if process.base.id == WeaponId::None || process.base.id == WeaponId::Null {
-            continue;
-        }
-        if process_map.insert(process.base.id, process).is_some() {
-            bail!("Multiple process for weapon {:?}", process.base.id);
-        }
-    }
+    let mut process_map = hash_map_unique(
+        weapon_list
+            .process
+            .param
+            .iter()
+            .filter(|p| p.base.id != WeaponId::None && p.base.id != WeaponId::Null),
+        |p| (p.base.id, p),
+        false,
+    )?;
 
     let mut name_map = weapon_list.name.get_name_map();
     let mut explain_map = weapon_list.explain.get_name_map();
@@ -1820,23 +1805,15 @@ where
 fn prepare_monster_lot(
     pedia: &Pedia,
 ) -> Result<HashMap<(EmTypes, QuestRank), &MonsterLotTableUserDataParam>> {
-    let mut result = HashMap::new();
-
-    for lot in &pedia.monster_lot.param {
-        if lot.em_types == EmTypes::Em(0) {
-            continue;
-        }
-
-        if result.insert((lot.em_types, lot.quest_rank), lot).is_some() {
-            bail!(
-                "Multiple LOT definition for {:?} {:?}",
-                lot.em_types,
-                lot.quest_rank
-            );
-        }
-    }
-
-    Ok(result)
+    hash_map_unique(
+        pedia
+            .monster_lot
+            .param
+            .iter()
+            .filter(|lot| lot.em_types != EmTypes::Em(0)),
+        |lot| ((lot.em_types, lot.quest_rank), lot),
+        false,
+    )
 }
 
 fn prepare_parts_dictionary(
@@ -1928,27 +1905,14 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
         }
     }
 
-    let mut weapon_products = HashMap::new();
-
-    for weapon_product in pedia
+    let weapon_products = pedia
         .airou_weapon_product
         .param
         .iter()
-        .chain(pedia.dog_weapon_product.param.iter())
-    {
-        if weapon_product.id == OtWeaponId::None {
-            continue;
-        }
-        if weapon_products
-            .insert(weapon_product.id, weapon_product)
-            .is_some()
-        {
-            bail!(
-                "Multiple product defintion for otomo weapon {:?}",
-                weapon_product.id
-            )
-        }
-    }
+        .chain(&pedia.dog_weapon_product.param)
+        .filter(|p| p.id != OtWeaponId::None);
+
+    let mut weapon_products = hash_map_unique(weapon_products, |p| (p.id, p), false)?;
 
     let airou_weapon_name = pedia.airou_weapon_name.get_name_map();
     let dog_weapon_name = pedia.dog_weapon_name.get_name_map();
@@ -2013,27 +1977,14 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
         bail!("Left over otomo weapon product")
     }
 
-    let mut armor_products = HashMap::new();
-
-    for armor_product in pedia
+    let armor_products = pedia
         .airou_armor_product
         .param
         .iter()
-        .chain(pedia.dog_armor_product.param.iter())
-    {
-        if armor_product.id == OtArmorId::None {
-            continue;
-        }
-        if armor_products
-            .insert(armor_product.id, armor_product)
-            .is_some()
-        {
-            bail!(
-                "Multiple product defintion for otomo armor {:?}",
-                armor_product.id
-            )
-        }
-    }
+        .chain(&pedia.dog_armor_product.param)
+        .filter(|p| p.id != OtArmorId::None);
+
+    let mut armor_products = hash_map_unique(armor_products, |p| (p.id, p), false)?;
 
     let airou_armor_head_name = pedia.airou_armor_head_name.get_name_map();
     let dog_armor_head_name = pedia.dog_armor_head_name.get_name_map();
