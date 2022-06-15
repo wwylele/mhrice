@@ -1,7 +1,7 @@
 #![allow(unused_variables)]
 
 use crate::file_ext::*;
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use serde::*;
 use std::io::{Read, Seek, SeekFrom};
 
@@ -86,7 +86,14 @@ pub struct Gui {
 
 impl Gui {
     pub fn new<F: Read + Seek>(mut file: F) -> Result<Gui> {
-        if file.read_u32()? != 0x061A96 {
+        const VERSION_A: u32 = 0x061A96;
+        const VERSION_B: u32 = 0x068FD0;
+
+        const CLIP_VERSION_A: u32 = 0x28;
+        const CLIP_VERSION_B: u32 = 0x2B;
+
+        let version = file.read_u32()?;
+        if !matches!(version, VERSION_A | VERSION_B) {
             bail!("Wrong version for GUI");
         }
 
@@ -99,8 +106,12 @@ impl Gui {
         let c_offset = file.read_u64()?;
         let d_offset = file.read_u64()?;
         let e_offset = file.read_u64()?;
+        // TODO: new version has a new offset here, but it is unclear whether it is the last one
+        let f_offset = (version >= VERSION_B)
+            .then(|| file.read_u64())
+            .transpose()?;
 
-        file.seek_noop(a_offset)?;
+        file.seek_noop(a_offset).context("a_offset")?;
 
         let control_start_offset = file.read_u64()?;
         let root_offset = file.read_u64()?;
@@ -109,7 +120,8 @@ impl Gui {
             .map(|_| file.read_u64())
             .collect::<Result<Vec<_>>>()?;
 
-        file.seek_noop(control_start_offset)?;
+        file.seek_noop(control_start_offset)
+            .context("control_start_offset")?;
 
         struct ControlInfo {
             hash: [u8; 0x10],
@@ -122,7 +134,7 @@ impl Gui {
         let controls = control_offset_list
             .into_iter()
             .map(|x_offset| {
-                file.seek_noop(x_offset)?;
+                file.seek_noop(x_offset).context("x_offset")?;
                 let mut hash = [0; 0x10];
                 file.read_exact(&mut hash)?;
                 let name = file.read_u64()?;
@@ -152,6 +164,9 @@ impl Gui {
             let b = file.read_u32()?;
             let name = file.read_u64()?;
             let value = file.read_u64()?;
+            let zinogre = (version >= VERSION_B)
+                .then(|| file.read_u64())
+                .transpose()?;
 
             let old = file.tell()?;
 
@@ -193,13 +208,19 @@ impl Gui {
             let property_offset = file.read_u64()?;
             let variable_offset = file.read_u64()?;
             let mtx_offset = file.read_u64()?;
+            let sa_offset = (version >= VERSION_B)
+                .then(|| file.read_u64())
+                .transpose()?;
+            let sb_offset = (version >= VERSION_B)
+                .then(|| file.read_u64())
+                .transpose()?;
 
-            file.seek_noop(property_offset)?;
+            file.seek_noop(property_offset).context("property_offset")?;
             let property_count = file.read_u64()?;
             let properties = (0..property_count)
                 .map(|_| read_field(file))
                 .collect::<Result<Vec<_>>>()?;
-            file.seek_noop(variable_offset)?;
+            file.seek_noop(variable_offset).context("variable_offset")?;
             let variable_count = file.read_u64()?;
             let variables = (0..variable_count)
                 .map(|_| read_field(file))
@@ -226,12 +247,14 @@ impl Gui {
         let controls = controls
             .into_iter()
             .map(|control| {
-                file.seek_noop(control.play_object_list_offset)?;
+                file.seek_noop(control.play_object_list_offset)
+                    .context("play_object_list_offset")?;
                 let play_object_count = file.read_u64()?;
                 let play_object_offsets = (0..play_object_count)
                     .map(|_| file.read_u64())
                     .collect::<Result<Vec<_>>>()?;
-                file.seek_noop(control.clip_list_offset)?;
+                file.seek_noop(control.clip_list_offset)
+                    .context("clip_list_offset")?;
                 let clip_count = file.read_u32()?;
                 let q_what = file.read_u32()?; //?
                 let clip_offsets = (0..clip_count)
@@ -264,7 +287,8 @@ impl Gui {
                             bail!("Wrong magic for CLIP")
                         }
 
-                        if file.read_u32()? != 0x28 {
+                        let version = file.read_u32()?;
+                        if !matches!(version, CLIP_VERSION_A | CLIP_VERSION_B) {
                             bail!("Wrong version for CLIP")
                         }
 
@@ -289,7 +313,8 @@ impl Gui {
                             bail!("Expected 0")
                         }
 
-                        file.seek_noop(base_offset + r0_offset)?;
+                        file.seek_noop(base_offset + r0_offset)
+                            .context("r0_offset")?;
 
                         let object_path = (0..u_count)
                             .map(|_| {
@@ -310,7 +335,8 @@ impl Gui {
                             })
                             .collect::<Result<Vec<_>>>()?;
 
-                        file.seek_noop(base_offset + r1_offset)?;
+                        file.seek_noop(base_offset + r1_offset)
+                            .context("r1_offset")?;
 
                         let variable_refs = (0..v_count)
                             .map(|_| {
@@ -335,7 +361,8 @@ impl Gui {
                             })
                             .collect::<Result<Vec<_>>>()?;
 
-                        file.seek_noop(base_offset + r2_offset)?;
+                        file.seek_noop(base_offset + r2_offset)
+                            .context("r2_offset")?;
 
                         let variable_values = (0..w_count)
                             .map(|_| {
@@ -347,7 +374,8 @@ impl Gui {
                             })
                             .collect::<Result<Vec<_>>>()?;
 
-                        file.seek_noop(base_offset + r3_offset)?;
+                        file.seek_noop(base_offset + r3_offset)
+                            .context("r3_offset")?;
                         //..
 
                         let old = file.tell()?;
@@ -377,7 +405,7 @@ impl Gui {
             })
             .collect::<Result<Vec<_>>>()?;
 
-        file.seek_noop(root_offset)?;
+        file.seek_noop(root_offset).context("root_offset")?;
         let root = read_play_object(&mut file)?;
 
         Ok(Gui { root, controls })
