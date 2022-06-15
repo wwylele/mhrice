@@ -818,7 +818,7 @@ fn dump_tree(pak: Vec<String>, list: String, output: String) -> Result<()> {
     let mut unvisited: std::collections::HashSet<_> = pak.all_file_indexs().into_iter().collect();
     for line in BufReader::new(list).lines() {
         let line = line?;
-        let path = line.split(' ').next().context("Empty line")?;
+        let path = line.split(" $ ").next().context("Empty line")?;
 
         for i18n_index in pak.find_file_i18n(path)? {
             let index = i18n_index.index;
