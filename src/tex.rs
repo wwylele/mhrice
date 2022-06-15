@@ -440,10 +440,13 @@ pub struct Tex {
 
 impl Tex {
     pub fn new<F: Read + Seek>(mut file: F) -> Result<Tex> {
+        const VERSION_A: u32 = 0x1C;
+        const VERSION_B: u32 = 0x22;
         if &file.read_magic()? != b"TEX\0" {
             bail!("Wrong magic for TEX");
         }
-        if file.read_u32()? != 0x1c {
+        let version = file.read_u32()?;
+        if !matches!(version, VERSION_A | VERSION_B) {
             bail!("Wrong version for TEX");
         }
         let width = file.read_u16()?;
