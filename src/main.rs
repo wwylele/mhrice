@@ -257,6 +257,8 @@ enum Mhrice {
         dmp: String,
         #[structopt(short, long)]
         map: Option<String>,
+        #[structopt(short, long)]
+        address: Option<String>,
     },
 
     DumpScn {
@@ -535,11 +537,25 @@ impl<'a> Seek for MinidumpReader<'a> {
     }
 }
 
-fn read_dmp_tdb(dmp: String, map: Option<String>) -> Result<()> {
+fn read_dmp_tdb(dmp: String, map: Option<String>, address: Option<String>) -> Result<()> {
     let dmp = Minidump::read_path(dmp).map_err(|e| anyhow!(e))?;
     let memory = dmp
         .get_stream::<MinidumpMemory64List>()
         .map_err(|e| anyhow!(e))?;
+
+    if let Some(address) = address {
+        let base = if let Some(hex) = address.strip_prefix("0x") {
+            u64::from_str_radix(hex, 16)?
+        } else {
+            address.parse()?
+        };
+        let file = OffsetFile::new(MinidumpReader::new(&memory), base)?;
+
+        let _ = Tdb::new(file, base, map)?;
+
+        return Ok(());
+    }
+
     for block in memory.iter() {
         if let Some(pos) = block
             .bytes
@@ -547,6 +563,7 @@ fn read_dmp_tdb(dmp: String, map: Option<String>) -> Result<()> {
             .position(|w| w == TDB_ANCHOR)
         {
             let base = block.base_address + u64::try_from(pos)?;
+            eprintln!("Found at address 0x{base:016X}");
             let file = OffsetFile::new(MinidumpReader::new(&memory), base)?;
 
             let _ = Tdb::new(file, base, map)?;
@@ -1123,7 +1140,7 @@ fn main() -> Result<()> {
             Ok(())
         }
         Mhrice::ReadUser { user } => read_user(user),
-        Mhrice::ReadDmpTdb { dmp, map } => read_dmp_tdb(dmp, map),
+        Mhrice::ReadDmpTdb { dmp, map, address } => read_dmp_tdb(dmp, map, address),
         Mhrice::DumpScn { scn } => dump_scn(scn),
         Mhrice::Scene { pak, name } => scene(pak, name),
         Mhrice::TypeInfo { dmp, hash, crc } => type_info(dmp, hash, crc),

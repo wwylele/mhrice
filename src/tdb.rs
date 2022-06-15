@@ -978,7 +978,8 @@ impl Tdb {
         let mut string_table = vec![0; string_table_len.try_into()?];
         file.read_exact(&mut string_table)?;
 
-        let read_string = move |offset: u32| {
+        let read_string = move |mut offset: u32| {
+            offset &= !0x40000000; // Sunbreak demo has this unknown flag for some
             let offset = usize::try_from(offset)?;
             if offset >= string_table.len() {
                 bail!("offset out of bount");
@@ -1135,6 +1136,10 @@ impl Tdb {
             let a = f.read_u8()?.into();
             if a < 128 {
                 Ok(a)
+            } else if a == 0xFF {
+                // A weird case found in sunbreak demo. Not sure what it signifies
+                // The containing attribute param list also looks broken
+                Ok(0)
             } else {
                 let b: usize = f.read_u8()?.into();
                 Ok(((a - 128) << 8) + b)
