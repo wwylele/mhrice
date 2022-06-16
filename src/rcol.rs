@@ -120,13 +120,29 @@ impl Rcol {
 
         let rsz_len = file.read_u32()?;
         file.read_u32()?;
-        let collider_group_offset = file.read_u64()?;
+
+        let mut collider_group_offset = file.read_u64()?;
+        let mut new_version = false;
+        if collider_group_offset != 0x50 {
+            new_version = true;
+            let _ = collider_group_offset;
+            collider_group_offset = file.read_u64()?;
+        }
 
         let rsz_offset = file.read_u64()?;
         let group_attachment_offset = file.read_u64()?;
 
         let ignore_tag_offset = file.read_u64()?;
         let e_offset = file.read_u64()?;
+
+        if new_version {
+            // TODO: what these are and where string_table_offset is
+            let _u_offset = file.read_u64()?;
+            let _v_offset = file.read_u64()?;
+            let _ = file.read_u64()?;
+        }
+
+        // only for verification
         let string_table_offset = e_offset + u64::from(e_count) * 0x40;
 
         file.seek_noop(collider_group_offset)?;
@@ -338,7 +354,8 @@ impl Rcol {
                 let name_hash = file.read_u32()?;
                 let x = file.read_u32()?;
                 if x != 0 {
-                    bail!("Expected zero");
+                    //bail!("Expected zero");
+                    // new version start to have non-zero id here
                 }
 
                 let name_b_offset = file.read_u64()?;
