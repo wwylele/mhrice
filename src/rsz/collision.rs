@@ -1,5 +1,5 @@
 use super::*;
-use crate::{rsz_bitflags, rsz_enum, rsz_struct};
+use crate::{rsz_bitflags, rsz_enum, rsz_struct, rsz_versioned_choice};
 use serde::*;
 
 rsz_struct! {
@@ -62,7 +62,7 @@ rsz_enum! {
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
-    pub enum HitSoundAttr {
+    pub enum HitSoundAttrV1 {
         Default = 0,
         Silence = 1,
         Yarn = 2,
@@ -77,6 +77,37 @@ rsz_enum! {
         EnemyIndex042CaryyPot = 11,
         Max = 12,
         Invalid = 13,
+    }
+}
+
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize)]
+    pub enum HitSoundAttrV2 {
+        Default = 0,
+        Silence = 1,
+        Yarn = 2,
+        EnemyIndex036IceArm = 3,
+        EnemyIndex035FloatingRock = 4,
+        EnemyIndex038FloatingRock = 5,
+        EnemyIndex042CarryRock = 6,
+        EnemyIndex042CaryyPot = 7,
+        EnemyIndex094Ice = 8,
+        EnemyIndex095MossArm = 9,
+        EnemyIndex095MossHead = 10,
+        EnemyIndex095RockArm = 11,
+        EnemyIndex095RickHead = 12,
+        EnemyIndex079Shell = 13,
+        Max = 14,
+        Invalid = 15,
+    }
+}
+
+rsz_versioned_choice! {
+    #[derive(Debug, Serialize)]
+    pub enum HitSoundAttr {
+        V1(HitSoundAttrV1) = 0..=3,
+        V2(HitSoundAttrV2) = 42,
     }
 }
 
@@ -103,7 +134,8 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.hit.userdata.EmHitDamageShapeData",
-        0xaa5a3f29 = 0
+        0xaa5a3f29 = 0,
+        0x010a53d2 = 42,
     )]
     #[derive(Debug, Serialize)]
     pub struct EmHitDamageShapeData {

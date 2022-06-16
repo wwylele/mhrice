@@ -411,6 +411,31 @@ impl<T: FieldFromRsz, const MIN: u32, const MAX: u32> FieldFromRsz for Versioned
     }
 }
 
+#[macro_export]
+macro_rules! rsz_versioned_choice {
+    (
+        $(#[$outer_meta:meta])*
+        $outer_vis:vis enum $enum_name:ident {
+            $( $variant:ident($field:ty) = $version:pat ),*$(,)?
+        }
+    ) => {
+        $(#[$outer_meta])*
+        $outer_vis enum $enum_name {
+            $( $variant($field),)*
+        }
+
+        impl FieldFromRsz for $enum_name {
+            fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+                let version = rsz.version();
+                Ok(match version {
+                    $($version => $enum_name::$variant(<$field>::field_from_rsz(rsz)?),)*
+                    _ => bail!("Unknown version for {}: {}", stringify!($enum_name), version)
+                })
+            }
+        }
+    }
+}
+
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
