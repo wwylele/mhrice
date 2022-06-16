@@ -4,7 +4,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use minidump::*;
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::convert::TryFrom;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Cursor, Read, Seek, SeekFrom, Write};
@@ -374,6 +374,8 @@ fn visit_tree(nodes: &mut [TreeNode], current: usize, depth: i32) {
 fn scan_rsz(pak: Vec<String>) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
 
+    let mut crc_mismatches = BTreeMap::new();
+
     for index in pak.all_file_indexs() {
         let content = pak
             .read_file(index)
@@ -386,24 +388,29 @@ fn scan_rsz(pak: Vec<String>) -> Result<()> {
             User::new(Cursor::new(&content))
                 .context(format!("Failed to open USER at {:?}", index))?
                 .rsz
-                .verify_crc()?;
+                .verify_crc(&mut crc_mismatches);
         } else if &content[0..3] == b"PFB" {
             Pfb::new(Cursor::new(&content))
                 .context(format!("Failed to open PFB at {:?}", index))?
                 .rsz
-                .verify_crc()?;
+                .verify_crc(&mut crc_mismatches);
         } else if &content[0..3] == b"SCN" {
             Scn::new(Cursor::new(&content))
                 .context(format!("Failed to open SCN at {:?}", index))?
                 .rsz
-                .verify_crc()?;
+                .verify_crc(&mut crc_mismatches);
         } else if &content[0..4] == b"RCOL" {
             Rcol::new(Cursor::new(&content), false)
                 .context(format!("Failed to open RCOL at {:?}", index))?
                 .rsz
-                .verify_crc()?;
+                .verify_crc(&mut crc_mismatches);
         }
     }
+
+    for (symbol, crc) in crc_mismatches {
+        println!("Mismatch CRC {crc:08X} for {symbol}")
+    }
+
     Ok(())
 }
 

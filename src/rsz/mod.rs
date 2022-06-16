@@ -49,7 +49,7 @@ use bitflags::*;
 use once_cell::sync::Lazy;
 use serde::*;
 use std::any::*;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::convert::{TryFrom, TryInto};
 use std::fmt::Debug;
 use std::io::{Cursor, Read, Seek, SeekFrom};
@@ -257,19 +257,14 @@ impl Rsz {
         self.roots.len()
     }
 
-    pub fn verify_crc(&self) -> Result<()> {
+    pub fn verify_crc(&self, crc_mismatches: &mut BTreeMap<&str, u32>) {
         for td in &self.type_descriptors {
             if let Some(type_info) = RSZ_TYPE_MAP.get(&td.hash) {
                 if !type_info.versions.contains_key(&td.crc) {
-                    bail!(
-                        "Type {} has unregistered version CRC {:08X}",
-                        type_info.symbol,
-                        td.crc
-                    )
+                    crc_mismatches.insert(type_info.symbol, td.crc);
                 }
             }
         }
-        Ok(())
     }
 }
 
