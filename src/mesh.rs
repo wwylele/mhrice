@@ -63,10 +63,14 @@ pub struct Mesh {
 
 impl Mesh {
     pub fn new<F: Read + Seek>(mut file: F) -> Result<Mesh> {
+        const VERSION_A: u32 = 0x77a2d00d;
+        const VERSION_B: u32 = 0x0141D2B8;
+
         if &file.read_magic()? != b"MESH" {
             bail!("Wrong magic for MESH");
         }
-        if file.read_u32()? != 0x77a2d00d {
+        let version = file.read_u32()?;
+        if !matches!(version, VERSION_A | VERSION_B) {
             bail!("Wrong version for MESH");
         }
         let total_len = file.read_u32()?.into();
@@ -374,42 +378,20 @@ impl Mesh {
         }
 
         if e_offset != 0 {
-            file.seek_assert_align_up(e_offset, 16)?;
+            // this only worked for version A
+            /*file.seek_assert_align_up(e_offset, 16)?;
             let p_offset = file.read_u64()?;
             let _q_offset = file.read_u64()?;
-            file.seek_noop(p_offset)?;
+            file.seek_noop(p_offset)?;*/
             //..
             //file.seek_noop(q_offset)?;
             //..
         }
 
-        //***
-
-        let next_offsets = [
-            f_offset,
-            i_offset,
-            model_names_offset,
-            bone_names_offset,
-            f_names_offset,
-            string_table_offset,
-        ];
-        let next_offset = *next_offsets.iter().find(|x| **x != 0).unwrap();
-        if e_offset == 0 {
-            let align = if f_offset != 0 || i_offset != 0 {
-                8
-            } else {
-                16
-            };
-            file.seek_assert_align_up(next_offset, align)?;
-        } else {
-            file.seek(SeekFrom::Start(next_offset))?;
-        }
-
-        //***
-
         let mut f_name_count = 0;
         if f_offset != 0 {
-            file.seek_assert_align_up(f_offset, 8)?;
+            file.seek(SeekFrom::Start(f_offset))?;
+            //file.seek_assert_align_up(f_offset, 8)?;
             let f_count = file.read_u8()?;
             file.read_u8()?;
             file.read_u8()?;
@@ -417,6 +399,10 @@ impl Mesh {
             file.read_u8()?;
             file.seek_align_up(8)?;
             let fa_offset = file.read_u64()?;
+            if version == VERSION_B {
+                file.read_u64()?;
+                file.read_u64()?;
+            }
             file.seek_noop(fa_offset)?;
             let fb_offsets = (0..f_count)
                 .map(|_| file.read_u64())
@@ -426,11 +412,16 @@ impl Mesh {
             fb_offsets
                 .into_iter()
                 .map(|offset| {
-                    file.seek_noop(offset)?;
+                    //file.seek_noop(offset)?;
+                    file.seek(SeekFrom::Start(offset))?;
                     file.read_u64()?;
                     file.read_u64()?;
                     let m_offset = file.read_u64()?;
                     let n_offset = file.read_u64()?;
+                    if version == VERSION_B {
+                        let _mm_offset = file.read_u64()?;
+                        let _nn_offset = file.read_u64()?;
+                    }
                     file.seek_noop(m_offset)?;
                     file.read_u64()?;
                     file.read_u16()?;
@@ -442,11 +433,25 @@ impl Mesh {
                     file.read_u64()?;
                     file.read_u64()?;
                     file.read_u64()?;
-
+                    // There are some more data at _mm_offset and _nn_offset
                     Ok(())
                 })
                 .collect::<Result<Vec<_>>>()?;
         }
+
+        //***
+
+        let next_offsets = [
+            i_offset,
+            model_names_offset,
+            bone_names_offset,
+            f_names_offset,
+            string_table_offset,
+        ];
+        let next_offset = *next_offsets.iter().find(|x| **x != 0).unwrap();
+        file.seek(SeekFrom::Start(next_offset))?;
+
+        //***
 
         if i_offset != 0 {
             file.seek_assert_align_up(i_offset, 8)?;
@@ -558,6 +563,9 @@ impl Mesh {
         let vertex_layout_offset = file.read_u64()?;
         let vertex_buffer_offset = file.read_u64()?;
         let index_buffer_offset = file.read_u64()?;
+        let _zinogre_offset = (version == VERSION_B)
+            .then(|| file.read_u64())
+            .transpose()?;
         let vertex_buffer_len = usize::try_from(file.read_u32()?)?;
         let index_buffer_len = usize::try_from(file.read_u32()?)?;
 
@@ -566,6 +574,9 @@ impl Mesh {
         let _ = file.read_u32()?;
         let _ = file.read_u32()?;
         let _ = file.read_u32()?;
+        let _zinogre = (version == VERSION_B)
+            .then(|| file.read_u64())
+            .transpose()?;
 
         file.seek_noop(vertex_layout_offset)?;
         let vertex_layouts = (0..vertex_layout_count)
