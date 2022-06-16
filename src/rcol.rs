@@ -125,7 +125,7 @@ impl Rcol {
         let mut new_version = false;
         if collider_group_offset != 0x50 {
             new_version = true;
-            let _ = collider_group_offset;
+            let _ = collider_group_offset; // two u32, could be (0, 0) or (1, 0)?
             collider_group_offset = file.read_u64()?;
         }
 
@@ -137,9 +137,10 @@ impl Rcol {
 
         if new_version {
             // TODO: what these are and where string_table_offset is
+            // looks like they are always the same as e_offset?
             let _u_offset = file.read_u64()?;
             let _v_offset = file.read_u64()?;
-            let _ = file.read_u64()?;
+            let _ = file.read_u64()?; // always zero?
         }
 
         // only for verification
