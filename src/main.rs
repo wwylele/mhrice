@@ -1,6 +1,7 @@
 #![recursion_limit = "4096"]
 
 use anyhow::{anyhow, bail, Context, Result};
+use clap::*;
 use minidump::*;
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
@@ -10,7 +11,6 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Cursor, Read, Seek, SeekFrom, Write};
 use std::path::*;
 use std::sync::Mutex;
-use structopt::*;
 
 mod align;
 mod bitfield;
@@ -85,219 +85,297 @@ pub fn get_config(key: &str) -> Option<String> {
     CONFIG.get(key).map(|s| s.to_string())
 }
 
-#[derive(StructOpt)]
+#[derive(clap::Parser)]
 enum Mhrice {
+    /// Dump a sub-file with specific name from the PAK file
     Dump {
-        #[structopt(short, long)]
+        /// Path to the PAK file
+        #[clap(short, long)]
         pak: Vec<String>,
-        #[structopt(short, long)]
+        /// Name of the sub-file to dump
+        #[clap(short, long)]
         name: String,
-        #[structopt(short, long)]
+        /// Output path
+        #[clap(short, long)]
         output: String,
     },
 
+    /// Dump a sub-file with specific index from the PAK file
     DumpIndex {
-        #[structopt(short, long)]
+        /// Path to the PAK file
+        #[clap(short, long)]
         pak: Vec<String>,
-        #[structopt(short, long)]
+        #[clap(short, long, default_value_t = 0)]
         version: usize,
-        #[structopt(short, long)]
+        /// Index of the sub-file to dump
+        #[clap(short, long)]
         index: usize,
-        #[structopt(short, long)]
+        /// Output path
+        #[clap(short, long)]
         output: String,
     },
 
+    /// Scan the PAK file to verify known file formats that contains RSZ
+    ///
+    /// This will verify the files conform the format,
+    /// and list the CRC mismatch among RSZ types found in them.
     ScanRsz {
-        #[structopt(short, long)]
+        /// Path to the PAK file
+        #[clap(short, long)]
         pak: Vec<String>,
     },
 
+    /// Generate JSON file of game information from the PAK file
     GenJson {
-        #[structopt(short, long)]
+        /// Path to the PAK file
+        #[clap(short, long)]
         pak: Vec<String>,
     },
 
+    /// Generate the mhrice website the PAK file
     GenWebsite {
-        #[structopt(short, long)]
+        /// Path to the PAK file
+        #[clap(short, long)]
         pak: Vec<String>,
-        #[structopt(short, long)]
+        /// Output directory
+        #[clap(short, long)]
         output: String,
     },
 
+    /// Find TDB in the given binary and print the converted TDB file
     ReadTdb {
-        #[structopt(short, long)]
+        /// Path to a TDB file, or a binary that contains one
+        #[clap(short, long)]
         tdb: String,
     },
 
+    /// Print messages from a MSG file
     ReadMsg {
-        #[structopt(short, long)]
+        /// Path to the MSG file
+        #[clap(short, long)]
         msg: String,
     },
 
+    /// Scan the PAK file and output messages from all MSG files
     ScanMsg {
-        #[structopt(short, long)]
+        /// Path to the PAK file
+        #[clap(short, long)]
         pak: Vec<String>,
-        #[structopt(short, long)]
+        /// Output directory
+        #[clap(short, long)]
         output: String,
     },
 
+    /// Scan the PAK file and find a regex pattern in MSG files
     GrepMsg {
-        #[structopt(short, long)]
+        /// Path to the PAK file
+        #[clap(short, long)]
         pak: Vec<String>,
-
+        /// The regex pattern
         pattern: String,
     },
 
+    /// Scan the PAK file and find a regex pattern in all files
     Grep {
-        #[structopt(short, long)]
+        /// Path to the PAK file
+        #[clap(short, long)]
         pak: Vec<String>,
-
-        #[structopt(short, long)]
+        /// Search for UTF-16 string
+        #[clap(short, long)]
         utf16: bool,
-
+        /// The regex pattern
         pattern: String,
     },
 
+    /// Scan the PAK file and print all potential sub-file names
     SearchPath {
-        #[structopt(short, long)]
+        /// Path to the PAK file
+        #[clap(short, long)]
         pak: Vec<String>,
     },
 
+    /// Dump all sub-files from the PAK file
     DumpTree {
-        #[structopt(short, long)]
+        /// Path to the PAK file
+        #[clap(short, long)]
         pak: Vec<String>,
-        #[structopt(short, long)]
+        /// File name list, can be the output from search-path command
+        #[clap(short, long)]
         list: String,
-        #[structopt(short, long)]
+        /// Output directory
+        #[clap(short, long)]
         output: String,
     },
 
+    /// Scan the PAK file and verify the format of all MESH files
     ScanMesh {
-        #[structopt(short, long)]
+        /// Path to the PAK file
+        #[clap(short, long)]
         pak: Vec<String>,
     },
 
+    /// Scan the PAK file and verify the format of all TEX files
     ScanTex {
-        #[structopt(short, long)]
+        /// Path to the PAK file
+        #[clap(short, long)]
         pak: Vec<String>,
     },
 
+    /// Scan the PAK file and verify the format of all GUI files
     ScanGui {
-        #[structopt(short, long)]
+        /// Path to the PAK file
+        #[clap(short, long)]
         pak: Vec<String>,
     },
 
+    /// Scan the PAK file and verify the format of all UVS files
     ScanUvs {
-        #[structopt(short, long)]
+        /// Path to the PAK file
+        #[clap(short, long)]
         pak: Vec<String>,
     },
 
+    /// Convert a MESH file to a OBJ model file
     DumpMesh {
-        #[structopt(short, long)]
+        /// Path to the MESH file
+        #[clap(short, long)]
         mesh: String,
-        #[structopt(short, long)]
+        /// Output file
+        #[clap(short, long)]
         output: String,
     },
 
+    /// Print information of a RCOL file
     DumpRcol {
-        #[structopt(short, long)]
+        /// Path to the RCOL file
+        #[clap(short, long)]
         rcol: String,
     },
 
     DumpMeat {
-        #[structopt(short, long)]
+        #[clap(short, long)]
         mesh: String,
-        #[structopt(short, long)]
+        #[clap(short, long)]
         rcol: String,
-        #[structopt(short, long)]
+        #[clap(short, long)]
         output: String,
     },
 
+    /// Convert a TEX file to a PNG file
     DumpTex {
-        #[structopt(short, long)]
+        /// Path to the TEX file
+        #[clap(short, long)]
         tex: String,
-        #[structopt(short, long)]
+        /// Output PNG file
+        #[clap(short, long)]
         output: String,
     },
 
+    /// Print information of a GUI file
     DumpGui {
-        #[structopt(short, long)]
+        /// Path to the GUI file
+        #[clap(short, long)]
         gui: String,
     },
 
+    /// Generate meat diagram PNG file for a monster
     GenMeat {
-        #[structopt(short, long)]
+        /// Path to the PAK file
+        #[clap(short, long)]
         pak: Vec<String>,
-        #[structopt(short, long)]
+        /// Monster EmTypes ID
+        #[clap(short, long)]
         index: u32,
-        #[structopt(short, long)]
+        /// Output PNG file
+        #[clap(short, long)]
         output: String,
     },
 
+    /// Generate resource files (images etc.) for the website
     GenResources {
-        #[structopt(short, long)]
+        /// Path to the PAK file
+        #[clap(short, long)]
         pak: Vec<String>,
-        #[structopt(short, long)]
+        /// Output directory
+        #[clap(short, long)]
         output: String,
     },
 
+    /// Calculate MurmurHash of a string
     Hash {
+        /// The string to be hashed
         input: String,
-        #[structopt(short, long)]
+        /// Hash as UTF-16. Otherwise, hash as UTF-8
+        #[clap(short, long)]
         utf16: bool,
     },
 
+    /// Print the content of a USER file
     ReadUser {
-        #[structopt(short, long)]
+        /// Path to the USER file
+        #[clap(short, long)]
         user: String,
     },
 
+    /// Find TDB in the a full minidump (DMP file) and print the converted TDB
     ReadDmpTdb {
-        #[structopt(short, long)]
+        /// Path to the full minidump (DMP file)
+        #[clap(short, long)]
         dmp: String,
-        #[structopt(short, long)]
+        /// Optional output path for function address map
+        #[clap(short, long)]
         map: Option<String>,
-        #[structopt(short, long)]
+        /// Optional memory address where TDB is allocated
+        ///
+        /// Specify this to skip search the entire minidump
+        #[clap(short, long)]
         address: Option<String>,
     },
 
+    /// Print information of a SCN file
     DumpScn {
-        #[structopt(short, long)]
+        /// Path to the SCN file
+        #[clap(short, long)]
         scn: String,
     },
 
+    /// Print information of a SCN tree
     Scene {
-        #[structopt(short, long)]
+        /// Path to the PAK file
+        #[clap(short, long)]
         pak: Vec<String>,
-        #[structopt(short, long)]
+        /// The name of the root SCN file
+        #[clap(short, long)]
         name: String,
     },
 
+    /// Print runtime information of a type
     TypeInfo {
-        #[structopt(short, long)]
+        /// Path to the full minidump (DMP file)
+        #[clap(short, long)]
         dmp: String,
-
-        #[structopt(short, long)]
+        /// Hash of the type in hex
+        #[clap(short, long)]
         hash: String,
-
-        #[structopt(short, long)]
+        /// CRC of the type in hex
+        #[clap(short, long)]
         crc: String,
     },
 
     Map {
-        #[structopt(short, long)]
+        #[clap(short, long)]
         pak: Vec<String>,
 
-        #[structopt(short, long)]
+        #[clap(short, long)]
         name: String,
 
-        #[structopt(short, long)]
+        #[clap(short, long)]
         scale: String,
 
-        #[structopt(short, long)]
+        #[clap(short, long)]
         tex: String,
 
-        #[structopt(short, long)]
+        #[clap(short, long)]
         output: String,
     },
 }
