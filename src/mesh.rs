@@ -1,5 +1,6 @@
 use crate::file_ext::*;
 use anyhow::{bail, Context, Result};
+use half::f16;
 use nalgebra_glm::*;
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
@@ -22,6 +23,7 @@ pub struct ModelLod {
     pub model_groups: Vec<ModelGroup>,
 }
 
+#[derive(Debug)]
 pub struct VertexLayout {
     pub usage: u16, // position, normal, uv, uv2, weight
     pub width: u16,
@@ -627,19 +629,19 @@ impl Mesh {
             .vertex_layouts
             .iter()
             .find(|layout| layout.usage == 1)
-            .context("No position data")?;
+            .context("No normal data")?;
 
         let texcoord = self
             .vertex_layouts
             .iter()
             .find(|layout| layout.usage == 2)
-            .context("No position data")?;
+            .context("No texcoord data")?;
 
         let vertex_count = (self.vertex_layouts[1].offset - self.vertex_layouts[0].offset)
             / self.vertex_layouts[0].width as u32;
 
         if position.width != 12 {
-            bail!("Unexpected width");
+            bail!("Unexpected width for position {}", position.width);
         }
 
         let mut buffer = &self.vertex_buffer[position.offset as usize..];
@@ -652,17 +654,37 @@ impl Mesh {
 
         let mut buffer = &self.vertex_buffer[normal.offset as usize..];
         for _ in 0..vertex_count {
-            let x = buffer.read_u8()? as f32 / 255.0;
-            let y = buffer.read_u8()? as f32 / 255.0;
-            let z = buffer.read_u8()? as f32 / 255.0;
-            let _ = buffer.read_u8()?;
-            writeln!(output, "vn {} {} {}", x, y, z)?;
+            if normal.width == 4 {
+                let x = buffer.read_i8()? as f32 / 128.0;
+                let y = buffer.read_i8()? as f32 / 128.0;
+                let z = buffer.read_i8()? as f32 / 128.0; // always 0?
+                let _ = buffer.read_u8()?;
+                writeln!(output, "vn {} {} {}", x, y, z)?;
+            } else if normal.width == 8 {
+                let x = buffer.read_i8()? as f32 / 128.0;
+                let y = buffer.read_i8()? as f32 / 128.0;
+                let z = buffer.read_i8()? as f32 / 128.0;
+                let _ = buffer.read_i8()? as f32 / 128.0; // always 0?
+
+                // These might be tangents
+                let _tx = buffer.read_i8()? as f32 / 128.0;
+                let _ty = buffer.read_i8()? as f32 / 128.0;
+                let _tz = buffer.read_i8()? as f32 / 128.0;
+                let _ = buffer.read_i8()? as f32 / 128.0; // always 1?
+                writeln!(output, "vn {} {} {} ", x, y, z,)?;
+            } else {
+                bail!("Unknown width for normal {}", normal.width)
+            }
+        }
+
+        if texcoord.width != 4 {
+            bail!("Unexpected width for texcoord {}", texcoord.width);
         }
 
         let mut buffer = &self.vertex_buffer[texcoord.offset as usize..];
         for _ in 0..vertex_count {
-            let u = half::f16::from_bits(buffer.read_u16()?);
-            let v = half::f16::from_bits(buffer.read_u16()?);
+            let u = f16::from_bits(buffer.read_u16()?);
+            let v = f16::from_bits(buffer.read_u16()?);
             writeln!(output, "vt {} {}", u, 1.0 - v.to_f32())?;
         }
 
