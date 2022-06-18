@@ -903,7 +903,10 @@ fn dump_tree(pak: Vec<String>, list: String, output: String) -> Result<()> {
     let mut unvisited: std::collections::HashSet<_> = pak.all_file_indexs().into_iter().collect();
     for line in BufReader::new(list).lines() {
         let line = line?;
-        let path = line.split(" $ ").next().context("Empty line")?;
+        let mut path = line.split(" $ ").next().context("Empty line")?;
+        if let Some(new_path) = path.strip_prefix('@') {
+            path = new_path;
+        }
 
         for i18n_index in pak.find_file_i18n(path)? {
             let index = i18n_index.index;
@@ -912,7 +915,11 @@ fn dump_tree(pak: Vec<String>, list: String, output: String) -> Result<()> {
             } else {
                 format!("{}.{}", path, i18n_index.language)
             };
-            let path = PathBuf::from(&output).join(path_i18n);
+
+            let mut path = PathBuf::from(&output);
+            for component in path_i18n.split('/') {
+                path.push(component);
+            }
 
             std::fs::create_dir_all(path.parent().context("no parent")?)?;
             std::fs::write(path, &pak.read_file(index)?)?;
@@ -921,11 +928,27 @@ fn dump_tree(pak: Vec<String>, list: String, output: String) -> Result<()> {
     }
 
     for index in unvisited {
-        let path = PathBuf::from(&output)
-            .join("_unknown")
-            .join(index.short_string());
-        std::fs::create_dir_all(path.parent().context("no parent")?)?;
-        std::fs::write(path, &pak.read_file(index)?)?;
+        let data = pak.read_file(index)?;
+        let format = if let Some(magic) = data.get(0..4) {
+            let mut format = String::new();
+            for c in magic {
+                if c.is_ascii_alphanumeric() {
+                    format.push(*c as char);
+                } else {
+                    format += &format!("_{:02x}", c);
+                }
+            }
+            format
+        } else {
+            "short".to_owned()
+        };
+
+        let mut path = PathBuf::from(&output);
+        path.push("_unknown");
+        path.push(&format);
+        std::fs::create_dir_all(&path)?;
+        path.push(index.short_string());
+        std::fs::write(path, &data)?;
     }
 
     Ok(())
