@@ -269,6 +269,9 @@ enum Mhrice {
         /// Output PNG file
         #[clap(short, long)]
         output: String,
+        /// Optional 4-character swizzle code. The default is "rgba"
+        #[clap(short, long, default_value = "rgba")]
+        swizzle: String,
     },
 
     /// Print information of a GUI file
@@ -970,9 +973,9 @@ fn dump_rcol(rcol: String) -> Result<()> {
     Ok(())
 }
 
-fn dump_tex(tex: String, output: String) -> Result<()> {
+fn dump_tex(tex: String, output: String, swizzle: String) -> Result<()> {
     let tex = Tex::new(File::open(tex)?)?;
-    tex.save_png(0, 0, std::fs::File::create(&output)?)?;
+    tex.save_png_swizzle(0, 0, std::fs::File::create(&output)?, &swizzle)?;
     Ok(())
 }
 
@@ -1237,7 +1240,11 @@ fn main() -> Result<()> {
         Mhrice::DumpMesh { mesh, output } => dump_mesh(mesh, output),
         Mhrice::DumpRcol { rcol } => dump_rcol(rcol),
         Mhrice::DumpMeat { mesh, rcol, output } => dump_meat(mesh, rcol, output),
-        Mhrice::DumpTex { tex, output } => dump_tex(tex, output),
+        Mhrice::DumpTex {
+            tex,
+            output,
+            swizzle,
+        } => dump_tex(tex, output, swizzle),
         Mhrice::DumpGui { gui } => dump_gui(gui),
         Mhrice::GenMeat { pak, index, output } => {
             gen_meat(pak, index, std::fs::File::create(output)?)

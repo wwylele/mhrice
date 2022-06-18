@@ -545,6 +545,18 @@ impl Tex {
     }
 
     pub fn to_rgba(&self, index: usize, mipmap: usize) -> anyhow::Result<RgbaImage> {
+        self.to_rgba_swizzle(index, mipmap, "rgba")
+    }
+
+    pub fn to_rgba_swizzle(
+        &self,
+        index: usize,
+        mipmap: usize,
+        swizzle: &str,
+    ) -> anyhow::Result<RgbaImage> {
+        if swizzle.len() != 4 {
+            bail!("Bad swizzle code");
+        }
         if self.depth != 1 {
             bail!("Volume texture")
         }
@@ -555,7 +567,33 @@ impl Tex {
         let mut data = vec![0; width * height * 4];
         let writer = |x, y, v: [u8; 4]| {
             let i = (x + y * (width)) * 4;
-            data[i..][..4].copy_from_slice(&v);
+            let dest = &mut data[i..][..4];
+            for (dest, &code) in dest.iter_mut().zip(swizzle.as_bytes()) {
+                *dest = match code {
+                    b'r' | b'x' => v[0],
+                    b'g' | b'y' => v[1],
+                    b'b' | b'z' => v[2],
+                    b'a' | b'w' => v[3],
+                    b'0' => 0,
+                    b'1' => 255,
+                    b'n' => 0,
+                    _ => 0,
+                }
+            }
+            if let Some(n) = swizzle.as_bytes().iter().position(|&c| c == b'n') {
+                let mut l: f32 = dest
+                    .iter()
+                    .map(|&x| {
+                        let x = x as f32 / 255.0 * 2.0 - 1.0;
+                        x * x
+                    })
+                    .sum();
+                if l > 1.0 {
+                    l = 1.0
+                }
+                let z = (((1.0 - l).sqrt() + 1.0) / 2.0 * 255.0).round() as u8;
+                dest[n] = z;
+            }
         };
         let decoder = match self.format {
             0x1C | 0x1D => R8G8B8A8Unorm::decode_image,
@@ -591,7 +629,18 @@ impl Tex {
     }
 
     pub fn save_png(&self, index: usize, mipmap: usize, output: impl Write) -> anyhow::Result<()> {
-        self.to_rgba(index, mipmap)?.save_png(output)?;
+        self.save_png_swizzle(index, mipmap, output, "rgba")
+    }
+
+    pub fn save_png_swizzle(
+        &self,
+        index: usize,
+        mipmap: usize,
+        output: impl Write,
+        swizzle: &str,
+    ) -> anyhow::Result<()> {
+        self.to_rgba_swizzle(index, mipmap, swizzle)?
+            .save_png(output)?;
 
         Ok(())
     }
