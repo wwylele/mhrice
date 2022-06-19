@@ -14,6 +14,7 @@ use std::sync::Mutex;
 
 mod align;
 mod bitfield;
+mod collada;
 mod extract;
 mod file_ext;
 mod gpu;
@@ -237,6 +238,16 @@ enum Mhrice {
 
     /// Convert a MESH file to a OBJ model file
     DumpMesh {
+        /// Path to the MESH file
+        #[clap(short, long)]
+        mesh: String,
+        /// Output file
+        #[clap(short, long)]
+        output: String,
+    },
+
+    /// Convert a MESH file to a DAE (Collada) model file
+    DumpMeshDae {
         /// Path to the MESH file
         #[clap(short, long)]
         mesh: String,
@@ -963,6 +974,12 @@ fn dump_mesh(mesh: String, output: String) -> Result<()> {
     Ok(())
 }
 
+fn dump_mesh_dae(mesh: String, output: String) -> Result<()> {
+    let mesh = Mesh::new(File::open(mesh)?)?;
+    mesh.dump_dae(output)?;
+    Ok(())
+}
+
 fn dump_rcol(rcol: String) -> Result<()> {
     let rcol = if let Ok(rcol) = Rcol::new(File::open(&rcol)?, true) {
         rcol
@@ -1238,6 +1255,7 @@ fn main() -> Result<()> {
         Mhrice::ScanGui { pak } => scan_gui(pak),
         Mhrice::ScanUvs { pak } => scan_uvs(pak),
         Mhrice::DumpMesh { mesh, output } => dump_mesh(mesh, output),
+        Mhrice::DumpMeshDae { mesh, output } => dump_mesh_dae(mesh, output),
         Mhrice::DumpRcol { rcol } => dump_rcol(rcol),
         Mhrice::DumpMeat { mesh, rcol, output } => dump_meat(mesh, rcol, output),
         Mhrice::DumpTex {

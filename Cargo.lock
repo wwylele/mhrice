@@ -1422,6 +1422,7 @@ dependencies = [
  "once_cell",
  "ordered-float",
  "png",
+ "quick-xml",
  "rayon",
  "regex",
  "rusoto_core",
@@ -2077,6 +2078,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c54b25569025b7fc9651de43004ae593a75ad88543b17178aa5e1b9c4f15f56f"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "quick-xml"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9279fbdacaad3baf559d8cabe0acc3d06e30ea14931af31af79578ac0946decc"
+dependencies = [
+ "memchr",
 ]
 
 [[package]]

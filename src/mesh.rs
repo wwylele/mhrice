@@ -724,4 +724,294 @@ impl Mesh {
 
         Ok(())
     }
+
+    pub fn dump_dae(&self, output: String) -> Result<()> {
+        use crate::collada::*;
+        use std::path::Path;
+
+        let mut geometries = vec![];
+        let mut visual_scene = VisualScene {
+            id: "scene".to_owned(),
+            nodes: vec![],
+        };
+        let lod = &self.main_model_lods[0];
+        for (group_i, group) in lod.model_groups.iter().enumerate() {
+            for (model_i, model) in group.models.iter().enumerate() {
+                if model.vertex_count == 0 {
+                    continue;
+                }
+                let model_id = format!("m{group_i}-{model_i}");
+
+                let index_buffer_start = usize::try_from(model.index_buffer_start * 2)?;
+                let index_buffer_end =
+                    index_buffer_start + usize::try_from(model.vertex_count * 2)?;
+                let index_buffer = self
+                    .index_buffer
+                    .get(index_buffer_start..index_buffer_end)
+                    .context("Index buffer out-of-bound")?;
+                let indices: Vec<u16> = index_buffer
+                    .chunks(2)
+                    .map(|c| u16::from_le_bytes(c.try_into().unwrap()))
+                    .collect();
+                let index_bound = indices.iter().max().unwrap() + 1;
+
+                let mut sources = vec![];
+                let mut vertices_inputs = vec![];
+                let mut primitive_inputs = vec![SharedInput {
+                    semantic: "VERTEX".to_owned(),
+                    source: format!("#{model_id}-vertices"),
+                    offset: 0,
+                    set: None,
+                }];
+
+                for (layout_i, layout) in self.vertex_layouts.iter().enumerate() {
+                    let vertex_buffer_start = usize::try_from(
+                        layout.offset + model.vertex_buffer_start * (u32::from(layout.width)),
+                    )?;
+                    let vertex_buffer_end =
+                        vertex_buffer_start + usize::from(layout.width) * usize::from(index_bound);
+                    let data = self
+                        .vertex_buffer
+                        .get(vertex_buffer_start..vertex_buffer_end)
+                        .context("Vertex buffer out-of-bound")?;
+
+                    match layout.usage {
+                        0 => {
+                            if layout.width != 12 {
+                                bail!("Unexpected width for position {}", layout.width);
+                            }
+                            let array: Vec<f32> = data
+                                .chunks(4)
+                                .map(|c| f32::from_le_bytes(c.try_into().unwrap()))
+                                .collect();
+
+                            sources.push(Source {
+                                id: format!("{model_id}-layout{layout_i}"),
+                                array_element: ArrayElement::FloatArray {
+                                    id: format!("{model_id}-layout{layout_i}-array"),
+                                    array,
+                                },
+                                technique_common: TechniqueCommon {
+                                    elements: vec![TechniqueCommonElement::Accessor {
+                                        count: index_bound.into(),
+                                        source: format!("#{model_id}-layout{layout_i}-array"),
+                                        stride: 3,
+                                        params: vec![
+                                            Param {
+                                                name: "X".to_owned(),
+                                                type_: "float".to_owned(),
+                                            },
+                                            Param {
+                                                name: "Y".to_owned(),
+                                                type_: "float".to_owned(),
+                                            },
+                                            Param {
+                                                name: "Z".to_owned(),
+                                                type_: "float".to_owned(),
+                                            },
+                                        ],
+                                    }],
+                                },
+                            });
+
+                            vertices_inputs.push(Input {
+                                semantic: "POSITION".to_owned(),
+                                source: format!("#{model_id}-layout{layout_i}"),
+                            });
+                        }
+
+                        1 => {
+                            if layout.width != 4 && layout.width != 8 {
+                                bail!("Unexpected width for normal {}", layout.width);
+                            }
+                            fn u8_to_f32(b: &u8) -> f32 {
+                                *b as i8 as f32 / 128.0
+                            }
+                            let array: Vec<f32> = data
+                                .chunks(layout.width.into())
+                                .flat_map(|c| &c[0..3])
+                                .map(u8_to_f32)
+                                .collect();
+                            sources.push(Source {
+                                id: format!("{model_id}-layout{layout_i}"),
+                                array_element: ArrayElement::FloatArray {
+                                    id: format!("{model_id}-layout{layout_i}-array"),
+                                    array,
+                                },
+                                technique_common: TechniqueCommon {
+                                    elements: vec![TechniqueCommonElement::Accessor {
+                                        count: index_bound.into(),
+                                        source: format!("#{model_id}-layout{layout_i}-array"),
+                                        stride: 3,
+                                        params: vec![
+                                            Param {
+                                                name: "X".to_owned(),
+                                                type_: "float".to_owned(),
+                                            },
+                                            Param {
+                                                name: "Y".to_owned(),
+                                                type_: "float".to_owned(),
+                                            },
+                                            Param {
+                                                name: "Z".to_owned(),
+                                                type_: "float".to_owned(),
+                                            },
+                                        ],
+                                    }],
+                                },
+                            });
+
+                            primitive_inputs.push(SharedInput {
+                                semantic: "NORMAL".to_owned(),
+                                source: format!("#{model_id}-layout{layout_i}"),
+                                offset: 0,
+                                set: None,
+                            });
+
+                            if layout.width == 8 {
+                                let array: Vec<f32> = data
+                                    .chunks(layout.width.into())
+                                    .flat_map(|c| &c[4..7])
+                                    .map(u8_to_f32)
+                                    .collect();
+                                sources.push(Source {
+                                    id: format!("{model_id}-layout{layout_i}tangent"),
+                                    array_element: ArrayElement::FloatArray {
+                                        id: format!("{model_id}-layout{layout_i}tangent-array"),
+                                        array,
+                                    },
+                                    technique_common: TechniqueCommon {
+                                        elements: vec![TechniqueCommonElement::Accessor {
+                                            count: index_bound.into(),
+                                            source: format!(
+                                                "#{model_id}-layout{layout_i}tangent-array"
+                                            ),
+                                            stride: 3,
+                                            params: vec![
+                                                Param {
+                                                    name: "X".to_owned(),
+                                                    type_: "float".to_owned(),
+                                                },
+                                                Param {
+                                                    name: "Y".to_owned(),
+                                                    type_: "float".to_owned(),
+                                                },
+                                                Param {
+                                                    name: "Z".to_owned(),
+                                                    type_: "float".to_owned(),
+                                                },
+                                            ],
+                                        }],
+                                    },
+                                });
+
+                                primitive_inputs.push(SharedInput {
+                                    semantic: "TANGENT".to_owned(),
+                                    source: format!("#{model_id}-layout{layout_i}tangent"),
+                                    offset: 0,
+                                    set: None,
+                                });
+                            }
+                        }
+                        2 | 3 => {
+                            if layout.width != 4 {
+                                bail!("Unexpected width for texcoord {}", layout.width);
+                            }
+
+                            let array: Vec<f32> = data
+                                .chunks(2)
+                                .enumerate()
+                                .map(|(index, c)| {
+                                    let v = f16::from_le_bytes(c.try_into().unwrap()).to_f32();
+                                    if index % 2 == 0 {
+                                        v
+                                    } else {
+                                        1.0 - v
+                                    }
+                                })
+                                .collect();
+
+                            sources.push(Source {
+                                id: format!("{model_id}-layout{layout_i}"),
+                                array_element: ArrayElement::FloatArray {
+                                    id: format!("{model_id}-layout{layout_i}-array"),
+                                    array,
+                                },
+                                technique_common: TechniqueCommon {
+                                    elements: vec![TechniqueCommonElement::Accessor {
+                                        count: index_bound.into(),
+                                        source: format!("#{model_id}-layout{layout_i}-array"),
+                                        stride: 2,
+                                        params: vec![
+                                            Param {
+                                                name: "U".to_owned(),
+                                                type_: "float".to_owned(),
+                                            },
+                                            Param {
+                                                name: "V".to_owned(),
+                                                type_: "float".to_owned(),
+                                            },
+                                        ],
+                                    }],
+                                },
+                            });
+
+                            primitive_inputs.push(SharedInput {
+                                semantic: "TEXCOORD".to_owned(),
+                                source: format!("#{model_id}-layout{layout_i}"),
+                                offset: 0,
+                                set: Some(if layout.usage == 2 { 0 } else { 1 }),
+                            });
+                        }
+                        _ => (),
+                    }
+                }
+
+                let vertices = Vertices {
+                    id: format!("{model_id}-vertices"),
+                    inputs: vertices_inputs,
+                };
+                let primitive_elements = vec![PrimitiveElements::Triangles {
+                    count: u32::try_from(indices.len() / 3)?,
+                    inputs: primitive_inputs,
+                    p: indices,
+                }];
+
+                let geometry = Geometry {
+                    id: model_id.clone(),
+                    geometric_element: GeometricElement::Mesh {
+                        sources,
+                        vertices,
+                        primitive_elements,
+                    },
+                };
+                geometries.push(geometry);
+
+                visual_scene.nodes.push(Node {
+                    id: format!("{model_id}-node"),
+                    instance_geometries: vec![InstanceGeometry {
+                        url: format!("#{model_id}"),
+                    }],
+                });
+            }
+        }
+
+        let library_geometries = Library::LibraryGeometries { geometries };
+        let library_visual_scenes = Library::LibraryVisualScenes {
+            visual_scenes: vec![visual_scene],
+        };
+
+        let collada = Collada {
+            asset: Asset {
+                created: "2022-06-19T15:05:15".to_owned(),
+                modified: "2022-06-19T15:05:15".to_owned(),
+            },
+            libraries: vec![library_geometries, library_visual_scenes],
+            scene: Scene {
+                instance_visual_scene: "#scene".to_owned(),
+            },
+        };
+
+        collada.save(Path::new(&output))
+    }
 }
