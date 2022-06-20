@@ -8,6 +8,7 @@ use std::io::{Read, Seek, SeekFrom, Write};
 
 #[derive(Clone)]
 pub struct Model {
+    pub name_index: u32,
     pub vertex_count: u32,
     pub index_buffer_start: u32,
     pub vertex_buffer_start: u32,
@@ -54,6 +55,7 @@ pub struct Bone {
 pub struct Mesh {
     pub main_model_lods: Vec<ModelLod>,
     pub aux_model_lods: Vec<ModelLod>,
+    pub model_names: Vec<String>,
     pub vertex_layouts: Vec<VertexLayout>,
     pub vertex_buffer: Vec<u8>,
     pub index_buffer: Vec<u8>,
@@ -90,13 +92,13 @@ impl Mesh {
         let c_offset = file.read_u64()?;
         let skeleton_offset = file.read_u64()?;
         let e_offset = file.read_u64()?;
-        let f_offset = file.read_u64()?;
+        let blend_shape_offset = file.read_u64()?;
         let g_offset = file.read_u64()?; // after string table
         let mesh_data_offset = file.read_u64()?; // after string table
         let i_offset = file.read_u64()?;
         let model_names_offset = file.read_u64()?; // lists to string table entry
         let bone_names_offset = file.read_u64()?; // lists to string table entry
-        let f_names_offset = file.read_u64()?; // lists to string table entry
+        let blend_shape_names_offset = file.read_u64()?; // lists to string table entry
         let string_table_offset = file.read_u64()?; // string table
 
         let mut model_lod_cache: HashMap<u64, ModelLod> = HashMap::new();
@@ -114,8 +116,8 @@ impl Mesh {
 
             let models = (0..model_count)
                 .map(|_| {
-                    let _j = file.read_u32()?;
-                    let face_count = file.read_u32()?;
+                    let name_index = file.read_u32()?;
+                    let vertex_count = file.read_u32()?;
                     let index_buffer_start = file.read_u32()?;
                     let vertex_buffer_start = file.read_u32()?;
 
@@ -123,7 +125,8 @@ impl Mesh {
                     let _ = file.read_u32()?;
 
                     Ok(Model {
-                        vertex_count: face_count,
+                        name_index,
+                        vertex_count,
                         index_buffer_start,
                         vertex_buffer_start,
                     })
@@ -205,6 +208,13 @@ impl Mesh {
             main_model_lods = vec![];
         }
 
+        /*if let Some(lod0) = main_model_lods.first() {
+            let expected_name_count = lod0.model_groups.len();
+            if usize::from(model_name_count) != expected_name_count {
+                bail!("Unexpected model name count {model_name_count}. Expected {expected_name_count}")
+            }
+        }*/
+
         let aux_model_lods = if aux_model_offset != 0 {
             file.seek_noop(aux_model_offset)?;
 
@@ -247,6 +257,19 @@ impl Mesh {
         } else {
             vec![]
         };
+
+        // verify that model name indices are all in-bound
+        for set in [&main_model_lods, &aux_model_lods] {
+            for lod in set {
+                for group in &lod.model_groups {
+                    for model in &group.models {
+                        if model.name_index >= u32::from(model_name_count) {
+                            bail!("model name index {} out of bound", model.name_index);
+                        }
+                    }
+                }
+            }
+        }
 
         if c_offset != 0 {
             file.seek_noop(c_offset)?;
@@ -390,11 +413,11 @@ impl Mesh {
             //..
         }
 
-        let mut f_name_count = 0;
-        if f_offset != 0 {
-            file.seek(SeekFrom::Start(f_offset))?;
-            //file.seek_assert_align_up(f_offset, 8)?;
-            let f_count = file.read_u8()?;
+        let mut blend_shape_name_count = 0;
+        if blend_shape_offset != 0 {
+            file.seek(SeekFrom::Start(blend_shape_offset))?;
+            //file.seek_assert_align_up(blend_shape_offset, 8)?;
+            let blend_shape_count = file.read_u8()?;
             file.read_u8()?;
             file.read_u8()?;
             file.read_u8()?;
@@ -406,7 +429,7 @@ impl Mesh {
                 file.read_u64()?;
             }
             file.seek_noop(fa_offset)?;
-            let fb_offsets = (0..f_count)
+            let fb_offsets = (0..blend_shape_count)
                 .map(|_| file.read_u64())
                 .collect::<Result<Vec<_>>>()?;
 
@@ -428,7 +451,7 @@ impl Mesh {
                     file.read_u64()?;
                     file.read_u16()?;
                     let name_count = file.read_u16()?;
-                    f_name_count += name_count;
+                    blend_shape_name_count += name_count;
                     file.read_u32()?;
                     file.seek_noop(n_offset)?;
                     file.read_u64()?;
@@ -447,7 +470,7 @@ impl Mesh {
             i_offset,
             model_names_offset,
             bone_names_offset,
-            f_names_offset,
+            blend_shape_names_offset,
             string_table_offset,
         ];
         let next_offset = *next_offsets.iter().find(|x| **x != 0).unwrap();
@@ -466,12 +489,14 @@ impl Mesh {
             file.read_exact(&mut i_buffer)?;
         }
 
-        if model_names_offset != 0 {
+        let model_names = if model_names_offset != 0 {
             file.seek_assert_align_up(model_names_offset, 16)?;
             (0..model_name_count)
                 .map(|_| file.read_u16())
-                .collect::<Result<Vec<_>>>()?;
-        }
+                .collect::<Result<Vec<_>>>()?
+        } else {
+            vec![]
+        };
 
         let bone_names = if bone_names_offset != 0 {
             file.seek_assert_align_up(bone_names_offset, 16)?;
@@ -482,14 +507,18 @@ impl Mesh {
             vec![]
         };
 
-        if f_names_offset != 0 {
-            file.seek_assert_align_up(f_names_offset, 16)?;
-            (0..f_name_count)
+        let blend_shape_names = if blend_shape_names_offset != 0 {
+            file.seek_assert_align_up(blend_shape_names_offset, 16)?;
+            (0..blend_shape_name_count)
                 .map(|_| file.read_u16())
-                .collect::<Result<Vec<_>>>()?;
-        }
+                .collect::<Result<Vec<_>>>()?
+        } else {
+            vec![]
+        };
 
-        if model_name_count as u32 + bone_count + f_name_count as u32 != string_count as u32 {
+        if model_name_count as u32 + bone_count + blend_shape_name_count as u32
+            != string_count as u32
+        {
             bail!("Strange count")
         }
 
@@ -515,6 +544,26 @@ impl Mesh {
             })
             .collect::<Result<Vec<_>>>()?;
 
+        let model_names = model_names
+            .into_iter()
+            .map(|name_index| {
+                Ok(strings
+                    .get(usize::try_from(name_index)?)
+                    .context("Model name out of bound")?
+                    .clone())
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        let _blend_shape_names = blend_shape_names
+            .into_iter()
+            .map(|name_index| {
+                Ok(strings
+                    .get(usize::try_from(name_index)?)
+                    .context("Blend shape name out of bound")?
+                    .clone())
+            })
+            .collect::<Result<Vec<_>>>()?;
+
         let bone_names = bone_names
             .into_iter()
             .enumerate()
@@ -522,7 +571,7 @@ impl Mesh {
                 Ok((
                     strings
                         .get(usize::try_from(name_index)?)
-                        .context("Name out of bound")?
+                        .context("Bone name out of bound")?
                         .clone(),
                     bone_index,
                 ))
@@ -607,6 +656,7 @@ impl Mesh {
         Ok(Mesh {
             aux_model_lods,
             main_model_lods,
+            model_names,
             vertex_layouts,
             vertex_buffer,
             index_buffer,
@@ -740,7 +790,8 @@ impl Mesh {
                 if model.vertex_count == 0 {
                     continue;
                 }
-                let model_id = format!("m{group_i}-{model_i}");
+                let model_name = &self.model_names[usize::try_from(model.name_index)?];
+                let model_id = format!("m{group_i}-{model_i}-{model_name}");
 
                 let index_buffer_start = usize::try_from(model.index_buffer_start * 2)?;
                 let index_buffer_end =
