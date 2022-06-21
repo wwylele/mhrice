@@ -50,6 +50,7 @@ pub struct Bone {
     pub relative_transform: Mat4x4,
     pub absolute_transform: Mat4x4,
     pub absolute_reverse: Mat4x4,
+    pub name: String,
 }
 
 pub struct Mesh {
@@ -298,7 +299,7 @@ impl Mesh {
 
         let bone_count;
         let bone_remap;
-        let bones;
+        let mut bones;
         if skeleton_offset != 0 {
             file.seek_assert_align_up(skeleton_offset, 8)?;
             bone_count = file.read_u32()?;
@@ -393,6 +394,7 @@ impl Mesh {
                         relative_transform: bone_rel_transform[i],
                         absolute_transform: bone_abs_transform[i],
                         absolute_reverse: bone_abs_reverse[i],
+                        name: "".to_string(),
                     })
                 })
                 .collect::<Result<Vec<_>>>()?;
@@ -568,13 +570,12 @@ impl Mesh {
             .into_iter()
             .enumerate()
             .map(|(bone_index, name_index)| {
-                Ok((
-                    strings
-                        .get(usize::try_from(name_index)?)
-                        .context("Bone name out of bound")?
-                        .clone(),
-                    bone_index,
-                ))
+                let name = strings
+                    .get(usize::try_from(name_index)?)
+                    .context("Bone name out of bound")?
+                    .clone();
+                bones[bone_index].name = name.clone();
+                Ok((name, bone_index))
             })
             .collect::<Result<HashMap<_, _>>>()?;
 
@@ -758,20 +759,6 @@ impl Mesh {
             }
         }
 
-        /*
-        for bone in &self.bones {
-            let parent = &self.bones[bone.parent.unwrap_or(0)];
-            let a = bone.absolute_transform * vec4(0.0, 0.0, 0.0, 1.0);
-            let b = parent.absolute_transform * vec4(0.0, 0.0, 0.0, 1.0);
-
-            writeln!(output, "v {} {} {}", a.x, a.y, a.z)?;
-            writeln!(output, "v {} {} {}", b.x, b.y, b.z)?;
-        }
-
-        for i in 0..self.bones.len() {
-            writeln!(output, "l {} {}", i * 2 + 1, i * 2 + 2)?;
-        }*/
-
         Ok(())
     }
 
@@ -779,11 +766,24 @@ impl Mesh {
         use crate::collada::*;
         use std::path::Path;
 
+        let remapped_joints: Vec<String> = self
+            .bone_remap
+            .iter()
+            .map(|i| self.bones[usize::from(*i)].name.clone())
+            .collect();
+
+        let mut inv_bind_matrices = vec![];
+        for &remap_index in &self.bone_remap {
+            let bone = &self.bones[usize::from(remap_index)];
+            for row in bone.absolute_reverse.row_iter() {
+                for e in &row {
+                    inv_bind_matrices.push(*e);
+                }
+            }
+        }
+
         let mut geometries = vec![];
-        let mut visual_scene = VisualScene {
-            id: "scene".to_owned(),
-            nodes: vec![],
-        };
+        let mut controllers = vec![];
         let lod = &self.main_model_lods[0];
         for (group_i, group) in lod.model_groups.iter().enumerate() {
             for (model_i, model) in group.models.iter().enumerate() {
@@ -804,6 +804,7 @@ impl Mesh {
                     .chunks(2)
                     .map(|c| u16::from_le_bytes(c.try_into().unwrap()))
                     .collect();
+                let vcount_for_weight: Vec<u8> = std::iter::repeat(8).take(indices.len()).collect();
                 let index_bound = indices.iter().max().unwrap() + 1;
 
                 let mut sources = vec![];
@@ -815,6 +816,8 @@ impl Mesh {
                     set: None,
                 }];
 
+                let mut v_for_weight: Vec<u32> = vec![];
+                let mut weight_array = vec![];
                 for (layout_i, layout) in self.vertex_layouts.iter().enumerate() {
                     let vertex_buffer_start = usize::try_from(
                         layout.offset + model.vertex_buffer_start * (u32::from(layout.width)),
@@ -1014,6 +1017,23 @@ impl Mesh {
                                 set: Some(if layout.usage == 2 { 0 } else { 1 }),
                             });
                         }
+                        4 => {
+                            if layout.width != 16 {
+                                bail!("Unexpected width for bone weight {}", layout.width);
+                            }
+
+                            for (i, chunk) in data.chunks(16).enumerate() {
+                                let joints = &chunk[0..8];
+                                let weights = &chunk[8..16];
+                                weight_array.extend(weights.iter().map(|w| *w as f32 / 255.0));
+
+                                #[allow(clippy::needless_range_loop)]
+                                for j in 0..8 {
+                                    v_for_weight.push(u32::from(joints[j]));
+                                    v_for_weight.push(u32::try_from(i * 8 + j)?);
+                                }
+                            }
+                        }
                         _ => (),
                     }
                 }
@@ -1038,29 +1058,228 @@ impl Mesh {
                 };
                 geometries.push(geometry);
 
-                visual_scene.nodes.push(Node {
-                    id: format!("{model_id}-node"),
-                    instance_geometries: vec![InstanceGeometry {
-                        url: format!("#{model_id}"),
-                    }],
-                });
+                let weight_sources = vec![
+                    Source {
+                        id: format!("{model_id}-joint"),
+                        array_element: ArrayElement::NameArray {
+                            id: format!("{model_id}-joint-array"),
+                            array: remapped_joints.clone(),
+                        },
+                        technique_common: TechniqueCommon {
+                            elements: vec![TechniqueCommonElement::Accessor {
+                                count: remapped_joints.len().try_into()?,
+                                source: format!("#{model_id}-joint-array"),
+                                stride: 1,
+                                params: vec![Param {
+                                    name: "JOINT".to_owned(),
+                                    type_: "name".to_owned(),
+                                }],
+                            }],
+                        },
+                    },
+                    Source {
+                        id: format!("{model_id}-weight"),
+                        array_element: ArrayElement::FloatArray {
+                            id: format!("{model_id}-weight-array"),
+                            array: weight_array,
+                        },
+                        technique_common: TechniqueCommon {
+                            elements: vec![TechniqueCommonElement::Accessor {
+                                count: u32::from(index_bound) * 8,
+                                source: format!("#{model_id}-weight-array"),
+                                stride: 1,
+                                params: vec![Param {
+                                    name: "WEIGHT".to_owned(),
+                                    type_: "float".to_owned(),
+                                }],
+                            }],
+                        },
+                    },
+                    Source {
+                        id: format!("{model_id}-inv"),
+                        array_element: ArrayElement::FloatArray {
+                            id: format!("{model_id}-inv-array"),
+                            array: inv_bind_matrices.clone(),
+                        },
+                        technique_common: TechniqueCommon {
+                            elements: vec![TechniqueCommonElement::Accessor {
+                                count: remapped_joints.len().try_into()?,
+                                source: format!("#{model_id}-inv-array"),
+                                stride: 16,
+                                params: vec![Param {
+                                    name: "TRANSFORM".to_owned(),
+                                    type_: "float4x4".to_owned(),
+                                }],
+                            }],
+                        },
+                    },
+                ];
+
+                let controller = Controller {
+                    id: format!("{model_id}-controller"),
+                    skin: Skin {
+                        source: format!("#{model_id}"),
+                        sources: weight_sources,
+                        joints: Joints {
+                            inputs: vec![
+                                Input {
+                                    semantic: "JOINT".to_owned(),
+                                    source: format!("#{model_id}-joint"),
+                                },
+                                Input {
+                                    semantic: "INV_BIND_MATRIX".to_owned(),
+                                    source: format!("#{model_id}-inv"),
+                                },
+                            ],
+                        },
+                        vertex_weights: VertexWeights {
+                            count: index_bound.try_into()?,
+                            inputs: vec![
+                                SharedInput {
+                                    semantic: "JOINT".to_owned(),
+                                    source: format!("#{model_id}-joint"),
+                                    offset: 0,
+                                    set: None,
+                                },
+                                SharedInput {
+                                    semantic: "WEIGHT".to_owned(),
+                                    source: format!("#{model_id}-weight"),
+                                    offset: 1,
+                                    set: None,
+                                },
+                            ],
+                            vcount: vcount_for_weight,
+                            v: v_for_weight,
+                        },
+                    },
+                };
+                controllers.push(controller);
             }
         }
 
-        let library_geometries = Library::LibraryGeometries { geometries };
-        let library_visual_scenes = Library::LibraryVisualScenes {
-            visual_scenes: vec![visual_scene],
+        let asset = Asset {
+            created: "2022-06-19T15:05:15".to_owned(),
+            modified: "2022-06-19T15:05:15".to_owned(),
         };
 
-        let collada = Collada {
-            asset: Asset {
-                created: "2022-06-19T15:05:15".to_owned(),
-                modified: "2022-06-19T15:05:15".to_owned(),
-            },
-            libraries: vec![library_geometries, library_visual_scenes],
-            scene: Scene {
-                instance_visual_scene: "#scene".to_owned(),
-            },
+        let collada = if self.bones.is_empty() {
+            let top_nodes = geometries
+                .iter()
+                .map(|g| Node {
+                    id: format!("__geometry__{}", g.id),
+                    name: g.id.clone(),
+                    type_: NodeType::Node,
+                    matrix: None,
+                    instance_controllers: vec![],
+                    instance_geometries: vec![InstanceGeometry {
+                        url: format!("#{}", g.id),
+                    }],
+                    nodes: vec![],
+                })
+                .collect();
+
+            let visual_scene = VisualScene {
+                id: "scene".to_owned(),
+                nodes: top_nodes,
+            };
+
+            let library_geometries = Library::Geometries { geometries };
+            let library_visual_scenes = Library::VisualScenes {
+                visual_scenes: vec![visual_scene],
+            };
+
+            Collada {
+                asset,
+                libraries: vec![library_geometries, library_visual_scenes],
+                scene: Scene {
+                    instance_visual_scene: "#scene".to_owned(),
+                },
+            }
+        } else {
+            fn make_joint(index: usize, bones: &[Bone]) -> Node {
+                let mut nodes = vec![];
+                let bone = &bones[index];
+                for (i, bone) in bones.iter().enumerate() {
+                    if Some(index) == bone.parent {
+                        nodes.push(make_joint(i, bones));
+                    }
+                }
+
+                Node {
+                    id: bone.name.clone(),
+                    name: bone.name.clone(),
+                    type_: NodeType::Joint,
+                    matrix: Some(bone.relative_transform),
+                    instance_controllers: vec![],
+                    instance_geometries: vec![],
+                    nodes,
+                }
+            }
+            let bone_root = self
+                .bones
+                .iter()
+                .position(|b| b.parent.is_none())
+                .context("No bone root")?;
+
+            let joint_root = make_joint(bone_root, &self.bones);
+
+            let top_nodes = vec![
+                Node {
+                    id: "__root__".to_owned(),
+                    name: "Joints".to_owned(),
+                    type_: NodeType::Node,
+                    matrix: None,
+                    instance_controllers: vec![],
+                    instance_geometries: vec![],
+                    nodes: vec![joint_root],
+                },
+                Node {
+                    id: "__controllers__".to_owned(),
+                    name: "Meshes".to_owned(),
+                    type_: NodeType::Node,
+                    matrix: None,
+                    instance_controllers: vec![],
+                    instance_geometries: vec![],
+                    nodes: controllers
+                        .iter()
+                        .map(|c| Node {
+                            id: format!("__controller__{}", c.id),
+                            name: c.id.clone(),
+                            type_: NodeType::Node,
+                            matrix: None,
+                            instance_controllers: vec![InstanceController {
+                                url: format!("#{}", c.id),
+                                skeletons: vec!["#__root__".to_owned()],
+                            }],
+                            instance_geometries: vec![],
+                            nodes: vec![],
+                        })
+                        .collect(),
+                },
+            ];
+
+            let visual_scene = VisualScene {
+                id: "scene".to_owned(),
+                nodes: top_nodes,
+            };
+
+            let library_geometries = Library::Geometries { geometries };
+            let library_controllers = Library::Controllers { controllers };
+            let library_visual_scenes = Library::VisualScenes {
+                visual_scenes: vec![visual_scene],
+            };
+
+            Collada {
+                asset,
+                libraries: vec![
+                    library_geometries,
+                    library_controllers,
+                    library_visual_scenes,
+                ],
+                scene: Scene {
+                    instance_visual_scene: "#scene".to_owned(),
+                },
+            }
         };
 
         collada.save(Path::new(&output))

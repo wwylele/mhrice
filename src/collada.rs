@@ -1,25 +1,37 @@
 use anyhow::Result;
+use nalgebra_glm::Mat4x4;
 use quick_xml::events::BytesText;
 use quick_xml::Writer;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
+fn seq_string(elements: &[impl std::fmt::Display]) -> String {
+    let element_str: Vec<String> = elements.iter().map(|p| format!("{p}")).collect();
+    element_str.join(" ")
+}
+
 pub enum ArrayElement {
+    NameArray { id: String, array: Vec<String> },
     FloatArray { id: String, array: Vec<f32> },
 }
 
 impl ArrayElement {
     fn write(&self, writer: &mut Writer<File>) -> quick_xml::Result<()> {
         match self {
+            ArrayElement::NameArray { id, array } => {
+                writer
+                    .create_element("Name_array")
+                    .with_attribute(("id", id.as_str()))
+                    .with_attribute(("count", array.len().to_string().as_str()))
+                    .write_text_content(BytesText::from_plain_str(&seq_string(array)))?;
+            }
             ArrayElement::FloatArray { id, array } => {
-                let string: Vec<String> = array.iter().map(|e| format!("{e}")).collect();
-                let string = string.join(" ");
                 writer
                     .create_element("float_array")
                     .with_attribute(("id", id.as_str()))
                     .with_attribute(("count", array.len().to_string().as_str()))
-                    .write_text_content(BytesText::from_plain(string.as_bytes()))?;
+                    .write_text_content(BytesText::from_plain_str(&seq_string(array)))?;
             }
         }
         Ok(())
@@ -178,11 +190,8 @@ impl PrimitiveElements {
                     .with_attribute(("count", count.to_string().as_str()))
                     .write_inner_content(|w| {
                         write_seq(inputs, SharedInput::write)(w)?;
-
-                        let p: Vec<String> = p.iter().map(|p| format!("{p}")).collect();
-                        let p = p.join(" ");
                         w.create_element("p")
-                            .write_text_content(BytesText::from_plain(p.as_bytes()))?;
+                            .write_text_content(BytesText::from_plain_str(&seq_string(p)))?;
 
                         Ok(())
                     })?;
@@ -253,20 +262,75 @@ impl InstanceGeometry {
     }
 }
 
+pub struct InstanceController {
+    pub url: String,
+    pub skeletons: Vec<String>,
+}
+
+impl InstanceController {
+    fn write(&self, writer: &mut Writer<File>) -> quick_xml::Result<()> {
+        writer
+            .create_element("instance_controller")
+            .with_attribute(("url", self.url.as_str()))
+            .write_inner_content(|w| {
+                for skeleton in &self.skeletons {
+                    w.create_element("skeleton")
+                        .write_text_content(BytesText::from_plain_str(skeleton))?;
+                }
+                Ok(())
+            })?;
+        Ok(())
+    }
+}
+
+pub enum NodeType {
+    Node,
+    Joint,
+}
+
 pub struct Node {
     pub id: String,
+    pub name: String,
+    pub type_: NodeType,
+    pub matrix: Option<Mat4x4>,
+    pub instance_controllers: Vec<InstanceController>,
     pub instance_geometries: Vec<InstanceGeometry>,
+    pub nodes: Vec<Node>,
+}
+
+fn write_matrix(matrix: &Mat4x4, writer: &mut Writer<File>) -> quick_xml::Result<()> {
+    let strings: Vec<String> = matrix
+        .row_iter()
+        .flat_map(|r| r.into_iter().map(|e| e.to_string()).collect::<Vec<_>>())
+        .collect();
+    let string = strings.join(" ");
+    writer
+        .create_element("matrix")
+        .write_text_content(BytesText::from_plain_str(&string))?;
+    Ok(())
 }
 
 impl Node {
     fn write(&self, writer: &mut Writer<File>) -> quick_xml::Result<()> {
+        let type_str = match self.type_ {
+            NodeType::Node => "NODE",
+            NodeType::Joint => "JOINT",
+        };
         writer
             .create_element("node")
             .with_attribute(("id", self.id.as_str()))
-            .write_inner_content(write_seq(
-                &self.instance_geometries,
-                InstanceGeometry::write,
-            ))?;
+            .with_attribute(("name", self.name.as_str()))
+            .with_attribute(("sid", self.id.as_str()))
+            .with_attribute(("node", type_str))
+            .write_inner_content(|w| {
+                if let Some(matrix) = &self.matrix {
+                    write_matrix(matrix, w)?;
+                }
+                write_seq(&self.instance_controllers, InstanceController::write)(w)?;
+                write_seq(&self.instance_geometries, InstanceGeometry::write)(w)?;
+                write_seq(&self.nodes, Node::write)(w)?;
+                Ok(())
+            })?;
         Ok(())
     }
 }
@@ -286,23 +350,103 @@ impl VisualScene {
     }
 }
 
+pub struct Joints {
+    pub inputs: Vec<Input>,
+}
+
+impl Joints {
+    fn write(&self, writer: &mut Writer<File>) -> quick_xml::Result<()> {
+        writer
+            .create_element("joints")
+            .write_inner_content(write_seq(&self.inputs, Input::write))?;
+        Ok(())
+    }
+}
+
+pub struct VertexWeights {
+    pub count: u32,
+    pub inputs: Vec<SharedInput>,
+    pub vcount: Vec<u8>,
+    pub v: Vec<u32>,
+}
+
+impl VertexWeights {
+    fn write(&self, writer: &mut Writer<File>) -> quick_xml::Result<()> {
+        writer
+            .create_element("vertex_weights")
+            .with_attribute(("count", self.count.to_string().as_str()))
+            .write_inner_content(|w| {
+                write_seq(&self.inputs, SharedInput::write)(w)?;
+                w.create_element("vcount")
+                    .write_text_content(BytesText::from_plain_str(&seq_string(&self.vcount)))?;
+                w.create_element("v")
+                    .write_text_content(BytesText::from_plain_str(&seq_string(&self.v)))?;
+                Ok(())
+            })?;
+        Ok(())
+    }
+}
+
+pub struct Skin {
+    pub source: String,
+    pub sources: Vec<Source>,
+    pub joints: Joints,
+    pub vertex_weights: VertexWeights,
+}
+
+impl Skin {
+    fn write(&self, writer: &mut Writer<File>) -> quick_xml::Result<()> {
+        writer
+            .create_element("skin")
+            .with_attribute(("source", self.source.as_str()))
+            .write_inner_content(|w| {
+                write_seq(&self.sources, Source::write)(w)?;
+                self.joints.write(w)?;
+                self.vertex_weights.write(w)?;
+                Ok(())
+            })?;
+        Ok(())
+    }
+}
+
+pub struct Controller {
+    pub id: String,
+    pub skin: Skin,
+}
+
+impl Controller {
+    fn write(&self, writer: &mut Writer<File>) -> quick_xml::Result<()> {
+        writer
+            .create_element("controller")
+            .with_attribute(("id", self.id.as_str()))
+            .write_inner_content(|w| self.skin.write(w))?;
+        Ok(())
+    }
+}
+
 pub enum Library {
-    LibraryGeometries { geometries: Vec<Geometry> },
-    LibraryVisualScenes { visual_scenes: Vec<VisualScene> },
+    Geometries { geometries: Vec<Geometry> },
+    VisualScenes { visual_scenes: Vec<VisualScene> },
+    Controllers { controllers: Vec<Controller> },
 }
 
 impl Library {
     fn write(&self, writer: &mut Writer<File>) -> quick_xml::Result<()> {
         match self {
-            Library::LibraryGeometries { geometries } => {
+            Library::Geometries { geometries } => {
                 writer
                     .create_element("library_geometries")
                     .write_inner_content(write_seq(geometries, Geometry::write))?;
             }
-            Library::LibraryVisualScenes { visual_scenes } => {
+            Library::VisualScenes { visual_scenes } => {
                 writer
                     .create_element("library_visual_scenes")
                     .write_inner_content(write_seq(visual_scenes, VisualScene::write))?;
+            }
+            Library::Controllers { controllers } => {
+                writer
+                    .create_element("library_controllers")
+                    .write_inner_content(write_seq(controllers, Controller::write))?;
             }
         }
         Ok(())
@@ -318,9 +462,9 @@ impl Asset {
     fn write(&self, writer: &mut Writer<File>) -> quick_xml::Result<()> {
         writer.create_element("asset").write_inner_content(|w| {
             w.create_element("created")
-                .write_text_content(BytesText::from_plain(self.created.as_bytes()))?;
+                .write_text_content(BytesText::from_plain_str(&self.created))?;
             w.create_element("modified")
-                .write_text_content(BytesText::from_plain(self.modified.as_bytes()))?;
+                .write_text_content(BytesText::from_plain_str(&self.modified))?;
             Ok(())
         })?;
 
