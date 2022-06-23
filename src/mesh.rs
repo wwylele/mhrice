@@ -26,7 +26,7 @@ pub struct ModelLod {
 
 #[derive(Debug)]
 pub struct VertexLayout {
-    pub usage: u16, // position, normal, uv, uv2, weight
+    pub usage: u16, // position, normal, uv, uv2, weight, ?
     pub width: u16,
     pub offset: u32,
 }
@@ -621,11 +621,15 @@ impl Mesh {
         let vertex_buffer_len = usize::try_from(file.read_u32()?)?;
         let index_buffer_len = usize::try_from(file.read_u32()?)?;
 
-        let _ = file.read_u16()?;
-        let vertex_layout_count = file.read_u16()?;
-        let _ = file.read_u32()?;
-        let _ = file.read_u32()?;
-        let _ = file.read_u32()?;
+        let _unique_vertex_layout_count = file.read_u16()?; // sometimes half of layout count
+        let vertex_layout_count = file.read_u16()?; // sometimes it looks like it has two sets
+        let _short_index_buffer_len = file.read_u32()?; // sometimes equal, sometimes smaller, sometimes 0
+        let _ = file.read_u32()?; // ?
+
+        // offset into vertex buffer
+        // If doesn't exist, this is 0x100000000-vertex_buffer_offset
+        let _what_offset = file.read_u32()?;
+
         let _zinogre = (version == VERSION_B)
             .then(|| file.read_u64())
             .transpose()?;
