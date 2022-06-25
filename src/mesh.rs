@@ -1,3 +1,4 @@
+use crate::align::*;
 use crate::file_ext::*;
 use anyhow::{bail, Context, Result};
 use half::f16;
@@ -8,14 +9,15 @@ use std::io::{Read, Seek, SeekFrom, Write};
 
 #[derive(Clone)]
 pub struct Model {
-    pub name_index: u32,
-    pub vertex_count: u32,
+    pub material_index: u32,
+    pub index_count: u32,
     pub index_buffer_start: u32,
     pub vertex_buffer_start: u32,
 }
 
 #[derive(Clone)]
 pub struct ModelGroup {
+    pub group_id: u8,
     pub models: Vec<Model>,
 }
 
@@ -56,8 +58,9 @@ pub struct Bone {
 pub struct Mesh {
     pub main_model_lods: Vec<ModelLod>,
     pub aux_model_lods: Vec<ModelLod>,
-    pub model_names: Vec<String>,
+    pub material_names: Vec<String>,
     pub vertex_layouts: Vec<VertexLayout>,
+    pub main_vertex_layout_count: usize,
     pub vertex_buffer: Vec<u8>,
     pub index_buffer: Vec<u8>,
     pub gs: Vec<G>,
@@ -97,7 +100,7 @@ impl Mesh {
         let g_offset = file.read_u64()?; // after string table
         let mesh_data_offset = file.read_u64()?; // after string table
         let i_offset = file.read_u64()?;
-        let model_names_offset = file.read_u64()?; // lists to string table entry
+        let materials_offset = file.read_u64()?; // lists to string table entry
         let bone_names_offset = file.read_u64()?; // lists to string table entry
         let blend_shape_names_offset = file.read_u64()?; // lists to string table entry
         let string_table_offset = file.read_u64()?; // string table
@@ -107,18 +110,24 @@ impl Mesh {
         let read_model_group = |file: &mut F, model_group_offset| {
             file.seek_noop(model_group_offset)?;
 
-            let _ = file.read_u8()?;
+            let group_id = file.read_u8()?;
             let model_count = file.read_u8()?;
             file.seek_align_up(4)?;
 
-            let _ = file.read_u32()?;
-            let _ = file.read_u32()?;
-            let _ = file.read_u32()?;
+            let x = file.read_u32()?;
+            if x != 0 {
+                bail!("Expected 0: {x}");
+            }
+
+            // How much vertex buffer to transfer to render this group
+            let _vertex_count = file.read_u32()?;
+
+            let total_index_count_aligned = file.read_u32()?;
 
             let models = (0..model_count)
                 .map(|_| {
-                    let name_index = file.read_u32()?;
-                    let vertex_count = file.read_u32()?;
+                    let material_index = file.read_u32()?;
+                    let index_count = file.read_u32()?;
                     let index_buffer_start = file.read_u32()?;
                     let vertex_buffer_start = file.read_u32()?;
 
@@ -126,15 +135,24 @@ impl Mesh {
                     let _ = file.read_u32()?;
 
                     Ok(Model {
-                        name_index,
-                        vertex_count,
+                        material_index,
+                        index_count,
                         index_buffer_start,
                         vertex_buffer_start,
                     })
                 })
                 .collect::<Result<Vec<_>>>()?;
 
-            Ok(ModelGroup { models })
+            let total_index_count_expected: u32 =
+                models.iter().map(|m| align_up(m.index_count, 2)).sum();
+            if total_index_count_aligned != total_index_count_expected {
+                bail!(
+                    "unexpected aligned index count {total_index_count_aligned} \
+                    for index count {total_index_count_expected}"
+                );
+            }
+
+            Ok(ModelGroup { group_id, models })
         };
 
         let mut read_model_lod = |file: &mut F, model_lod_offset| -> Result<ModelLod> {
@@ -145,7 +163,7 @@ impl Mesh {
             file.seek_noop(model_lod_offset)?;
 
             let model_group_count = file.read_u32()?;
-            let _ = file.read_f32()?;
+            let _lod_range = file.read_f32()?; // controls when to choose this LOD?
             let model_group_list_offset = file.read_u64()?;
             file.seek_noop(model_group_list_offset)?;
 
@@ -165,12 +183,12 @@ impl Mesh {
             Ok(ab)
         };
 
-        let model_name_count;
+        let material_count;
         let main_model_lods;
         if main_models_offset != 0 {
             file.seek_noop(main_models_offset)?;
             let model_lod_count = file.read_u8()?;
-            model_name_count = file.read_u8()?;
+            material_count = file.read_u8()?;
             let _a3_count = file.read_u8()?;
             let _a4_count = file.read_u8()?;
             let _a5_count = file.read_u8()?;
@@ -205,16 +223,9 @@ impl Mesh {
                 .map(|offset| read_model_lod(&mut file, offset))
                 .collect::<Result<Vec<_>>>()?;
         } else {
-            model_name_count = 0;
+            material_count = 0;
             main_model_lods = vec![];
         }
-
-        /*if let Some(lod0) = main_model_lods.first() {
-            let expected_name_count = lod0.model_groups.len();
-            if usize::from(model_name_count) != expected_name_count {
-                bail!("Unexpected model name count {model_name_count}. Expected {expected_name_count}")
-            }
-        }*/
 
         let aux_model_lods = if aux_model_offset != 0 {
             file.seek_noop(aux_model_offset)?;
@@ -264,8 +275,8 @@ impl Mesh {
             for lod in set {
                 for group in &lod.model_groups {
                     for model in &group.models {
-                        if model.name_index >= u32::from(model_name_count) {
-                            bail!("model name index {} out of bound", model.name_index);
+                        if model.material_index >= u32::from(material_count) {
+                            bail!("model name index {} out of bound", model.material_index);
                         }
                     }
                 }
@@ -470,7 +481,7 @@ impl Mesh {
 
         let next_offsets = [
             i_offset,
-            model_names_offset,
+            materials_offset,
             bone_names_offset,
             blend_shape_names_offset,
             string_table_offset,
@@ -491,9 +502,9 @@ impl Mesh {
             file.read_exact(&mut i_buffer)?;
         }
 
-        let model_names = if model_names_offset != 0 {
-            file.seek_assert_align_up(model_names_offset, 16)?;
-            (0..model_name_count)
+        let material_names = if materials_offset != 0 {
+            file.seek_assert_align_up(materials_offset, 16)?;
+            (0..material_count)
                 .map(|_| file.read_u16())
                 .collect::<Result<Vec<_>>>()?
         } else {
@@ -518,8 +529,7 @@ impl Mesh {
             vec![]
         };
 
-        if model_name_count as u32 + bone_count + blend_shape_name_count as u32
-            != string_count as u32
+        if material_count as u32 + bone_count + blend_shape_name_count as u32 != string_count as u32
         {
             bail!("Strange count")
         }
@@ -546,12 +556,12 @@ impl Mesh {
             })
             .collect::<Result<Vec<_>>>()?;
 
-        let model_names = model_names
+        let material_names = material_names
             .into_iter()
             .map(|name_index| {
                 Ok(strings
                     .get(usize::try_from(name_index)?)
-                    .context("Model name out of bound")?
+                    .context("Material name out of bound")?
                     .clone())
             })
             .collect::<Result<Vec<_>>>()?;
@@ -621,8 +631,15 @@ impl Mesh {
         let vertex_buffer_len = usize::try_from(file.read_u32()?)?;
         let index_buffer_len = usize::try_from(file.read_u32()?)?;
 
-        let _unique_vertex_layout_count = file.read_u16()?; // sometimes half of layout count
+        let main_vertex_layout_count = file.read_u16()?; // sometimes half of layout count
         let vertex_layout_count = file.read_u16()?; // sometimes it looks like it has two sets
+        if main_vertex_layout_count > vertex_layout_count {
+            bail!(
+                "main_vertex_layout_count {main_vertex_layout_count} is larger \
+            than vertex_layout_count {vertex_layout_count}"
+            );
+        }
+
         let _short_index_buffer_len = file.read_u32()?; // sometimes equal, sometimes smaller, sometimes 0
         let _ = file.read_u32()?; // ?
 
@@ -661,8 +678,9 @@ impl Mesh {
         Ok(Mesh {
             aux_model_lods,
             main_model_lods,
-            model_names,
+            material_names,
             vertex_layouts,
+            main_vertex_layout_count: usize::from(main_vertex_layout_count),
             vertex_buffer,
             index_buffer,
             gs,
@@ -748,7 +766,7 @@ impl Mesh {
         for group in &lod.model_groups {
             for model in &group.models {
                 let mut index_buffer = &self.index_buffer[model.index_buffer_start as usize * 2..];
-                for _ in 0..model.vertex_count / 3 {
+                for _ in 0..model.index_count / 3 {
                     let a = index_buffer.read_u16()? as u32 + model.vertex_buffer_start;
                     let b = index_buffer.read_u16()? as u32 + model.vertex_buffer_start;
                     let c = index_buffer.read_u16()? as u32 + model.vertex_buffer_start;
@@ -786,164 +804,146 @@ impl Mesh {
             }
         }
 
+        enum MeshNodeContent {
+            Leaf {
+                geometry_name: String,
+                controller_name: String,
+            },
+            Branch {
+                children: Vec<MeshNode>,
+            },
+        }
+
+        struct MeshNode {
+            id: String,
+            name: String,
+            content: MeshNodeContent,
+        }
+
         let mut geometries = vec![];
         let mut controllers = vec![];
-        let lod = &self.main_model_lods[0];
-        for (group_i, group) in lod.model_groups.iter().enumerate() {
-            for (model_i, model) in group.models.iter().enumerate() {
-                if model.vertex_count == 0 {
-                    continue;
-                }
-                let model_name = &self.model_names[usize::try_from(model.name_index)?];
-                let model_id = format!("m{group_i}-{model_i}-{model_name}");
+        let mut all_meshes = vec![];
+        for (lod_i, lod) in self.main_model_lods.iter().enumerate() {
+            let mut lod_meshes = vec![];
+            for (group_i, group) in lod.model_groups.iter().enumerate() {
+                let mut group_meshes = vec![];
+                for (model_i, model) in group.models.iter().enumerate() {
+                    if model.index_count == 0 {
+                        continue;
+                    }
+                    let material_name =
+                        &self.material_names[usize::try_from(model.material_index)?];
+                    let model_id = format!("mesh-lod{lod_i}-group{group_i}-model{model_i}");
 
-                let index_buffer_start = usize::try_from(model.index_buffer_start * 2)?;
-                let index_buffer_end =
-                    index_buffer_start + usize::try_from(model.vertex_count * 2)?;
-                let index_buffer = self
-                    .index_buffer
-                    .get(index_buffer_start..index_buffer_end)
-                    .context("Index buffer out-of-bound")?;
-                let indices: Vec<u16> = index_buffer
-                    .chunks(2)
-                    .map(|c| u16::from_le_bytes(c.try_into().unwrap()))
-                    .collect();
-                let vcount_for_weight: Vec<u8> = std::iter::repeat(8).take(indices.len()).collect();
-                let index_bound = indices.iter().max().unwrap() + 1;
+                    let index_buffer_start = usize::try_from(model.index_buffer_start * 2)?;
+                    let index_buffer_end =
+                        index_buffer_start + usize::try_from(model.index_count * 2)?;
+                    let index_buffer = self
+                        .index_buffer
+                        .get(index_buffer_start..index_buffer_end)
+                        .context("Index buffer out-of-bound")?;
+                    let indices: Vec<u16> = index_buffer
+                        .chunks(2)
+                        .map(|c| u16::from_le_bytes(c.try_into().unwrap()))
+                        .collect();
+                    let vcount_for_weight: Vec<u8> =
+                        std::iter::repeat(8).take(indices.len()).collect();
+                    let index_bound = indices.iter().max().unwrap() + 1;
 
-                let mut sources = vec![];
-                let mut vertices_inputs = vec![];
-                let mut primitive_inputs = vec![SharedInput {
-                    semantic: "VERTEX".to_owned(),
-                    source: format!("#{model_id}-vertices"),
-                    offset: 0,
-                    set: None,
-                }];
+                    let mut sources = vec![];
+                    let mut vertices_inputs = vec![];
+                    let mut primitive_inputs = vec![SharedInput {
+                        semantic: "VERTEX".to_owned(),
+                        source: format!("#{model_id}-vertices"),
+                        offset: 0,
+                        set: None,
+                    }];
 
-                let mut v_for_weight: Vec<u32> = vec![];
-                let mut weight_array = vec![];
-                for (layout_i, layout) in self.vertex_layouts.iter().enumerate() {
-                    let vertex_buffer_start = usize::try_from(
-                        layout.offset + model.vertex_buffer_start * (u32::from(layout.width)),
-                    )?;
-                    let vertex_buffer_end =
-                        vertex_buffer_start + usize::from(layout.width) * usize::from(index_bound);
-                    let data = self
-                        .vertex_buffer
-                        .get(vertex_buffer_start..vertex_buffer_end)
-                        .context("Vertex buffer out-of-bound")?;
+                    let mut v_for_weight: Vec<u32> = vec![];
+                    let mut weight_array = vec![];
+                    for (layout_i, layout) in self
+                        .vertex_layouts
+                        .iter()
+                        .take(self.main_vertex_layout_count)
+                        .enumerate()
+                    {
+                        let vertex_buffer_start = usize::try_from(
+                            layout.offset + model.vertex_buffer_start * (u32::from(layout.width)),
+                        )?;
+                        let vertex_buffer_end = vertex_buffer_start
+                            + usize::from(layout.width) * usize::from(index_bound);
+                        let data = self
+                            .vertex_buffer
+                            .get(vertex_buffer_start..vertex_buffer_end)
+                            .context("Vertex buffer out-of-bound")?;
 
-                    match layout.usage {
-                        0 => {
-                            if layout.width != 12 {
-                                bail!("Unexpected width for position {}", layout.width);
-                            }
-                            let array: Vec<f32> = data
-                                .chunks(4)
-                                .map(|c| f32::from_le_bytes(c.try_into().unwrap()))
-                                .collect();
-
-                            sources.push(Source {
-                                id: format!("{model_id}-layout{layout_i}"),
-                                array_element: ArrayElement::FloatArray {
-                                    id: format!("{model_id}-layout{layout_i}-array"),
-                                    array,
-                                },
-                                technique_common: TechniqueCommon {
-                                    elements: vec![TechniqueCommonElement::Accessor {
-                                        count: index_bound.into(),
-                                        source: format!("#{model_id}-layout{layout_i}-array"),
-                                        stride: 3,
-                                        params: vec![
-                                            Param {
-                                                name: "X".to_owned(),
-                                                type_: "float".to_owned(),
-                                            },
-                                            Param {
-                                                name: "Y".to_owned(),
-                                                type_: "float".to_owned(),
-                                            },
-                                            Param {
-                                                name: "Z".to_owned(),
-                                                type_: "float".to_owned(),
-                                            },
-                                        ],
-                                    }],
-                                },
-                            });
-
-                            vertices_inputs.push(Input {
-                                semantic: "POSITION".to_owned(),
-                                source: format!("#{model_id}-layout{layout_i}"),
-                            });
-                        }
-
-                        1 => {
-                            if layout.width != 4 && layout.width != 8 {
-                                bail!("Unexpected width for normal {}", layout.width);
-                            }
-                            fn u8_to_f32(b: &u8) -> f32 {
-                                *b as i8 as f32 / 128.0
-                            }
-                            let array: Vec<f32> = data
-                                .chunks(layout.width.into())
-                                .flat_map(|c| &c[0..3])
-                                .map(u8_to_f32)
-                                .collect();
-                            sources.push(Source {
-                                id: format!("{model_id}-layout{layout_i}"),
-                                array_element: ArrayElement::FloatArray {
-                                    id: format!("{model_id}-layout{layout_i}-array"),
-                                    array,
-                                },
-                                technique_common: TechniqueCommon {
-                                    elements: vec![TechniqueCommonElement::Accessor {
-                                        count: index_bound.into(),
-                                        source: format!("#{model_id}-layout{layout_i}-array"),
-                                        stride: 3,
-                                        params: vec![
-                                            Param {
-                                                name: "X".to_owned(),
-                                                type_: "float".to_owned(),
-                                            },
-                                            Param {
-                                                name: "Y".to_owned(),
-                                                type_: "float".to_owned(),
-                                            },
-                                            Param {
-                                                name: "Z".to_owned(),
-                                                type_: "float".to_owned(),
-                                            },
-                                        ],
-                                    }],
-                                },
-                            });
-
-                            primitive_inputs.push(SharedInput {
-                                semantic: "NORMAL".to_owned(),
-                                source: format!("#{model_id}-layout{layout_i}"),
-                                offset: 0,
-                                set: None,
-                            });
-
-                            if layout.width == 8 {
+                        match layout.usage {
+                            0 => {
+                                if layout.width != 12 {
+                                    bail!("Unexpected width for position {}", layout.width);
+                                }
                                 let array: Vec<f32> = data
-                                    .chunks(layout.width.into())
-                                    .flat_map(|c| &c[4..7])
-                                    .map(u8_to_f32)
+                                    .chunks(4)
+                                    .map(|c| f32::from_le_bytes(c.try_into().unwrap()))
                                     .collect();
+
                                 sources.push(Source {
-                                    id: format!("{model_id}-layout{layout_i}tangent"),
+                                    id: format!("{model_id}-layout{layout_i}"),
                                     array_element: ArrayElement::FloatArray {
-                                        id: format!("{model_id}-layout{layout_i}tangent-array"),
+                                        id: format!("{model_id}-layout{layout_i}-array"),
                                         array,
                                     },
                                     technique_common: TechniqueCommon {
                                         elements: vec![TechniqueCommonElement::Accessor {
                                             count: index_bound.into(),
-                                            source: format!(
-                                                "#{model_id}-layout{layout_i}tangent-array"
-                                            ),
+                                            source: format!("#{model_id}-layout{layout_i}-array"),
+                                            stride: 3,
+                                            params: vec![
+                                                Param {
+                                                    name: "X".to_owned(),
+                                                    type_: "float".to_owned(),
+                                                },
+                                                Param {
+                                                    name: "Y".to_owned(),
+                                                    type_: "float".to_owned(),
+                                                },
+                                                Param {
+                                                    name: "Z".to_owned(),
+                                                    type_: "float".to_owned(),
+                                                },
+                                            ],
+                                        }],
+                                    },
+                                });
+
+                                vertices_inputs.push(Input {
+                                    semantic: "POSITION".to_owned(),
+                                    source: format!("#{model_id}-layout{layout_i}"),
+                                });
+                            }
+
+                            1 => {
+                                if layout.width != 4 && layout.width != 8 {
+                                    bail!("Unexpected width for normal {}", layout.width);
+                                }
+                                fn u8_to_f32(b: &u8) -> f32 {
+                                    *b as i8 as f32 / 128.0
+                                }
+                                let array: Vec<f32> = data
+                                    .chunks(layout.width.into())
+                                    .flat_map(|c| &c[0..3])
+                                    .map(u8_to_f32)
+                                    .collect();
+                                sources.push(Source {
+                                    id: format!("{model_id}-layout{layout_i}"),
+                                    array_element: ArrayElement::FloatArray {
+                                        id: format!("{model_id}-layout{layout_i}-array"),
+                                        array,
+                                    },
+                                    technique_common: TechniqueCommon {
+                                        elements: vec![TechniqueCommonElement::Accessor {
+                                            count: index_bound.into(),
+                                            source: format!("#{model_id}-layout{layout_i}-array"),
                                             stride: 3,
                                             params: vec![
                                                 Param {
@@ -964,201 +964,356 @@ impl Mesh {
                                 });
 
                                 primitive_inputs.push(SharedInput {
-                                    semantic: "TANGENT".to_owned(),
-                                    source: format!("#{model_id}-layout{layout_i}tangent"),
+                                    semantic: "NORMAL".to_owned(),
+                                    source: format!("#{model_id}-layout{layout_i}"),
+                                    offset: 0,
+                                    set: None,
+                                });
+
+                                if layout.width == 8 {
+                                    let array: Vec<f32> = data
+                                        .chunks(layout.width.into())
+                                        .flat_map(|c| &c[4..7])
+                                        .map(u8_to_f32)
+                                        .collect();
+                                    sources.push(Source {
+                                        id: format!("{model_id}-layout{layout_i}tangent"),
+                                        array_element: ArrayElement::FloatArray {
+                                            id: format!("{model_id}-layout{layout_i}tangent-array"),
+                                            array,
+                                        },
+                                        technique_common: TechniqueCommon {
+                                            elements: vec![TechniqueCommonElement::Accessor {
+                                                count: index_bound.into(),
+                                                source: format!(
+                                                    "#{model_id}-layout{layout_i}tangent-array"
+                                                ),
+                                                stride: 3,
+                                                params: vec![
+                                                    Param {
+                                                        name: "X".to_owned(),
+                                                        type_: "float".to_owned(),
+                                                    },
+                                                    Param {
+                                                        name: "Y".to_owned(),
+                                                        type_: "float".to_owned(),
+                                                    },
+                                                    Param {
+                                                        name: "Z".to_owned(),
+                                                        type_: "float".to_owned(),
+                                                    },
+                                                ],
+                                            }],
+                                        },
+                                    });
+
+                                    primitive_inputs.push(SharedInput {
+                                        semantic: "TANGENT".to_owned(),
+                                        source: format!("#{model_id}-layout{layout_i}tangent"),
+                                        offset: 0,
+                                        set: None,
+                                    });
+                                }
+                            }
+                            2 | 3 => {
+                                if layout.width != 4 {
+                                    bail!("Unexpected width for texcoord {}", layout.width);
+                                }
+
+                                let array: Vec<f32> = data
+                                    .chunks(2)
+                                    .enumerate()
+                                    .map(|(index, c)| {
+                                        let v = f16::from_le_bytes(c.try_into().unwrap()).to_f32();
+                                        if index % 2 == 0 {
+                                            v
+                                        } else {
+                                            1.0 - v
+                                        }
+                                    })
+                                    .collect();
+
+                                sources.push(Source {
+                                    id: format!("{model_id}-layout{layout_i}"),
+                                    array_element: ArrayElement::FloatArray {
+                                        id: format!("{model_id}-layout{layout_i}-array"),
+                                        array,
+                                    },
+                                    technique_common: TechniqueCommon {
+                                        elements: vec![TechniqueCommonElement::Accessor {
+                                            count: index_bound.into(),
+                                            source: format!("#{model_id}-layout{layout_i}-array"),
+                                            stride: 2,
+                                            params: vec![
+                                                Param {
+                                                    name: "U".to_owned(),
+                                                    type_: "float".to_owned(),
+                                                },
+                                                Param {
+                                                    name: "V".to_owned(),
+                                                    type_: "float".to_owned(),
+                                                },
+                                            ],
+                                        }],
+                                    },
+                                });
+
+                                primitive_inputs.push(SharedInput {
+                                    semantic: "TEXCOORD".to_owned(),
+                                    source: format!("#{model_id}-layout{layout_i}"),
+                                    offset: 0,
+                                    set: Some(if layout.usage == 2 { 0 } else { 1 }),
+                                });
+                            }
+                            4 => {
+                                if layout.width != 16 {
+                                    bail!("Unexpected width for bone weight {}", layout.width);
+                                }
+
+                                for (i, chunk) in data.chunks(16).enumerate() {
+                                    let joints = &chunk[0..8];
+                                    let weights = &chunk[8..16];
+                                    weight_array.extend(weights.iter().map(|w| *w as f32 / 255.0));
+
+                                    #[allow(clippy::needless_range_loop)]
+                                    for j in 0..8 {
+                                        v_for_weight.push(u32::from(joints[j]));
+                                        v_for_weight.push(u32::try_from(i * 8 + j)?);
+                                    }
+                                }
+                            }
+                            5 => {
+                                if layout.width != 4 {
+                                    bail!("Unexpected width for color {}", layout.width);
+                                }
+                                let array: Vec<f32> =
+                                    data.iter().map(|&b| b as f32 / 255.0).collect();
+                                sources.push(Source {
+                                    id: format!("{model_id}-layout{layout_i}"),
+                                    array_element: ArrayElement::FloatArray {
+                                        id: format!("{model_id}-layout{layout_i}-array"),
+                                        array,
+                                    },
+                                    technique_common: TechniqueCommon {
+                                        elements: vec![TechniqueCommonElement::Accessor {
+                                            count: index_bound.into(),
+                                            source: format!("#{model_id}-layout{layout_i}-array"),
+                                            stride: 4,
+                                            params: vec![
+                                                Param {
+                                                    name: "R".to_owned(),
+                                                    type_: "float".to_owned(),
+                                                },
+                                                Param {
+                                                    name: "G".to_owned(),
+                                                    type_: "float".to_owned(),
+                                                },
+                                                Param {
+                                                    name: "B".to_owned(),
+                                                    type_: "float".to_owned(),
+                                                },
+                                                Param {
+                                                    name: "A".to_owned(),
+                                                    type_: "float".to_owned(),
+                                                },
+                                            ],
+                                        }],
+                                    },
+                                });
+
+                                primitive_inputs.push(SharedInput {
+                                    semantic: "COLOR".to_owned(),
+                                    source: format!("#{model_id}-layout{layout_i}"),
                                     offset: 0,
                                     set: None,
                                 });
                             }
+                            _ => (),
                         }
-                        2 | 3 => {
-                            if layout.width != 4 {
-                                bail!("Unexpected width for texcoord {}", layout.width);
-                            }
-
-                            let array: Vec<f32> = data
-                                .chunks(2)
-                                .enumerate()
-                                .map(|(index, c)| {
-                                    let v = f16::from_le_bytes(c.try_into().unwrap()).to_f32();
-                                    if index % 2 == 0 {
-                                        v
-                                    } else {
-                                        1.0 - v
-                                    }
-                                })
-                                .collect();
-
-                            sources.push(Source {
-                                id: format!("{model_id}-layout{layout_i}"),
-                                array_element: ArrayElement::FloatArray {
-                                    id: format!("{model_id}-layout{layout_i}-array"),
-                                    array,
-                                },
-                                technique_common: TechniqueCommon {
-                                    elements: vec![TechniqueCommonElement::Accessor {
-                                        count: index_bound.into(),
-                                        source: format!("#{model_id}-layout{layout_i}-array"),
-                                        stride: 2,
-                                        params: vec![
-                                            Param {
-                                                name: "U".to_owned(),
-                                                type_: "float".to_owned(),
-                                            },
-                                            Param {
-                                                name: "V".to_owned(),
-                                                type_: "float".to_owned(),
-                                            },
-                                        ],
-                                    }],
-                                },
-                            });
-
-                            primitive_inputs.push(SharedInput {
-                                semantic: "TEXCOORD".to_owned(),
-                                source: format!("#{model_id}-layout{layout_i}"),
-                                offset: 0,
-                                set: Some(if layout.usage == 2 { 0 } else { 1 }),
-                            });
-                        }
-                        4 => {
-                            if layout.width != 16 {
-                                bail!("Unexpected width for bone weight {}", layout.width);
-                            }
-
-                            for (i, chunk) in data.chunks(16).enumerate() {
-                                let joints = &chunk[0..8];
-                                let weights = &chunk[8..16];
-                                weight_array.extend(weights.iter().map(|w| *w as f32 / 255.0));
-
-                                #[allow(clippy::needless_range_loop)]
-                                for j in 0..8 {
-                                    v_for_weight.push(u32::from(joints[j]));
-                                    v_for_weight.push(u32::try_from(i * 8 + j)?);
-                                }
-                            }
-                        }
-                        _ => (),
                     }
+
+                    let vertices = Vertices {
+                        id: format!("{model_id}-vertices"),
+                        inputs: vertices_inputs,
+                    };
+                    let primitive_elements = vec![PrimitiveElements::Triangles {
+                        count: u32::try_from(indices.len() / 3)?,
+                        inputs: primitive_inputs,
+                        p: indices,
+                    }];
+
+                    let geometry = Geometry {
+                        id: model_id.clone(),
+                        geometric_element: GeometricElement::Mesh {
+                            sources,
+                            vertices,
+                            primitive_elements,
+                        },
+                    };
+                    geometries.push(geometry);
+
+                    let weight_sources = vec![
+                        Source {
+                            id: format!("{model_id}-joint"),
+                            array_element: ArrayElement::NameArray {
+                                id: format!("{model_id}-joint-array"),
+                                array: remapped_joints.clone(),
+                            },
+                            technique_common: TechniqueCommon {
+                                elements: vec![TechniqueCommonElement::Accessor {
+                                    count: remapped_joints.len().try_into()?,
+                                    source: format!("#{model_id}-joint-array"),
+                                    stride: 1,
+                                    params: vec![Param {
+                                        name: "JOINT".to_owned(),
+                                        type_: "name".to_owned(),
+                                    }],
+                                }],
+                            },
+                        },
+                        Source {
+                            id: format!("{model_id}-weight"),
+                            array_element: ArrayElement::FloatArray {
+                                id: format!("{model_id}-weight-array"),
+                                array: weight_array,
+                            },
+                            technique_common: TechniqueCommon {
+                                elements: vec![TechniqueCommonElement::Accessor {
+                                    count: u32::from(index_bound) * 8,
+                                    source: format!("#{model_id}-weight-array"),
+                                    stride: 1,
+                                    params: vec![Param {
+                                        name: "WEIGHT".to_owned(),
+                                        type_: "float".to_owned(),
+                                    }],
+                                }],
+                            },
+                        },
+                        Source {
+                            id: format!("{model_id}-inv"),
+                            array_element: ArrayElement::FloatArray {
+                                id: format!("{model_id}-inv-array"),
+                                array: inv_bind_matrices.clone(),
+                            },
+                            technique_common: TechniqueCommon {
+                                elements: vec![TechniqueCommonElement::Accessor {
+                                    count: remapped_joints.len().try_into()?,
+                                    source: format!("#{model_id}-inv-array"),
+                                    stride: 16,
+                                    params: vec![Param {
+                                        name: "TRANSFORM".to_owned(),
+                                        type_: "float4x4".to_owned(),
+                                    }],
+                                }],
+                            },
+                        },
+                    ];
+
+                    let controller = Controller {
+                        id: format!("{model_id}-controller"),
+                        skin: Skin {
+                            source: format!("#{model_id}"),
+                            sources: weight_sources,
+                            joints: Joints {
+                                inputs: vec![
+                                    Input {
+                                        semantic: "JOINT".to_owned(),
+                                        source: format!("#{model_id}-joint"),
+                                    },
+                                    Input {
+                                        semantic: "INV_BIND_MATRIX".to_owned(),
+                                        source: format!("#{model_id}-inv"),
+                                    },
+                                ],
+                            },
+                            vertex_weights: VertexWeights {
+                                count: index_bound.try_into()?,
+                                inputs: vec![
+                                    SharedInput {
+                                        semantic: "JOINT".to_owned(),
+                                        source: format!("#{model_id}-joint"),
+                                        offset: 0,
+                                        set: None,
+                                    },
+                                    SharedInput {
+                                        semantic: "WEIGHT".to_owned(),
+                                        source: format!("#{model_id}-weight"),
+                                        offset: 1,
+                                        set: None,
+                                    },
+                                ],
+                                vcount: vcount_for_weight,
+                                v: v_for_weight,
+                            },
+                        },
+                    };
+                    controllers.push(controller);
+
+                    group_meshes.push(MeshNode {
+                        id: format!("meshnode-lod{lod_i}-group{group_i}-model{model_i}"),
+                        name: format!("[{material_name}]Lod{lod_i}-Group{group_i}-Model{model_i}"),
+                        content: MeshNodeContent::Leaf {
+                            geometry_name: format!("#{model_id}"),
+                            controller_name: format!("#{model_id}-controller"),
+                        },
+                    });
                 }
-
-                let vertices = Vertices {
-                    id: format!("{model_id}-vertices"),
-                    inputs: vertices_inputs,
-                };
-                let primitive_elements = vec![PrimitiveElements::Triangles {
-                    count: u32::try_from(indices.len() / 3)?,
-                    inputs: primitive_inputs,
-                    p: indices,
-                }];
-
-                let geometry = Geometry {
-                    id: model_id.clone(),
-                    geometric_element: GeometricElement::Mesh {
-                        sources,
-                        vertices,
-                        primitive_elements,
+                let group_id = group.group_id;
+                lod_meshes.push(MeshNode {
+                    id: format!("meshnode-lod{lod_i}-group{group_i}"),
+                    name: format!("[{group_id}]Lod{lod_i}-Group{group_i}"),
+                    content: MeshNodeContent::Branch {
+                        children: group_meshes,
                     },
-                };
-                geometries.push(geometry);
-
-                let weight_sources = vec![
-                    Source {
-                        id: format!("{model_id}-joint"),
-                        array_element: ArrayElement::NameArray {
-                            id: format!("{model_id}-joint-array"),
-                            array: remapped_joints.clone(),
-                        },
-                        technique_common: TechniqueCommon {
-                            elements: vec![TechniqueCommonElement::Accessor {
-                                count: remapped_joints.len().try_into()?,
-                                source: format!("#{model_id}-joint-array"),
-                                stride: 1,
-                                params: vec![Param {
-                                    name: "JOINT".to_owned(),
-                                    type_: "name".to_owned(),
-                                }],
-                            }],
-                        },
-                    },
-                    Source {
-                        id: format!("{model_id}-weight"),
-                        array_element: ArrayElement::FloatArray {
-                            id: format!("{model_id}-weight-array"),
-                            array: weight_array,
-                        },
-                        technique_common: TechniqueCommon {
-                            elements: vec![TechniqueCommonElement::Accessor {
-                                count: u32::from(index_bound) * 8,
-                                source: format!("#{model_id}-weight-array"),
-                                stride: 1,
-                                params: vec![Param {
-                                    name: "WEIGHT".to_owned(),
-                                    type_: "float".to_owned(),
-                                }],
-                            }],
-                        },
-                    },
-                    Source {
-                        id: format!("{model_id}-inv"),
-                        array_element: ArrayElement::FloatArray {
-                            id: format!("{model_id}-inv-array"),
-                            array: inv_bind_matrices.clone(),
-                        },
-                        technique_common: TechniqueCommon {
-                            elements: vec![TechniqueCommonElement::Accessor {
-                                count: remapped_joints.len().try_into()?,
-                                source: format!("#{model_id}-inv-array"),
-                                stride: 16,
-                                params: vec![Param {
-                                    name: "TRANSFORM".to_owned(),
-                                    type_: "float4x4".to_owned(),
-                                }],
-                            }],
-                        },
-                    },
-                ];
-
-                let controller = Controller {
-                    id: format!("{model_id}-controller"),
-                    skin: Skin {
-                        source: format!("#{model_id}"),
-                        sources: weight_sources,
-                        joints: Joints {
-                            inputs: vec![
-                                Input {
-                                    semantic: "JOINT".to_owned(),
-                                    source: format!("#{model_id}-joint"),
-                                },
-                                Input {
-                                    semantic: "INV_BIND_MATRIX".to_owned(),
-                                    source: format!("#{model_id}-inv"),
-                                },
-                            ],
-                        },
-                        vertex_weights: VertexWeights {
-                            count: index_bound.try_into()?,
-                            inputs: vec![
-                                SharedInput {
-                                    semantic: "JOINT".to_owned(),
-                                    source: format!("#{model_id}-joint"),
-                                    offset: 0,
-                                    set: None,
-                                },
-                                SharedInput {
-                                    semantic: "WEIGHT".to_owned(),
-                                    source: format!("#{model_id}-weight"),
-                                    offset: 1,
-                                    set: None,
-                                },
-                            ],
-                            vcount: vcount_for_weight,
-                            v: v_for_weight,
-                        },
-                    },
-                };
-                controllers.push(controller);
+                })
             }
+            all_meshes.push(MeshNode {
+                id: format!("meshnode-lod{lod_i}"),
+                name: format!("Lod{lod_i}"),
+                content: MeshNodeContent::Branch {
+                    children: lod_meshes,
+                },
+            })
+        }
+
+        let mesh_root = MeshNode {
+            id: "meshnode-root".to_owned(),
+            name: "Mesh".to_owned(),
+            content: MeshNodeContent::Branch {
+                children: all_meshes,
+            },
+        };
+
+        fn make_mesh_node(
+            node: MeshNode,
+            leaf_mapper: fn(geometry_name: String, controller_name: String, node: &mut Node),
+        ) -> Node {
+            let mut result = Node {
+                id: node.id,
+                name: node.name,
+                type_: NodeType::Node,
+                matrix: None,
+                instance_controllers: vec![],
+                instance_geometries: vec![],
+                nodes: vec![],
+            };
+
+            match node.content {
+                MeshNodeContent::Leaf {
+                    geometry_name,
+                    controller_name,
+                } => {
+                    leaf_mapper(geometry_name, controller_name, &mut result);
+                }
+                MeshNodeContent::Branch { children } => {
+                    result.nodes = children
+                        .into_iter()
+                        .map(|c| make_mesh_node(c, leaf_mapper))
+                        .collect();
+                }
+            }
+
+            result
         }
 
         let asset = Asset {
@@ -1167,24 +1322,15 @@ impl Mesh {
         };
 
         let collada = if self.bones.is_empty() {
-            let top_nodes = geometries
-                .iter()
-                .map(|g| Node {
-                    id: format!("__geometry__{}", g.id),
-                    name: g.id.clone(),
-                    type_: NodeType::Node,
-                    matrix: None,
-                    instance_controllers: vec![],
-                    instance_geometries: vec![InstanceGeometry {
-                        url: format!("#{}", g.id),
-                    }],
-                    nodes: vec![],
-                })
-                .collect();
+            fn mesh_to_geometry(geometry_name: String, _controller_name: String, node: &mut Node) {
+                node.instance_geometries = vec![InstanceGeometry { url: geometry_name }]
+            }
+
+            let mesh_node_root = make_mesh_node(mesh_root, mesh_to_geometry);
 
             let visual_scene = VisualScene {
                 id: "scene".to_owned(),
-                nodes: top_nodes,
+                nodes: vec![mesh_node_root],
             };
 
             let library_geometries = Library::Geometries { geometries };
@@ -1227,6 +1373,19 @@ impl Mesh {
 
             let joint_root = make_joint(bone_root, &self.bones);
 
+            fn mesh_to_controller(
+                _geometry_name: String,
+                controller_name: String,
+                node: &mut Node,
+            ) {
+                node.instance_controllers = vec![InstanceController {
+                    url: controller_name,
+                    skeletons: vec!["#__root__".to_owned()],
+                }]
+            }
+
+            let mesh_node_root = make_mesh_node(mesh_root, mesh_to_controller);
+
             let top_nodes = vec![
                 Node {
                     id: "__root__".to_owned(),
@@ -1237,29 +1396,7 @@ impl Mesh {
                     instance_geometries: vec![],
                     nodes: vec![joint_root],
                 },
-                Node {
-                    id: "__controllers__".to_owned(),
-                    name: "Meshes".to_owned(),
-                    type_: NodeType::Node,
-                    matrix: None,
-                    instance_controllers: vec![],
-                    instance_geometries: vec![],
-                    nodes: controllers
-                        .iter()
-                        .map(|c| Node {
-                            id: format!("__controller__{}", c.id),
-                            name: c.id.clone(),
-                            type_: NodeType::Node,
-                            matrix: None,
-                            instance_controllers: vec![InstanceController {
-                                url: format!("#{}", c.id),
-                                skeletons: vec!["#__root__".to_owned()],
-                            }],
-                            instance_geometries: vec![],
-                            nodes: vec![],
-                        })
-                        .collect(),
-                },
+                mesh_node_root,
             ];
 
             let visual_scene = VisualScene {

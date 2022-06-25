@@ -662,7 +662,7 @@ impl Rcol {
                     .index_buffer
                     .get(model.index_buffer_start as usize * 2..)
                     .context("index out of bound")?;
-                for _ in 0..usize::try_from(model.vertex_count)? {
+                for _ in 0..usize::try_from(model.index_count)? {
                     indexs.push(u32::from(index_buffer.read_u16()?) + (model.vertex_buffer_start))
                 }
             }
