@@ -43,7 +43,6 @@ use pak::*;
 use pfb::*;
 use rcol::*;
 use scn::*;
-use tdb::*;
 use tex::*;
 use user::*;
 use uvs::*;
@@ -84,6 +83,25 @@ pub fn get_config(key: &str) -> Option<String> {
         return Some(value);
     }
     CONFIG.get(key).map(|s| s.to_string())
+}
+
+#[derive(clap::Parser)]
+pub struct TdbOptions {
+    /// Don't output runtime addresses
+    #[clap(long)]
+    pub no_runtime: bool,
+
+    /// Remove classes in System namespace
+    #[clap(long)]
+    pub no_system: bool,
+
+    /// Remove template instantiation and array
+    #[clap(long)]
+    pub no_compound: bool,
+
+    /// Remove type flags
+    #[clap(long)]
+    pub no_type_flag: bool,
 }
 
 #[derive(clap::Parser)]
@@ -148,6 +166,9 @@ enum Mhrice {
         /// Path to a TDB file, or a binary that contains one
         #[clap(short, long)]
         tdb: String,
+
+        #[clap(flatten)]
+        options: TdbOptions,
     },
 
     /// Print messages from a MSG file
@@ -349,6 +370,9 @@ enum Mhrice {
         /// Specify this to skip search the entire minidump
         #[clap(short, long)]
         address: Option<String>,
+
+        #[clap(flatten)]
+        options: TdbOptions,
     },
 
     /// Print information of a SCN file
@@ -576,7 +600,7 @@ impl<F: Seek> Seek for OffsetFile<F> {
     }
 }
 
-fn read_tdb(tdb: String) -> Result<()> {
+fn read_tdb(tdb: String, options: TdbOptions) -> Result<()> {
     let mut file = BufReader::new(File::open(tdb)?);
     let offset = loop {
         let mut magic = vec![0; TDB_ANCHOR.len()];
@@ -588,7 +612,7 @@ fn read_tdb(tdb: String) -> Result<()> {
         }
     };
 
-    let _ = Tdb::new(OffsetFile::new(file, offset)?, 0, None)?;
+    tdb::print(OffsetFile::new(file, offset)?, 0, None, options)?;
     Ok(())
 }
 
@@ -641,7 +665,12 @@ impl<'a> Seek for MinidumpReader<'a> {
     }
 }
 
-fn read_dmp_tdb(dmp: String, map: Option<String>, address: Option<String>) -> Result<()> {
+fn read_dmp_tdb(
+    dmp: String,
+    map: Option<String>,
+    address: Option<String>,
+    options: TdbOptions,
+) -> Result<()> {
     let dmp = Minidump::read_path(dmp).map_err(|e| anyhow!(e))?;
     let memory = dmp
         .get_stream::<MinidumpMemory64List>()
@@ -656,7 +685,7 @@ fn read_dmp_tdb(dmp: String, map: Option<String>, address: Option<String>) -> Re
         };
         let file = OffsetFile::new(MinidumpReader::new(&memory), base)?;
 
-        let _ = Tdb::new(file, base, map)?;
+        tdb::print(file, base, map, options)?;
 
         return Ok(());
     }
@@ -671,7 +700,7 @@ fn read_dmp_tdb(dmp: String, map: Option<String>, address: Option<String>) -> Re
             eprintln!("Found at address 0x{base:016X}");
             let file = OffsetFile::new(MinidumpReader::new(&memory), base)?;
 
-            let _ = Tdb::new(file, base, map)?;
+            tdb::print(file, base, map, options)?;
 
             break;
         }
@@ -1313,7 +1342,7 @@ fn main() -> Result<()> {
         Mhrice::ScanRsz { pak } => scan_rsz(pak),
         Mhrice::GenJson { pak } => gen_json(pak),
         Mhrice::GenWebsite { pak, output } => gen_website(pak, output),
-        Mhrice::ReadTdb { tdb } => read_tdb(tdb),
+        Mhrice::ReadTdb { tdb, options } => read_tdb(tdb, options),
         Mhrice::ReadMsg { msg } => read_msg(msg),
         Mhrice::ScanMsg { pak, output } => scan_msg(pak, output),
         Mhrice::GrepMsg { pak, pattern } => grep_msg(pak, pattern),
@@ -1347,7 +1376,12 @@ fn main() -> Result<()> {
             Ok(())
         }
         Mhrice::ReadUser { user } => read_user(user),
-        Mhrice::ReadDmpTdb { dmp, map, address } => read_dmp_tdb(dmp, map, address),
+        Mhrice::ReadDmpTdb {
+            dmp,
+            map,
+            address,
+            options,
+        } => read_dmp_tdb(dmp, map, address, options),
         Mhrice::DumpScn { scn } => dump_scn(scn),
         Mhrice::Scene { pak, name } => scene(pak, name),
         Mhrice::TypeInfo { dmp, hash, crc } => type_info(dmp, hash, crc),
