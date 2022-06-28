@@ -14,7 +14,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyAngerData",
-        0xfd3c0d3a = 0
+        0x96BC1534 = 0
     )]
     #[derive(Debug, Serialize)]
     pub struct EnemyAngerData {

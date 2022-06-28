@@ -1,4 +1,4 @@
-use super::prepare_map::*;
+//use super::prepare_map::*;
 use crate::msg::*;
 use crate::rsz::*;
 use serde::*;
@@ -25,8 +25,8 @@ pub struct Monster {
     pub parts_break_data: EnemyPartsBreakData,
     pub boss_init_set_data: Option<EnemyBossInitSetData>,
     pub collider_mapping: ColliderMapping,
-    pub drop_item: EnemyDropItemInfoData,
-    pub parts_break_reward: Option<EnemyPartsBreakRewardData>,
+    //pub drop_item: EnemyDropItemInfoData,
+    //pub parts_break_reward: Option<EnemyPartsBreakRewardData>,
 }
 
 #[derive(Debug, Serialize)]
@@ -48,12 +48,10 @@ pub struct Pedia {
     pub monster_aliases: Msg,
     pub monster_explains: Msg,
     pub condition_preset: EnemyConditionPresetData,
-    pub monster_list: MonsterListBossData,
+    //pub monster_list: MonsterListBossData,
     pub hunter_note_msg: Msg,
-
-    pub monster_lot: MonsterLotTableUserData,
+    /*pub monster_lot: MonsterLotTableUserData,
     pub parts_type: PartsTypeTextUserData,
-
     pub normal_quest_data: BaseNormalQuestData,
     pub normal_quest_data_for_enemy: BaseNormalQuestDataForEnemy,
     pub dl_quest_data: DlNormalQuestData,
@@ -161,7 +159,7 @@ pub struct Pedia {
     pub dog_weapon_name: Msg,
     pub dog_weapon_explain: Msg,
     pub airou_series_name: Msg,
-    pub dog_series_name: Msg,
+    pub dog_series_name: Msg,*/
 }
 
 pub struct QuestReward<'a> {
@@ -276,14 +274,15 @@ pub struct OtEquipSeries<'a> {
 }
 
 pub struct PediaEx<'a> {
-    pub sizes: HashMap<EmTypes, &'a SizeInfo>,
+    /*pub sizes: HashMap<EmTypes, &'a SizeInfo>,
     pub size_dists: HashMap<i32, &'a [ScaleAndRateData]>,
     pub quests: Vec<Quest<'a>>,
     pub discoveries: HashMap<EmTypes, &'a DiscoverEmSetDataParam>,
     pub skills: BTreeMap<PlEquipSkillId, Skill<'a>>,
     pub hyakuryu_skills: BTreeMap<PlHyakuryuSkillId, HyakuryuSkill<'a>>,
-    pub armors: Vec<ArmorSeries<'a>>,
+    pub armors: Vec<ArmorSeries<'a>>,*/
     pub meat_names: HashMap<MeatKey, &'a MsgEntry>,
+    /*
     pub items: BTreeMap<ItemId, Item<'a>>,
     pub material_categories: HashMap<MaterialCategory, &'a MsgEntry>,
     pub monster_lot: HashMap<(EmTypes, QuestRank), &'a MonsterLotTableUserDataParam>,
@@ -304,10 +303,10 @@ pub struct PediaEx<'a> {
     pub heavy_bowgun: WeaponTree<'a, HeavyBowgunBaseUserDataParam>,
     pub bow: WeaponTree<'a, BowBaseUserDataParam>,
 
-    pub horn_melody: HashMap<i32, &'a MsgEntry>,
-
+    pub horn_melody: HashMap<i32, &'a MsgEntry>,*/
     pub monster_order: HashMap<EmTypes, usize>,
-    pub item_pop: HashMap<(/*pop_id*/ i32, /*map*/ i32), &'a ItemPopLotTableUserDataParam>,
+    /*pub item_pop: HashMap<(/*pop_id*/ i32, /*map*/ i32), &'a ItemPopLotTableUserDataParam>,
 
-    pub ot_equip: BTreeMap<OtEquipSeriesId, OtEquipSeries<'a>>,
+    pub ot_equip: BTreeMap<OtEquipSeriesId, OtEquipSeries<'a>>,*/
+    pub marker: std::marker::PhantomData<&'a ()>,
 }

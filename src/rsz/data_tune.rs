@@ -18,11 +18,12 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyPartsData",
-        0xdbf55bff = 0
+        0x0F4645E0 = 0
     )]
     #[derive(Debug, Serialize)]
     pub struct EnemyPartsData {
         pub vital: i32,
+        pub master_vital: i32,
         pub extractive_type: ExtractiveType,
     }
 }
@@ -40,12 +41,13 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyDataTune.PartsBreakData",
-        0xcf7e209a = 0
+        0x76BFB370 = 0
     )]
     #[derive(Debug, Serialize)]
     pub struct DataTunePartsBreakData {
         pub break_level: i32,
         pub vital: i32,
+        pub master_vital: i32,
         pub ignore_condition: PartsBreakDataIgnoreCondition,
         pub ignore_check_count: i32,
         pub reward_data: i32,
@@ -76,11 +78,12 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyDataTune.PartsLossData",
-        0x4e573da9 = 0
+        0x860B5A4B = 0
     )]
     #[derive(Debug, Serialize)]
     pub struct DataTunePartsLossData {
         pub vital: i32,
+        pub master_vital: i32,
         pub permit_damage_attr: PermitDamageAttrEnum,
     }
 }
@@ -108,11 +111,12 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.enemy.MultiPartsVital",
-        0x3e34bd92 = 0
+        0xD4323CD7 = 0
     )]
     #[derive(Debug, Serialize)]
     pub struct MultiPartsVital {
         pub vital: i32,
+        pub master_vital: i32,
     }
 }
 
@@ -152,7 +156,7 @@ rsz_bitflags! {
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyMultiPartsSystemVitalData",
-        0xc954c0c5 = 0
+        0x12DECB46 = 0
     )]
     #[derive(Debug, Serialize)]
     pub struct EnemyMultiPartsSystemVitalData {
@@ -164,6 +168,7 @@ rsz_struct! {
         pub is_enable_overwrite_down: bool,
         pub is_prio_damage_customize: bool,
         pub prio_damage_catagory_flag: DamageCategoryFlag,
+        pub is_not_use_difficulty_rate: bool,
         pub is_multi_rate_ex: bool,
         pub multi_parts_vital_data: Vec<MultiPartsVital>,
         pub enable_parts_names: Vec<String>,
@@ -173,7 +178,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyMultiPartsVitalData",
-        0xd4a750bf = 0
+        0xCCB7000D = 0
     )]
     #[derive(Debug, Serialize)]
     pub struct EnemyMultiPartsVitalData {
@@ -185,6 +190,7 @@ rsz_struct! {
         pub is_enable_overwrite_down: bool,
         pub is_prio_damage_customize: bool,
         pub prio_damage_catagory_flag: DamageCategoryFlag,
+        pub is_not_use_difficulty_rate: bool,
         pub is_multi_rate_ex: bool,
         pub multi_parts_vital_data: Vec<MultiPartsVital>,
         pub enable_parts_names: Vec<String>,
@@ -251,11 +257,12 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyDataTune",
-        0xf2b27352 = 0
+        0xC170C4DC = 0
     )]
     #[derive(Debug, Serialize)]
     pub struct EnemyDataTune {
         pub base_hp_vital: i32,
+        pub master_hp_vital: i32,
         pub enemy_parts_data: Vec<EnemyPartsData>,
         pub enemy_parts_break_data_list: Vec<DataTuneEnemyPartsBreakData>,
         pub enemy_parts_loss_data_list: Vec<DataTuneEnemyPartsLossData>,
@@ -270,9 +277,11 @@ rsz_struct! {
         pub dying_village_hp_vital_rate: f32,
         pub dying_low_level_hp_vital_rate: f32,
         pub dying_high_level_hp_vital_rate: f32,
+        pub dying_master_class_hp_vital_rate: f32,
         pub capture_village_hp_vital_rate: f32,
         pub capture_low_level_hp_vital_rate: f32,
         pub capture_high_level_hp_vital_rate: f32,
+        pub capture_master_level_hp_vital_rate: f32,
         pub self_sleep_recover_hp_vital_rate: f32,
         pub self_sleep_time: f32,
         pub in_combat_self_sleep_flag: bool,

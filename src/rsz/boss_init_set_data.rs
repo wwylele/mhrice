@@ -27,7 +27,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyBossInitSetData.StageInfo",
-        0x1e7b6ae3 = 0
+        0x70C8A6BB = 0
     )]
     #[derive(Debug, Serialize)]
     pub struct StageInfo {
@@ -38,7 +38,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyBossInitSetData",
-        0x4cfd1fa0 = 0
+        0x6D38BB8A = 0
     )]
     #[derive(Debug, Serialize)]
     pub struct EnemyBossInitSetData {

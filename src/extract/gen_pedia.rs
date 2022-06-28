@@ -1,5 +1,5 @@
 use super::pedia::*;
-use super::prepare_map::*;
+//use super::prepare_map::*;
 use super::sink::*;
 use crate::gpu::*;
 use crate::gui::*;
@@ -205,10 +205,10 @@ pub fn gen_monsters(
                 Rcol::new(Cursor::new(pak.read_file(rcol_index)?), true).context(rcol_path)?;
             let collider_mapping = gen_collider_mapping(rcol)?;
 
-            let drop_item = sub_file(pak, &main_pfb).context("drop_item")?;
-            let parts_break_reward = is_large
-                .then(|| sub_file(pak, &main_pfb).context("parts_break_reward"))
-                .transpose()?;
+            // let drop_item = sub_file(pak, &main_pfb).context("drop_item")?;
+            //let parts_break_reward = is_large
+            //    .then(|| sub_file(pak, &main_pfb).context("parts_break_reward"))
+            //     .transpose()?;
 
             monsters.push(Monster {
                 id,
@@ -222,8 +222,8 @@ pub fn gen_monsters(
                 parts_break_data,
                 boss_init_set_data,
                 collider_mapping,
-                drop_item,
-                parts_break_reward,
+                //drop_item,
+                //parts_break_reward,
             })
         }
     }
@@ -357,7 +357,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
 
     let hunter_note_msg = get_msg(pak, "Message/HunterNote/HN_Hunternote_Menu.msg")?;
 
-    let quest_hall_msg = get_msg(pak, "Message/Quest/QuestData_Hall.msg")?;
+    /*let quest_hall_msg = get_msg(pak, "Message/Quest/QuestData_Hall.msg")?;
     let quest_village_msg = get_msg(pak, "Message/Quest/QuestData_Village.msg")?;
     let quest_tutorial_msg = get_msg(pak, "Message/Quest/QuestData_Tutorial.msg")?;
     let quest_arena_msg = get_msg(pak, "Message/Quest/QuestData_Arena.msg")?;
@@ -484,7 +484,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let dog_series_name = get_msg(
         pak,
         "data/Define/Otomo/Equip/Armor/ArmorSeries_OtDog_Name.msg",
-    )?;
+    )?;*/
 
     Ok(Pedia {
         monsters,
@@ -493,9 +493,9 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         monster_aliases,
         monster_explains,
         condition_preset,
-        monster_list: get_singleton(pak)?,
+        //monster_list: get_singleton(pak)?,
         hunter_note_msg,
-        monster_lot: get_singleton(pak)?,
+        /*monster_lot: get_singleton(pak)?,
         parts_type: get_singleton(pak)?,
         normal_quest_data: get_singleton(pak)?,
         normal_quest_data_for_enemy: get_singleton(pak)?,
@@ -594,7 +594,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         dog_weapon_name,
         dog_weapon_explain,
         airou_series_name,
-        dog_series_name,
+        dog_series_name,*/
     })
 }
 
@@ -751,6 +751,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
         }
     }
 
+    /*
     let guild_card = pak.find_file("gui/80_Texture/GuildCard_IAM.tex")?;
     let guild_card = Tex::new(Cursor::new(pak.read_file(guild_card)?))?.to_rgba(0, 0)?;
 
@@ -880,6 +881,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
     gen_rarity_colors(pak, item_colors_path)?;
 
     gen_map_resource(pak, output)?;
+    */
 
     Ok(())
 }
@@ -982,6 +984,7 @@ fn hash_map_unique<T, K: Eq + std::hash::Hash + std::fmt::Debug, V>(
     Ok(result)
 }
 
+/*
 fn prepare_size_map(size_data: &EnemySizeListData) -> Result<HashMap<EmTypes, &SizeInfo>> {
     hash_map_unique(&size_data.size_info_list, |e| (e.em_type, e), false)
 }
@@ -1514,14 +1517,14 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
     }
 
     Ok(series_map.into_iter().map(|(_, v)| v).collect())
-}
+}*/
 
 fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, &MsgEntry>> {
     let msg_map: HashMap<_, _> = pedia.hunter_note_msg.get_name_map();
 
     let mut result = HashMap::new();
 
-    for boss_monster in &pedia.monster_list.data_list {
+    /*for boss_monster in &pedia.monster_list.data_list {
         for part_data in &boss_monster.part_table_data {
             let part = part_data.em_meat.try_into()?;
             let phase = part_data.em_meat_group_index.try_into()?;
@@ -1549,11 +1552,12 @@ fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, &MsgEntry>> {
                 );
             }
         }
-    }
+    }*/
 
     Ok(result)
 }
 
+/*
 fn prepare_items<'a>(pedia: &'a Pedia) -> Result<BTreeMap<ItemId, Item<'a>>> {
     let mut result: BTreeMap<ItemId, Item<'a>> = BTreeMap::new();
     let mut name_map: HashMap<_, _> = pedia.items_name_msg.get_name_map();
@@ -2066,16 +2070,19 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
 
     Ok(res)
 }
+*/
 
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
-    let monster_order = pedia
-        .monster_list
-        .data_list
-        .iter()
-        .enumerate()
-        .map(|(i, monster)| (monster.em_type, i))
-        .collect();
+    let monster_order = HashMap::new();
+    /*pedia
+    .monster_list
+    .data_list
+    .iter()
+    .enumerate()
+    .map(|(i, monster)| (monster.em_type, i))
+    .collect();*/
 
+    /*
     let mut hyakuryu_weapon_map: HashMap<
         WeaponId,
         BTreeMap<i32, &HyakuryuWeaponHyakuryuBuildupUserDataParam>,
@@ -2089,18 +2096,18 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
                 param.slot_type
             );
         }
-    }
+    }*/
 
     Ok(PediaEx {
-        sizes: prepare_size_map(&pedia.size_list)?,
+        /* sizes: prepare_size_map(&pedia.size_list)?,
         size_dists: prepare_size_dist_map(&pedia.random_scale)?,
         quests: prepare_quests(pedia)?,
         discoveries: prepare_discoveries(pedia)?,
         skills: prepare_skills(pedia)?,
         hyakuryu_skills: prepare_hyakuryu_skills(pedia)?,
-        armors: prepare_armors(pedia)?,
+        armors: prepare_armors(pedia)?, */
         meat_names: prepare_meat_names(pedia)?,
-        items: prepare_items(pedia)?,
+        /*items: prepare_items(pedia)?,
         material_categories: prepare_material_categories(pedia),
         monster_lot: prepare_monster_lot(pedia)?,
         parts_dictionary: prepare_parts_dictionary(pedia)?,
@@ -2119,10 +2126,10 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         light_bowgun: prepare_weapon(&pedia.light_bowgun, &mut hyakuryu_weapon_map)?,
         heavy_bowgun: prepare_weapon(&pedia.heavy_bowgun, &mut hyakuryu_weapon_map)?,
         bow: prepare_weapon(&pedia.bow, &mut hyakuryu_weapon_map)?,
-        horn_melody: prepare_horn_melody(pedia),
-
+        horn_melody: prepare_horn_melody(pedia), */
         monster_order,
-        item_pop: prepare_item_pop(pedia)?,
-        ot_equip: prepeare_ot_equip(pedia)?,
+        /*item_pop: prepare_item_pop(pedia)?,
+        ot_equip: prepeare_ot_equip(pedia)?,*/
+        marker: std::marker::PhantomData,
     })
 }

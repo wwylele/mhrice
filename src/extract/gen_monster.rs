@@ -1,5 +1,5 @@
-use super::gen_item::*;
-use super::gen_quest::*;
+//use super::gen_item::*;
+//use super::gen_quest::*;
 use super::gen_website::{gen_multi_lang, head_common, navbar};
 use super::pedia::*;
 use super::sink::*;
@@ -480,6 +480,7 @@ fn gen_condition_steel_fang(
     )
 }
 
+/*
 fn gen_grouped_reward_table<'a>(
     pedia_ex: &'a PediaEx,
     drop_dictionary: &'a HashMap<EnemyRewardPopTypes, Vec<String>>,
@@ -739,6 +740,7 @@ pub fn gen_lot(
         </div>
     </section>)
 }
+*/
 
 pub fn gen_monster(
     is_large: bool,
@@ -786,7 +788,7 @@ pub fn gen_monster(
         .and_then(|e| explains.get(&format!("HN_MonsterListMsg_EnemyIndex{:03}_page2", e)))
         .map(|m| html!(<pre> {gen_multi_lang(m)} </pre>));
 
-    let quest_list = html!(
+    /*let quest_list = html!(
         <section>
         <h2 >"Quests"</h2>
         <div class="mh-table"><table>
@@ -841,7 +843,7 @@ pub fn gen_monster(
             </tbody>
         </table></div>
         </section>
-    );
+    );*/
 
     let monster_alias = if let Some(enemy_type) = monster.enemy_type {
         let name_name = format!("Alias_EnemyIndex{:03}", enemy_type);
@@ -876,16 +878,19 @@ pub fn gen_monster(
                 </section>
                 <section>
                 <h2 >"Basic data"</h2>
-                <p>{ text!("Base HP: {}", monster.data_tune.base_hp_vital) }</p>
-                <p>{ text!("Limping threshold: (village) {}% / (LR) {}% / (HR) {}%",
+                <p>{ text!("Base HP: (LR/HR) {}, (MR) {}", monster.data_tune.base_hp_vital,
+                    monster.data_tune.master_hp_vital) }</p>
+                <p>{ text!("Limping threshold: (village) {}% / (LR) {}% / (HR) {}% / (MR) {}%",
                     monster.data_tune.dying_village_hp_vital_rate,
                     monster.data_tune.dying_low_level_hp_vital_rate,
-                    monster.data_tune.dying_high_level_hp_vital_rate
+                    monster.data_tune.dying_high_level_hp_vital_rate,
+                    monster.data_tune.dying_master_class_hp_vital_rate
                 ) }</p>
-                <p>{ text!("Capturing threshold: (village) {}% / (LR) {}% / (HR) {}%",
+                <p>{ text!("Capturing threshold: (village) {}% / (LR) {}% / (HR) {}% / (MR) {}%",
                     monster.data_tune.capture_village_hp_vital_rate,
                     monster.data_tune.capture_low_level_hp_vital_rate,
-                    monster.data_tune.capture_high_level_hp_vital_rate
+                    monster.data_tune.capture_high_level_hp_vital_rate,
+                    monster.data_tune.capture_master_level_hp_vital_rate
                 ) }</p>
                 <p>{ text!("Sleep recovering: {} seconds / recover {}% HP",
                     monster.data_tune.self_sleep_time,
@@ -893,7 +898,7 @@ pub fn gen_monster(
                 ) }</p>
                 </section>
 
-                { quest_list }
+                //{ quest_list }
 
                 <section>
                 <h2 >"Hitzone data"</h2>
@@ -1040,7 +1045,7 @@ pub fn gen_monster(
                                 .filter(|p| Ok(p.parts_group) == index_u16)
                                 .map(|part_break|{
                                     part_break.parts_break_data_list.iter().map(
-                                        |p| format!("(x{}) {}", p.break_level, p.vital)
+                                        |p| format!("(x{}) (LR/HR) {}, (MR) {}", p.break_level, p.vital, p.master_vital)
                                     ).collect::<Vec<_>>().join(" / ")
                                 }).collect::<Vec<_>>().join(" , ");
 
@@ -1052,7 +1057,8 @@ pub fn gen_monster(
                                         PermitDamageAttrEnum::Strike => "(Impact) ",
                                         PermitDamageAttrEnum::All => "",
                                     };
-                                    format!("{}{}", attr, part_loss.parts_loss_data.vital)
+                                    format!("{} (LR/HR) {}, (MR) {}", attr, part_loss.parts_loss_data.vital,
+                                        part_loss.parts_loss_data.master_vital)
                                 }).collect::<Vec<_>>().join(" , ");
 
                             let id = format!("mh-part-dt-{index}");
@@ -1064,7 +1070,7 @@ pub fn gen_monster(
                                     { text!("[{}]", index) }
                                     { text!("{}", part_name) }
                                 </td>
-                                <td>{ text!("{}", part.vital) }</td>
+                                <td>{ text!("(LR/HR) {}, (MR) {}", part.vital, part.master_vital) }</td>
                                 <td>{ text!("{}", part_break) }</td>
                                 <td>{ text!("{}", part_loss) }</td>
                                 <td>{ gen_extractive_type(part.extractive_type) }</td>
@@ -1150,8 +1156,8 @@ pub fn gen_monster(
                 </table></div>
                 </section>
 
-                {gen_lot(monster, monster_em_type, QuestRank::Low, pedia_ex)}
-                {gen_lot(monster, monster_em_type, QuestRank::High, pedia_ex)}
+                //{gen_lot(monster, monster_em_type, QuestRank::Low, pedia_ex)}
+                //{gen_lot(monster, monster_em_type, QuestRank::High, pedia_ex)}
                 </main>
             </body>
         </html>
@@ -1201,20 +1207,26 @@ pub fn gen_monsters(
                     <option value="1">"Sort by in-game order"</option>
                 </select></div>
                 <ul class="mh-list-monster" id="slist-monster">{
-                    pedia.monsters.iter().filter_map(|monster| {
+                    pedia.monsters.iter().map(|monster| {
                         let icon_path = format!("/resources/em{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
-                        let name_name = format!("EnemyIndex{:03}", monster.enemy_type?);
 
-                        let name_entry = pedia.monster_names.get_entry(&name_name)?;
+                        let name_name = format!("EnemyIndex{:03}", monster.enemy_type.unwrap_or(9999));
+
+                        let name_entry = if let Some(entry) = pedia.monster_names.get_entry(&name_name) {
+                            gen_multi_lang(entry)
+                        } else {
+                            html!(<span>"-"</span>)
+                        };
+
                         let order = pedia_ex.monster_order.get(&EmTypes::Em(monster.id | (monster.sub_id << 8)))
                             .cloned().unwrap_or(0);
                         let sort_tag = format!("{},{}", monster.id << 16 | monster.sub_id, order);
-                        Some(html!{<li data-sort=sort_tag>
+                        html!{<li data-sort=sort_tag>
                             <a href={format!("/monster/{:03}_{:02}.html", monster.id, monster.sub_id)}>
                                 <img alt="Monster icon" class="mh-list-monster-icon" src=icon_path />
-                                <div>{gen_multi_lang(name_entry)}</div>
+                                <div>{name_entry}</div>
                             </a>
-                        </li>})
+                        </li>}
                     }).collect::<Vec<_>>()
                 }</ul>
                 </section>
