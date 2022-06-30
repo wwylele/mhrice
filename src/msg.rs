@@ -134,7 +134,7 @@ impl Msg {
                 }
                 let attributes = attributes
                     .into_iter()
-                    .map(|n| (&data[usize::try_from(n - data_offset)?..]).read_u16str())
+                    .map(|n| Ok(format!("? {n}"))) // TODO: new version has some non-string stuff here
                     .collect::<Result<Vec<_>>>()?;
                 let content = content
                     .into_iter()
