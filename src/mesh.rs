@@ -73,12 +73,13 @@ impl Mesh {
     pub fn new<F: Read + Seek>(mut file: F) -> Result<Mesh> {
         const VERSION_A: u32 = 0x77a2d00d;
         const VERSION_B: u32 = 0x0141D2B8;
+        const VERSION_C: u32 = 0x014160A8;
 
         if &file.read_magic()? != b"MESH" {
             bail!("Wrong magic for MESH");
         }
         let version = file.read_u32()?;
-        if !matches!(version, VERSION_A | VERSION_B) {
+        if !matches!(version, VERSION_A | VERSION_B | VERSION_C) {
             bail!("Wrong version for MESH");
         }
         let total_len = file.read_u32()?.into();
@@ -437,7 +438,7 @@ impl Mesh {
             file.read_u8()?;
             file.seek_align_up(8)?;
             let fa_offset = file.read_u64()?;
-            if version == VERSION_B {
+            if version == VERSION_B || version == VERSION_C {
                 file.read_u64()?;
                 file.read_u64()?;
             }
@@ -456,7 +457,7 @@ impl Mesh {
                     file.read_u64()?;
                     let m_offset = file.read_u64()?;
                     let n_offset = file.read_u64()?;
-                    if version == VERSION_B {
+                    if version == VERSION_B || version == VERSION_C {
                         let _mm_offset = file.read_u64()?;
                         let _nn_offset = file.read_u64()?;
                     }
@@ -625,7 +626,7 @@ impl Mesh {
         let vertex_layout_offset = file.read_u64()?;
         let vertex_buffer_offset = file.read_u64()?;
         let index_buffer_offset = file.read_u64()?;
-        let _zinogre_offset = (version == VERSION_B)
+        let _zinogre_offset = (version == VERSION_B || version == VERSION_C)
             .then(|| file.read_u64())
             .transpose()?;
         let vertex_buffer_len = usize::try_from(file.read_u32()?)?;
@@ -647,7 +648,7 @@ impl Mesh {
         // If doesn't exist, this is 0x100000000-vertex_buffer_offset
         let _what_offset = file.read_u32()?;
 
-        let _zinogre = (version == VERSION_B)
+        let _zinogre = (version == VERSION_B || version == VERSION_C)
             .then(|| file.read_u64())
             .transpose()?;
 
