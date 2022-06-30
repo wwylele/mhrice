@@ -88,12 +88,13 @@ impl Gui {
     pub fn new<F: Read + Seek>(mut file: F) -> Result<Gui> {
         const VERSION_A: u32 = 0x061A96;
         const VERSION_B: u32 = 0x068FD0;
+        const VERSION_C: u32 = 0x068FD1;
 
         const CLIP_VERSION_A: u32 = 0x28;
         const CLIP_VERSION_B: u32 = 0x2B;
 
         let version = file.read_u32()?;
-        if !matches!(version, VERSION_A | VERSION_B) {
+        if !matches!(version, VERSION_A | VERSION_B | VERSION_C) {
             bail!("Wrong version for GUI");
         }
 
@@ -206,6 +207,9 @@ impl Gui {
             let name = file.read_u64()?;
             let type_name = file.read_u64()?;
             let property_offset = file.read_u64()?;
+            let sc_offset = (version >= VERSION_C)
+                .then(|| file.read_u64())
+                .transpose()?;
             let variable_offset = file.read_u64()?;
             let mtx_offset = file.read_u64()?;
             let sa_offset = (version >= VERSION_B)
@@ -220,7 +224,16 @@ impl Gui {
             let properties = (0..property_count)
                 .map(|_| read_field(file))
                 .collect::<Result<Vec<_>>>()?;
-            file.seek_noop(variable_offset).context("variable_offset")?;
+
+            if let Some(sc_offset) = sc_offset {
+                file.seek_noop(sc_offset).context("sc_offset")?;
+                let property_whats = (0..property_count)
+                    .map(|_| file.read_u16())
+                    .collect::<Result<Vec<_>>>()?;
+            }
+
+            file.seek_assert_align_up(variable_offset, 8)
+                .context("variable_offset")?;
             let variable_count = file.read_u64()?;
             let variables = (0..variable_count)
                 .map(|_| read_field(file))
