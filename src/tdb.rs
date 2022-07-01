@@ -486,6 +486,7 @@ fn display_param_attributes(attributes: ParamAttribute) -> String {
     s
 }
 
+/*
 fn print_bytes(b: &[u8]) {
     for b in b {
         print!("{:02x} ", b);
@@ -493,7 +494,6 @@ fn print_bytes(b: &[u8]) {
     println!()
 }
 
-/*
 fn analyze_bits<F: Read + Seek>(mut file: F, offset: u64, count: u32, item_byte_len: usize) {
     println!();
     println!("========Analyzing {offset}===========");
@@ -888,7 +888,7 @@ pub fn print<F: Read + Seek>(
         field_count: usize,
         //n4: u16,
         // n5: u16,
-        //attribute_list_index: usize,
+        attribute_list_index: usize,
         // n7: u16,
 
         // flag_a: u64,
@@ -903,7 +903,8 @@ pub fn print<F: Read + Seek>(
             let len = file.read_u32()?;
             let static_len = file.read_u32()?;
 
-            let (a, field_count, b) = file.read_u64()?.bit_split((33, 24, 7));
+            let (attribute_list_index, a, field_count, b) =
+                file.read_u64()?.bit_split((17, 16, 24, 7));
             let method_count = file.read_u16()?;
             let _ = file.read_u16()?;
             let _ = file.read_u16()?;
@@ -918,6 +919,7 @@ pub fn print<F: Read + Seek>(
                 static_len,
                 method_count: method_count.try_into()?,
                 field_count: field_count.try_into()?,
+                attribute_list_index: attribute_list_index.try_into()?,
             })
         })
         .collect::<Result<Vec<_>>>()?;
@@ -1484,11 +1486,11 @@ pub fn print<F: Read + Seek>(
 
         let calc_hash = hash_as_utf8(full_name);
         println!("/// % {:08X}", type_instance.hash);
-        /*if ty.attribute_list_index != 0 {
+        if ty.attribute_list_index != 0 {
             print_attributes(attribute_lists[ty.attribute_list_index], false)?;
             println!();
         }
-        if !options.no_type_flag {
+        /*if !options.no_type_flag {
             println!("{}", display_type_flags(type_instance.flags));
         }*/
         println!(
