@@ -52,7 +52,7 @@ pub mod built_info {
     include!(concat!(env!("OUT_DIR"), "/built.rs"));
 }
 
-const TDB_ANCHOR: &[u8] = b"TDB\0\x46\0\0\0";
+const TDB_ANCHOR: &[u8] = b"TDB\0\x47\0\0\0";
 
 pub static CONFIG: Lazy<HashMap<String, String>> = Lazy::new(|| {
     let mut config = HashMap::new();
