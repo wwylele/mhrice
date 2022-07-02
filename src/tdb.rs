@@ -678,6 +678,7 @@ pub fn print<F: Read + Seek>(
         type_index: usize,
         special_type_id: u64,
 
+        flags: TypeFlag,
         hash: u32,
 
         ctor_method_membership_index: usize,
@@ -729,7 +730,7 @@ pub fn print<F: Read + Seek>(
                 bail!("type_index out of bound")
             }
 
-            let flag = file.read_u32()?;
+            let flags = file.read_u32()?;
             let _ = file.read_u32()?;
             let hash = file.read_u32()?;
             let crc = file.read_u32()?;
@@ -781,6 +782,7 @@ pub fn print<F: Read + Seek>(
                 type_index: type_index.try_into()?,
                 special_type_id,
 
+                flags: TypeFlag::from_bits(flags).context("Unknown type flag")?,
                 hash,
 
                 ctor_method_membership_index: ctor_method_membership_index.try_into()?,
@@ -1490,9 +1492,9 @@ pub fn print<F: Read + Seek>(
             print_attributes(attribute_lists[ty.attribute_list_index], false)?;
             println!();
         }
-        /*if !options.no_type_flag {
+        if !options.no_type_flag {
             println!("{}", display_type_flags(type_instance.flags));
-        }*/
+        }
         println!(
             "class {}: {}",
             full_name,
