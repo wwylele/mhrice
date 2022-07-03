@@ -1,6 +1,5 @@
 use crate::align::align_up;
 use crate::file_ext::*;
-use crate::get_config;
 use crate::hash::hash_as_utf16;
 use crate::suffix::SUFFIX_MAP;
 use anyhow::{bail, Context, Result};
@@ -11,14 +10,13 @@ use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::io::{Read, Seek, SeekFrom};
 
-static PAK_MAIN_KEY_MOD: Lazy<Option<Vec<u8>>> =
-    Lazy::new(|| get_config("PAK_MAIN_KEY_MOD").and_then(|s| base64::decode(s).ok()));
+static PAK_MAIN_KEY_MOD: Lazy<Option<Vec<u8>>> = Lazy::new(|| None);
 
-static PAK_SUB_KEY_MOD: Lazy<Option<Vec<u8>>> =
-    Lazy::new(|| get_config("PAK_SUB_KEY_MOD").and_then(|s| base64::decode(s).ok()));
+static PAK_SUB_KEY_MOD: Lazy<Vec<u8>> =
+    Lazy::new(|| base64::decode("E9eciYiRSBDXqniu+FnffTxDoNC7Nne18FwCr2XYdwM=").unwrap());
 
-static PAK_SUB_KEY_EXP: Lazy<Option<Vec<u8>>> =
-    Lazy::new(|| get_config("PAK_SUB_KEY_EXP").and_then(|s| base64::decode(s).ok()));
+static PAK_SUB_KEY_EXP: Lazy<Vec<u8>> =
+    Lazy::new(|| base64::decode("wMJ3H1s0agHH1NeFLkIrOxY6FxMW6oMwMN8/9CWTIAE=").unwrap());
 
 const LANGUAGE_LIST: &[&str] = &[
     "", "Ja", "En", "Fr", "It", "De", "Es", "Ru", "Pl", "Nl", "Pt", "PtBR", "Ko", "ZhTW", "ZhCN",
@@ -234,12 +232,8 @@ impl<F: Read + Seek> PakReader<F> {
                     bail!("Unexpected size for decryption")
                 }
                 data = vec![0; plain_len];
-                let e = (&*PAK_SUB_KEY_EXP)
-                    .as_ref()
-                    .context("Needs PAK_SUB_KEY_EXP")?;
-                let m = (&*PAK_SUB_KEY_MOD)
-                    .as_ref()
-                    .context("Needs PAK_SUB_KEY_MOD")?;
+                let e = &*PAK_SUB_KEY_EXP;
+                let m = &*PAK_SUB_KEY_MOD;
                 let e = BigUint::from_bytes_le(e);
                 let m = BigUint::from_bytes_le(m);
                 for (plain, enc) in data.chunks_mut(8).zip(encrypted.chunks(0x80)) {

@@ -54,37 +54,6 @@ pub mod built_info {
 
 const TDB_ANCHOR: &[u8] = b"TDB\0\x47\0\0\0";
 
-pub static CONFIG: Lazy<HashMap<String, String>> = Lazy::new(|| {
-    let mut config = HashMap::new();
-    if let Ok(file) = File::open("mhrice.config") {
-        eprintln!("Reading global config file...");
-        for line in BufReader::new(file).lines() {
-            if let Ok(line) = line {
-                let split = if let Some(split) = line.find('=') {
-                    split
-                } else {
-                    continue;
-                };
-                let key = line[0..split].trim().to_string();
-                let value = line[split + 1..].trim().to_string();
-                eprintln!("Got {}", key);
-                config.insert(key, value);
-            } else {
-                break;
-            }
-        }
-        eprintln!("Finished reading global config file");
-    }
-    config
-});
-
-pub fn get_config(key: &str) -> Option<String> {
-    if let Ok(value) = std::env::var(key) {
-        return Some(value);
-    }
-    CONFIG.get(key).map(|s| s.to_string())
-}
-
 #[derive(clap::Parser)]
 pub struct TdbOptions {
     /// Don't output runtime addresses
