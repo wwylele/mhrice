@@ -3,9 +3,8 @@
 use anyhow::{anyhow, bail, Context, Result};
 use clap::*;
 use minidump::*;
-use once_cell::sync::Lazy;
 use rayon::prelude::*;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Cursor, Read, Seek, SeekFrom, Write};
