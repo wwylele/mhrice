@@ -755,7 +755,7 @@ pub fn print<F: Read + Seek>(
 
             let (property_count, property_membership_start_index, d2_into_heap, d3, array_rank) =
                 file.read_u64()?.bit_split((12, 20, 26, 3, 3));
-            if property_membership_start_index >= property_membership_count.into() {
+            if property_membership_start_index + property_count > property_membership_count.into() {
                 bail!("property_membership_index out of bound")
             }
 
@@ -902,7 +902,11 @@ pub fn print<F: Read + Seek>(
                 file.read_u64()?.bit_split((17, 16, 24, 7));
             let method_count = file.read_u16()?;
             let _ = file.read_u16()?;
-            let (event_count, event_start_index) = file.read_u32()?.bit_split((12, 20));
+            let (types_event_count, event_start_index) = file.read_u32()?.bit_split((12, 20));
+
+            if types_event_count + event_start_index > event_count {
+                bail!("Event out of bound")
+            }
 
             let _ = file.read_u64()?;
             let _ = file.read_u64()?;
@@ -914,7 +918,7 @@ pub fn print<F: Read + Seek>(
                 method_count: method_count.try_into()?,
                 field_count: field_count.try_into()?,
                 attribute_list_index: attribute_list_index.try_into()?,
-                event_count: event_count.try_into()?,
+                event_count: types_event_count.try_into()?,
                 event_start_index: event_start_index.try_into()?,
             })
         })
@@ -935,6 +939,12 @@ pub fn print<F: Read + Seek>(
             let attributes = file.read_u16()?;
             let impl_flag = file.read_u16()?;
             let name_offset = file.read_u32()?;
+            if u32::from(attribute_list_index) >= attribute_list_count {
+                bail!("attribute_list_index out of bound")
+            }
+            if name_offset >= string_table_len {
+                bail!("name_offset out of bound")
+            }
             Ok(Method {
                 attribute_list_index: attribute_list_index.try_into()?,
                 vtable_slot,
@@ -1554,11 +1564,13 @@ pub fn print<F: Read + Seek>(
         println!();
         println!("    /*** Method ***/");
         println!();
-        for j in 0..ty.method_count {
-            let method_membership_index = type_instance.method_membership_start_index + j;
-            let method_membership = method_memberships
-                .get(method_membership_index)
-                .context("Method membership index out of bound")?;
+        if type_instance.method_membership_start_index + ty.method_count > method_memberships.len()
+        {
+            bail!("Method membership out of bound")
+        }
+        for method_membership in
+            &method_memberships[type_instance.method_membership_start_index..][..ty.method_count]
+        {
             if method_membership.type_instance_index != i {
                 bail!("method_membership.type_instance_index mismatch");
             }
@@ -1633,11 +1645,12 @@ pub fn print<F: Read + Seek>(
         println!("    /*** Field ***/");
         println!();
 
-        for j in 0..ty.field_count {
-            let field_membership_index = type_instance.field_membership_start_index + j;
-            let field_membership = field_memberships
-                .get(field_membership_index)
-                .context("Field membership index out of bound")?;
+        if type_instance.field_membership_start_index + ty.field_count > field_memberships.len() {
+            bail!("Field membership out of bound")
+        }
+        for field_membership in
+            &field_memberships[type_instance.field_membership_start_index..][..ty.field_count]
+        {
             if field_membership.parent_type_instance_index != i {
                 bail!("field_membership.parent_type_instance_index mismatch")
             }
@@ -1677,17 +1690,16 @@ pub fn print<F: Read + Seek>(
         println!();
         println!("    /*** Event ***/");
         println!();
-        for j in 0..ty.event_count {
-            let event = &events[ty.event_start_index + j];
+        for event in &events[ty.event_start_index..][..ty.event_count] {
             println!("    public event {};", read_string(event.name_offset)?);
         }
 
         println!();
         println!("    /*** Property ***/");
         println!();
-        for j in 0..type_instance.property_count {
-            let property_membership =
-                &property_memberships[type_instance.property_membership_start_index + j];
+        for property_membership in &property_memberships
+            [type_instance.property_membership_start_index..][..type_instance.property_count]
+        {
             let property = &properties[property_membership.property_index];
             if property.attribute_list_index != 0 {
                 print!("    ");
