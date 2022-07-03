@@ -883,18 +883,11 @@ pub fn print<F: Read + Seek>(
         len: usize,
         static_len: u32,
 
-        //assembly_index: u8,
-        // array_dimension: u8,
         method_count: usize,
-
         field_count: usize,
-        //n4: u16,
-        // n5: u16,
         attribute_list_index: usize,
-        // n7: u16,
-
-        // flag_a: u64,
-        //flag_b: u64,
+        event_count: usize,
+        event_start_index: usize,
     }
 
     file.seek_assert_align_up(type_offset, 16)?;
@@ -909,8 +902,7 @@ pub fn print<F: Read + Seek>(
                 file.read_u64()?.bit_split((17, 16, 24, 7));
             let method_count = file.read_u16()?;
             let _ = file.read_u16()?;
-            let _ = file.read_u16()?;
-            let _ = file.read_u16()?;
+            let (event_count, event_start_index) = file.read_u32()?.bit_split((12, 20));
 
             let _ = file.read_u64()?;
             let _ = file.read_u64()?;
@@ -922,6 +914,8 @@ pub fn print<F: Read + Seek>(
                 method_count: method_count.try_into()?,
                 field_count: field_count.try_into()?,
                 attribute_list_index: attribute_list_index.try_into()?,
+                event_count: event_count.try_into()?,
+                event_start_index: event_start_index.try_into()?,
             })
         })
         .collect::<Result<Vec<_>>>()?;
@@ -1683,16 +1677,10 @@ pub fn print<F: Read + Seek>(
         println!();
         println!("    /*** Event ***/");
         println!();
-        // Where is this?
-        /*for j in 0..type_instance.event_count {
-            let event = &events[type_instance.event_start_index + j];
+        for j in 0..ty.event_count {
+            let event = &events[ty.event_start_index + j];
             println!("    public event {};", read_string(event.name_offset)?);
-        }*/
-
-        // Is this events?
-        /*if type_instance.d2_into_heap != 0 {
-            println!("$#$ {:?}", &heap[type_instance.d2_into_heap..][..16]);
-        }*/
+        }
 
         println!();
         println!("    /*** Property ***/");
