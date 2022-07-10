@@ -297,6 +297,14 @@ impl<'a, 'b> RszDeserializer<'a, 'b> {
         self.get_child_inner(index)
     }
 
+    pub fn get_child_opt<T: 'static>(&mut self) -> Result<Option<T>> {
+        let index = self.cursor.read_u32()?;
+        if index == 0 {
+            return Ok(None);
+        }
+        Ok(Some(self.get_child_inner(index)?))
+    }
+
     pub fn get_child_rc<T: 'static>(&mut self) -> Result<Rc<T>> {
         self.get_child_rc_opt()?.context("None child")
     }
@@ -354,8 +362,14 @@ impl AnyRsz {
         Self::new(ExternPath(path), &*EXTERN_PATH_TYPE_INFO)
     }
 
-    pub fn downcast<T: Any>(self) -> Option<T> {
-        self.any.downcast().ok().map(|b| *b)
+    pub fn downcast<T: Any>(self) -> Result<T> {
+        let symbol = self.type_info.symbol;
+        match self.any.downcast() {
+            Ok(b) => Ok(*b),
+            Err(e) => {
+                bail!("Expected {}, found {}", type_name::<T>(), symbol)
+            }
+        }
     }
 
     pub fn downcast_ref<T: Any>(&self) -> Option<&T> {
@@ -571,6 +585,7 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         PhysicsUserData,
         EmHitDamageRsData,
         EmHitDamageShapeData,
+        Em135_00HitDamageShapeUniqueData,
     );
 
     r!(

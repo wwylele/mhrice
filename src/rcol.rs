@@ -32,7 +32,7 @@ impl UserData {
 
     pub fn downcast<T: 'static>(self) -> Option<Box<T>> {
         if let UserData::Data(data) = self {
-            data.downcast()
+            data.downcast().ok()
         } else {
             panic!();
         }

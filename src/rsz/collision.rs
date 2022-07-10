@@ -29,7 +29,7 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct EmHitDamageRsData {
         pub name: String,
-        pub base: PhysicsUserData,
+        pub base: Option<PhysicsUserData>,
         pub parts_group: u16, // snow.enemy.EnemyDef.PartsGroup
     }
 }
@@ -62,7 +62,7 @@ rsz_enum! {
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
-    pub enum HitSoundAttrV1 {
+    pub enum HitSoundAttr {
         Default = 0,
         Silence = 1,
         Yarn = 2,
@@ -75,39 +75,12 @@ rsz_enum! {
         EnemyIndex038FloatingRock = 9,
         EnemyIndex042CarryRock = 10,
         EnemyIndex042CaryyPot = 11,
-        Max = 12,
-        Invalid = 13,
-    }
-}
-
-rsz_enum! {
-    #[rsz(i32)]
-    #[derive(Debug, Serialize)]
-    pub enum HitSoundAttrV2 {
-        Default = 0,
-        Silence = 1,
-        Yarn = 2,
-        EnemyIndex036IceArm = 3,
-        EnemyIndex035FloatingRock = 4,
-        EnemyIndex038FloatingRock = 5,
-        EnemyIndex042CarryRock = 6,
-        EnemyIndex042CaryyPot = 7,
-        EnemyIndex094Ice = 8,
-        EnemyIndex095MossArm = 9,
-        EnemyIndex095MossHead = 10,
-        EnemyIndex095RockArm = 11,
-        EnemyIndex095RickHead = 12,
-        EnemyIndex079Shell = 13,
-        Max = 14,
-        Invalid = 15,
-    }
-}
-
-rsz_versioned_choice! {
-    #[derive(Debug, Serialize)]
-    pub enum HitSoundAttr {
-        V1(HitSoundAttrV1) = 0..=3,
-        V2(HitSoundAttrV2) = 42,
+        EnemyIndex094Ice = 12,
+        EnemyIndex095MossArm = 13,
+        EnemyIndex095MossHead = 14,
+        EnemyIndex095RockArm = 15,
+        EnemyIndex095RockHead = 16,
+        EnemyIndex079Shell = 17,
     }
 }
 
@@ -134,8 +107,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.hit.userdata.EmHitDamageShapeData",
-        0xaa5a3f29 = 0,
-        0x010a53d2 = 42,
+        0x2b4a32fe = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct EmHitDamageShapeData {
@@ -149,5 +121,17 @@ rsz_struct! {
         pub meat: i32, // snow.enemy.EnemyDef.Meat
         pub damage_attr: DamageAttr,
         pub base_hit_mark_type: BaseHitMarkType,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.hit.userdata.Em135_00HitDamageShapeUniqueData",
+        0x1b6de095 = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct Em135_00HitDamageShapeUniqueData {
+        #[serde(flatten)]
+        pub base: Flatten<EmHitDamageShapeData>,
+        pub back_leech_id: u16,
     }
 }
