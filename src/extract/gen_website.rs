@@ -88,66 +88,69 @@ pub fn navbar() -> Box<nav<String>> {
                 <a class="navbar-item" href="/monster.html">
                     "Monsters"
                 </a>
-                <a class="navbar-item" href="/quest.html">
-                    "Quests"
-                </a>
+                // <a class="navbar-item" href="/quest.html">
+                //     "Quests"
+                // </a>
 
-                <div class="navbar-item has-dropdown is-hoverable">
-                <a class="navbar-link">
-                    "Skills"
-                </a>
-                <div class="navbar-dropdown">
-                    <a class="navbar-item" href="/skill.html">
-                        "Armor skills"
-                    </a>
-                    <a class="navbar-item" href="/hyakuryu_skill.html">
-                        "Ramp-up skills"
-                    </a>
-                </div>
-                </div>
+                // <div class="navbar-item has-dropdown is-hoverable">
+                // <a class="navbar-link">
+                //     "Skills"
+                // </a>
+                // <div class="navbar-dropdown">
+                //     <a class="navbar-item" href="/skill.html">
+                //         "Armor skills"
+                //     </a>
+                //     <a class="navbar-item" href="/hyakuryu_skill.html">
+                //         "Ramp-up skills"
+                //     </a>
+                // </div>
+                // </div>
 
-                <a class="navbar-item" href="/armor.html">
-                    "Armors"
-                </a>
+                // <a class="navbar-item" href="/armor.html">
+                //     "Armors"
+                // </a>
 
-                <div class="navbar-item has-dropdown is-hoverable">
-                <a class="navbar-link">
-                    "Weapon"
-                </a>
-                <div class="navbar-dropdown">
-                    <a class="navbar-item" href="/weapon/great_sword.html">"Great sword"</a>
-                    <a class="navbar-item" href="/weapon/long_sword.html">"Long sword"</a>
-                    <a class="navbar-item" href="/weapon/short_sword.html">"Sword & shield"</a>
-                    <a class="navbar-item" href="/weapon/dual_blades.html">"Dual blades"</a>
-                    <a class="navbar-item" href="/weapon/hammer.html">"Hammer"</a>
-                    <a class="navbar-item" href="/weapon/horn.html">"Hunting horn"</a>
-                    <a class="navbar-item" href="/weapon/lance.html">"Lance"</a>
-                    <a class="navbar-item" href="/weapon/gun_lance.html">"Gunlance"</a>
-                    <a class="navbar-item" href="/weapon/slash_axe.html">"Switch axe"</a>
-                    <a class="navbar-item" href="/weapon/charge_axe.html">"Charge blade"</a>
-                    <a class="navbar-item" href="/weapon/insect_glaive.html">"Insect glaive"</a>
-                    <a class="navbar-item" href="/weapon/light_bowgun.html">"Light bowgun"</a>
-                    <a class="navbar-item" href="/weapon/heavy_bowgun.html">"Heavy bowgun"</a>
-                    <a class="navbar-item" href="/weapon/bow.html">"Bow"</a>
-                </div>
-                </div>
+                // <div class="navbar-item has-dropdown is-hoverable">
+                // <a class="navbar-link">
+                //     "Weapon"
+                // </a>
+                // <div class="navbar-dropdown">
+                //     <a class="navbar-item" href="/weapon/great_sword.html">"Great sword"</a>
+                //     <a class="navbar-item" href="/weapon/long_sword.html">"Long sword"</a>
+                //     <a class="navbar-item" href="/weapon/short_sword.html">"Sword & shield"</a>
+                //     <a class="navbar-item" href="/weapon/dual_blades.html">"Dual blades"</a>
+                //     <a class="navbar-item" href="/weapon/hammer.html">"Hammer"</a>
+                //     <a class="navbar-item" href="/weapon/horn.html">"Hunting horn"</a>
+                //     <a class="navbar-item" href="/weapon/lance.html">"Lance"</a>
+                //     <a class="navbar-item" href="/weapon/gun_lance.html">"Gunlance"</a>
+                //     <a class="navbar-item" href="/weapon/slash_axe.html">"Switch axe"</a>
+                //     <a class="navbar-item" href="/weapon/charge_axe.html">"Charge blade"</a>
+                //     <a class="navbar-item" href="/weapon/insect_glaive.html">"Insect glaive"</a>
+                //     <a class="navbar-item" href="/weapon/light_bowgun.html">"Light bowgun"</a>
+                //     <a class="navbar-item" href="/weapon/heavy_bowgun.html">"Heavy bowgun"</a>
+                //     <a class="navbar-item" href="/weapon/bow.html">"Bow"</a>
+                // </div>
+                // </div>
 
-                <div class="navbar-item has-dropdown is-hoverable">
-                <a class="navbar-link">
-                    "Buddy"
-                </a>
-                <div class="navbar-dropdown">
-                    <a class="navbar-item" href="/airou.html">"Palico equipment"</a>
-                    <a class="navbar-item" href="/dog.html">"Palamute equipment"</a>
-                </div>
-                </div>
+                // <div class="navbar-item has-dropdown is-hoverable">
+                // <a class="navbar-link">
+                //     "Buddy"
+                // </a>
+                // <div class="navbar-dropdown">
+                //     <a class="navbar-item" href="/airou.html">"Palico equipment"</a>
+                //     <a class="navbar-item" href="/dog.html">"Palamute equipment"</a>
+                // </div>
+                // </div>
 
-                <a class="navbar-item" href="/map.html">
-                    "Maps"
-                </a>
+                // <a class="navbar-item" href="/map.html">
+                //     "Maps"
+                // </a>
 
-                <a class="navbar-item" href="/item.html">
-                    "Items"
+                // <a class="navbar-item" href="/item.html">
+                //     "Items"
+                // </a>
+                <a class="navbar-item">
+                    "(More are coming soon...)"
                 </a>
                 <a class="navbar-item" href="/about.html">
                     "About"

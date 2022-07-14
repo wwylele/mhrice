@@ -52,7 +52,7 @@ pub struct Pedia {
     pub monster_aliases_mr: Msg,
     pub monster_explains_mr: Msg,
     pub condition_preset: EnemyConditionPresetData,
-    //pub monster_list: MonsterListBossData,
+    pub monster_list: MonsterListBossData,
     pub hunter_note_msg: Msg,
     /*pub monster_lot: MonsterLotTableUserData,
     pub parts_type: PartsTypeTextUserData,
@@ -294,7 +294,7 @@ pub struct PediaEx<'a> {
     pub skills: BTreeMap<PlEquipSkillId, Skill<'a>>,
     pub hyakuryu_skills: BTreeMap<PlHyakuryuSkillId, HyakuryuSkill<'a>>,
     pub armors: Vec<ArmorSeries<'a>>,*/
-    pub meat_names: HashMap<MeatKey, &'a MsgEntry>,
+    pub meat_names: HashMap<MeatKey, Vec<&'a MsgEntry>>,
     /*
     pub items: BTreeMap<ItemId, Item<'a>>,
     pub material_categories: HashMap<MaterialCategory, &'a MsgEntry>,

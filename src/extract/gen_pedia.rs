@@ -503,7 +503,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         monster_aliases_mr,
         monster_explains_mr,
         condition_preset,
-        //monster_list: get_singleton(pak)?,
+        monster_list: get_singleton(pak)?,
         hunter_note_msg,
         /*monster_lot: get_singleton(pak)?,
         parts_type: get_singleton(pak)?,
@@ -1529,12 +1529,12 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
     Ok(series_map.into_iter().map(|(_, v)| v).collect())
 }*/
 
-fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, &MsgEntry>> {
+fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, Vec<&MsgEntry>>> {
     let msg_map: HashMap<_, _> = pedia.hunter_note_msg.get_name_map();
 
-    let mut result = HashMap::new();
+    let mut result: HashMap<MeatKey, Vec<&MsgEntry>> = HashMap::new();
 
-    /*for boss_monster in &pedia.monster_list.data_list {
+    for boss_monster in &pedia.monster_list.data_list {
         for part_data in &boss_monster.part_table_data {
             let part = part_data.em_meat.try_into()?;
             let phase = part_data.em_meat_group_index.try_into()?;
@@ -1550,19 +1550,17 @@ fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, &MsgEntry>> {
             )) {
                 name
             } else {
+                // TODO: MR name
+                eprintln!(
+                    "Part text not found for {:?}-{part}-{phase}. part ID {}",
+                    boss_monster.em_type, part_data.part
+                );
                 continue;
             };
 
-            if result.insert(key, name).is_some() {
-                bail!(
-                    "Duplicate definition for meat {:?}-{}-{}",
-                    boss_monster.em_type,
-                    part,
-                    phase
-                );
-            }
+            result.entry(key).or_default().push(name);
         }
-    }*/
+    }
 
     Ok(result)
 }
@@ -2145,14 +2143,13 @@ fn prepare_monsters<'a>(pedia: &'a Pedia) -> Result<HashMap<EmTypes, MonsterEx<'
 }
 
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
-    let monster_order = HashMap::new();
-    /*pedia
-    .monster_list
-    .data_list
-    .iter()
-    .enumerate()
-    .map(|(i, monster)| (monster.em_type, i))
-    .collect();*/
+    let monster_order = pedia
+        .monster_list
+        .data_list
+        .iter()
+        .enumerate()
+        .map(|(i, monster)| (monster.em_type, i))
+        .collect();
 
     /*
     let mut hyakuryu_weapon_map: HashMap<

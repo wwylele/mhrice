@@ -1,3 +1,4 @@
+use super::common::*;
 use super::*;
 use crate::rsz_struct;
 use nalgebra_glm::*;
@@ -5,7 +6,7 @@ use serde::*;
 
 rsz_struct! {
     #[rsz("snow.data.monsterList.BossMonsterData.PartData",
-        0x8999739b = 0
+        0xD80AF230 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct PartData {
@@ -28,8 +29,22 @@ rsz_struct! {
 }
 
 rsz_struct! {
+    #[rsz("snow.data.monsterList.BossMonsterData.MarionetteData",
+        0xcae6b96a = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct MarionetteData {
+        pub attack_type: i32, // snow.data.monsterList.AttackType
+        pub is_button_repeatedly: bool,
+        pub is_change_air: bool,
+        pub description_id: Guid,
+
+    }
+}
+
+rsz_struct! {
     #[rsz("snow.data.monsterList.BossMonsterData",
-        0xe2ca959a = 0
+        0xf03fc40b = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct BossMonsterData {
@@ -38,12 +53,13 @@ rsz_struct! {
         pub habitat_area: BitSetFlagHabitatType,
         pub is_limit_open_lv: bool,
         pub part_table_data: Vec<PartData>,
+        pub marionette_table_data: Vec<MarionetteData>,
     }
 }
 
 rsz_struct! {
     #[rsz("snow.data.monsterList.MonsterListBossData",
-        path = "data/Define/Common/HunterNote/MonsterListBossData.user",
+        path = "data/Define/Common/HunterNote/MonsterListBossData_MR.user",
         0x4a9edb4f = 0
     )]
     #[derive(Debug, Serialize)]

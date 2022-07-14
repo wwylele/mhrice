@@ -967,16 +967,21 @@ pub fn gen_monster(
 
                                 meats.meat_group_info.iter().enumerate()
                                 .map(move |(phase, group_info)| {
-                                    let name = pedia_ex.meat_names.get(&MeatKey {
+                                    let names = pedia_ex.meat_names.get(&MeatKey {
                                         em_type: monster_em_type,
                                         part,
                                         phase
-                                    }).copied().map_or(html!(<span></span>), gen_multi_lang);
+                                    }).map(|v|v.as_slice()).unwrap_or_default();
 
                                     let mut tds = part_common.take().unwrap_or_default();
                                     tds.extend(vec![
                                         html!(<td>{text!("{}", phase)}</td>),
-                                        html!(<td>{name}</td>),
+                                        html!(<td>{
+                                            names.iter().enumerate().map(|(i, n)| html!(<span>
+                                                { text!("{}", if i == 0 {""} else {", "}) }
+                                                { gen_multi_lang(n) }
+                                            </span>))
+                                        }</td>),
                                         html!(<td>{text!("{}", group_info.slash)}</td>),
                                         html!(<td>{text!("{}", group_info.strike)}</td>),
                                         html!(<td>{text!("{}", group_info.shell)}</td>),
@@ -1185,11 +1190,6 @@ pub fn gen_monsters(
             </head>
             <body>
                 { navbar() }
-                <article class="message is-warning">
-                    <div class="message-body">
-                        "This website won't get update within the first two weeks after Sunbreak release."
-                    </div>
-                </article>
 
                 <main>
                 <header><h1>"Monsters"</h1></header>
@@ -1200,7 +1200,7 @@ pub fn gen_monsters(
                     <option value="1">"Sort by in-game order"</option>
                 </select></div>
                 <ul class="mh-list-monster" id="slist-monster">{
-                    pedia.monsters.iter().map(|monster| {
+                    pedia.monsters.iter().filter(|monster|monster.id != 131).map(|monster| {
                         let icon_path = format!("/resources/em{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
 
                         let monster_ex = &pedia_ex.monsters[&monster.em_type];
