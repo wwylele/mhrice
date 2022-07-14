@@ -512,7 +512,7 @@ fn gen_quest(
                         .filter(|&(_, em_type)|em_type != EmTypes::Em(0))
                         .map(|(i, em_type)|{
                             html!(<tr>
-                                <td>{ gen_monster_tag(pedia, em_type, quest.param.has_target(em_type), false) }</td>
+                                <td>{ gen_monster_tag(pedia, pedia_ex, em_type, quest.param.has_target(em_type), false) }</td>
                                 { gen_quest_monster_data(quest.enemy_param.as_ref().map(|p|&p.param),
                                     em_type, i, pedia, pedia_ex) }
                             </tr>)
@@ -545,7 +545,7 @@ fn gen_quest(
                         .filter(|&(_, em_type)|em_type != EmTypes::Em(0))
                         .map(|(i, em_type)|{
                             html!(<tr>
-                                <td>{ gen_monster_tag(pedia, em_type, quest.param.has_target(em_type), false)}</td>
+                                <td>{ gen_monster_tag(pedia, pedia_ex, em_type, quest.param.has_target(em_type), false)}</td>
                                 { gen_quest_monster_multi_player_data(
                                     quest.enemy_param.as_ref().map(|p|&p.param), i, pedia) }
                             </tr>)
@@ -619,13 +619,13 @@ fn gen_quest(
                         .filter(|wave|wave.boss_em != EmTypes::Em(0))
                         .map(|wave| {
                             html!(<tr>
-                                <td>{ gen_monster_tag(pedia, wave.boss_em, false, false) }</td>
+                                <td>{ gen_monster_tag(pedia, pedia_ex, wave.boss_em, false, false) }</td>
                                 <td>{text!("{}", wave.boss_sub_type)}</td>
                                 <td>{text!("{}", wave.boss_em_nando_tbl_no)}</td>
                                 <td><ul class="mh-rampage-em-list"> {
                                     wave.em_table.iter().filter(|&&em|em != EmTypes::Em(0))
                                     .map(|&em|html!(<li>
-                                        { gen_monster_tag(pedia, em, false, true) }
+                                        { gen_monster_tag(pedia, pedia_ex, em, false, true) }
                                     </li>))
                                 } </ul></td>
                                 <td>{text!("{}", wave.wave_em_nando_tbl_no)}</td>

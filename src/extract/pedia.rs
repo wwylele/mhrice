@@ -17,6 +17,7 @@ pub struct Monster {
     pub id: u32,
     pub sub_id: u32,
     pub enemy_type: Option<i32>,
+    pub em_type: EmTypes,
     pub data_base: EnemyDataBase,
     pub data_tune: EnemyDataTune,
     pub meat_data: EnemyMeatData,
@@ -47,6 +48,9 @@ pub struct Pedia {
     pub monster_names: Msg,
     pub monster_aliases: Msg,
     pub monster_explains: Msg,
+    pub monster_names_mr: Msg,
+    pub monster_aliases_mr: Msg,
+    pub monster_explains_mr: Msg,
     pub condition_preset: EnemyConditionPresetData,
     //pub monster_list: MonsterListBossData,
     pub hunter_note_msg: Msg,
@@ -273,7 +277,16 @@ pub struct OtEquipSeries<'a> {
     pub chest: Option<OtArmor<'a>>,
 }
 
+#[derive(Debug)]
+pub struct MonsterEx<'a> {
+    pub name: Option<&'a MsgEntry>,
+    pub alias: Option<&'a MsgEntry>,
+    pub explain1: Option<&'a MsgEntry>,
+    pub explain2: Option<&'a MsgEntry>,
+}
+
 pub struct PediaEx<'a> {
+    pub monsters: HashMap<EmTypes, MonsterEx<'a>>,
     /*pub sizes: HashMap<EmTypes, &'a SizeInfo>,
     pub size_dists: HashMap<i32, &'a [ScaleAndRateData]>,
     pub quests: Vec<Quest<'a>>,

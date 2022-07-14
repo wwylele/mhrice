@@ -210,10 +210,13 @@ pub fn gen_monsters(
             //    .then(|| sub_file(pak, &main_pfb).context("parts_break_reward"))
             //     .transpose()?;
 
+            let em_type = if is_large { EmTypes::Em } else { EmTypes::Ems }(id | (sub_id << 8));
+
             monsters.push(Monster {
                 id,
                 sub_id,
                 enemy_type,
+                em_type,
                 data_base,
                 data_tune,
                 meat_data,
@@ -351,6 +354,10 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let monster_names = get_msg(pak, "Message/Tag/Tag_EM_Name.msg")?;
     let monster_aliases = get_msg(pak, "Message/Tag/Tag_EM_Name_Alias.msg")?;
     let monster_explains = get_msg(pak, "Message/HunterNote/HN_MonsterListMsg.msg")?;
+
+    let monster_names_mr = get_msg(pak, "Message/Tag_MR/Tag_EM_Name_MR.msg")?;
+    let monster_aliases_mr = get_msg(pak, "Message/Tag_MR/Tag_EM_Name_Alias_MR.msg")?;
+    let monster_explains_mr = get_msg(pak, "Message/HunterNote_MR/HN_MonsterListMsg_MR.msg")?;
 
     let condition_preset: EnemyConditionPresetData = get_singleton(pak)?;
     condition_preset.verify()?;
@@ -492,6 +499,9 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         monster_names,
         monster_aliases,
         monster_explains,
+        monster_names_mr,
+        monster_aliases_mr,
+        monster_explains_mr,
         condition_preset,
         //monster_list: get_singleton(pak)?,
         hunter_note_msg,
@@ -2072,6 +2082,68 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
 }
 */
 
+fn prepare_monsters<'a>(pedia: &'a Pedia) -> Result<HashMap<EmTypes, MonsterEx<'a>>> {
+    let mut result = HashMap::new();
+
+    let names = pedia.monster_names.get_name_map();
+    let names_mr = pedia.monster_names_mr.get_name_map();
+    let aliases = pedia.monster_aliases.get_name_map();
+    let aliases_mr = pedia.monster_aliases_mr.get_name_map();
+    let explains = pedia.monster_explains.get_name_map();
+    let explains_mr = pedia.monster_explains_mr.get_name_map();
+
+    let monsters = pedia.monsters.iter().chain(&pedia.small_monsters);
+    for monster in monsters {
+        let entry = if let Some(index) = monster.enemy_type {
+            let name = names
+                .get(&format!("EnemyIndex{index:03}"))
+                .copied()
+                .or_else(|| names_mr.get(&format!("EnemyIndex{index:03}_MR")).copied());
+
+            let alias_name = format!("Alias_EnemyIndex{index:03}");
+            let alias = aliases
+                .get(&alias_name)
+                .copied()
+                .or_else(|| aliases_mr.get(&alias_name).copied());
+
+            let explain1 = explains
+                .get(&format!("HN_MonsterListMsg_EnemyIndex{index:03}_page1"))
+                .copied()
+                .or_else(|| {
+                    explains_mr
+                        .get(&format!("HN_MonsterListMsg_EnemyIndex{index:03}_MR_page1"))
+                        .copied()
+                });
+
+            let explain2 = explains
+                .get(&format!("HN_MonsterListMsg_EnemyIndex{index:03}_page2"))
+                .copied()
+                .or_else(|| {
+                    explains_mr
+                        .get(&format!("HN_MonsterListMsg_EnemyIndex{index:03}_MR_page2"))
+                        .copied()
+                });
+
+            MonsterEx {
+                name,
+                alias,
+                explain1,
+                explain2,
+            }
+        } else {
+            MonsterEx {
+                name: None,
+                alias: None,
+                explain1: None,
+                explain2: None,
+            }
+        };
+        result.insert(monster.em_type, entry);
+    }
+
+    Ok(result)
+}
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     let monster_order = HashMap::new();
     /*pedia
@@ -2099,6 +2171,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     }*/
 
     Ok(PediaEx {
+        monsters: prepare_monsters(pedia)?,
         /* sizes: prepare_size_map(&pedia.size_list)?,
         size_dists: prepare_size_dist_map(&pedia.random_scale)?,
         quests: prepare_quests(pedia)?,

@@ -151,6 +151,7 @@ rsz_bitflags! {
         const GIMMICK_S                = 0x02000000;
         const EM2_EM_S                 = 0x04000000;
         const STEEL_FANG               = 0x08000000;
+        const MYSTERY_MAXIMUM_ACTIVITY_RELEASE = 0x10000000;
     }
 }
 

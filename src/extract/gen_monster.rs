@@ -13,6 +13,7 @@ use typed_html::{dom::*, elements::*, html, text};
 
 pub fn gen_monster_tag(
     pedia: &Pedia,
+    pedia_ex: &PediaEx,
     em_type: EmTypes,
     is_target: bool,
     short: bool,
@@ -31,8 +32,8 @@ pub fn gen_monster_tag(
 
     let monster_name = (!short).then(|| {
         (|| {
-            let name_name = format!("EnemyIndex{:03}", monster?.enemy_type?);
-            Some(gen_multi_lang(pedia.monster_names.get_entry(&name_name)?))
+            let name = pedia_ex.monsters[&em_type].name?;
+            Some(gen_multi_lang(name))
         })()
         .unwrap_or(html!(<span>{text!("Monster {0:03}_{1:02}",
                                 id & 0xFF, id >> 8)}</span>))
@@ -774,18 +775,15 @@ pub fn gen_monster(
 
     let monster_id = monster.id;
     let monster_sub_id = monster.sub_id;
-    let monster_em_type =
-        if is_large { EmTypes::Em } else { EmTypes::Ems }(monster_id | (monster_sub_id << 8));
+    let monster_em_type = monster.em_type;
+    let monster_ex = &pedia_ex.monsters[&monster_em_type];
     let condition_preset = &pedia.condition_preset;
 
-    let explains = pedia.monster_explains.get_name_map();
-    let explain1 = monster
-        .enemy_type
-        .and_then(|e| explains.get(&format!("HN_MonsterListMsg_EnemyIndex{:03}_page1", e)))
+    let explain1 = monster_ex
+        .explain1
         .map(|m| html!(<pre> {gen_multi_lang(m)} </pre>));
-    let explain2 = monster
-        .enemy_type
-        .and_then(|e| explains.get(&format!("HN_MonsterListMsg_EnemyIndex{:03}_page2", e)))
+    let explain2 = monster_ex
+        .explain2
         .map(|m| html!(<pre> {gen_multi_lang(m)} </pre>));
 
     /*let quest_list = html!(
@@ -845,12 +843,7 @@ pub fn gen_monster(
         </section>
     );*/
 
-    let monster_alias = if let Some(enemy_type) = monster.enemy_type {
-        let name_name = format!("Alias_EnemyIndex{:03}", enemy_type);
-        pedia.monster_aliases.get_entry(&name_name)
-    } else {
-        None
-    };
+    let monster_alias = monster_ex.alias;
 
     let doc: DOMTree<String> = html!(
         <html>
@@ -1210,12 +1203,11 @@ pub fn gen_monsters(
                     pedia.monsters.iter().map(|monster| {
                         let icon_path = format!("/resources/em{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
 
-                        let name_name = format!("EnemyIndex{:03}", monster.enemy_type.unwrap_or(9999));
-
-                        let name_entry = if let Some(entry) = pedia.monster_names.get_entry(&name_name) {
+                        let monster_ex = &pedia_ex.monsters[&monster.em_type];
+                        let name_entry = if let Some(entry) = monster_ex.name {
                             gen_multi_lang(entry)
                         } else {
-                            html!(<span>"-"</span>)
+                            html!(<span>{text!("Monster {:03}_{:02}", monster.id, monster.sub_id)}</span>)
                         };
 
                         let order = pedia_ex.monster_order.get(&EmTypes::Em(monster.id | (monster.sub_id << 8)))
@@ -1237,12 +1229,9 @@ pub fn gen_monsters(
                     .map(|monster| {
                         let icon_path = format!("/resources/ems{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
 
-                        let name = if let Some(enemy_type) = monster.enemy_type {
-                            let name_name = format!("EnemyIndex{:03}", enemy_type);
-                            pedia.monster_names.get_entry(&name_name).map_or(
-                                html!(<span>{text!("Monster {:03}_{:02}", monster.id, monster.sub_id)}</span>),
-                                gen_multi_lang
-                            )
+                        let monster_ex = &pedia_ex.monsters[&monster.em_type];
+                        let name = if let Some(entry) = monster_ex.name {
+                            gen_multi_lang(entry)
                         } else {
                             html!(<span>{text!("Monster {:03}_{:02}", monster.id, monster.sub_id)}</span>)
                         };
