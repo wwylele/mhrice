@@ -642,6 +642,23 @@ fn gen_monster_hitzones(
         .map(|(index, sub_id, mesh, collider)| {
             let mesh = Mesh::new(Cursor::new(mesh))?;
             let mut collider = Rcol::new(Cursor::new(collider), true)?;
+
+            // pre-check a glitchy thing
+            for attachment in &collider.group_attachments {
+                if let Some(data) = attachment.user_data.downcast_ref::<EmHitDamageRsData>() {
+                    if data.base.is_none() {
+                        eprintln!(
+                            "Found glitch collider '{}' for em{}_{}",
+                            data.name, index, sub_id
+                        );
+                    }
+                }
+            }
+
+            if collider.get_special_ammo_filter() != 0 {
+                eprintln!("Found special ammo collider for em{}_{}", index, sub_id);
+            }
+
             let meat_path = output.create(&meat_file_name_gen(index, sub_id))?;
             let parts_group_path = output.create(&parts_group_file_name_gen(index, sub_id))?;
             collider.apply_skeleton(&mesh)?;

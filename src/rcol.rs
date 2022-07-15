@@ -566,6 +566,19 @@ impl Rcol {
         }
     }
 
+    pub fn get_special_ammo_filter(&self) -> u32 {
+        if let Some((i, _)) = self
+            .ignore_tags
+            .iter()
+            .enumerate()
+            .find(|(_, s)| *s == "矢弾き")
+        {
+            1 << i
+        } else {
+            0
+        }
+    }
+
     pub fn color_monster_model(&self, mesh: &Mesh) -> Result<(Vec<ColoredVertex>, Vec<u32>)> {
         let position = mesh
             .vertex_layouts
@@ -586,6 +599,8 @@ impl Rcol {
             bail!("Didn't find monster ride filter")
         }
 
+        let special_ammo_filter = self.get_special_ammo_filter();
+
         let vertexs = (0..vertex_count)
             .map(|_| {
                 let position = buffer.read_f32vec3()?;
@@ -602,6 +617,10 @@ impl Rcol {
                             if let Some(data) =
                                 attachment.user_data.downcast_ref::<EmHitDamageRsData>()
                             {
+                                if data.base.is_none() {
+                                    // seen in magmadron, seems incorrect attachment. skipping
+                                    continue;
+                                }
                                 new_parts_group = Some(usize::try_from(data.parts_group)?);
                             }
                         }
@@ -609,6 +628,10 @@ impl Rcol {
 
                     for collider in &group.colliders {
                         if collider.ignore_tag_bits & ignore_tag_filter != 0 {
+                            continue;
+                        }
+                        if collider.ignore_tag_bits & special_ammo_filter != 0 {
+                            // Seen in crab, kush, and toaster
                             continue;
                         }
                         if let Some(data) =
