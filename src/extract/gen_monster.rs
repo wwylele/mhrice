@@ -1,5 +1,5 @@
 use super::gen_item::*;
-//use super::gen_quest::*;
+use super::gen_quest::*;
 use super::gen_website::{gen_multi_lang, head_common, navbar};
 use super::pedia::*;
 use super::sink::*;
@@ -785,7 +785,7 @@ pub fn gen_monster(
         .explain2
         .map(|m| html!(<pre> {gen_multi_lang(m)} </pre>));
 
-    /*let quest_list = html!(
+    let quest_list = html!(
         <section>
         <h2 >"Quests"</h2>
         <div class="mh-table"><table>
@@ -796,11 +796,12 @@ pub fn gen_monster(
                 <th>"Attack"</th>
                 <th>"Parts"</th>
                 <th>"Defense"</th>
-                <th>"Element A"</th>
-                <th>"Element B"</th>
+                <th>"Element"</th>
                 <th>"Stun"</th>
                 <th>"Exhaust"</th>
                 <th>"Ride"</th>
+                <th>"Paralyze"</th>
+                <th>"Sleep"</th>
                 <th>"Stamina"</th>
             </tr></thead>
             <tbody> {
@@ -811,13 +812,12 @@ pub fn gen_monster(
                     .map(move |(i, em_type)|{
                         html!(<tr>
                             <td> { gen_quest_tag(quest, quest.param.has_target(em_type)) } </td>
-                            { gen_quest_monster_data(quest.enemy_param.as_ref().map(|p|&p.param),
-                                em_type, i, pedia, pedia_ex) }
+                            { gen_quest_monster_data(quest.enemy_param, em_type, i, pedia, pedia_ex) }
                         </tr>)
                     })
                 })
             }
-            {
+            /*{
                 if let Some(&discovery) = pedia_ex.discoveries.get(&monster_em_type) {
                     vec![
                         html!(<tr><td>"Village tour"</td>{
@@ -836,11 +836,11 @@ pub fn gen_monster(
                 } else {
                     vec![]
                 }
-            }
+            }*/
             </tbody>
         </table></div>
         </section>
-    );*/
+    );
 
     let monster_alias = monster_ex.alias;
 
@@ -890,7 +890,7 @@ pub fn gen_monster(
                 ) }</p>
                 </section>
 
-                //{ quest_list }
+                { quest_list }
 
                 <section>
                 <h2 >"Hitzone data"</h2>

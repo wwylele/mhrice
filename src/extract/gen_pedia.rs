@@ -366,13 +366,16 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let hunter_note_msg = get_msg(pak, "Message/HunterNote/HN_Hunternote_Menu.msg")?;
     let hunter_note_msg_mr = get_msg(pak, "Message/HunterNote_MR/HN_Hunternote_Menu_MR.msg")?;
 
-    /*let quest_hall_msg = get_msg(pak, "Message/Quest/QuestData_Hall.msg")?;
+    let quest_hall_msg = get_msg(pak, "Message/Quest/QuestData_Hall.msg")?;
+    let quest_hall_msg_mr = get_msg(pak, "Message/Quest/QuestData_Hall_MR.msg")?;
+    let quest_hall_msg_mr2 = get_msg(pak, "Message/Quest/QuestData_Hall2_MR.msg")?;
     let quest_village_msg = get_msg(pak, "Message/Quest/QuestData_Village.msg")?;
+    let quest_village_msg_mr = get_msg(pak, "Message/Quest/QuestData_Village_MR.msg")?;
     let quest_tutorial_msg = get_msg(pak, "Message/Quest/QuestData_Tutorial.msg")?;
     let quest_arena_msg = get_msg(pak, "Message/Quest/QuestData_Arena.msg")?;
     let quest_dlc_msg = get_msg(pak, "Message/Quest/QuestData_Dlc.msg")?;
 
-    let armor_head_name_msg = get_msg(pak, "data/Define/Player/Armor/Head/A_Head_Name.msg")?;
+    /*let armor_head_name_msg = get_msg(pak, "data/Define/Player/Armor/Head/A_Head_Name.msg")?;
     let armor_chest_name_msg = get_msg(pak, "data/Define/Player/Armor/Chest/A_Chest_Name.msg")?;
     let armor_arm_name_msg = get_msg(pak, "data/Define/Player/Armor/Arm/A_Arm_Name.msg")?;
     let armor_waist_name_msg = get_msg(pak, "data/Define/Player/Armor/Waist/A_Waist_Name.msg")?;
@@ -524,24 +527,29 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         monster_lot: get_singleton(pak)?,
         monster_lot_mr: get_singleton(pak)?,
         parts_type: get_singleton(pak)?,
-        /*normal_quest_data: get_singleton(pak)?,
+        normal_quest_data: get_singleton(pak)?,
+        normal_quest_data_mr: get_singleton(pak)?,
         normal_quest_data_for_enemy: get_singleton(pak)?,
+        normal_quest_data_for_enemy_mr: get_singleton(pak)?,
         dl_quest_data: get_singleton(pak)?,
         dl_quest_data_for_enemy: get_singleton(pak)?,
         difficulty_rate: get_singleton(pak)?,
         random_scale: get_singleton(pak)?,
         size_list: get_singleton(pak)?,
-        discover_em_set_data: get_singleton(pak)?,
-        quest_data_for_reward: get_singleton(pak)?,
-        reward_id_lot_table: get_singleton(pak)?,
-        main_target_reward_lot_num: get_singleton(pak)?,
-        fixed_hyakuryu_quest: get_singleton(pak)?,
+        //discover_em_set_data: get_singleton(pak)?,
+        //quest_data_for_reward: get_singleton(pak)?,
+        //reward_id_lot_table: get_singleton(pak)?,
+        //main_target_reward_lot_num: get_singleton(pak)?,
+        //fixed_hyakuryu_quest: get_singleton(pak)?,
         quest_hall_msg,
+        quest_hall_msg_mr,
+        quest_hall_msg_mr2,
         quest_village_msg,
+        quest_village_msg_mr,
         quest_tutorial_msg,
         quest_arena_msg,
         quest_dlc_msg,
-        armor: get_singleton(pak)?,
+        /*armor: get_singleton(pak)?,
         armor_series: get_singleton(pak)?,
         armor_product: get_singleton(pak)?,
         overwear: get_singleton(pak)?,
@@ -900,7 +908,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
             .gen_double_mask();
         equip_icon_r.save_png(equip_icon_path.create(&format!("{:03}.r.png", i))?)?;
         equip_icon_a.save_png(equip_icon_path.create(&format!("{:03}.a.png", i))?)?;
-    }
+    }*/
 
     let common_uvs = pak.find_file("gui/70_UVSequence/common.uvs")?;
     let common_uvs = Uvs::new(Cursor::new(pak.read_file(common_uvs)?))?;
@@ -915,7 +923,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
             .save_png(output.create(&format!("questtype_{}.png", i))?)?;
     }
 
-    let common_uvs = pak.find_file("gui/70_UVSequence/Slot_Icon.uvs")?;
+    /*let common_uvs = pak.find_file("gui/70_UVSequence/Slot_Icon.uvs")?;
     let common_uvs = Uvs::new(Cursor::new(pak.read_file(common_uvs)?))?;
     if common_uvs.textures.len() != 1 || common_uvs.spriter_groups.len() != 1 {
         bail!("Broken Slot_Icon.uvs");
@@ -1050,9 +1058,15 @@ fn hash_map_unique<T, K: Eq + std::hash::Hash + std::fmt::Debug, V>(
     Ok(result)
 }
 
-/*
 fn prepare_size_map(size_data: &EnemySizeListData) -> Result<HashMap<EmTypes, &SizeInfo>> {
-    hash_map_unique(&size_data.size_info_list, |e| (e.em_type, e), false)
+    hash_map_unique(
+        size_data
+            .size_info_list
+            .iter()
+            .filter(|e| e.em_type != EmTypes::Em(0)),
+        |e| (e.em_type, e),
+        false,
+    )
 }
 
 fn prepare_size_dist_map(
@@ -1082,9 +1096,12 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
         .entries
         .iter()
         .chain(&pedia.quest_village_msg.entries)
+        .chain(&pedia.quest_village_msg_mr.entries)
         .chain(&pedia.quest_tutorial_msg.entries)
         .chain(&pedia.quest_arena_msg.entries)
-        .chain(&pedia.quest_dlc_msg.entries);
+        .chain(&pedia.quest_dlc_msg.entries)
+        .chain(&pedia.quest_hall_msg_mr.entries)
+        .chain(&pedia.quest_hall_msg_mr2.entries);
 
     let mut all_msg = hash_map_unique(all_msg, |e| (&e.name, e), false)?;
 
@@ -1092,59 +1109,61 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
         .normal_quest_data_for_enemy
         .param
         .iter()
-        .chain(&pedia.dl_quest_data_for_enemy.param);
+        .chain(&pedia.dl_quest_data_for_enemy.param)
+        .chain(&pedia.normal_quest_data_for_enemy_mr.param)
+        .filter(|e| e.quest_no != 0);
 
     let mut enemy_params = hash_map_unique(enemy_params, |param| (param.quest_no, param), false)?;
 
-    let mut reward_params = hash_map_unique(
-        &pedia.quest_data_for_reward.param,
-        |param| (param.quest_numer, param),
-        false,
-    )?;
+    //let mut reward_params = hash_map_unique(
+    //    &pedia.quest_data_for_reward.param,
+    //    |param| (param.quest_numer, param),
+    //    false,
+    //)?;
+    //
+    //let reward_lot = hash_map_unique(
+    //    &pedia.reward_id_lot_table.param,
+    //    |param| (param.id, param),
+    //    false,
+    //)?;
 
-    let reward_lot = hash_map_unique(
-        &pedia.reward_id_lot_table.param,
-        |param| (param.id, param),
-        false,
-    )?;
-
-    let hyakuryu_list = pedia
-        .fixed_hyakuryu_quest
-        .data_list
-        .iter()
-        .chain(pedia.fixed_hyakuryu_quest.data_list_310.iter())
-        .chain(pedia.fixed_hyakuryu_quest.data_list_320.iter())
-        .chain(pedia.fixed_hyakuryu_quest.data_list_350.iter())
-        .chain(
-            pedia
-                .fixed_hyakuryu_quest
-                .data_list_370
-                .0
-                .iter()
-                .flat_map(|i| i.iter()),
-        )
-        .chain(
-            pedia
-                .fixed_hyakuryu_quest
-                .data_list_380
-                .0
-                .iter()
-                .flat_map(|i| i.iter()),
-        )
-        .chain(
-            pedia
-                .fixed_hyakuryu_quest
-                .data_list_390
-                .0
-                .iter()
-                .flat_map(|i| i.iter()),
-        );
-
-    let mut hyakuryus = hash_map_unique(
-        hyakuryu_list,
-        |hyakuryu| (hyakuryu.quest_no, hyakuryu),
-        false,
-    )?;
+    //let hyakuryu_list = pedia
+    //    .fixed_hyakuryu_quest
+    //    .data_list
+    //    .iter()
+    //    .chain(pedia.fixed_hyakuryu_quest.data_list_310.iter())
+    //    .chain(pedia.fixed_hyakuryu_quest.data_list_320.iter())
+    //    .chain(pedia.fixed_hyakuryu_quest.data_list_350.iter())
+    //    .chain(
+    //        pedia
+    //            .fixed_hyakuryu_quest
+    //            .data_list_370
+    //            .0
+    //            .iter()
+    //            .flat_map(|i| i.iter()),
+    //    )
+    //    .chain(
+    //        pedia
+    //            .fixed_hyakuryu_quest
+    //            .data_list_380
+    //            .0
+    //            .iter()
+    //            .flat_map(|i| i.iter()),
+    //    )
+    //    .chain(
+    //        pedia
+    //            .fixed_hyakuryu_quest
+    //            .data_list_390
+    //            .0
+    //            .iter()
+    //            .flat_map(|i| i.iter()),
+    //    );
+    //
+    //let mut hyakuryus = hash_map_unique(
+    //    hyakuryu_list,
+    //    |hyakuryu| (hyakuryu.quest_no, hyakuryu),
+    //    false,
+    //)?;
 
     pedia
         .normal_quest_data
@@ -1152,6 +1171,14 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
         .iter()
         .filter(|param| param.quest_no != 0)
         .map(|param| (param, false))
+        .chain(
+            pedia
+                .normal_quest_data_mr
+                .param
+                .iter()
+                .filter(|param| param.quest_no != 0)
+                .map(|param| (param, false)),
+        )
         .chain(
             pedia
                 .dl_quest_data
@@ -1167,7 +1194,7 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
             let target_msg_name = format!("QN{:06}_04", param.quest_no);
             let condition_msg_name = format!("QN{:06}_05", param.quest_no);
 
-            let reward = if let Some(reward) = reward_params.remove(&param.quest_no) {
+            /*let reward = if let Some(reward) = reward_params.remove(&param.quest_no) {
                 let additional_target_reward = if reward.additional_target_reward_table_index != 0 {
                     Some(
                         *reward_lot
@@ -1236,7 +1263,7 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
                 })
             } else {
                 None
-            };
+            };*/
 
             Ok(Quest {
                 param,
@@ -1247,13 +1274,14 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
                 target: all_msg.remove(&target_msg_name),
                 condition: all_msg.remove(&condition_msg_name),
                 is_dl,
-                reward,
-                hyakuryu: hyakuryus.remove(&param.quest_no),
+                //reward,
+                //hyakuryu: hyakuryus.remove(&param.quest_no),
             })
         })
         .collect::<Result<Vec<_>>>()
 }
 
+/*
 fn prepare_discoveries(pedia: &Pedia) -> Result<HashMap<EmTypes, &DiscoverEmSetDataParam>> {
     let mut result = HashMap::new();
     for discovery in &pedia.discover_em_set_data.param {
@@ -2239,13 +2267,13 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
 
     Ok(PediaEx {
         monsters: prepare_monsters(pedia)?,
-        /* sizes: prepare_size_map(&pedia.size_list)?,
+        sizes: prepare_size_map(&pedia.size_list)?,
         size_dists: prepare_size_dist_map(&pedia.random_scale)?,
         quests: prepare_quests(pedia)?,
-        discoveries: prepare_discoveries(pedia)?,
-        skills: prepare_skills(pedia)?,
-        hyakuryu_skills: prepare_hyakuryu_skills(pedia)?,
-        armors: prepare_armors(pedia)?, */
+        //discoveries: prepare_discoveries(pedia)?,
+        //skills: prepare_skills(pedia)?,
+        //hyakuryu_skills: prepare_hyakuryu_skills(pedia)?,
+        //armors: prepare_armors(pedia)?,
         meat_names: prepare_meat_names(pedia)?,
         items: prepare_items(pedia)?,
         material_categories: prepare_material_categories(pedia),

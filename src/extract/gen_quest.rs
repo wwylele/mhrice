@@ -101,7 +101,7 @@ pub fn gen_quest_list(quests: &[Quest], output: &impl Sink) -> Result<()> {
 }
 
 pub fn gen_quest_monster_data(
-    enemy_param: Option<&SharedEnemyParam>,
+    enemy_param: Option<&NormalQuestDataForEnemyParam>,
     em_type: EmTypes,
     index: usize,
     pedia: &Pedia,
@@ -147,7 +147,7 @@ pub fn gen_quest_monster_data(
                 </span>)
             });
 
-            html!(<span>{small} " " {large}</span>)
+            html!(<span>{small}<br/>{large}</span>)
         } else {
             html!(<span>"-"</span>)
         }
@@ -190,10 +190,11 @@ pub fn gen_quest_monster_data(
     );
 
     let defense;
-    let element_a;
-    let element_b;
+    let element_ab;
     let stun;
     let exhaust;
+    let paralyze;
+    let sleep;
     let ride;
 
     if let Some(v) = enemy_param.other_tbl.get(index) {
@@ -202,28 +203,37 @@ pub fn gen_quest_monster_data(
             .other_rate_table_list
             .get(usize::from(*v))
         {
-            defense = format!("x{}", r.defense_rate);
-            element_a = format!("x{}", r.damage_element_rate_a);
-            element_b = format!("x{}", r.damage_element_rate_b);
-            stun = format!("x{}", r.stun_rate);
-            exhaust = format!("x{}", r.tired_rate);
-            ride = format!("x{}", r.marionette_rate);
+            defense = html!(<span>{text!("x{}", r.defense_rate)}</span>);
+            element_ab = html!(<span>{text!("Ax{}, Bx{}", r.damage_element_rate_a, r.damage_element_rate_b)}
+                <br/>{text!("①Ax{}, Bx{}", r.damage_element_first_rate_a, r.damage_element_first_rate_b)}</span>);
+            stun = html!(<span>{text!("x{}", r.stun_rate)}
+                <br/>{text!("①x{}", r.stun_first_rate)}</span>);
+            exhaust = html!(<span>{text!("x{}", r.tired_rate)}
+                <br/>{text!("①x{}", r.tired_first_rate)}</span>);
+            paralyze = html!(<span>{text!("x{}", r.paralyze_rate)}
+                <br/>{text!("①x{}", r.paralyze_first_rate)}</span>);
+            sleep = html!(<span>{text!("x{}", r.sleep_rate)}
+                <br/>{text!("①x{}", r.sleep_first_rate)}</span>);
+            ride = html!(<span>{text!("x{}", r.marionette_rate)}</span>);
         } else {
-            let placeholder = format!("~ {}", v);
-            defense = placeholder.clone();
-            element_a = placeholder.clone();
-            element_b = placeholder.clone();
-            stun = placeholder.clone();
-            exhaust = placeholder.clone();
-            ride = placeholder;
+            let placeholder = || html!(<span>{text!("~ {}", v)}</span>);
+            defense = placeholder();
+            element_ab = placeholder();
+            stun = placeholder();
+            exhaust = placeholder();
+            paralyze = placeholder();
+            sleep = placeholder();
+            ride = placeholder();
         }
     } else {
-        defense = "-".to_owned();
-        element_a = "-".to_owned();
-        element_b = "-".to_owned();
-        stun = "-".to_owned();
-        exhaust = "-".to_owned();
-        ride = "-".to_owned();
+        let placeholder = || html!(<span>"-"</span>);
+        defense = placeholder();
+        element_ab = placeholder();
+        stun = placeholder();
+        exhaust = placeholder();
+        paralyze = placeholder();
+        sleep = placeholder();
+        ride = placeholder();
     };
 
     let stamina = enemy_param
@@ -236,12 +246,13 @@ pub fn gen_quest_monster_data(
         html!(<td>{text!("{}", hp)}</td>),
         html!(<td>{text!("{}", attack)}</td>),
         html!(<td>{text!("{}", parts)}</td>),
-        html!(<td>{text!("{}", defense)}</td>),
-        html!(<td>{text!("{}", element_a)}</td>),
-        html!(<td>{text!("{}", element_b)}</td>),
-        html!(<td>{text!("{}", stun)}</td>),
-        html!(<td>{text!("{}", exhaust)}</td>),
-        html!(<td>{text!("{}", ride)}</td>),
+        html!(<td>{defense}</td>),
+        html!(<td>{element_ab}</td>),
+        html!(<td>{stun}</td>),
+        html!(<td>{exhaust}</td>),
+        html!(<td>{paralyze}</td>),
+        html!(<td>{sleep}</td>),
+        html!(<td>{ride}</td>),
         html!(<td>{text!("{}", stamina)}</td>),
     ]
 }
@@ -267,7 +278,7 @@ fn translate_rule(rule: LotRule) -> Box<span<String>> {
 
 #[allow(clippy::vec_box)]
 fn gen_quest_monster_multi_player_data(
-    enemy_param: Option<&SharedEnemyParam>,
+    enemy_param: Option<&NormalQuestDataForEnemyParam>,
     index: usize,
     pedia: &Pedia,
 ) -> Vec<Box<td<String>>> {
@@ -301,6 +312,7 @@ fn gen_quest_monster_multi_player_data(
         .collect()
 }
 
+/*
 impl HyakuryuQuestData {
     fn display(&self) -> String {
         let mut list = vec![];
@@ -326,7 +338,7 @@ impl HyakuryuQuestData {
         }
         list.join(" | ")
     }
-}
+}*/
 
 fn gen_quest(
     quest: &Quest,
@@ -500,11 +512,12 @@ fn gen_quest(
                         <th>"Attack"</th>
                         <th>"Parts"</th>
                         <th>"Defense"</th>
-                        <th>"Element A"</th>
-                        <th>"Element B"</th>
+                        <th>"Element"</th>
                         <th>"Stun"</th>
                         <th>"Exhaust"</th>
                         <th>"Ride"</th>
+                        <th>"Paralyze"</th>
+                        <th>"Sleep"</th>
                         <th>"Stamina"</th>
                     </tr></thead>
                     <tbody> {
@@ -513,8 +526,7 @@ fn gen_quest(
                         .map(|(i, em_type)|{
                             html!(<tr>
                                 <td>{ gen_monster_tag(pedia, pedia_ex, em_type, quest.param.has_target(em_type), false) }</td>
-                                { gen_quest_monster_data(quest.enemy_param.as_ref().map(|p|&p.param),
-                                    em_type, i, pedia, pedia_ex) }
+                                { gen_quest_monster_data(quest.enemy_param, em_type, i, pedia, pedia_ex) }
                             </tr>)
                         })
                     } </tbody>
@@ -539,6 +551,7 @@ fn gen_quest(
                         <th>"Exhaust"</th>
                         <th>"Ride"</th>
                         <th>"Monster to monster"</th>
+                        <th>"Qurio"</th>
                     </tr></thead>
                     <tbody> {
                         quest.param.boss_em_type.iter().copied().enumerate()
@@ -547,7 +560,7 @@ fn gen_quest(
                             html!(<tr>
                                 <td>{ gen_monster_tag(pedia, pedia_ex, em_type, quest.param.has_target(em_type), false)}</td>
                                 { gen_quest_monster_multi_player_data(
-                                    quest.enemy_param.as_ref().map(|p|&p.param), i, pedia) }
+                                    quest.enemy_param, i, pedia) }
                             </tr>)
                         })
                     } </tbody>
@@ -555,7 +568,7 @@ fn gen_quest(
 
                 </section>)) }
 
-                { quest.hyakuryu.map(|h| {
+                /*{ quest.hyakuryu.map(|h| {
                     [html!(<section>
                     <h2 >"Rampage information"</h2>
                     <div class="mh-kvlist">
@@ -726,7 +739,7 @@ fn gen_quest(
                 } else {
                     html!(<div>"No data"</div>)
                 }}
-                </section>
+                </section>*/
                 </main>
             </body>
         </html>

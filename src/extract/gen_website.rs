@@ -4,7 +4,7 @@ use super::gen_item::*;
 //use super::gen_map::*;
 use super::gen_monster::*;
 //use super::gen_otomo::*;
-//use super::gen_quest::*;
+use super::gen_quest::*;
 //use super::gen_skill::*;
 //use super::gen_weapon::*;
 use super::pedia::*;
@@ -88,9 +88,9 @@ pub fn navbar() -> Box<nav<String>> {
                 <a class="navbar-item" href="/monster.html">
                     "Monsters"
                 </a>
-                // <a class="navbar-item" href="/quest.html">
-                //     "Quests"
-                // </a>
+                <a class="navbar-item" href="/quest.html">
+                    "Quests"
+                </a>
 
                 // <div class="navbar-item has-dropdown is-hoverable">
                 // <a class="navbar-link">
@@ -532,8 +532,8 @@ pub fn gen_part_color_css(output: &impl Sink) -> Result<()> {
 
 pub fn gen_website(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
     let mut toc = Toc::new();
-    //gen_quests(pedia, pedia_ex, output, &mut toc)?;
-    //gen_quest_list(&pedia_ex.quests, output)?;
+    gen_quests(pedia, pedia_ex, output, &mut toc)?;
+    gen_quest_list(&pedia_ex.quests, output)?;
     //gen_skills(pedia_ex, output, &mut toc)?;
     //gen_skill_list(&pedia_ex.skills, output)?;
     //gen_hyakuryu_skills(pedia_ex, output, &mut toc)?;
