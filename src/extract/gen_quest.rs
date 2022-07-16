@@ -101,7 +101,7 @@ pub fn gen_quest_list(quests: &[Quest], output: &impl Sink) -> Result<()> {
 }
 
 pub fn gen_quest_monster_data(
-    enemy_param: Option<&NormalQuestDataForEnemyParam>,
+    enemy_param: Option<&impl EnemyParam>,
     em_type: EmTypes,
     index: usize,
     pedia: &Pedia,
@@ -110,21 +110,20 @@ pub fn gen_quest_monster_data(
     let enemy_param = if let Some(enemy_param) = enemy_param.as_ref() {
         enemy_param
     } else {
-        return vec![html!(<td colspan=11>"[NO DATA]"</td>)];
+        return vec![html!(<td colspan=12>"[NO DATA]"</td>)];
     };
 
-    let size = if let (Some(scale_tbl_i), Some(base_scale)) = (
-        enemy_param.scale_tbl.get(index),
-        enemy_param.scale.get(index),
-    ) {
+    let size = if let (Some(scale_tbl_i), Some(base_scale)) =
+        (enemy_param.scale_tbl(index), enemy_param.scale(index))
+    {
         if let (Some(size), Some(size_dist)) = (
             pedia_ex.sizes.get(&em_type),
-            pedia_ex.size_dists.get(scale_tbl_i),
+            pedia_ex.size_dists.get(&scale_tbl_i),
         ) {
             let mut small_chance = 0;
             let mut large_chance = 0;
             for sample in *size_dist {
-                let scale = sample.scale * (*base_scale as f32) / 100.0;
+                let scale = sample.scale * (base_scale as f32) / 100.0;
                 if scale <= size.small_boarder {
                     small_chance += sample.rate;
                 }
@@ -155,33 +154,33 @@ pub fn gen_quest_monster_data(
         html!(<span>"-"</span>)
     };
 
-    let hp = enemy_param.vital_tbl.get(index).map_or_else(
+    let hp = enemy_param.vital_tbl(index).map_or_else(
         || "-".to_owned(),
         |v| {
             pedia
                 .difficulty_rate
                 .vital_rate_table_list
-                .get(usize::from(*v))
+                .get(usize::from(v))
                 .map_or_else(|| format!("~ {}", v), |r| format!("x{}", r.vital_rate))
         },
     );
-    let attack = enemy_param.attack_tbl.get(index).map_or_else(
+    let attack = enemy_param.attack_tbl(index).map_or_else(
         || "-".to_owned(),
         |v| {
             pedia
                 .difficulty_rate
                 .attack_rate_table_list
-                .get(usize::from(*v))
+                .get(usize::from(v))
                 .map_or_else(|| format!("~ {}", v), |r| format!("x{}", r.attack_rate))
         },
     );
-    let parts = enemy_param.parts_tbl.get(index).map_or_else(
+    let parts = enemy_param.parts_tbl(index).map_or_else(
         || "-".to_owned(),
         |v| {
             pedia
                 .difficulty_rate
                 .parts_rate_table_list
-                .get(usize::from(*v))
+                .get(usize::from(v))
                 .map_or_else(
                     || format!("~ {}", v),
                     |r| format!("x{}", r.parts_vital_rate),
@@ -197,11 +196,11 @@ pub fn gen_quest_monster_data(
     let sleep;
     let ride;
 
-    if let Some(v) = enemy_param.other_tbl.get(index) {
+    if let Some(v) = enemy_param.other_tbl(index) {
         if let Some(r) = pedia
             .difficulty_rate
             .other_rate_table_list
-            .get(usize::from(*v))
+            .get(usize::from(v))
         {
             defense = html!(<span>{text!("x{}", r.defense_rate)}</span>);
             element_ab = html!(<span>{text!("Ax{}, Bx{}", r.damage_element_rate_a, r.damage_element_rate_b)}
@@ -237,8 +236,7 @@ pub fn gen_quest_monster_data(
     };
 
     let stamina = enemy_param
-        .stamina_tbl
-        .get(index)
+        .stamina_tbl(index)
         .map_or_else(|| "-".to_owned(), |v| format!("{}", v));
 
     vec![

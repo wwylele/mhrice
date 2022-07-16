@@ -425,25 +425,6 @@ rsz_enum! {
     }
 }
 
-rsz_struct! {
-    #[rsz()]
-    #[derive(Debug, Serialize, Clone)]
-    pub struct SharedEnemyParam { // non-TDB type
-        pub route_no: Vec<u8>,
-        pub init_set_name: Vec<String>,
-        pub sub_type: Vec<u8>,
-        pub vital_tbl: Vec<u8>,
-        pub attack_tbl: Vec<u8>,
-        pub parts_tbl: Vec<u8>,
-        pub other_tbl: Vec<u8>,
-        pub stamina_tbl: Vec<u8>,
-        pub scale: Vec<u8>,
-        pub scale_tbl: Vec<i32>, // snow.enemy.EnemyDef.BossScaleTblType
-        pub difficulty: Vec<NandoYuragi>,
-        pub boss_multi: Vec<u8>,
-    }
-}
-
 // snow.enemy.EnemyDef.EnemyIndividualType
 rsz_enum! {
     #[rsz(i32)]
@@ -452,6 +433,56 @@ rsz_enum! {
         Normal = 0,
         Mystery = 1,
     }
+}
+
+pub trait EnemyParam {
+    fn sub_type(&self, i: usize) -> Option<u8>;
+    fn vital_tbl(&self, i: usize) -> Option<u16>;
+    fn attack_tbl(&self, i: usize) -> Option<u16>;
+    fn parts_tbl(&self, i: usize) -> Option<u16>;
+    fn other_tbl(&self, i: usize) -> Option<u16>;
+    fn stamina_tbl(&self, i: usize) -> Option<u8>;
+    fn scale(&self, i: usize) -> Option<u8>;
+    fn scale_tbl(&self, i: usize) -> Option<i32>;
+    fn difficulty(&self, i: usize) -> Option<NandoYuragi>;
+    fn boss_multi(&self, i: usize) -> Option<u8>;
+}
+
+macro_rules! impl_enemy_param {
+    ($t:ty) => {
+        impl EnemyParam for $t {
+            fn sub_type(&self, i: usize) -> Option<u8> {
+                self.sub_type.get(i).copied()
+            }
+            fn vital_tbl(&self, i: usize) -> Option<u16> {
+                self.vital_tbl.get(i).copied().map(Into::into)
+            }
+            fn attack_tbl(&self, i: usize) -> Option<u16> {
+                self.attack_tbl.get(i).copied().map(Into::into)
+            }
+            fn parts_tbl(&self, i: usize) -> Option<u16> {
+                self.parts_tbl.get(i).copied().map(Into::into)
+            }
+            fn other_tbl(&self, i: usize) -> Option<u16> {
+                self.other_tbl.get(i).copied().map(Into::into)
+            }
+            fn stamina_tbl(&self, i: usize) -> Option<u8> {
+                self.stamina_tbl.get(i).copied()
+            }
+            fn scale(&self, i: usize) -> Option<u8> {
+                self.scale.get(i).copied()
+            }
+            fn scale_tbl(&self, i: usize) -> Option<i32> {
+                self.scale_tbl.get(i).copied()
+            }
+            fn difficulty(&self, i: usize) -> Option<NandoYuragi> {
+                self.difficulty.get(i).copied()
+            }
+            fn boss_multi(&self, i: usize) -> Option<u8> {
+                self.boss_multi.get(i).copied()
+            }
+        }
+    };
 }
 
 rsz_struct! {
@@ -482,6 +513,8 @@ rsz_struct! {
         pub boss_multi: Vec<u8>,
     }
 }
+
+impl_enemy_param!(NormalQuestDataForEnemyParam);
 
 rsz_struct! {
     #[rsz("snow.quest.NormalQuestDataForEnemy",
@@ -657,7 +690,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.DiscoverEmSetData.Param",
-        0x9f570ffb = 0
+        0xa9f8ec2d = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct DiscoverEmSetDataParam {
@@ -665,10 +698,24 @@ rsz_struct! {
         pub cond_village: VillageProgress,
         pub cond_low: i32, // snow.progress.HallProgress
         pub cond_high: i32, // snow.progress.HallProgress
-        pub map_flag: [bool; 5],
-        pub param: SharedEnemyParam,
+        pub cond_master: i32, // snow.progress.MasterRankProgress
+        pub map_flag: [bool; 7],
+        pub route_no: [u8; 7],
+        pub init_set_name: [String; 7],
+        pub sub_type: [u8; 4],
+        pub vital_tbl: [u8; 4],
+        pub attack_tbl: [u8; 4],
+        pub parts_tbl: [u8; 4],
+        pub other_tbl: [u8; 4],
+        pub stamina_tbl: [u8; 4],
+        pub scale: [u8; 4],
+        pub scale_tbl:[i32; 4], // snow.enemy.EnemyDef.BossScaleTblType
+        pub difficulty: [NandoYuragi; 4],
+        pub boss_multi: [u8; 4],
     }
 }
+
+impl_enemy_param!(DiscoverEmSetDataParam);
 
 rsz_struct! {
     #[rsz("snow.quest.DiscoverEmSetData",

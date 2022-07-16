@@ -817,26 +817,30 @@ pub fn gen_monster(
                     })
                 })
             }
-            /*{
+            {
                 if let Some(&discovery) = pedia_ex.discoveries.get(&monster_em_type) {
                     vec![
                         html!(<tr><td>"Village tour"</td>{
-                            gen_quest_monster_data(Some(&discovery.param),
+                            gen_quest_monster_data(Some(discovery),
                                 monster_em_type, 0, pedia, pedia_ex)
                         }</tr>),
                         html!(<tr><td>"Low rank tour"</td>{
-                            gen_quest_monster_data(Some(&discovery.param),
+                            gen_quest_monster_data(Some(discovery),
                                 monster_em_type, 1, pedia, pedia_ex)
                         }</tr>),
                         html!(<tr><td>"High rank tour"</td>{
-                            gen_quest_monster_data(Some(&discovery.param),
+                            gen_quest_monster_data(Some(discovery),
                                 monster_em_type, 2, pedia, pedia_ex)
+                        }</tr>),
+                        html!(<tr><td>"Master rank tour"</td>{
+                            gen_quest_monster_data(Some(discovery),
+                                monster_em_type, 3, pedia, pedia_ex)
                         }</tr>)
                     ]
                 } else {
                     vec![]
                 }
-            }*/
+            }
             </tbody>
         </table></div>
         </section>

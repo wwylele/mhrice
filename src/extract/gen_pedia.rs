@@ -536,7 +536,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         difficulty_rate: get_singleton(pak)?,
         random_scale: get_singleton(pak)?,
         size_list: get_singleton(pak)?,
-        //discover_em_set_data: get_singleton(pak)?,
+        discover_em_set_data: get_singleton(pak)?,
         //quest_data_for_reward: get_singleton(pak)?,
         //reward_id_lot_table: get_singleton(pak)?,
         //main_target_reward_lot_num: get_singleton(pak)?,
@@ -1281,25 +1281,12 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
         .collect::<Result<Vec<_>>>()
 }
 
-/*
 fn prepare_discoveries(pedia: &Pedia) -> Result<HashMap<EmTypes, &DiscoverEmSetDataParam>> {
     let mut result = HashMap::new();
     for discovery in &pedia.discover_em_set_data.param {
         if discovery.em_type == EmTypes::Em(0) {
             continue;
         }
-        ensure!(discovery.param.route_no.len() == 5);
-        ensure!(discovery.param.init_set_name.len() == 5);
-        ensure!(discovery.param.sub_type.len() == 3);
-        ensure!(discovery.param.vital_tbl.len() == 3);
-        ensure!(discovery.param.attack_tbl.len() == 3);
-        ensure!(discovery.param.parts_tbl.len() == 3);
-        ensure!(discovery.param.other_tbl.len() == 3);
-        ensure!(discovery.param.stamina_tbl.len() == 3);
-        ensure!(discovery.param.scale.len() == 3);
-        ensure!(discovery.param.scale_tbl.len() == 3);
-        ensure!(discovery.param.difficulty.len() == 3);
-        ensure!(discovery.param.boss_multi.len() == 3);
 
         if result.insert(discovery.em_type, discovery).is_some() {
             bail!("Duplicated discovery data for {:?}", discovery.em_type)
@@ -1309,6 +1296,7 @@ fn prepare_discoveries(pedia: &Pedia) -> Result<HashMap<EmTypes, &DiscoverEmSetD
     Ok(result)
 }
 
+/*
 fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> {
     let mut result = BTreeMap::new();
 
@@ -2270,7 +2258,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         sizes: prepare_size_map(&pedia.size_list)?,
         size_dists: prepare_size_dist_map(&pedia.random_scale)?,
         quests: prepare_quests(pedia)?,
-        //discoveries: prepare_discoveries(pedia)?,
+        discoveries: prepare_discoveries(pedia)?,
         //skills: prepare_skills(pedia)?,
         //hyakuryu_skills: prepare_hyakuryu_skills(pedia)?,
         //armors: prepare_armors(pedia)?,
