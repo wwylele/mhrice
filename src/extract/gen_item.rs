@@ -1,14 +1,14 @@
-use super::gen_armor::*;
-use super::gen_hyakuryu_skill::*;
-use super::gen_map::*;
+//use super::gen_armor::*;
+//use super::gen_hyakuryu_skill::*;
+//use super::gen_map::*;
 use super::gen_monster::*;
-use super::gen_otomo::*;
-use super::gen_quest::*;
-use super::gen_skill::*;
-use super::gen_weapon::*;
+//use super::gen_otomo::*;
+//use super::gen_quest::*;
+//use super::gen_skill::*;
+//use super::gen_weapon::*;
 use super::gen_website::*;
 use super::pedia::*;
-use super::prepare_map::MapPopKind;
+//use super::prepare_map::MapPopKind;
 use super::sink::*;
 use crate::rsz::*;
 use anyhow::Result;
@@ -36,6 +36,7 @@ fn gen_item_icon(item: &Item) -> Box<div<String>> {
         IconRank::Lv1 => addons.push("mh-addon-lv1"),
         IconRank::Lv2 => addons.push("mh-addon-lv2"),
         IconRank::Lv3 => addons.push("mh-addon-lv3"),
+        // TODO: curio icon
         _ => (),
     }
 
@@ -89,7 +90,7 @@ pub fn gen_category(
     material_category: MaterialCategory,
     material_category_num: u32,
 ) -> Box<td<String>> {
-    let category = if material_category == MaterialCategory(0) {
+    let category = if material_category == MaterialCategory::None {
         return html!(<td>"-"</td>);
     } else if let Some(name) = pedia_ex.material_categories.get(&material_category) {
         html!(<span>{gen_multi_lang(name)}" "</span>)
@@ -100,6 +101,7 @@ pub fn gen_category(
     html!(<td>{category}{text!("{} pt", material_category_num)}</td>)
 }
 
+/*
 fn gen_item_source_monster(
     item_id: ItemId,
     pedia: &Pedia,
@@ -524,7 +526,7 @@ fn gen_item_source_map(
     } else {
         None
     }
-}
+}*/
 
 static ITEM_TYPES: Lazy<BTreeMap<ItemTypes, (&'static str, &'static str)>> = Lazy::new(|| {
     BTreeMap::from_iter([
@@ -551,7 +553,7 @@ pub fn gen_item(
     mut toc_sink: TocSink<'_>,
 ) -> Result<()> {
     let material_categories = item.param.material_category.iter().filter_map(|&category| {
-        if category == MaterialCategory(0) {
+        if category == MaterialCategory::None {
             return None;
         }
         Some(
@@ -623,26 +625,28 @@ pub fn gen_item(
                 </span></p>
                 <p class="mh-kv"><span>"Evaluation value"</span>
                 <span>{text!("{}",item.param.evaluation_value)}</span></p>
+                <p class="mh-kv"><span>"Dog pouch"</span>
+                <span>{text!("{}",item.param.can_put_in_dog_pouch)}</span></p>
                 </div>
                 </section>
 
-                <section>
-                <h2 >"Where to get"</h2>
-                {gen_item_source_monster(item.param.id, pedia, pedia_ex)}
-                {gen_item_source_quest(item.param.id, pedia_ex)}
-                {gen_item_source_map(item.param.id, pedia, pedia_ex)}
-                {gen_item_source_weapon(item.param.id, pedia_ex)}
-                {gen_item_source_armor(item.param.id, pedia_ex)}
-                </section>
+                // <section>
+                // <h2 >"Where to get"</h2>
+                // {gen_item_source_monster(item.param.id, pedia, pedia_ex)}
+                // {gen_item_source_quest(item.param.id, pedia_ex)}
+                // {gen_item_source_map(item.param.id, pedia, pedia_ex)}
+                // {gen_item_source_weapon(item.param.id, pedia_ex)}
+                // {gen_item_source_armor(item.param.id, pedia_ex)}
+                // </section>
 
-                <section>
-                <h2 >"Where to use"</h2>
-                {gen_item_usage_weapon(item.param.id, pedia_ex)}
-                {gen_item_usage_armor(item.param.id, pedia_ex)}
-                {gen_item_usage_otomo(item.param.id, pedia_ex)}
-                {gen_item_usage_deco(item.param.id, pedia_ex)}
-                {gen_item_usage_hyakuryu(item.param.id, pedia_ex)}
-                </section>
+                // <section>
+                // <h2 >"Where to use"</h2>
+                // {gen_item_usage_weapon(item.param.id, pedia_ex)}
+                // {gen_item_usage_armor(item.param.id, pedia_ex)}
+                // {gen_item_usage_otomo(item.param.id, pedia_ex)}
+                // {gen_item_usage_deco(item.param.id, pedia_ex)}
+                // {gen_item_usage_hyakuryu(item.param.id, pedia_ex)}
+                // </section>
 
                 </main>
             </body>
@@ -683,7 +687,11 @@ pub fn gen_item_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
                 <ul class="mh-item-list" id="slist-item">
                 {
                     pedia_ex.items.iter().map(|(i, item)|{
-                        let sort_id = item.param.sort_id;
+                        let mut sort_id = item.param.sort_id;
+                        if sort_id == 0 {
+                            // sort ID 0 is used for undefined items. Move them to the last
+                            sort_id = u32::MAX;
+                        }
                         let sort_tag = format!("{},{}", i.into_raw(), sort_id);
                         let filter = ITEM_TYPES[&item.param.type_].0;
                         html!(<li class="mh-item-filter-item"

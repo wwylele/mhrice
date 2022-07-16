@@ -3,7 +3,7 @@
 //mod gen_armor;
 //mod gen_common;
 //mod gen_hyakuryu_skill;
-//mod gen_item;
+mod gen_item;
 //mod gen_map;
 mod gen_monster;
 mod gen_pedia;

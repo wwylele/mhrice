@@ -112,14 +112,15 @@ pub struct Pedia {
     pub alchemy_second_skill_lot: SecondSkillLotRateTableUserData,
     pub alchemy_skill_grade_lot: SkillGradeLotRateTableUserData,
     pub alchemy_slot_num: SlotNumTableUserData,
-    pub alchemy_slot_worth: SlotWorthTableUserData,
-
+    pub alchemy_slot_worth: SlotWorthTableUserData,*/
     pub items: ItemUserData,
     pub items_name_msg: Msg,
     pub items_explain_msg: Msg,
+    pub items_name_msg_mr: Msg,
+    pub items_explain_msg_mr: Msg,
     pub material_category_msg: Msg,
-
-    pub great_sword: WeaponList<GreatSwordBaseUserData>,
+    pub material_category_msg_mr: Msg,
+    /*pub great_sword: WeaponList<GreatSwordBaseUserData>,
     pub short_sword: WeaponList<ShortSwordBaseUserData>,
     pub hammer: WeaponList<HammerBaseUserData>,
     pub lance: WeaponList<LanceBaseUserData>,
@@ -295,10 +296,10 @@ pub struct PediaEx<'a> {
     pub hyakuryu_skills: BTreeMap<PlHyakuryuSkillId, HyakuryuSkill<'a>>,
     pub armors: Vec<ArmorSeries<'a>>,*/
     pub meat_names: HashMap<MeatKey, Vec<&'a MsgEntry>>,
-    /*
+
     pub items: BTreeMap<ItemId, Item<'a>>,
     pub material_categories: HashMap<MaterialCategory, &'a MsgEntry>,
-    pub monster_lot: HashMap<(EmTypes, QuestRank), &'a MonsterLotTableUserDataParam>,
+    /*pub monster_lot: HashMap<(EmTypes, QuestRank), &'a MonsterLotTableUserDataParam>,
     pub parts_dictionary: HashMap<(EmTypes, BrokenPartsTypes), &'a MsgEntry>,
 
     pub great_sword: WeaponTree<'a, GreatSwordBaseUserDataParam>,

@@ -46,6 +46,7 @@ rsz_enum! {
         Lv1 = 2,
         Lv2 = 3,
         Lv3 = 4,
+        Mystery = 5,
     }
 }
 
@@ -56,6 +57,7 @@ rsz_enum! {
     pub enum RankTypes {
         Low = 0,
         Upper = 1,
+        Master = 2,
     }
 }
 
@@ -78,7 +80,7 @@ rsz_enum! {
         Null = 0, // not defined in TDB, but appears in some overwear data
         None = 0x04000000,
         Normal(u32) = 0x04100000..=0x0410FFFF,
-        Ec(u32) = 0x04200000..=0x0420FFFF,
+        Ec(u32) = 0x04200000..=0x0420FFFF, // TODO: I_EC_0057 and up is offseted
     }
 }
 
@@ -90,19 +92,31 @@ rsz_newtype! {
     pub struct RareTypes(pub u8);
 }
 
-// snow.data.NormalItemData.MaterialCategory
-rsz_newtype! {
-    // Despite the enum naming from TDB
-    // it seems that the 0-based raw value is used to index messages.
-    #[rsz_offset(0)]
-    #[derive(Debug, Serialize, PartialEq, Eq, Hash, Copy, Clone)]
-    #[serde(transparent)]
-    pub struct MaterialCategory(pub i32);
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, PartialEq, Eq, PartialOrd, Ord, Hash, Copy, Clone)]
+    pub enum MaterialCategory {
+        None = 0,
+        LrHr(i32) = 1..=85,
+        ArmorSphere = 86,
+        Mr(i32) = 153..=1000,
+    }
+}
+
+// Eh, please
+impl MaterialCategory {
+    pub fn from_msg_id(id: i32) -> MaterialCategory {
+        if id < 200 {
+            MaterialCategory::LrHr(id - 1)
+        } else {
+            MaterialCategory::Mr(id - 200)
+        }
+    }
 }
 
 rsz_struct! {
     #[rsz("snow.data.ItemUserData.Param",
-        0xc5401e4b = 0
+        0xc4940266 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct ItemUserDataParam {
@@ -112,8 +126,9 @@ rsz_struct! {
         pub rare: RareTypes,
         pub pl_max_count: u32,
         pub ot_max_count: u32,
-        pub sort_id: u16,
+        pub sort_id: u32,
         pub supply: bool,
+        pub can_put_in_dog_pouch: bool,
         pub show_item_window: bool,
         pub show_action_window: bool,
         pub infinite: bool,

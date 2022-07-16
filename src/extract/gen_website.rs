@@ -1,6 +1,6 @@
 //use super::gen_armor::*;
 //use super::gen_hyakuryu_skill::*;
-//use super::gen_item::*;
+use super::gen_item::*;
 //use super::gen_map::*;
 use super::gen_monster::*;
 //use super::gen_otomo::*;
@@ -146,9 +146,9 @@ pub fn navbar() -> Box<nav<String>> {
                 //     "Maps"
                 // </a>
 
-                // <a class="navbar-item" href="/item.html">
-                //     "Items"
-                // </a>
+                <a class="navbar-item" href="/item.html">
+                   "Items"
+                </a>
                 <a class="navbar-item">
                     "(More are coming soon...)"
                 </a>
@@ -541,8 +541,8 @@ pub fn gen_website(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &impl Sink) ->
     //gen_armors(pedia_ex, output, &mut toc)?;
     //gen_armor_list(&pedia_ex.armors, output)?;
     gen_monsters(pedia, pedia_ex, output, &mut toc)?;
-    //gen_items(pedia, pedia_ex, output, &mut toc)?;
-    //gen_item_list(pedia_ex, output)?;
+    gen_items(pedia, pedia_ex, output, &mut toc)?;
+    gen_item_list(pedia_ex, output)?;
     //gen_weapons(pedia_ex, output, &mut toc)?;
     //gen_maps(pedia, pedia_ex, output, &mut toc)?;
     //gen_map_list(pedia, output)?;

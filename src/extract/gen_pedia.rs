@@ -13,6 +13,7 @@ use crate::tex::*;
 use crate::user::User;
 use crate::uvs::*;
 use anyhow::{bail, ensure, Context, Result};
+use nalgebra::coordinates::X;
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use std::collections::BTreeMap;
@@ -410,19 +411,31 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let decorations_name_msg = get_msg(
         pak,
         "data/Define/Player/Equip/Decorations/Decorations_Name.msg",
-    )?;
+    )?;*/
 
     let items_name_msg = get_msg(pak, "data/System/ContentsIdSystem/Item/Normal/ItemName.msg")?;
     let items_explain_msg = get_msg(
         pak,
         "data/System/ContentsIdSystem/Item/Normal/ItemExplain.msg",
     )?;
+    let items_name_msg_mr = get_msg(
+        pak,
+        "data/System/ContentsIdSystem/Item/Normal/ItemName_MR.msg",
+    )?;
+    let items_explain_msg_mr = get_msg(
+        pak,
+        "data/System/ContentsIdSystem/Item/Normal/ItemExplain_MR.msg",
+    )?;
     let material_category_msg = get_msg(
         pak,
         "data/System/ContentsIdSystem/Common/ItemCategoryType_Name.msg",
     )?;
+    let material_category_msg_mr = get_msg(
+        pak,
+        "data/System/ContentsIdSystem/Common/ItemCategoryType_Name_MR.msg",
+    )?;
 
-    let great_sword = get_weapon_list(pak, "GreatSword")?;
+    /*let great_sword = get_weapon_list(pak, "GreatSword")?;
     let short_sword = get_weapon_list(pak, "ShortSword")?;
     let hammer = get_weapon_list(pak, "Hammer")?;
     let lance = get_weapon_list(pak, "Lance")?;
@@ -505,6 +518,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         condition_preset,
         monster_list: get_singleton(pak)?,
         hunter_note_msg,
+        material_category_msg_mr,
         /*monster_lot: get_singleton(pak)?,
         parts_type: get_singleton(pak)?,
         normal_quest_data: get_singleton(pak)?,
@@ -558,12 +572,14 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         alchemy_second_skill_lot: get_singleton(pak)?,
         alchemy_skill_grade_lot: get_singleton(pak)?,
         alchemy_slot_num: get_singleton(pak)?,
-        alchemy_slot_worth: get_singleton(pak)?,
+        alchemy_slot_worth: get_singleton(pak)?,*/
         items: get_singleton(pak)?,
         items_name_msg,
         items_explain_msg,
+        items_name_msg_mr,
+        items_explain_msg_mr,
         material_category_msg,
-        great_sword,
+        /*great_sword,
         short_sword,
         hammer,
         lance,
@@ -778,7 +794,6 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
         }
     }
 
-    /*
     let guild_card = pak.find_file("gui/80_Texture/GuildCard_IAM.tex")?;
     let guild_card = Tex::new(Cursor::new(pak.read_file(guild_card)?))?.to_rgba(0, 0)?;
 
@@ -790,49 +805,58 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
         .sub_image(302, 453, 24, 24)?
         .save_png(output.create("small_crown.png")?)?;
 
-    let map_icon = pak.find_file("gui/80_Texture/map/map_icon_IAM.tex")?;
+    /*let map_icon = pak.find_file("gui/80_Texture/map/map_icon_IAM.tex")?;
     let map_icon = Tex::new(Cursor::new(pak.read_file(map_icon)?))?.to_rgba(0, 0)?;
     map_icon
         .sub_image(0, 31, 31, 33)?
         .save_png(output.create("main_camp.png")?)?;
     map_icon
         .sub_image(0, 64, 31, 30)?
-        .save_png(output.create("sub_camp.png")?)?;
+        .save_png(output.create("sub_camp.png")?)?;*/
 
     let item_icon_path = output.sub_sink("item")?;
-    let item_icon_uvs = pak.find_file("gui/70_UVSequence/cmn_icon.uvs")?;
-    let item_icon_uvs = Uvs::new(Cursor::new(pak.read_file(item_icon_uvs)?))?;
-    if item_icon_uvs.textures.len() != 1 || item_icon_uvs.spriter_groups.len() != 1 {
-        bail!("Broken cmn_icon.uvs");
-    }
-    let item_icon = pak.find_file(&item_icon_uvs.textures[0].path)?;
-    let item_icon = Tex::new(Cursor::new(pak.read_file(item_icon)?))?.to_rgba(0, 0)?;
-    for (i, spriter) in item_icon_uvs.spriter_groups[0].spriters.iter().enumerate() {
-        let item_icon = item_icon.sub_image_f(spriter.p0, spriter.p1)?;
 
-        if ITEM_ICON_SPECIAL_COLOR.contains(&(i as i32)) {
-            item_icon.save_png(item_icon_path.create(&format!("{:03}.png", i))?)?;
-        } else {
-            let (item_icon_r, item_icon_a) = item_icon.gen_double_mask();
-            item_icon_r.save_png(item_icon_path.create(&format!("{:03}.r.png", i))?)?;
-            item_icon_a.save_png(item_icon_path.create(&format!("{:03}.a.png", i))?)?;
+    let item_icon_files = [
+        ("gui/70_UVSequence/cmn_icon.uvs", 0),
+        ("gui/70_UVSequence/cmn_icon_MR.uvs", 200),
+    ];
+
+    for (file, offset) in item_icon_files {
+        let item_icon_uvs = pak.find_file(file)?;
+        let item_icon_uvs = Uvs::new(Cursor::new(pak.read_file(item_icon_uvs)?))?;
+        if item_icon_uvs.textures.len() != 1 || item_icon_uvs.spriter_groups.len() != 1 {
+            bail!("Broken {file}");
+        }
+        let item_icon = pak.find_file(&item_icon_uvs.textures[0].path)?;
+        let item_icon = Tex::new(Cursor::new(pak.read_file(item_icon)?))?.to_rgba(0, 0)?;
+        for (i, spriter) in item_icon_uvs.spriter_groups[0].spriters.iter().enumerate() {
+            let i = i + offset;
+            let item_icon = item_icon.sub_image_f(spriter.p0, spriter.p1)?;
+
+            if ITEM_ICON_SPECIAL_COLOR.contains(&(i as i32)) {
+                item_icon.save_png(item_icon_path.create(&format!("{:03}.png", i))?)?;
+            } else {
+                let (item_icon_r, item_icon_a) = item_icon.gen_double_mask();
+                item_icon_r.save_png(item_icon_path.create(&format!("{:03}.r.png", i))?)?;
+                item_icon_a.save_png(item_icon_path.create(&format!("{:03}.a.png", i))?)?;
+            }
+        }
+
+        let item_addon_uvs = pak.find_file("gui/70_UVSequence/Item_addonicon.uvs")?;
+        let item_addon_uvs = Uvs::new(Cursor::new(pak.read_file(item_addon_uvs)?))?;
+        if item_addon_uvs.textures.len() != 1 || item_addon_uvs.spriter_groups.len() != 1 {
+            bail!("Broken item_addon.uvs");
+        }
+        let item_addon = pak.find_file(&item_addon_uvs.textures[0].path)?;
+        let item_addon = Tex::new(Cursor::new(pak.read_file(item_addon)?))?.to_rgba(0, 0)?;
+        for (i, spriter) in item_addon_uvs.spriter_groups[0].spriters.iter().enumerate() {
+            item_addon
+                .sub_image_f(spriter.p0, spriter.p1)?
+                .save_png(output.create(&format!("item_addon_{}.png", i))?)?;
         }
     }
 
-    let item_addon_uvs = pak.find_file("gui/70_UVSequence/Item_addonicon.uvs")?;
-    let item_addon_uvs = Uvs::new(Cursor::new(pak.read_file(item_addon_uvs)?))?;
-    if item_addon_uvs.textures.len() != 1 || item_addon_uvs.spriter_groups.len() != 1 {
-        bail!("Broken item_addon.uvs");
-    }
-    let item_addon = pak.find_file(&item_addon_uvs.textures[0].path)?;
-    let item_addon = Tex::new(Cursor::new(pak.read_file(item_addon)?))?.to_rgba(0, 0)?;
-    for (i, spriter) in item_addon_uvs.spriter_groups[0].spriters.iter().enumerate() {
-        item_addon
-            .sub_image_f(spriter.p0, spriter.p1)?
-            .save_png(output.create(&format!("item_addon_{}.png", i))?)?;
-    }
-
-    let message_window_uvs = pak.find_file("gui/70_UVSequence/message_window.uvs")?;
+    /*let message_window_uvs = pak.find_file("gui/70_UVSequence/message_window.uvs")?;
     let message_window_uvs = Uvs::new(Cursor::new(pak.read_file(message_window_uvs)?))?;
     if message_window_uvs.textures.len() != 1 || message_window_uvs.spriter_groups.len() != 1 {
         bail!("Broken message_window.uvs");
@@ -899,7 +923,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
         common
             .sub_image_f(spriter.p0, spriter.p1)?
             .save_png(output.create(&format!("slot_{}.png", i))?)?;
-    }
+    }*/
 
     let item_colors_path = output.create("item_color.css")?;
     gen_item_colors(pak, item_colors_path)?;
@@ -907,8 +931,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
     let item_colors_path = output.create("rarity_color.css")?;
     gen_rarity_colors(pak, item_colors_path)?;
 
-    gen_map_resource(pak, output)?;
-    */
+    //gen_map_resource(pak, output)?;
 
     Ok(())
 }
@@ -934,7 +957,8 @@ fn gen_gui_colors(
         if !(0.0..=1.0).contains(&value) {
             bail!("Bad color value");
         }
-        Ok((value * 255.0).round() as u8)
+        // linear RGB to sRGB
+        Ok((value.powf(1.0 / 2.2) * 255.0).round() as u8)
     }
 
     for clips in &item_icon_color.clips {
@@ -942,17 +966,29 @@ fn gen_gui_colors(
             continue;
         }
         let id: u32 = clips.name[prefix.len()..].parse()?;
-        if clips.variable_values.len() != 3 {
-            bail!("Unexpected variable values len");
+        if clips.variable_values.len() != 3 && clips.variable_values.len() != 7 {
+            bail!(
+                "Unexpected variable values len {} for {}",
+                clips.variable_values.len(),
+                clips.name
+            );
         }
-        let r = color_tran(clips.variable_values[0].value)?;
-        let g = color_tran(clips.variable_values[1].value)?;
-        let b = color_tran(clips.variable_values[2].value)?;
+
+        // Alternative color? the only difference happened in item color 6.
+        // The second one looks correct
+        let offset = if clips.variable_values.len() == 7 {
+            4
+        } else {
+            0
+        };
+        let r = color_tran(clips.variable_values[offset].value)?;
+        let g = color_tran(clips.variable_values[offset + 1].value)?;
+        let b = color_tran(clips.variable_values[offset + 2].value)?;
 
         writeln!(
             file,
             ".{}{} {{background-color: #{:02X}{:02X}{:02X}}}",
-            css_prefix, id, r, g, b
+            css_prefix, id, r, g, b,
         )?;
     }
 
@@ -1582,11 +1618,12 @@ fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, Vec<&MsgEntry>>>
     Ok(result)
 }
 
-/*
 fn prepare_items<'a>(pedia: &'a Pedia) -> Result<BTreeMap<ItemId, Item<'a>>> {
     let mut result: BTreeMap<ItemId, Item<'a>> = BTreeMap::new();
-    let mut name_map: HashMap<_, _> = pedia.items_name_msg.get_name_map();
-    let mut explain_map: HashMap<_, _> = pedia.items_explain_msg.get_name_map();
+    let name_map: HashMap<_, _> = pedia.items_name_msg.get_name_map();
+    let explain_map: HashMap<_, _> = pedia.items_explain_msg.get_name_map();
+    let name_map_mr: HashMap<_, _> = pedia.items_name_msg_mr.get_name_map();
+    let explain_map_mr: HashMap<_, _> = pedia.items_explain_msg_mr.get_name_map();
     for param in &pedia.items.param {
         if let Some(existing) = result.get_mut(&param.id) {
             eprintln!("Duplicate definition for item {:?}", param.id);
@@ -1594,21 +1631,28 @@ fn prepare_items<'a>(pedia: &'a Pedia) -> Result<BTreeMap<ItemId, Item<'a>>> {
             continue;
         }
 
-        let (name_tag, explain_tag) = match param.id {
+        let (name_tag, explain_tag, name_tag_mr, explain_tag_mr) = match param.id {
             ItemId::Normal(id) => (
                 format!("I_{:04}_Name", id & 0xFFFF),
                 format!("I_{:04}_Explain", id & 0xFFFF),
+                format!("I_{:04}_Name_MR", id & 0xFFFF),
+                format!("I_{:04}_Explain_MR", id & 0xFFFF),
             ),
             _ => bail!("Unexpected item type"),
         };
 
-        let name = name_map
-            .remove(&name_tag)
+        let name = *name_map_mr
+            .get(&name_tag_mr)
+            .or_else(|| name_map_mr.get(&name_tag))
+            .or_else(|| name_map.get(&name_tag))
             .with_context(|| format!("Name not found for item {:?}", param.id))?;
 
-        let explain = explain_map
-            .remove(&explain_tag)
+        let explain = *explain_map_mr
+            .get(&explain_tag_mr)
+            .or_else(|| explain_map_mr.get(&explain_tag))
+            .or_else(|| explain_map.get(&explain_tag))
             .with_context(|| format!("Explain not found for item {:?}", param.id))?;
+
         let item = Item {
             name,
             explain,
@@ -1635,23 +1679,23 @@ fn prepare_material_categories(pedia: &Pedia) -> HashMap<MaterialCategory, &MsgE
         .material_category_msg
         .entries
         .iter()
+        .chain(pedia.material_category_msg_mr.entries.iter())
         .filter_map(|entry| {
             if !entry.name.starts_with(PREFIX) {
                 return None;
             }
-
             Some((
-                MaterialCategory(entry.name[PREFIX.len()..].parse().ok()?),
+                MaterialCategory::from_msg_id(entry.name[PREFIX.len()..].parse().ok()?),
                 entry,
             ))
         })
         .chain(std::iter::once((
-            MaterialCategory(86),
+            MaterialCategory::ArmorSphere,
             &*AMMOR_SPHERE_CATEGORY_MSG,
         )))
         .collect()
 }
-
+/*
 fn prepare_weapon<'a, 'b, T, Param>(
     weapon_list: &'a WeaponList<T>,
     hyakuryu_weapon_map: &'b mut HashMap<
@@ -2194,9 +2238,9 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         hyakuryu_skills: prepare_hyakuryu_skills(pedia)?,
         armors: prepare_armors(pedia)?, */
         meat_names: prepare_meat_names(pedia)?,
-        /*items: prepare_items(pedia)?,
+        items: prepare_items(pedia)?,
         material_categories: prepare_material_categories(pedia),
-        monster_lot: prepare_monster_lot(pedia)?,
+        /*monster_lot: prepare_monster_lot(pedia)?,
         parts_dictionary: prepare_parts_dictionary(pedia)?,
 
         great_sword: prepare_weapon(&pedia.great_sword, &mut hyakuryu_weapon_map)?,
