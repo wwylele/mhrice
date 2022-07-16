@@ -101,7 +101,6 @@ pub fn gen_category(
     html!(<td>{category}{text!("{} pt", material_category_num)}</td>)
 }
 
-/*
 fn gen_item_source_monster(
     item_id: ItemId,
     pedia: &Pedia,
@@ -138,6 +137,7 @@ fn gen_item_source_monster(
     }
 }
 
+/*
 fn gen_item_source_quest(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
     let quests: Vec<_> = pedia_ex
         .quests
@@ -630,23 +630,23 @@ pub fn gen_item(
                 </div>
                 </section>
 
-                // <section>
-                // <h2 >"Where to get"</h2>
-                // {gen_item_source_monster(item.param.id, pedia, pedia_ex)}
-                // {gen_item_source_quest(item.param.id, pedia_ex)}
-                // {gen_item_source_map(item.param.id, pedia, pedia_ex)}
-                // {gen_item_source_weapon(item.param.id, pedia_ex)}
-                // {gen_item_source_armor(item.param.id, pedia_ex)}
-                // </section>
+                <section>
+                <h2 >"Where to get"</h2>
+                {gen_item_source_monster(item.param.id, pedia, pedia_ex)}
+                //{gen_item_source_quest(item.param.id, pedia_ex)}
+                //{gen_item_source_map(item.param.id, pedia, pedia_ex)}
+                //{gen_item_source_weapon(item.param.id, pedia_ex)}
+                //{gen_item_source_armor(item.param.id, pedia_ex)}
+                </section>
 
-                // <section>
-                // <h2 >"Where to use"</h2>
-                // {gen_item_usage_weapon(item.param.id, pedia_ex)}
-                // {gen_item_usage_armor(item.param.id, pedia_ex)}
-                // {gen_item_usage_otomo(item.param.id, pedia_ex)}
-                // {gen_item_usage_deco(item.param.id, pedia_ex)}
-                // {gen_item_usage_hyakuryu(item.param.id, pedia_ex)}
-                // </section>
+                <section>
+                <h2 >"Where to use"</h2>
+                //{gen_item_usage_weapon(item.param.id, pedia_ex)}
+                //{gen_item_usage_armor(item.param.id, pedia_ex)}
+                //{gen_item_usage_otomo(item.param.id, pedia_ex)}
+                //{gen_item_usage_deco(item.param.id, pedia_ex)}
+                //{gen_item_usage_hyakuryu(item.param.id, pedia_ex)}
+                </section>
 
                 </main>
             </body>

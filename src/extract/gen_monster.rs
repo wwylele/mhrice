@@ -1,4 +1,4 @@
-//use super::gen_item::*;
+use super::gen_item::*;
 //use super::gen_quest::*;
 use super::gen_website::{gen_multi_lang, head_common, navbar};
 use super::pedia::*;
@@ -481,7 +481,6 @@ fn gen_condition_steel_fang(
     )
 }
 
-/*
 fn gen_grouped_reward_table<'a>(
     pedia_ex: &'a PediaEx,
     drop_dictionary: &'a HashMap<EnemyRewardPopTypes, Vec<String>>,
@@ -574,6 +573,7 @@ pub fn gen_lot(
     let header = match rank {
         QuestRank::Low => "Low rank reward",
         QuestRank::High => "High rank reward",
+        QuestRank::Master => "Master rank reward",
     };
 
     html!(<section>
@@ -741,7 +741,6 @@ pub fn gen_lot(
         </div>
     </section>)
 }
-*/
 
 pub fn gen_monster(
     is_large: bool,
@@ -1154,8 +1153,9 @@ pub fn gen_monster(
                 </table></div>
                 </section>
 
-                //{gen_lot(monster, monster_em_type, QuestRank::Low, pedia_ex)}
-                //{gen_lot(monster, monster_em_type, QuestRank::High, pedia_ex)}
+                {gen_lot(monster, monster_em_type, QuestRank::Low, pedia_ex)}
+                {gen_lot(monster, monster_em_type, QuestRank::High, pedia_ex)}
+                {gen_lot(monster, monster_em_type, QuestRank::Master, pedia_ex)}
                 </main>
             </body>
         </html>

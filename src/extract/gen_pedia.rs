@@ -206,10 +206,10 @@ pub fn gen_monsters(
                 Rcol::new(Cursor::new(pak.read_file(rcol_index)?), true).context(rcol_path)?;
             let collider_mapping = gen_collider_mapping(rcol)?;
 
-            // let drop_item = sub_file(pak, &main_pfb).context("drop_item")?;
-            //let parts_break_reward = is_large
-            //    .then(|| sub_file(pak, &main_pfb).context("parts_break_reward"))
-            //     .transpose()?;
+            let drop_item = sub_file(pak, &main_pfb).context("drop_item")?;
+            let parts_break_reward = is_large
+                .then(|| sub_file(pak, &main_pfb).context("parts_break_reward"))
+                .transpose()?;
 
             let em_type = if is_large { EmTypes::Em } else { EmTypes::Ems }(id | (sub_id << 8));
 
@@ -226,8 +226,8 @@ pub fn gen_monsters(
                 parts_break_data,
                 boss_init_set_data,
                 collider_mapping,
-                //drop_item,
-                //parts_break_reward,
+                drop_item,
+                parts_break_reward,
             })
         }
     }
@@ -364,6 +364,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     condition_preset.verify()?;
 
     let hunter_note_msg = get_msg(pak, "Message/HunterNote/HN_Hunternote_Menu.msg")?;
+    let hunter_note_msg_mr = get_msg(pak, "Message/HunterNote_MR/HN_Hunternote_Menu_MR.msg")?;
 
     /*let quest_hall_msg = get_msg(pak, "Message/Quest/QuestData_Hall.msg")?;
     let quest_village_msg = get_msg(pak, "Message/Quest/QuestData_Village.msg")?;
@@ -518,10 +519,12 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         condition_preset,
         monster_list: get_singleton(pak)?,
         hunter_note_msg,
+        hunter_note_msg_mr,
         material_category_msg_mr,
-        /*monster_lot: get_singleton(pak)?,
+        monster_lot: get_singleton(pak)?,
+        monster_lot_mr: get_singleton(pak)?,
         parts_type: get_singleton(pak)?,
-        normal_quest_data: get_singleton(pak)?,
+        /*normal_quest_data: get_singleton(pak)?,
         normal_quest_data_for_enemy: get_singleton(pak)?,
         dl_quest_data: get_singleton(pak)?,
         dl_quest_data_for_enemy: get_singleton(pak)?,
@@ -1873,17 +1876,19 @@ where
     };
 
     Ok(result)
-}
+}*/
 
 fn prepare_monster_lot(
     pedia: &Pedia,
 ) -> Result<HashMap<(EmTypes, QuestRank), &MonsterLotTableUserDataParam>> {
+    let iter = pedia
+        .monster_lot
+        .param
+        .iter()
+        .chain(pedia.monster_lot_mr.param.iter());
+
     hash_map_unique(
-        pedia
-            .monster_lot
-            .param
-            .iter()
-            .filter(|lot| lot.em_types != EmTypes::Em(0)),
+        iter.filter(|lot| lot.em_types != EmTypes::Em(0)),
         |lot| ((lot.em_types, lot.quest_rank), lot),
         false,
     )
@@ -1893,14 +1898,18 @@ fn prepare_parts_dictionary(
     pedia: &Pedia,
 ) -> Result<HashMap<(EmTypes, BrokenPartsTypes), &MsgEntry>> {
     let msgs: HashMap<_, _> = pedia.hunter_note_msg.get_guid_map();
+    let msgs_mr: HashMap<_, _> = pedia.hunter_note_msg_mr.get_guid_map();
 
     let mut result = HashMap::new();
 
     for part in &pedia.parts_type.params {
         for info in &part.text_infos {
-            let msg = *msgs.get(&info.text_for_monster_list).with_context(|| {
-                format!("Cannot found part text for {:?}", part.broken_parts_types)
-            })?;
+            let msg = *msgs
+                .get(&info.text_for_monster_list)
+                .or_else(|| msgs_mr.get(&info.text_for_monster_list))
+                .with_context(|| {
+                    format!("Cannot found part text for {:?}", part.broken_parts_types)
+                })?;
             for &em in &info.enemy_type_list {
                 if em == EmTypes::Em(0) {
                     continue;
@@ -1918,7 +1927,7 @@ fn prepare_parts_dictionary(
     Ok(result)
 }
 
-fn prepare_horn_melody(pedia: &Pedia) -> HashMap<i32, &'_ MsgEntry> {
+/*fn prepare_horn_melody(pedia: &Pedia) -> HashMap<i32, &'_ MsgEntry> {
     let mut res = HashMap::new();
     let map = pedia.horn_melody.get_name_map();
     for id in 0..999 {
@@ -2240,10 +2249,10 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         meat_names: prepare_meat_names(pedia)?,
         items: prepare_items(pedia)?,
         material_categories: prepare_material_categories(pedia),
-        /*monster_lot: prepare_monster_lot(pedia)?,
+        monster_lot: prepare_monster_lot(pedia)?,
         parts_dictionary: prepare_parts_dictionary(pedia)?,
 
-        great_sword: prepare_weapon(&pedia.great_sword, &mut hyakuryu_weapon_map)?,
+        /*great_sword: prepare_weapon(&pedia.great_sword, &mut hyakuryu_weapon_map)?,
         short_sword: prepare_weapon(&pedia.short_sword, &mut hyakuryu_weapon_map)?,
         hammer: prepare_weapon(&pedia.hammer, &mut hyakuryu_weapon_map)?,
         lance: prepare_weapon(&pedia.lance, &mut hyakuryu_weapon_map)?,

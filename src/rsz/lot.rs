@@ -1,6 +1,7 @@
 use super::*;
 use crate::rsz_enum;
 use crate::rsz_struct;
+use crate::rsz_with_singleton;
 use serde::*;
 
 // snow.QuestManager.QuestRank
@@ -10,6 +11,7 @@ rsz_enum! {
     pub enum QuestRank {
         Low = 0,
         High = 1,
+        Master = 2,
     }
 }
 
@@ -55,7 +57,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.MonsterLotTableUserData.Param",
-        0x47aec6b3 = 0
+        0xbdcef7e9 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct MonsterLotTableUserDataParam {
@@ -98,9 +100,17 @@ rsz_struct! {
     }
 }
 
+rsz_with_singleton! {
+    #[path("data/System/RewardSystem/LotTable/MonsterLotTableData.user")]
+    pub struct MonsterLotTableUserDataLrHr(MonsterLotTableUserData);
+
+    #[path("data/System/RewardSystem/LotTable/MonsterLotTableData_MR.user")]
+    pub struct MonsterLotTableUserDataMr(MonsterLotTableUserData);
+}
+
 rsz_struct! {
     #[rsz("snow.enemy.EnemyDropItemInfoData.EnemyDropItemTableData.EnemyDropItemInfo",
-        0x8ce51602 = 0
+        0xfe443c24 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct EnemyDropItemInfo {
@@ -156,12 +166,12 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyPartsBreakRewardData.EnemyPartsBreakRewardInfo",
-        0xb7e700cc = 0
+        0xE287185B = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct EnemyPartsBreakRewardInfo {
         pub parts_break_condition_list: Vec<PartsBreakGroupConditionInfo>,
-        pub condition_type: EnemyPartsBreakRewardDataConditionType ,
+        pub condition_type: EnemyPartsBreakRewardDataConditionType,
         pub broken_parts_type: BrokenPartsTypes,
     }
 }
@@ -178,7 +188,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.PartsTypeTextUserData.TextInfo",
-        0x8988fd90 = 0
+        0x62EF585F = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct PartsTypeTextUserDataTextInfo {
@@ -190,7 +200,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.PartsTypeTextUserData.PartsTypeInfo",
-        0x7db22cf7 = 0
+        0xED99FA5B = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct PartsTypeInfo {
@@ -201,7 +211,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.PartsTypeTextUserData",
-    path = "data/Define/Quest/System/QuestRewardSystem/PartsTypeTextData.user",
+        path = "data/Define/Quest/System/QuestRewardSystem/PartsTypeTextData.user",
         0x03a010a7 = 0
     )]
     #[derive(Debug, Serialize)]

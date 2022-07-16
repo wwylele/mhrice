@@ -26,8 +26,8 @@ pub struct Monster {
     pub parts_break_data: EnemyPartsBreakData,
     pub boss_init_set_data: Option<EnemyBossInitSetData>,
     pub collider_mapping: ColliderMapping,
-    //pub drop_item: EnemyDropItemInfoData,
-    //pub parts_break_reward: Option<EnemyPartsBreakRewardData>,
+    pub drop_item: EnemyDropItemInfoData,
+    pub parts_break_reward: Option<EnemyPartsBreakRewardData>,
 }
 
 #[derive(Debug, Serialize)]
@@ -54,9 +54,11 @@ pub struct Pedia {
     pub condition_preset: EnemyConditionPresetData,
     pub monster_list: MonsterListBossData,
     pub hunter_note_msg: Msg,
-    /*pub monster_lot: MonsterLotTableUserData,
+    pub hunter_note_msg_mr: Msg,
+    pub monster_lot: MonsterLotTableUserDataLrHr,
+    pub monster_lot_mr: MonsterLotTableUserDataMr,
     pub parts_type: PartsTypeTextUserData,
-    pub normal_quest_data: BaseNormalQuestData,
+    /*pub normal_quest_data: BaseNormalQuestData,
     pub normal_quest_data_for_enemy: BaseNormalQuestDataForEnemy,
     pub dl_quest_data: DlNormalQuestData,
     pub dl_quest_data_for_enemy: DlNormalQuestDataForEnemy,
@@ -299,10 +301,10 @@ pub struct PediaEx<'a> {
 
     pub items: BTreeMap<ItemId, Item<'a>>,
     pub material_categories: HashMap<MaterialCategory, &'a MsgEntry>,
-    /*pub monster_lot: HashMap<(EmTypes, QuestRank), &'a MonsterLotTableUserDataParam>,
+    pub monster_lot: HashMap<(EmTypes, QuestRank), &'a MonsterLotTableUserDataParam>,
     pub parts_dictionary: HashMap<(EmTypes, BrokenPartsTypes), &'a MsgEntry>,
 
-    pub great_sword: WeaponTree<'a, GreatSwordBaseUserDataParam>,
+    /*pub great_sword: WeaponTree<'a, GreatSwordBaseUserDataParam>,
     pub short_sword: WeaponTree<'a, ShortSwordBaseUserDataParam>,
     pub hammer: WeaponTree<'a, HammerBaseUserDataParam>,
     pub lance: WeaponTree<'a, LanceBaseUserDataParam>,
