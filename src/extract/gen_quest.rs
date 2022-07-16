@@ -310,7 +310,6 @@ fn gen_quest_monster_multi_player_data(
         .collect()
 }
 
-/*
 impl HyakuryuQuestData {
     fn display(&self) -> String {
         let mut list = vec![];
@@ -336,7 +335,7 @@ impl HyakuryuQuestData {
         }
         list.join(" | ")
     }
-}*/
+}
 
 fn gen_quest(
     quest: &Quest,
@@ -566,7 +565,7 @@ fn gen_quest(
 
                 </section>)) }
 
-                /*{ quest.hyakuryu.map(|h| {
+                { quest.hyakuryu.map(|h| {
                     [html!(<section>
                     <h2 >"Rampage information"</h2>
                     <div class="mh-kvlist">
@@ -649,7 +648,7 @@ fn gen_quest(
                     </section>)]
                 }).into_iter().flatten() }
 
-                <section>
+                /*<section>
                 <h2 >"Rewards"</h2>
                 { if let Some(reward) = &quest.reward {
                     html!(<div>

@@ -540,7 +540,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         //quest_data_for_reward: get_singleton(pak)?,
         //reward_id_lot_table: get_singleton(pak)?,
         //main_target_reward_lot_num: get_singleton(pak)?,
-        //fixed_hyakuryu_quest: get_singleton(pak)?,
+        fixed_hyakuryu_quest: get_singleton(pak)?,
         quest_hall_msg,
         quest_hall_msg_mr,
         quest_hall_msg_mr2,
@@ -1127,43 +1127,22 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
     //    false,
     //)?;
 
-    //let hyakuryu_list = pedia
-    //    .fixed_hyakuryu_quest
-    //    .data_list
-    //    .iter()
-    //    .chain(pedia.fixed_hyakuryu_quest.data_list_310.iter())
-    //    .chain(pedia.fixed_hyakuryu_quest.data_list_320.iter())
-    //    .chain(pedia.fixed_hyakuryu_quest.data_list_350.iter())
-    //    .chain(
-    //        pedia
-    //            .fixed_hyakuryu_quest
-    //            .data_list_370
-    //            .0
-    //            .iter()
-    //            .flat_map(|i| i.iter()),
-    //    )
-    //    .chain(
-    //        pedia
-    //            .fixed_hyakuryu_quest
-    //            .data_list_380
-    //            .0
-    //            .iter()
-    //            .flat_map(|i| i.iter()),
-    //    )
-    //    .chain(
-    //        pedia
-    //            .fixed_hyakuryu_quest
-    //            .data_list_390
-    //            .0
-    //            .iter()
-    //            .flat_map(|i| i.iter()),
-    //    );
-    //
-    //let mut hyakuryus = hash_map_unique(
-    //    hyakuryu_list,
-    //    |hyakuryu| (hyakuryu.quest_no, hyakuryu),
-    //    false,
-    //)?;
+    let hyakuryu_list = pedia
+        .fixed_hyakuryu_quest
+        .data_list
+        .iter()
+        .chain(pedia.fixed_hyakuryu_quest.data_list_310.iter())
+        .chain(pedia.fixed_hyakuryu_quest.data_list_320.iter())
+        .chain(pedia.fixed_hyakuryu_quest.data_list_350.iter())
+        .chain(pedia.fixed_hyakuryu_quest.data_list_370.iter())
+        .chain(pedia.fixed_hyakuryu_quest.data_list_380.iter())
+        .chain(pedia.fixed_hyakuryu_quest.data_list_390.iter());
+
+    let mut hyakuryus = hash_map_unique(
+        hyakuryu_list,
+        |hyakuryu| (hyakuryu.quest_no, hyakuryu),
+        false,
+    )?;
 
     pedia
         .normal_quest_data
@@ -1275,7 +1254,7 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
                 condition: all_msg.remove(&condition_msg_name),
                 is_dl,
                 //reward,
-                //hyakuryu: hyakuryus.remove(&param.quest_no),
+                hyakuryu: hyakuryus.remove(&param.quest_no),
             })
         })
         .collect::<Result<Vec<_>>>()
@@ -2286,6 +2265,5 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         monster_order,
         /*item_pop: prepare_item_pop(pedia)?,
         ot_equip: prepeare_ot_equip(pedia)?,*/
-        marker: std::marker::PhantomData,
     })
 }

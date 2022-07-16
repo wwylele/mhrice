@@ -71,7 +71,7 @@ pub struct Pedia {
     // pub quest_data_for_reward: QuestDataForRewardUserData,
     // pub reward_id_lot_table: RewardIdLotTableUserData,
     // pub main_target_reward_lot_num: MainTargetRewardLotNumDefineUserData,
-    // pub fixed_hyakuryu_quest: HyakuryuQuestDataTbl,
+    pub fixed_hyakuryu_quest: HyakuryuQuestDataTbl,
     pub quest_hall_msg: Msg,
     pub quest_hall_msg_mr: Msg,
     pub quest_hall_msg_mr2: Msg,
@@ -192,7 +192,7 @@ pub struct Quest<'a> {
     pub condition: Option<&'a MsgEntry>,
     pub is_dl: bool,
     // pub reward: Option<QuestReward<'a>>,
-    // pub hyakuryu: Option<&'a HyakuryuQuestData>,
+    pub hyakuryu: Option<&'a HyakuryuQuestData>,
 }
 
 pub struct Deco<'a> {
@@ -329,5 +329,4 @@ pub struct PediaEx<'a> {
     /*pub item_pop: HashMap<(/*pop_id*/ i32, /*map*/ i32), &'a ItemPopLotTableUserDataParam>,
 
     pub ot_equip: BTreeMap<OtEquipSeriesId, OtEquipSeries<'a>>,*/
-    pub marker: std::marker::PhantomData<&'a ()>,
 }

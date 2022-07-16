@@ -818,7 +818,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.HyakuryuQuestData.WaveData",
-        0xc4e69cfb = 0
+        0x43C9A46C = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct HyakuryuQuestDataWaveData {
@@ -853,7 +853,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.quest.HyakuryuQuestData",
-        0x48e96a40 = 0
+        0x238dcfc8 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct HyakuryuQuestData {
@@ -880,8 +880,7 @@ rsz_struct! {
 rsz_struct! {
     #[rsz("snow.quest.HyakuryuQuestDataTbl",
         path = "Quest/Hyakuryu/QuestData/FixHyakuryuQuestData.user",
-        0x9b163063 = 0,
-        0xB0022BC2 = 2,
+        0xB0022BC2 = 10_00_02,
     )]
     #[derive(Debug, Serialize)]
     pub struct HyakuryuQuestDataTbl {
@@ -889,8 +888,8 @@ rsz_struct! {
         pub data_list_310: Vec<HyakuryuQuestData>,
         pub data_list_320: Vec<HyakuryuQuestData>,
         pub data_list_350: Vec<HyakuryuQuestData>,
-        pub data_list_370: Versioned<Vec<HyakuryuQuestData>, 2, {u32::MAX}>,
-        pub data_list_380: Versioned<Vec<HyakuryuQuestData>, 2, {u32::MAX}>,
-        pub data_list_390: Versioned<Vec<HyakuryuQuestData>, 2, {u32::MAX}>,
+        pub data_list_370: Vec<HyakuryuQuestData>,
+        pub data_list_380: Vec<HyakuryuQuestData>,
+        pub data_list_390: Vec<HyakuryuQuestData>,
     }
 }
