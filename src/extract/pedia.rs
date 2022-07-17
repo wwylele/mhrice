@@ -68,9 +68,11 @@ pub struct Pedia {
     pub random_scale: EnemyBossRandomScaleData,
     pub size_list: EnemySizeListData,
     pub discover_em_set_data: DiscoverEmSetData,
-    // pub quest_data_for_reward: QuestDataForRewardUserData,
-    // pub reward_id_lot_table: RewardIdLotTableUserData,
-    // pub main_target_reward_lot_num: MainTargetRewardLotNumDefineUserData,
+    pub quest_data_for_reward: QuestDataForRewardUserDataLrHr,
+    pub quest_data_for_reward_mr: QuestDataForRewardUserDataMr,
+    pub reward_id_lot_table: RewardIdLotTableUserDataLrHr,
+    pub reward_id_lot_table_mr: RewardIdLotTableUserDataMr,
+    pub main_target_reward_lot_num: MainTargetRewardLotNumDefineUserData,
     pub fixed_hyakuryu_quest: HyakuryuQuestDataTbl,
     pub quest_hall_msg: Msg,
     pub quest_hall_msg_mr: Msg,
@@ -191,7 +193,7 @@ pub struct Quest<'a> {
     pub target: Option<&'a MsgEntry>,
     pub condition: Option<&'a MsgEntry>,
     pub is_dl: bool,
-    // pub reward: Option<QuestReward<'a>>,
+    pub reward: Option<QuestReward<'a>>,
     pub hyakuryu: Option<&'a HyakuryuQuestData>,
 }
 

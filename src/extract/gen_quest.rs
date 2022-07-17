@@ -648,7 +648,7 @@ fn gen_quest(
                     </section>)]
                 }).into_iter().flatten() }
 
-                /*<section>
+                <section>
                 <h2 >"Rewards"</h2>
                 { if let Some(reward) = &quest.reward {
                     html!(<div>
@@ -736,7 +736,7 @@ fn gen_quest(
                 } else {
                     html!(<div>"No data"</div>)
                 }}
-                </section>*/
+                </section>
                 </main>
             </body>
         </html>

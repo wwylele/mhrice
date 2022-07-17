@@ -778,6 +778,14 @@ rsz_struct! {
     }
 }
 
+rsz_with_singleton! {
+    #[path("data/Define/Quest/System/QuestRewardSystem/QuestDataForRewardData.user")]
+    pub struct QuestDataForRewardUserDataLrHr(QuestDataForRewardUserData);
+
+    #[path("data/Define/Quest/System/QuestRewardSystem/QuestDataForRewardData_MR.user")]
+    pub struct QuestDataForRewardUserDataMr(QuestDataForRewardUserData);
+}
+
 // snow.data.ItemLotTable.LotRule
 rsz_enum! {
     #[rsz(i32)]
@@ -793,7 +801,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.RewardIdLotTableUserData.Param",
-        0x214bfede = 0
+        0x11de5dc7 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct RewardIdLotTableUserDataParam {
@@ -807,13 +815,20 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.RewardIdLotTableUserData",
-        path = "data/Define/Quest/System/QuestRewardSystem/RewardIdLotTableData.user",
         0xdb631ed5 = 0
     )]
     #[derive(Debug, Serialize)]
     pub struct RewardIdLotTableUserData {
         pub param: Vec<RewardIdLotTableUserDataParam>
     }
+}
+
+rsz_with_singleton! {
+    #[path("data/Define/Quest/System/QuestRewardSystem/RewardIdLotTableData.user")]
+    pub struct RewardIdLotTableUserDataLrHr(RewardIdLotTableUserData);
+
+    #[path("data/Define/Quest/System/QuestRewardSystem/RewardIdLotTableData_MR.user")]
+    pub struct RewardIdLotTableUserDataMr(RewardIdLotTableUserData);
 }
 
 rsz_struct! {

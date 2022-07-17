@@ -3,7 +3,7 @@
 //use super::gen_map::*;
 use super::gen_monster::*;
 //use super::gen_otomo::*;
-//use super::gen_quest::*;
+use super::gen_quest::*;
 //use super::gen_skill::*;
 //use super::gen_weapon::*;
 use super::gen_website::*;
@@ -137,7 +137,6 @@ fn gen_item_source_monster(
     }
 }
 
-/*
 fn gen_item_source_quest(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
     let quests: Vec<_> = pedia_ex
         .quests
@@ -188,6 +187,7 @@ fn gen_item_source_quest(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<
     }
 }
 
+/*
 fn gen_item_source_weapon(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
     let mut htmls = vec![];
     macro_rules! check_weapon {
@@ -633,7 +633,7 @@ pub fn gen_item(
                 <section>
                 <h2 >"Where to get"</h2>
                 {gen_item_source_monster(item.param.id, pedia, pedia_ex)}
-                //{gen_item_source_quest(item.param.id, pedia_ex)}
+                {gen_item_source_quest(item.param.id, pedia_ex)}
                 //{gen_item_source_map(item.param.id, pedia, pedia_ex)}
                 //{gen_item_source_weapon(item.param.id, pedia_ex)}
                 //{gen_item_source_armor(item.param.id, pedia_ex)}
