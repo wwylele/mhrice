@@ -256,6 +256,14 @@ ul.mh-armor-skill-list {
     display: inline-block;
     width: 1.65rem;
     height: 1.25rem;
+    vertical-align: middle;
+}
+
+.mh-slot-large {
+    display: inline-block;
+    width: 1.85rem;
+    height: 1.85rem;
+    vertical-align: middle;
 }
 
 /** Sharpness bar **/

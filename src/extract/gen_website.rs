@@ -6,7 +6,7 @@ use super::gen_monster::*;
 //use super::gen_otomo::*;
 use super::gen_quest::*;
 //use super::gen_skill::*;
-//use super::gen_weapon::*;
+use super::gen_weapon::*;
 use super::pedia::*;
 use super::sink::*;
 use crate::msg::*;
@@ -110,27 +110,27 @@ pub fn navbar() -> Box<nav<String>> {
                 //     "Armors"
                 // </a>
 
-                // <div class="navbar-item has-dropdown is-hoverable">
-                // <a class="navbar-link">
-                //     "Weapon"
-                // </a>
-                // <div class="navbar-dropdown">
-                //     <a class="navbar-item" href="/weapon/great_sword.html">"Great sword"</a>
-                //     <a class="navbar-item" href="/weapon/long_sword.html">"Long sword"</a>
-                //     <a class="navbar-item" href="/weapon/short_sword.html">"Sword & shield"</a>
-                //     <a class="navbar-item" href="/weapon/dual_blades.html">"Dual blades"</a>
-                //     <a class="navbar-item" href="/weapon/hammer.html">"Hammer"</a>
-                //     <a class="navbar-item" href="/weapon/horn.html">"Hunting horn"</a>
-                //     <a class="navbar-item" href="/weapon/lance.html">"Lance"</a>
-                //     <a class="navbar-item" href="/weapon/gun_lance.html">"Gunlance"</a>
-                //     <a class="navbar-item" href="/weapon/slash_axe.html">"Switch axe"</a>
-                //     <a class="navbar-item" href="/weapon/charge_axe.html">"Charge blade"</a>
-                //     <a class="navbar-item" href="/weapon/insect_glaive.html">"Insect glaive"</a>
-                //     <a class="navbar-item" href="/weapon/light_bowgun.html">"Light bowgun"</a>
-                //     <a class="navbar-item" href="/weapon/heavy_bowgun.html">"Heavy bowgun"</a>
-                //     <a class="navbar-item" href="/weapon/bow.html">"Bow"</a>
-                // </div>
-                // </div>
+                <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link">
+                    "Weapon"
+                </a>
+                <div class="navbar-dropdown">
+                    <a class="navbar-item" href="/weapon/great_sword.html">"Great sword"</a>
+                    <a class="navbar-item" href="/weapon/long_sword.html">"Long sword"</a>
+                    <a class="navbar-item" href="/weapon/short_sword.html">"Sword & shield"</a>
+                    <a class="navbar-item" href="/weapon/dual_blades.html">"Dual blades"</a>
+                    <a class="navbar-item" href="/weapon/hammer.html">"Hammer"</a>
+                    <a class="navbar-item" href="/weapon/horn.html">"Hunting horn"</a>
+                    <a class="navbar-item" href="/weapon/lance.html">"Lance"</a>
+                    <a class="navbar-item" href="/weapon/gun_lance.html">"Gunlance"</a>
+                    <a class="navbar-item" href="/weapon/slash_axe.html">"Switch axe"</a>
+                    <a class="navbar-item" href="/weapon/charge_axe.html">"Charge blade"</a>
+                    <a class="navbar-item" href="/weapon/insect_glaive.html">"Insect glaive"</a>
+                    <a class="navbar-item" href="/weapon/light_bowgun.html">"Light bowgun"</a>
+                    <a class="navbar-item" href="/weapon/heavy_bowgun.html">"Heavy bowgun"</a>
+                    <a class="navbar-item" href="/weapon/bow.html">"Bow"</a>
+                </div>
+                </div>
 
                 // <div class="navbar-item has-dropdown is-hoverable">
                 // <a class="navbar-link">
@@ -543,7 +543,7 @@ pub fn gen_website(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &impl Sink) ->
     gen_monsters(pedia, pedia_ex, output, &mut toc)?;
     gen_items(pedia, pedia_ex, output, &mut toc)?;
     gen_item_list(pedia_ex, output)?;
-    //gen_weapons(pedia_ex, output, &mut toc)?;
+    gen_weapons(pedia_ex, output, &mut toc)?;
     //gen_maps(pedia, pedia_ex, output, &mut toc)?;
     //gen_map_list(pedia, output)?;
     //gen_otomo_equips(pedia_ex, output, &mut toc)?;

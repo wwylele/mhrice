@@ -117,6 +117,8 @@ rsz_enum! {
         GatlingHeal = 47,
         SnipeHeal = 48,
         WireBullet = 49,
+        FullAuto = 50,
+        Max = 51, // what is this?
     }
 }
 

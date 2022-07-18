@@ -1,5 +1,5 @@
 use super::gen_common::*;
-use super::gen_hyakuryu_skill::*;
+//use super::gen_hyakuryu_skill::*;
 use super::gen_item::*;
 use super::gen_website::*;
 use super::pedia::*;
@@ -125,6 +125,8 @@ fn display_bullet_type(bullet: BulletType) -> &'static str {
         BulletType::GatlingHeal => "<GatlingHeal>",
         BulletType::SnipeHeal => "<SnipeHeal>",
         BulletType::WireBullet => "<WireBullet>",
+        BulletType::FullAuto => "<FullAuto>",
+        BulletType::Max => "<Max>",
     }
 }
 
@@ -229,7 +231,7 @@ where
     let horn = horn.map(|horn| {
         html!(<section>
         <h2 >"Melody"</h2>
-        <ul> {
+        /*<ul> {
             horn.horn_melody_type_list.iter().map(|id| {
                 html!(<li> {
                     if let Some(name) = pedia_ex.horn_melody.get(id) {
@@ -239,7 +241,7 @@ where
                     }
                 } </li>)
             })
-        } </ul>
+        } </ul>*/
         </section>)
     });
 
@@ -299,25 +301,26 @@ where
         </section>)
     });
 
-    let more_bullet: HashSet<BulletType> = main
-        .hyakuryu_skill_id_list
-        .iter()
-        .flat_map(|skill| {
-            pedia_ex
-                .hyakuryu_skills
-                .get(skill)
-                .map(|skill| {
-                    skill
-                        .data
-                        .add_bullet_type_list
-                        .iter()
-                        .cloned()
-                        .filter(|&bullet| bullet != BulletType::None)
-                })
-                .into_iter()
-                .flatten()
-        })
-        .collect();
+    let more_bullet: HashSet<BulletType> = HashSet::new();
+    /*main
+    .hyakuryu_skill_id_list
+    .iter()
+    .flat_map(|skill| {
+        pedia_ex
+            .hyakuryu_skills
+            .get(skill)
+            .map(|skill| {
+                skill
+                    .data
+                    .add_bullet_type_list
+                    .iter()
+                    .cloned()
+                    .filter(|&bullet| bullet != BulletType::None)
+            })
+            .into_iter()
+            .flatten()
+    })
+    .collect();*/
 
     let rapid = lbg.map_or(&[][..], |lbg| &lbg.rapid_shot_list[..]);
 
@@ -392,7 +395,7 @@ where
                 </header>
 
                 <section><pre>
-                    {gen_multi_lang(weapon.explain)}
+                    {weapon.explain.as_ref().map(|e|gen_multi_lang(e))}
                 </pre></section>
 
                 <section>
@@ -406,6 +409,7 @@ where
                 <span>{text!("{}", main.def_bonus)}</span></p>
                 <p class="mh-kv"><span>"Slot"</span>
                 <span>{gen_slot(&main.slot_num_list)}</span></p>
+                // TODO: rampage slot
 
                 {first_element.map(|first_element| html!(
                     <p class="mh-kv"><span>"Element"</span>
@@ -436,6 +440,7 @@ where
                 </div>
                 </section>
 
+                /*
                 <section>
                 <h2 >"Ramp-up skills"</h2>
                 <ul> {
@@ -461,7 +466,7 @@ where
                         }
                     })
                 } </ul>
-                </section>
+                </section>*/
 
                 { horn }
 

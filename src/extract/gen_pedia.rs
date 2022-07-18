@@ -303,6 +303,20 @@ fn get_weapon_list<BaseData: 'static>(
                 weapon_class
             ),
         )?,
+        name_mr: get_msg(
+            pak,
+            &format!(
+                "data/Define/Player/Weapon/{0}/{0}_Name_MR.msg",
+                weapon_class
+            ),
+        )?,
+        explain_mr: get_msg(
+            pak,
+            &format!(
+                "data/Define/Player/Weapon/{0}/{0}_Explain_MR.msg",
+                weapon_class
+            ),
+        )?,
     })
 }
 
@@ -439,7 +453,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         "data/System/ContentsIdSystem/Common/ItemCategoryType_Name_MR.msg",
     )?;
 
-    /*let great_sword = get_weapon_list(pak, "GreatSword")?;
+    let great_sword = get_weapon_list(pak, "GreatSword")?;
     let short_sword = get_weapon_list(pak, "ShortSword")?;
     let hammer = get_weapon_list(pak, "Hammer")?;
     let lance = get_weapon_list(pak, "Lance")?;
@@ -454,7 +468,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let heavy_bowgun = get_weapon_list(pak, "HeavyBowgun")?;
     let bow = get_weapon_list(pak, "Bow")?;
 
-    let horn_melody = get_msg(pak, "data/Define/Player/Weapon/Horn/Horn_UniqueParam.msg")?;
+    /*let horn_melody = get_msg(pak, "data/Define/Player/Weapon/Horn/Horn_UniqueParam.msg")?;
 
     let maps = prepare_maps(pak)?;
     let map_name = get_msg(pak, "Message/Common_Msg/Stage_Name.msg")?;
@@ -592,7 +606,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         items_name_msg_mr,
         items_explain_msg_mr,
         material_category_msg,
-        /*great_sword,
+        great_sword,
         short_sword,
         hammer,
         lance,
@@ -606,9 +620,9 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         light_bowgun,
         heavy_bowgun,
         bow,
-        horn_melody,
+        //horn_melody,
         hyakuryu_weapon_buildup: get_singleton(pak)?,
-        maps,
+        /*maps,
         map_name,
         item_pop_lot: get_singleton(pak)?,
         airou_armor: get_singleton(pak)?,
@@ -869,7 +883,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
         }
     }
 
-    /*let message_window_uvs = pak.find_file("gui/70_UVSequence/message_window.uvs")?;
+    let message_window_uvs = pak.find_file("gui/70_UVSequence/message_window.uvs")?;
     let message_window_uvs = Uvs::new(Cursor::new(pak.read_file(message_window_uvs)?))?;
     if message_window_uvs.textures.len() != 1 || message_window_uvs.spriter_groups.len() != 1 {
         bail!("Broken message_window.uvs");
@@ -910,7 +924,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
             .gen_double_mask();
         equip_icon_r.save_png(equip_icon_path.create(&format!("{:03}.r.png", i))?)?;
         equip_icon_a.save_png(equip_icon_path.create(&format!("{:03}.a.png", i))?)?;
-    }*/
+    }
 
     let common_uvs = pak.find_file("gui/70_UVSequence/common.uvs")?;
     let common_uvs = Uvs::new(Cursor::new(pak.read_file(common_uvs)?))?;
@@ -925,18 +939,38 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
             .save_png(output.create(&format!("questtype_{}.png", i))?)?;
     }
 
-    /*let common_uvs = pak.find_file("gui/70_UVSequence/Slot_Icon.uvs")?;
+    let common_uvs = pak.find_file("gui/70_UVSequence/Slot_Icon.uvs")?;
     let common_uvs = Uvs::new(Cursor::new(pak.read_file(common_uvs)?))?;
     if common_uvs.textures.len() != 1 || common_uvs.spriter_groups.len() != 1 {
         bail!("Broken Slot_Icon.uvs");
     }
     let common = pak.find_file(&common_uvs.textures[0].path)?;
     let common = Tex::new(Cursor::new(pak.read_file(common)?))?.to_rgba(0, 0)?;
-    for (i, spriter) in common_uvs.spriter_groups[0].spriters.iter().enumerate() {
+    for (i, spriter) in common_uvs.spriter_groups[0]
+        .spriters
+        .iter()
+        .enumerate()
+        .take(3)
+    {
         common
             .sub_image_f(spriter.p0, spriter.p1)?
             .save_png(output.create(&format!("slot_{}.png", i))?)?;
-    }*/
+    }
+
+    let common_uvs = pak.find_file("gui/70_UVSequence/Slot_Icon_MR.uvs")?;
+    let common_uvs = Uvs::new(Cursor::new(pak.read_file(common_uvs)?))?;
+    if common_uvs.textures.len() != 1 || common_uvs.spriter_groups.len() != 1 {
+        bail!("Broken Slot_Icon_MR.uvs");
+    }
+    let common = pak.find_file(&common_uvs.textures[0].path)?;
+    let common = Tex::new(Cursor::new(pak.read_file(common)?))?.to_rgba(0, 0)?;
+    let spriter = common_uvs.spriter_groups[0]
+        .spriters
+        .get(1)
+        .context("Broken Slot_Icon_MR.uvs: no 4-slot")?;
+    common
+        .sub_image_f(spriter.p0, spriter.p1)?
+        .save_png(output.create("slot_3.png")?)?;
 
     let item_colors_path = output.create("item_color.css")?;
     gen_item_colors(pak, item_colors_path)?;
@@ -1704,7 +1738,7 @@ fn prepare_material_categories(pedia: &Pedia) -> HashMap<MaterialCategory, &MsgE
         )))
         .collect()
 }
-/*
+
 fn prepare_weapon<'a, 'b, T, Param>(
     weapon_list: &'a WeaponList<T>,
     hyakuryu_weapon_map: &'b mut HashMap<
@@ -1748,6 +1782,8 @@ where
 
     let mut name_map = weapon_list.name.get_name_map();
     let mut explain_map = weapon_list.explain.get_name_map();
+    let mut name_map_mr = weapon_list.name_mr.get_name_map();
+    let mut explain_map_mr = weapon_list.explain_mr.get_name_map();
 
     let mut weapons = BTreeMap::new();
     for param in &*weapon_list.base_data {
@@ -1759,8 +1795,16 @@ where
             bail!("Multiple definition for weapon {:?}", param.to_base().id)
         }
         let tag = id.to_tag();
-        let name = name_map.remove(&format!("W_{}_Name", tag)).unwrap();
-        let explain = explain_map.remove(&format!("W_{}_Explain", tag)).unwrap();
+        let name_tag = format!("W_{}_Name", tag);
+        let explain_tag = format!("W_{}_Explain", tag);
+
+        let name = name_map
+            .remove(&name_tag)
+            .or_else(|| name_map_mr.remove(&name_tag))
+            .with_context(|| format!("Weapon name for {tag} not found"))?;
+        let explain = explain_map
+            .remove(&explain_tag)
+            .or_else(|| explain_map_mr.remove(&explain_tag));
 
         let weapon = Weapon {
             param,
@@ -1777,15 +1821,15 @@ where
     }
 
     if !product_map.is_empty() {
-        bail!("Left over product data: {:?}", product_map)
+        eprintln!("Left over product data: {:?}", product_map)
     }
 
     if !process_map.is_empty() {
-        bail!("Left over process data: {:?}", process_map)
+        eprintln!("Left over process data: {:?}", process_map)
     }
 
     if !change_map.is_empty() {
-        bail!("Left over change data: {:?}", change_map)
+        eprintln!("Left over change data: {:?}", change_map)
     }
 
     let mut tree_map = HashMap::new();
@@ -1861,7 +1905,10 @@ where
             let next = if let Some(next) = tree_map.get(&(t, i)) {
                 next
             } else {
-                eprintln!("Unknown children at {:?}, {}", t, i);
+                eprintln!(
+                    "Unknown children at {:?}, {}, for weapon {:?}",
+                    t, i, node.weapon_id
+                );
                 continue;
             };
             if next.prev_weapon_type != node.tree_type || next.prev_weapon_index != node.index {
@@ -1882,7 +1929,7 @@ where
     };
 
     Ok(result)
-}*/
+}
 
 fn prepare_monster_lot(
     pedia: &Pedia,
@@ -2227,7 +2274,6 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         .map(|(i, monster)| (monster.em_type, i))
         .collect();
 
-    /*
     let mut hyakuryu_weapon_map: HashMap<
         WeaponId,
         BTreeMap<i32, &HyakuryuWeaponHyakuryuBuildupUserDataParam>,
@@ -2241,7 +2287,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
                 param.slot_type
             );
         }
-    }*/
+    }
 
     Ok(PediaEx {
         monsters: prepare_monsters(pedia)?,
@@ -2258,7 +2304,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         monster_lot: prepare_monster_lot(pedia)?,
         parts_dictionary: prepare_parts_dictionary(pedia)?,
 
-        /*great_sword: prepare_weapon(&pedia.great_sword, &mut hyakuryu_weapon_map)?,
+        great_sword: prepare_weapon(&pedia.great_sword, &mut hyakuryu_weapon_map)?,
         short_sword: prepare_weapon(&pedia.short_sword, &mut hyakuryu_weapon_map)?,
         hammer: prepare_weapon(&pedia.hammer, &mut hyakuryu_weapon_map)?,
         lance: prepare_weapon(&pedia.lance, &mut hyakuryu_weapon_map)?,
@@ -2272,7 +2318,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         light_bowgun: prepare_weapon(&pedia.light_bowgun, &mut hyakuryu_weapon_map)?,
         heavy_bowgun: prepare_weapon(&pedia.heavy_bowgun, &mut hyakuryu_weapon_map)?,
         bow: prepare_weapon(&pedia.bow, &mut hyakuryu_weapon_map)?,
-        horn_melody: prepare_horn_melody(pedia), */
+        // horn_melody: prepare_horn_melody(pedia),
         monster_order,
         /*item_pop: prepare_item_pop(pedia)?,
         ot_equip: prepeare_ot_equip(pedia)?,*/

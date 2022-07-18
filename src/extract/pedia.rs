@@ -39,6 +39,8 @@ pub struct WeaponList<BaseData> {
     pub tree: WeaponUpdateTreeUserData,
     pub name: Msg,
     pub explain: Msg,
+    pub name_mr: Msg,
+    pub explain_mr: Msg,
 }
 
 #[derive(Debug, Serialize)]
@@ -129,7 +131,8 @@ pub struct Pedia {
     pub items_explain_msg_mr: Msg,
     pub material_category_msg: Msg,
     pub material_category_msg_mr: Msg,
-    /*pub great_sword: WeaponList<GreatSwordBaseUserData>,
+
+    pub great_sword: WeaponList<GreatSwordBaseUserData>,
     pub short_sword: WeaponList<ShortSwordBaseUserData>,
     pub hammer: WeaponList<HammerBaseUserData>,
     pub lance: WeaponList<LanceBaseUserData>,
@@ -144,10 +147,9 @@ pub struct Pedia {
     pub heavy_bowgun: WeaponList<HeavyBowgunBaseUserData>,
     pub bow: WeaponList<BowBaseUserData>,
 
-    pub horn_melody: Msg,
+    // pub horn_melody: Msg,
     pub hyakuryu_weapon_buildup: HyakuryuWeaponHyakuryuBuildupUserData,
-
-    pub maps: BTreeMap<i32, GameMap>,
+    /*pub maps: BTreeMap<i32, GameMap>,
     pub map_name: Msg,
     pub item_pop_lot: ItemPopLotTableUserData,
 
@@ -253,7 +255,7 @@ pub struct Weapon<'a, Param> {
     pub change: Option<&'a WeaponChangeUserDataParam>,
     pub process: Option<&'a WeaponProcessUserDataParam>,
     pub name: &'a MsgEntry,
-    pub explain: &'a MsgEntry,
+    pub explain: Option<&'a MsgEntry>,
     pub children: Vec<WeaponId>,
     pub parent: Option<WeaponId>,
     pub hyakuryu_weapon_buildup: BTreeMap<i32, &'a HyakuryuWeaponHyakuryuBuildupUserDataParam>,
@@ -311,7 +313,7 @@ pub struct PediaEx<'a> {
     pub monster_lot: HashMap<(EmTypes, QuestRank), &'a MonsterLotTableUserDataParam>,
     pub parts_dictionary: HashMap<(EmTypes, BrokenPartsTypes), &'a MsgEntry>,
 
-    /*pub great_sword: WeaponTree<'a, GreatSwordBaseUserDataParam>,
+    pub great_sword: WeaponTree<'a, GreatSwordBaseUserDataParam>,
     pub short_sword: WeaponTree<'a, ShortSwordBaseUserDataParam>,
     pub hammer: WeaponTree<'a, HammerBaseUserDataParam>,
     pub lance: WeaponTree<'a, LanceBaseUserDataParam>,
@@ -326,7 +328,7 @@ pub struct PediaEx<'a> {
     pub heavy_bowgun: WeaponTree<'a, HeavyBowgunBaseUserDataParam>,
     pub bow: WeaponTree<'a, BowBaseUserDataParam>,
 
-    pub horn_melody: HashMap<i32, &'a MsgEntry>,*/
+    //pub horn_melody: HashMap<i32, &'a MsgEntry>,
     pub monster_order: HashMap<EmTypes, usize>,
     /*pub item_pop: HashMap<(/*pop_id*/ i32, /*map*/ i32), &'a ItemPopLotTableUserDataParam>,
 
