@@ -17,6 +17,7 @@ pub fn gen_monster_tag(
     em_type: EmTypes,
     is_target: bool,
     short: bool,
+    is_mystery: bool,
 ) -> Box<div<String>> {
     let (id, is_large) = match em_type {
         EmTypes::Em(id) => (id, true),
@@ -46,11 +47,6 @@ pub fn gen_monster_tag(
         id >> 8
     );
 
-    let target_tag = if is_target {
-        html!(<span class="tag is-primary">"Target"</span>)
-    } else {
-        html!(<span />)
-    };
     html!(<div>
         <a href={format!("/{}/{:03}_{:02}.html",
             if is_large { "monster" } else { "small-monster" }, id & 0xFF, id >> 8)}>
@@ -59,7 +55,9 @@ pub fn gen_monster_tag(
                 {monster_name}
             </span>
         </a>
-        {target_tag}
+
+        {is_target.then(||html!(<span class="tag is-primary">"Target"</span>))}
+        {is_mystery.then(||html!(<span class="tag is-danger">"Afflicted"</span>))}
     </div>)
 }
 
@@ -810,8 +808,15 @@ pub fn gen_monster(
                         |&(_, em_type)|em_type == monster_em_type
                     )
                     .map(move |(i, em_type)|{
+                        let is_target = quest.param.has_target(em_type);
+                        let is_mystery = quest.enemy_param
+                            .and_then(|p|p.individual_type.get(i))
+                            .map(|&t|t == EnemyIndividualType::Mystery)
+                            .unwrap_or(false);
                         html!(<tr>
-                            <td> { gen_quest_tag(quest, quest.param.has_target(em_type)) } </td>
+                            <td> {
+                                gen_quest_tag(quest, is_target, is_mystery)
+                            } </td>
                             { gen_quest_monster_data(quest.enemy_param, em_type, i, pedia, pedia_ex) }
                         </tr>)
                     })

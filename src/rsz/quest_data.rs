@@ -428,7 +428,7 @@ rsz_enum! {
 // snow.enemy.EnemyDef.EnemyIndividualType
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize, Clone, Copy)]
+    #[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq)]
     pub enum EnemyIndividualType {
         Normal = 0,
         Mystery = 1,
