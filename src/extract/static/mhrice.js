@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', function () {
     hide_class("mh-invalid-meat");
     hide_class("mh-invalid-part");
     hide_class("mh-no-preset");
+    hide_class("mh-non-target");
+    hide_class("mh-quest-detail");
 
     change_sort("monster", 1);
     change_sort("item", 1);
@@ -67,6 +69,10 @@ function addEventListensers() {
         e => onCheckDisplay(e.currentTarget, 'mh-ride-cond', 'mh-default-cond'));
     addEventListenerToId("mh-preset-check", "click",
         e => onCheckDisplay(e.currentTarget, 'mh-no-preset', 'mh-preset'));
+    addEventListenerToId("mh-non-target-check", "click",
+        e => onCheckDisplay(e.currentTarget, 'mh-non-target', null));
+    addEventListenerToId("mh-quest-detail-check", "click",
+        e => onCheckDisplay(e.currentTarget, 'mh-quest-detail', null));
 
     addEventListenerToClass("mh-color-diagram-switch", "click", onChangeDiagramColor);
 }

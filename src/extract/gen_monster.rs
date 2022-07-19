@@ -786,6 +786,14 @@ pub fn gen_monster(
     let quest_list = html!(
         <section>
         <h2 >"Quests"</h2>
+        <div>
+            <input type="checkbox" id="mh-non-target-check"/>
+            <label for="mh-non-target-check">"Display non-target"</label>
+        </div>
+        <div>
+            <input type="checkbox" id="mh-quest-detail-check"/>
+            <label for="mh-quest-detail-check">"More detailed stat"</label>
+        </div>
         <div class="mh-table"><table>
             <thead><tr>
                 <th>"Quest"</th>
@@ -793,14 +801,14 @@ pub fn gen_monster(
                 <th>"HP"</th>
                 <th>"Attack"</th>
                 <th>"Parts"</th>
-                <th>"Defense"</th>
-                <th>"Element"</th>
-                <th>"Stun"</th>
-                <th>"Exhaust"</th>
-                <th>"Ride"</th>
-                <th>"Paralyze"</th>
-                <th>"Sleep"</th>
-                <th>"Stamina"</th>
+                <th class="mh-quest-detail">"Defense"</th>
+                <th class="mh-quest-detail">"Element"</th>
+                <th class="mh-quest-detail">"Stun"</th>
+                <th class="mh-quest-detail">"Exhaust"</th>
+                <th class="mh-quest-detail">"Ride"</th>
+                <th class="mh-quest-detail">"Paralyze"</th>
+                <th class="mh-quest-detail">"Sleep"</th>
+                <th class="mh-quest-detail">"Stamina"</th>
             </tr></thead>
             <tbody> {
                 pedia_ex.quests.iter().flat_map(|quest| {
@@ -813,7 +821,12 @@ pub fn gen_monster(
                             .and_then(|p|p.individual_type.get(i))
                             .map(|&t|t == EnemyIndividualType::Mystery)
                             .unwrap_or(false);
-                        html!(<tr>
+                        let class = if !is_target {
+                            "mh-non-target"
+                        } else {
+                            ""
+                        };
+                        html!(<tr class={class}>
                             <td> {
                                 gen_quest_tag(quest, is_target, is_mystery)
                             } </td>
