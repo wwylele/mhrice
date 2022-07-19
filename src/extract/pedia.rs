@@ -147,7 +147,8 @@ pub struct Pedia {
     pub heavy_bowgun: WeaponList<HeavyBowgunBaseUserData>,
     pub bow: WeaponList<BowBaseUserData>,
 
-    // pub horn_melody: Msg,
+    pub horn_melody: Msg,
+    pub horn_melody_mr: Msg,
     pub hyakuryu_weapon_buildup: HyakuryuWeaponHyakuryuBuildupUserData,
     /*pub maps: BTreeMap<i32, GameMap>,
     pub map_name: Msg,
@@ -328,7 +329,7 @@ pub struct PediaEx<'a> {
     pub heavy_bowgun: WeaponTree<'a, HeavyBowgunBaseUserDataParam>,
     pub bow: WeaponTree<'a, BowBaseUserDataParam>,
 
-    //pub horn_melody: HashMap<i32, &'a MsgEntry>,
+    pub horn_melody: HashMap<i32, &'a MsgEntry>,
     pub monster_order: HashMap<EmTypes, usize>,
     /*pub item_pop: HashMap<(/*pop_id*/ i32, /*map*/ i32), &'a ItemPopLotTableUserDataParam>,
 

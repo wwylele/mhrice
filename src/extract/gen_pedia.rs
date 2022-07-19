@@ -468,9 +468,13 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let heavy_bowgun = get_weapon_list(pak, "HeavyBowgun")?;
     let bow = get_weapon_list(pak, "Bow")?;
 
-    /*let horn_melody = get_msg(pak, "data/Define/Player/Weapon/Horn/Horn_UniqueParam.msg")?;
+    let horn_melody = get_msg(pak, "data/Define/Player/Weapon/Horn/Horn_UniqueParam.msg")?;
+    let horn_melody_mr = get_msg(
+        pak,
+        "data/Define/Player/Weapon/Horn/Horn_UniqueParam_MR.msg",
+    )?;
 
-    let maps = prepare_maps(pak)?;
+    /*let maps = prepare_maps(pak)?;
     let map_name = get_msg(pak, "Message/Common_Msg/Stage_Name.msg")?;
 
     let airou_armor_head_name = get_msg(
@@ -620,7 +624,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         light_bowgun,
         heavy_bowgun,
         bow,
-        //horn_melody,
+        horn_melody,
+        horn_melody_mr,
         hyakuryu_weapon_buildup: get_singleton(pak)?,
         /*maps,
         map_name,
@@ -1980,19 +1985,22 @@ fn prepare_parts_dictionary(
     Ok(result)
 }
 
-/*fn prepare_horn_melody(pedia: &Pedia) -> HashMap<i32, &'_ MsgEntry> {
+fn prepare_horn_melody(pedia: &Pedia) -> HashMap<i32, &'_ MsgEntry> {
     let mut res = HashMap::new();
     let map = pedia.horn_melody.get_name_map();
+    let map_mr = pedia.horn_melody_mr.get_name_map();
     for id in 0..999 {
         let name = format!("Horn_UniqueParam_{:03}_Name", id);
         if let Some(&name) = map.get(&name) {
+            res.insert(id, name);
+        } else if let Some(&name) = map_mr.get(&name) {
             res.insert(id, name);
         }
     }
     res
 }
 
-fn prepare_item_pop(
+/*fn prepare_item_pop(
     pedia: &Pedia,
 ) -> Result<HashMap<(i32, i32), &'_ ItemPopLotTableUserDataParam>> {
     let mut res = HashMap::new();
@@ -2318,7 +2326,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         light_bowgun: prepare_weapon(&pedia.light_bowgun, &mut hyakuryu_weapon_map)?,
         heavy_bowgun: prepare_weapon(&pedia.heavy_bowgun, &mut hyakuryu_weapon_map)?,
         bow: prepare_weapon(&pedia.bow, &mut hyakuryu_weapon_map)?,
-        // horn_melody: prepare_horn_melody(pedia),
+        horn_melody: prepare_horn_melody(pedia),
         monster_order,
         /*item_pop: prepare_item_pop(pedia)?,
         ot_equip: prepeare_ot_equip(pedia)?,*/

@@ -231,7 +231,7 @@ where
     let horn = horn.map(|horn| {
         html!(<section>
         <h2 >"Melody"</h2>
-        /*<ul> {
+        <ul> {
             horn.horn_melody_type_list.iter().map(|id| {
                 html!(<li> {
                     if let Some(name) = pedia_ex.horn_melody.get(id) {
@@ -241,7 +241,7 @@ where
                     }
                 } </li>)
             })
-        } </ul>*/
+        } </ul>
         </section>)
     });
 
