@@ -408,7 +408,9 @@ where
                 <p class="mh-kv"><span>"Defense"</span>
                 <span>{text!("{}", main.def_bonus)}</span></p>
                 <p class="mh-kv"><span>"Slot"</span>
-                <span>{gen_slot(&main.slot_num_list)}</span></p>
+                <span>{gen_slot(&main.slot_num_list, false)}</span></p>
+                <p class="mh-kv"><span>"Rampage Slot"</span>
+                <span>{gen_slot(&main.slot_num_list, true)}</span></p>
                 // TODO: rampage slot
 
                 {first_element.map(|first_element| html!(

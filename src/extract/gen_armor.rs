@@ -147,7 +147,7 @@ fn gen_armor(
                         return html!(<tr><td colspan="10">"-"</td></tr>)
                     };
 
-                    let slots = gen_slot(&piece.data.decorations_num_list);
+                    let slots = gen_slot(&piece.data.decorations_num_list, false);
 
                     let skills = html!(<ul class="mh-armor-skill-list"> {
                         piece.data.skill_list.iter().zip(piece.data.skill_lv_list.iter())

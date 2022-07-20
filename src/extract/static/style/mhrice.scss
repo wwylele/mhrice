@@ -252,18 +252,40 @@ ul.mh-armor-skill-list {
 }
 
 /** Slot icons **/
-.mh-slot {
-    display: inline-block;
-    width: 1.65rem;
-    height: 1.25rem;
-    vertical-align: middle;
-}
 
-.mh-slot-large {
-    display: inline-block;
+.mh-slot-outer {
+    position: relative;
     width: 1.85rem;
     height: 1.85rem;
     vertical-align: middle;
+    display: inline-block;
+
+    >.mh-slot {
+        display: inline-block;
+        position: absolute;
+        left: 0.1rem;
+        top: 0.3rem;
+        width: 1.65rem;
+        height: 1.25rem;
+        vertical-align: middle;
+    }
+
+    >.mh-slot-large {
+        display: inline-block;
+        position: absolute;
+        left: 0rem;
+        top: 0rem;
+        width: 1.85rem;
+        height: 1.85rem;
+        vertical-align: middle;
+    }
+
+    >.mh-slot-rampage {
+        display: inline-block;
+        position: absolute;
+        left: 0.75rem;
+        top: 0rem;
+    }
 }
 
 /** Sharpness bar **/

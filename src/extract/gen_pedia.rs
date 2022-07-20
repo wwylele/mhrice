@@ -837,14 +837,14 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
         .sub_image(302, 453, 24, 24)?
         .save_png(output.create("small_crown.png")?)?;
 
-    /*let map_icon = pak.find_file("gui/80_Texture/map/map_icon_IAM.tex")?;
+    let map_icon = pak.find_file("gui/80_Texture/map/map_icon_IAM.tex")?;
     let map_icon = Tex::new(Cursor::new(pak.read_file(map_icon)?))?.to_rgba(0, 0)?;
     map_icon
         .sub_image(0, 31, 31, 33)?
         .save_png(output.create("main_camp.png")?)?;
     map_icon
         .sub_image(0, 64, 31, 30)?
-        .save_png(output.create("sub_camp.png")?)?;*/
+        .save_png(output.create("sub_camp.png")?)?;
 
     let item_icon_path = output.sub_sink("item")?;
 
@@ -976,6 +976,13 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
     common
         .sub_image_f(spriter.p0, spriter.p1)?
         .save_png(output.create("slot_3.png")?)?;
+    let spriter = common_uvs.spriter_groups[0]
+        .spriters
+        .get(9)
+        .context("Broken Slot_Icon_MR.uvs: no rampage slot icon")?;
+    common
+        .sub_image_f(spriter.p0, spriter.p1)?
+        .save_png(output.create("slot_rampage.png")?)?;
 
     let item_colors_path = output.create("item_color.css")?;
     gen_item_colors(pak, item_colors_path)?;
