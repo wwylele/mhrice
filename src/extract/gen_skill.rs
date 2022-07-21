@@ -1,4 +1,4 @@
-use super::gen_armor::*;
+//use super::gen_armor::*;
 use super::gen_item::*;
 use super::gen_website::*;
 use super::pedia::*;
@@ -10,10 +10,7 @@ use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
 
 pub fn skill_page(id: PlEquipSkillId) -> String {
-    match id {
-        PlEquipSkillId::None => "none.html".to_string(),
-        PlEquipSkillId::Skill(id) => format!("{:03}.html", id),
-    }
+    format!("{}.html", id.to_msg_tag())
 }
 
 pub fn gen_skill_list(skills: &BTreeMap<PlEquipSkillId, Skill>, output: &impl Sink) -> Result<()> {
@@ -52,14 +49,19 @@ pub fn gen_skill_list(skills: &BTreeMap<PlEquipSkillId, Skill>, output: &impl Si
 }
 
 pub fn gen_deco_label(deco: &Deco) -> Box<div<String>> {
-    let icon = format!("/resources/item/{:03}", 63 + deco.data.decoration_lv);
+    let icon_id = if deco.data.decoration_lv == 4 {
+        200
+    } else {
+        63 + deco.data.decoration_lv
+    };
+    let icon = format!("/resources/item/{:03}", icon_id);
     html!(<div class="mh-icon-text">
         { gen_colored_icon(deco.data.icon_color, &icon, &[]) }
         <span>{gen_multi_lang(deco.name)}</span>
     </div>)
 }
 
-fn gen_skill_source_gear(id: PlEquipSkillId, pedia_ex: &PediaEx) -> Option<Box<section<String>>> {
+/*fn gen_skill_source_gear(id: PlEquipSkillId, pedia_ex: &PediaEx) -> Option<Box<section<String>>> {
     let mut htmls = vec![];
 
     for series in &pedia_ex.armors {
@@ -82,7 +84,7 @@ fn gen_skill_source_gear(id: PlEquipSkillId, pedia_ex: &PediaEx) -> Option<Box<s
     } else {
         None
     }
-}
+}*/
 
 pub fn gen_skill(
     id: PlEquipSkillId,
@@ -92,22 +94,28 @@ pub fn gen_skill(
     mut toc_sink: TocSink<'_>,
 ) -> Result<()> {
     toc_sink.add(skill.name);
-    let deco = skill.deco.as_ref().map(|deco| {
+    let deco = (!skill.decos.is_empty()).then(|| {
         html!(<section>
         <h2 >"Decoration"</h2>
         <div class="mh-table"><table>
             <thead><tr>
                 <th>"Name"</th>
+                <th>"Skill level"</th>
                 <th>"Cost"</th>
                 <th>"Material"</th>
             </tr></thead>
             <tbody>
-            <tr>
-                <td>{gen_deco_label(deco)}</td>
-                <td>{text!("{}", deco.data.base_price)}</td>
-                { gen_materials(pedia_ex, &deco.product.item_id_list,
-                    &deco.product.item_num_list, deco.product.item_flag) }
-            </tr>
+            {
+                skill.decos.iter().map(|deco|{html!(
+                    <tr>
+                        <td>{gen_deco_label(deco)}</td>
+                        <td>{text!("{}", deco.data.skill_lv_list[0])}</td>
+                        <td>{text!("{}", deco.data.base_price)}</td>
+                        { gen_materials(pedia_ex, &deco.product.item_id_list,
+                            &deco.product.item_num_list, deco.product.item_flag) }
+                    </tr>
+                )})
+            }
             </tbody>
         </table></div>
         </section>)
@@ -142,7 +150,7 @@ pub fn gen_skill(
 
                 { deco }
 
-                { gen_skill_source_gear(id, pedia_ex) }
+                //{ gen_skill_source_gear(id, pedia_ex) }
 
                 </main>
             </body>

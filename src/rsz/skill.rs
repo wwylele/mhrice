@@ -7,16 +7,34 @@ use serde::*;
 // snow.data.DataDef.PlEquipSkillId
 rsz_enum! {
     #[rsz(u8)]
-    #[derive(Debug, Serialize, Clone, Copy, PartialEq, PartialOrd, Eq, Ord)]
+    #[derive(Debug, Serialize, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
     pub enum PlEquipSkillId {
         None = 0,
-        Skill(u8) = 1..=255,
+        Skill(u8) = 1..=0x6F,
+        MrSkill(u8) = 0x70..=0xA7
+    }
+}
+
+impl PlEquipSkillId {
+    pub fn to_tag_id(&self) -> Option<u8> {
+        match self {
+            PlEquipSkillId::None => None,
+            PlEquipSkillId::Skill(i) => Some(*i),
+            PlEquipSkillId::MrSkill(i) => Some(*i + 200),
+        }
+    }
+
+    pub fn to_msg_tag(&self) -> String {
+        match self.to_tag_id() {
+            None => "PlayerSkill_None".to_owned(),
+            Some(id) => format!("PlayerSkill_{id:03}"),
+        }
     }
 }
 
 rsz_struct! {
     #[rsz("snow.data.PlEquipSkillBaseUserData.Param",
-        0x90d277a2 = 0
+        0xac747724 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct PlEquipSkillBaseUserDataParam {
@@ -360,13 +378,24 @@ rsz_enum! {
     #[derive(Debug, Serialize, Copy, Clone, Hash, PartialEq, Eq)]
     pub enum DecorationsId {
         None = 0,
-        Deco(u32) = 1..=255,
+        Deco(u32) = 1..=108,
+        MrDeco(u32) = 109..=255,
+    }
+}
+
+impl DecorationsId {
+    pub fn to_msg_tag(&self) -> String {
+        match self {
+            DecorationsId::None => "Decorations_None".to_owned(),
+            DecorationsId::Deco(i) => format!("Decorations_{i:03}"),
+            DecorationsId::MrDeco(i) => format!("Decorations_{:04}", i + 200),
+        }
     }
 }
 
 rsz_struct! {
     #[rsz("snow.data.DecorationsBaseUserData.Param",
-        0xf2ad08c4 = 0
+        0x041e623d = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct DecorationsBaseUserDataParam {
@@ -374,10 +403,10 @@ rsz_struct! {
         pub sort_id: u32,
         pub rare: RareTypes,
         pub icon_color: i32, // snow.gui.SnowGuiCommonUtility.Icon.ItemIconColor
-        pub decoration_lv: i32,
-        pub skill_id_list: Vec<PlEquipSkillId>,
-        pub skill_lv_list: Vec<i32>,
         pub base_price: u32,
+        pub decoration_lv: i32, // snow.data.DataDef.DecorationsSlotLvTypes
+        pub skill_id_list: [PlEquipSkillId; 2],
+        pub skill_lv_list: [i32; 2],
     }
 }
 
@@ -394,7 +423,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.DecorationsProductUserData.Param",
-        0x556b482b = 0
+        0x1B205AA6 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct DecorationsProductUserDataParam {

@@ -100,23 +100,25 @@ pub struct Pedia {
     pub armor_arm_explain_msg: Msg,
     pub armor_waist_explain_msg: Msg,
     pub armor_leg_explain_msg: Msg,
-    pub armor_series_name_msg: Msg,
-
+    pub armor_series_name_msg: Msg,*/
     pub equip_skill: PlEquipSkillBaseUserData,
     pub player_skill_detail_msg: Msg,
     pub player_skill_explain_msg: Msg,
     pub player_skill_name_msg: Msg,
+    pub player_skill_detail_msg_mr: Msg,
+    pub player_skill_explain_msg_mr: Msg,
+    pub player_skill_name_msg_mr: Msg,
 
-    pub hyakuryu_skill: PlHyakuryuSkillBaseUserData,
+    /*pub hyakuryu_skill: PlHyakuryuSkillBaseUserData,
     pub hyakuryu_skill_recipe: PlHyakuryuSkillRecipeUserData,
     pub hyakuryu_skill_name_msg: Msg,
-    pub hyakuryu_skill_explain_msg: Msg,
-
+    pub hyakuryu_skill_explain_msg: Msg,*/
     pub decorations: DecorationsBaseUserData,
     pub decorations_product: DecorationsProductUserData,
     pub decorations_name_msg: Msg,
+    pub decorations_name_msg_mr: Msg,
 
-    pub alchemy_pattern: AlchemyPatturnUserData,
+    /*pub alchemy_pattern: AlchemyPatturnUserData,
     pub alchemy_pl_skill: AlchemyPlSkillTableUserData,
     pub alchemy_grade_worth: GradeWorthTableUserData,
     pub alchemy_rare_type: RareTypeTableUserData,
@@ -211,7 +213,7 @@ pub struct Skill<'a> {
     pub explain: &'a MsgEntry,
     pub levels: Vec<&'a MsgEntry>,
     pub icon_color: i32,
-    pub deco: Option<Deco<'a>>,
+    pub decos: Vec<Deco<'a>>,
 }
 
 pub struct HyakuryuSkill<'a> {
@@ -304,8 +306,8 @@ pub struct PediaEx<'a> {
     pub size_dists: HashMap<i32, &'a [ScaleAndRateData]>,
     pub quests: Vec<Quest<'a>>,
     pub discoveries: HashMap<EmTypes, &'a DiscoverEmSetDataParam>,
-    /*pub skills: BTreeMap<PlEquipSkillId, Skill<'a>>,
-    pub hyakuryu_skills: BTreeMap<PlHyakuryuSkillId, HyakuryuSkill<'a>>,
+    pub skills: BTreeMap<PlEquipSkillId, Skill<'a>>,
+    /*pub hyakuryu_skills: BTreeMap<PlHyakuryuSkillId, HyakuryuSkill<'a>>,
     pub armors: Vec<ArmorSeries<'a>>,*/
     pub meat_names: HashMap<MeatKey, Vec<&'a MsgEntry>>,
 

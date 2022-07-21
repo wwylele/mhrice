@@ -13,7 +13,6 @@ use crate::tex::*;
 use crate::user::User;
 use crate::uvs::*;
 use anyhow::{bail, ensure, Context, Result};
-use nalgebra::coordinates::X;
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use std::collections::BTreeMap;
@@ -402,7 +401,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         get_msg(pak, "data/Define/Player/Armor/Waist/A_Waist_Explain.msg")?;
     let armor_leg_explain_msg = get_msg(pak, "data/Define/Player/Armor/Leg/A_Leg_Explain.msg")?;
     let armor_series_name_msg =
-        get_msg(pak, "data/Define/Player/Armor/ArmorSeries_Hunter_Name.msg")?;
+        get_msg(pak, "data/Define/Player/Armor/ArmorSeries_Hunter_Name.msg")?;*/
 
     let player_skill_detail_msg = get_msg(
         pak,
@@ -416,20 +415,36 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         pak,
         "data/Define/Player/Skill/PlEquipSkill/PlayerSkill_Name.msg",
     )?;
+    let player_skill_detail_msg_mr = get_msg(
+        pak,
+        "data/Define/Player/Skill/PlEquipSkill/PlayerSkill_Detail_MR.msg",
+    )?;
+    let player_skill_explain_msg_mr = get_msg(
+        pak,
+        "data/Define/Player/Skill/PlEquipSkill/PlayerSkill_Explain_MR.msg",
+    )?;
+    let player_skill_name_msg_mr = get_msg(
+        pak,
+        "data/Define/Player/Skill/PlEquipSkill/PlayerSkill_Name_MR.msg",
+    )?;
 
-    let hyakuryu_skill_name_msg = get_msg(
+    /*let hyakuryu_skill_name_msg = get_msg(
         pak,
         "data/Define/Player/Skill/PlHyakuryuSkill/HyakuryuSkill_Name.msg",
     )?;
     let hyakuryu_skill_explain_msg = get_msg(
         pak,
         "data/Define/Player/Skill/PlHyakuryuSkill/HyakuryuSkill_Explain.msg",
-    )?;
+    )?;*/
 
     let decorations_name_msg = get_msg(
         pak,
         "data/Define/Player/Equip/Decorations/Decorations_Name.msg",
-    )?;*/
+    )?;
+    let decorations_name_msg_mr = get_msg(
+        pak,
+        "data/Define/Player/Equip/Decorations/Decorations_Name_MR.msg",
+    )?;
 
     let items_name_msg = get_msg(pak, "data/System/ContentsIdSystem/Item/Normal/ItemName.msg")?;
     let items_explain_msg = get_msg(
@@ -584,19 +599,23 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         armor_arm_explain_msg,
         armor_waist_explain_msg,
         armor_leg_explain_msg,
-        armor_series_name_msg,
+        armor_series_name_msg,*/
         equip_skill: get_singleton(pak)?,
         player_skill_detail_msg,
         player_skill_explain_msg,
         player_skill_name_msg,
-        hyakuryu_skill: get_singleton(pak)?,
+        player_skill_detail_msg_mr,
+        player_skill_explain_msg_mr,
+        player_skill_name_msg_mr,
+        /*hyakuryu_skill: get_singleton(pak)?,
         hyakuryu_skill_recipe: get_singleton(pak)?,
         hyakuryu_skill_name_msg,
-        hyakuryu_skill_explain_msg,
+        hyakuryu_skill_explain_msg,*/
         decorations: get_singleton(pak)?,
         decorations_product: get_singleton(pak)?,
         decorations_name_msg,
-        alchemy_pattern: get_singleton(pak)?,
+        decorations_name_msg_mr,
+        /*alchemy_pattern: get_singleton(pak)?,
         alchemy_pl_skill: get_singleton(pak)?,
         alchemy_grade_worth: get_singleton(pak)?,
         alchemy_rare_type: get_singleton(pak)?,
@@ -1332,9 +1351,52 @@ fn prepare_discoveries(pedia: &Pedia) -> Result<HashMap<EmTypes, &DiscoverEmSetD
     Ok(result)
 }
 
-/*
 fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> {
     let mut result = BTreeMap::new();
+
+    let deco_name_msg = pedia.decorations_name_msg.get_name_map();
+    let deco_name_msg_mr = pedia.decorations_name_msg_mr.get_name_map();
+    let mut deco_products = hash_map_unique(
+        pedia
+            .decorations_product
+            .param
+            .iter()
+            .filter(|product| product.id != DecorationsId::None),
+        |product| (product.id, product),
+        false,
+    )?;
+
+    let mut deco_map: HashMap<PlEquipSkillId, Vec<Deco>> = HashMap::new();
+    let mut deco_dedup: HashSet<DecorationsId> = HashSet::new();
+    for deco in &pedia.decorations.param {
+        if deco.id == DecorationsId::None {
+            continue;
+        }
+        if !deco_dedup.insert(deco.id) {
+            bail!("Duplicate deco definition for {:?}", deco.id)
+        }
+        let product = deco_products
+            .remove(&deco.id)
+            .with_context(|| format!("No product for deco {:?}", deco.id))?;
+
+        let name_tag = format!("{}_Name", deco.id.to_msg_tag());
+        let name = *deco_name_msg
+            .get(&name_tag)
+            .or_else(|| deco_name_msg_mr.get(&name_tag))
+            .with_context(|| format!("no name for deco {:?}", deco.id))?;
+
+        if deco.skill_id_list[1] != PlEquipSkillId::None {
+            bail!("Combo deco {:?}", deco.id);
+        }
+        deco_map
+            .entry(deco.skill_id_list[0])
+            .or_default()
+            .push(Deco {
+                data: deco,
+                product,
+                name,
+            });
+    }
 
     let mut name_msg: HashMap<&String, &MsgEntry> = pedia.player_skill_name_msg.get_name_map();
 
@@ -1343,28 +1405,52 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> 
 
     let mut detail_msg: HashMap<&String, &MsgEntry> = pedia.player_skill_detail_msg.get_name_map();
 
+    let mut name_msg_mr: HashMap<&String, &MsgEntry> =
+        pedia.player_skill_name_msg_mr.get_name_map();
+
+    let mut explain_msg_mr: HashMap<&String, &MsgEntry> =
+        pedia.player_skill_explain_msg_mr.get_name_map();
+
+    let mut detail_msg_mr: HashMap<&String, &MsgEntry> =
+        pedia.player_skill_detail_msg_mr.get_name_map();
+
     for skill in &pedia.equip_skill.param {
-        let id = match skill.id {
-            PlEquipSkillId::None => continue,
-            PlEquipSkillId::Skill(id) => id,
-        };
+        if skill.id == PlEquipSkillId::None {
+            continue;
+        }
         if result.contains_key(&skill.id) {
-            bail!("Multiple definition for skill {}", id);
+            bail!("Multiple definition for skill {:?}", skill.id);
         }
 
-        let name = name_msg
-            .remove(&format!("PlayerSkill_{:03}_Name", id))
-            .with_context(|| format!("Name for skill {}", id))?;
+        let msg_tag = skill.id.to_msg_tag();
 
-        let explain = explain_msg
-            .remove(&format!("PlayerSkill_{:03}_Explain", id))
-            .with_context(|| format!("Explain for skill {}", id))?;
+        let name_tag = format!("{msg_tag}_Name");
+        let name_tag_mr = format!("{msg_tag}_Name_MR");
+        let explain_tag = format!("{msg_tag}_Explain");
+        let explain_tag_mr = format!("{msg_tag}_Explain_MR");
+
+        let name = name_msg_mr
+            .remove(&name_tag_mr)
+            .or_else(|| name_msg_mr.remove(&name_tag))
+            .or_else(|| name_msg.remove(&name_tag))
+            .with_context(|| format!("No name for skill {:?}", skill.id))?;
+
+        let explain = explain_msg_mr
+            .remove(&explain_tag_mr)
+            .or_else(|| explain_msg_mr.remove(&explain_tag))
+            .or_else(|| explain_msg.remove(&explain_tag))
+            .with_context(|| format!("No explain for skill {:?}", skill.id))?;
 
         let levels = (0..(skill.max_level + 1))
             .map(|level| {
-                detail_msg
-                    .remove(&format!("PlayerSkill_{:03}_{:02}_Detail", id, level))
-                    .with_context(|| format!("Detail for skill {} level {}", id, level))
+                let detail_tag = format!("{msg_tag}_{level:02}_Detail");
+                let detail_tag_mr = format!("{msg_tag}_{level:02}_Detail_MR");
+
+                detail_msg_mr
+                    .remove(&detail_tag_mr)
+                    .or_else(|| detail_msg_mr.remove(&detail_tag))
+                    .or_else(|| detail_msg.remove(&detail_tag))
+                    .with_context(|| format!("No detail for skill {:?} level {}", skill.id, level))
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -1375,12 +1461,12 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> 
                 explain,
                 levels,
                 icon_color: skill.icon_color,
-                deco: None,
+                decos: deco_map.remove(&skill.id).unwrap_or_default(),
             },
         );
     }
 
-    let mut deco_name_msg = pedia.decorations_name_msg.get_name_map();
+    /*let mut deco_name_msg = pedia.decorations_name_msg.get_name_map();
     let mut deco_product = hash_map_unique(
         pedia
             .decorations_product
@@ -1420,11 +1506,12 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> 
             .get_mut(&deco.skill_id_list[0])
             .with_context(|| format!("Skill not found for deco {:?}", deco.id))?
             .deco = Some(deco_pack);
-    }
+    }*/
 
     Ok(result)
 }
 
+/*
 fn prepare_hyakuryu_skills(
     pedia: &Pedia,
 ) -> Result<BTreeMap<PlHyakuryuSkillId, HyakuryuSkill<'_>>> {
@@ -2310,7 +2397,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         size_dists: prepare_size_dist_map(&pedia.random_scale)?,
         quests: prepare_quests(pedia)?,
         discoveries: prepare_discoveries(pedia)?,
-        //skills: prepare_skills(pedia)?,
+        skills: prepare_skills(pedia)?,
         //hyakuryu_skills: prepare_hyakuryu_skills(pedia)?,
         //armors: prepare_armors(pedia)?,
         meat_names: prepare_meat_names(pedia)?,

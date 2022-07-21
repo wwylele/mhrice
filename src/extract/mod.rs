@@ -8,7 +8,7 @@ mod gen_item;
 mod gen_monster;
 mod gen_pedia;
 mod gen_quest;
-//mod gen_skill;
+mod gen_skill;
 mod gen_weapon;
 mod gen_website;
 //mod gen_otomo;

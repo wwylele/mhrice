@@ -4,7 +4,7 @@
 use super::gen_monster::*;
 //use super::gen_otomo::*;
 use super::gen_quest::*;
-//use super::gen_skill::*;
+use super::gen_skill::*;
 use super::gen_weapon::*;
 use super::gen_website::*;
 use super::pedia::*;
@@ -446,13 +446,13 @@ fn gen_item_usage_hyakuryu(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<di
     } else {
         None
     }
-}
+}*/
 
 fn gen_item_usage_deco(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
     let mut htmls = vec![];
 
     for (&id, skill) in &pedia_ex.skills {
-        if let Some(deco) = &skill.deco {
+        for deco in &skill.decos {
             if deco.product.item_id_list.contains(&item_id) {
                 htmls.push(html!(<li>
                     <a href={format!("/skill/{}", skill_page(id))}>
@@ -475,7 +475,7 @@ fn gen_item_usage_deco(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<St
     }
 }
 
-fn gen_item_source_map(
+/*fn gen_item_source_map(
     item_id: ItemId,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
@@ -645,7 +645,7 @@ pub fn gen_item(
                 {gen_item_usage_weapon(item.param.id, pedia_ex)}
                 //{gen_item_usage_armor(item.param.id, pedia_ex)}
                 //{gen_item_usage_otomo(item.param.id, pedia_ex)}
-                //{gen_item_usage_deco(item.param.id, pedia_ex)}
+                {gen_item_usage_deco(item.param.id, pedia_ex)}
                 //{gen_item_usage_hyakuryu(item.param.id, pedia_ex)}
                 </section>
 

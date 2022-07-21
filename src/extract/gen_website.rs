@@ -5,7 +5,7 @@ use super::gen_item::*;
 use super::gen_monster::*;
 //use super::gen_otomo::*;
 use super::gen_quest::*;
-//use super::gen_skill::*;
+use super::gen_skill::*;
 use super::gen_weapon::*;
 use super::pedia::*;
 use super::sink::*;
@@ -92,19 +92,19 @@ pub fn navbar() -> Box<nav<String>> {
                     "Quests"
                 </a>
 
-                // <div class="navbar-item has-dropdown is-hoverable">
-                // <a class="navbar-link">
-                //     "Skills"
-                // </a>
-                // <div class="navbar-dropdown">
-                //     <a class="navbar-item" href="/skill.html">
-                //         "Armor skills"
-                //     </a>
-                //     <a class="navbar-item" href="/hyakuryu_skill.html">
-                //         "Ramp-up skills"
-                //     </a>
-                // </div>
-                // </div>
+                <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link">
+                    "Skills"
+                </a>
+                <div class="navbar-dropdown">
+                    <a class="navbar-item" href="/skill.html">
+                        "Armor skills"
+                    </a>
+                    <a class="navbar-item" href="/hyakuryu_skill.html">
+                        "Ramp-up skills"
+                    </a>
+                </div>
+                </div>
 
                 // <a class="navbar-item" href="/armor.html">
                 //     "Armors"
@@ -534,8 +534,8 @@ pub fn gen_website(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &impl Sink) ->
     let mut toc = Toc::new();
     gen_quests(pedia, pedia_ex, output, &mut toc)?;
     gen_quest_list(&pedia_ex.quests, output)?;
-    //gen_skills(pedia_ex, output, &mut toc)?;
-    //gen_skill_list(&pedia_ex.skills, output)?;
+    gen_skills(pedia_ex, output, &mut toc)?;
+    gen_skill_list(&pedia_ex.skills, output)?;
     //gen_hyakuryu_skills(pedia_ex, output, &mut toc)?;
     //gen_hyakuryu_skill_list(&pedia_ex.hyakuryu_skills, output)?;
     //gen_armors(pedia_ex, output, &mut toc)?;
