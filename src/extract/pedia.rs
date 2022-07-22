@@ -109,10 +109,13 @@ pub struct Pedia {
     pub player_skill_explain_msg_mr: Msg,
     pub player_skill_name_msg_mr: Msg,
 
-    /*pub hyakuryu_skill: PlHyakuryuSkillBaseUserData,
+    pub hyakuryu_skill: PlHyakuryuSkillBaseUserData,
     pub hyakuryu_skill_recipe: PlHyakuryuSkillRecipeUserData,
     pub hyakuryu_skill_name_msg: Msg,
-    pub hyakuryu_skill_explain_msg: Msg,*/
+    pub hyakuryu_skill_explain_msg: Msg,
+    pub hyakuryu_skill_name_msg_mr: Msg,
+    pub hyakuryu_skill_explain_msg_mr: Msg,
+
     pub decorations: DecorationsBaseUserData,
     pub decorations_product: DecorationsProductUserData,
     pub decorations_name_msg: Msg,
@@ -307,8 +310,8 @@ pub struct PediaEx<'a> {
     pub quests: Vec<Quest<'a>>,
     pub discoveries: HashMap<EmTypes, &'a DiscoverEmSetDataParam>,
     pub skills: BTreeMap<PlEquipSkillId, Skill<'a>>,
-    /*pub hyakuryu_skills: BTreeMap<PlHyakuryuSkillId, HyakuryuSkill<'a>>,
-    pub armors: Vec<ArmorSeries<'a>>,*/
+    pub hyakuryu_skills: BTreeMap<PlHyakuryuSkillId, HyakuryuSkill<'a>>,
+    /*pub armors: Vec<ArmorSeries<'a>>,*/
     pub meat_names: HashMap<MeatKey, Vec<&'a MsgEntry>>,
 
     pub items: BTreeMap<ItemId, Item<'a>>,

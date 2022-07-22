@@ -1,5 +1,5 @@
 //use super::gen_armor::*;
-//use super::gen_hyakuryu_skill::*;
+use super::gen_hyakuryu_skill::*;
 //use super::gen_map::*;
 use super::gen_monster::*;
 //use super::gen_otomo::*;
@@ -421,7 +421,7 @@ fn gen_item_usage_otomo(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<S
     } else {
         None
     }
-}
+}*/
 
 fn gen_item_usage_hyakuryu(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
     let mut htmls = vec![];
@@ -446,7 +446,7 @@ fn gen_item_usage_hyakuryu(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<di
     } else {
         None
     }
-}*/
+}
 
 fn gen_item_usage_deco(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
     let mut htmls = vec![];
@@ -646,7 +646,7 @@ pub fn gen_item(
                 //{gen_item_usage_armor(item.param.id, pedia_ex)}
                 //{gen_item_usage_otomo(item.param.id, pedia_ex)}
                 {gen_item_usage_deco(item.param.id, pedia_ex)}
-                //{gen_item_usage_hyakuryu(item.param.id, pedia_ex)}
+                {gen_item_usage_hyakuryu(item.param.id, pedia_ex)}
                 </section>
 
                 </main>

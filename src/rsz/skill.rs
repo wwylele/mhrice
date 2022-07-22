@@ -293,7 +293,7 @@ rsz_newtype! {
 
 rsz_struct! {
     #[rsz("snow.data.PlHyakuryuSkillBaseUserData.Param",
-        0x352d582d = 0
+        0xc72df418 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct PlHyakuryuSkillBaseUserDataParam {
@@ -349,7 +349,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.PlHyakuryuSkillRecipeUserData.Param",
-        0xd8943d8c = 0
+        0xa10bbbc4 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct PlHyakuryuSkillRecipeUserDataParam {
