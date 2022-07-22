@@ -113,7 +113,7 @@ pub fn gen_hyakuryu_deco_label(deco: &HyakuryuDeco) -> Box<div<String>> {
     };
     let icon = format!("/resources/item/{:03}", icon_id);
     html!(<div class="mh-icon-text">
-        { gen_colored_icon(deco.data.icon_color, &icon, &[]) }
+        { gen_colored_icon(deco.data.icon_color, &icon, &["mh-addon-hyakuryu"]) }
         <span>{gen_multi_lang(deco.name)}</span>
     </div>)
 }
