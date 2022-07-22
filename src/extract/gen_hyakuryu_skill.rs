@@ -13,6 +13,8 @@ pub fn gen_hyakuryu_skill_label(skill: &HyakuryuSkill) -> Box<a<String>> {
     html!(<a href={format!("/hyakuryu_skill/{}", hyakuryu_skill_page(skill.data.id))} class="mh-icon-text">
         {gen_colored_icon(skill.data.item_color, "/resources/rskill", &[])}
         <span>{gen_multi_lang(skill.name)}</span>
+        {skill.recipe.is_some().then(||html!(<span class="tag">"HR"</span>))}
+        {skill.deco.is_some().then(||html!(<span class="tag">"MR"</span>))}
     </a>)
 }
 
@@ -103,6 +105,19 @@ fn gen_hyakuryu_source_weapon(
     }
 }
 
+pub fn gen_hyakuryu_deco_label(deco: &HyakuryuDeco) -> Box<div<String>> {
+    let icon_id = if deco.data.decoration_lv == 4 {
+        200
+    } else {
+        63 + deco.data.decoration_lv
+    };
+    let icon = format!("/resources/item/{:03}", icon_id);
+    html!(<div class="mh-icon-text">
+        { gen_colored_icon(deco.data.icon_color, &icon, &[]) }
+        <span>{gen_multi_lang(deco.name)}</span>
+    </div>)
+}
+
 pub fn gen_hyakuryu_skill(
     skill: &HyakuryuSkill,
     pedia_ex: &PediaEx,
@@ -110,6 +125,31 @@ pub fn gen_hyakuryu_skill(
     mut toc_sink: TocSink<'_>,
 ) -> Result<()> {
     toc_sink.add(skill.name);
+
+    let deco = skill.deco.as_ref().map(|deco| {
+        html!(<section>
+        <h2 >"Decoration"</h2>
+        <div class="mh-table"><table>
+            <thead><tr>
+                <th>"Name"</th>
+                <th>"Cost"</th>
+                <th>"Categorized Material"</th>
+                <th>"Material"</th>
+            </tr></thead>
+            <tbody>
+                <tr>
+                    <td>{gen_hyakuryu_deco_label(deco)}</td>
+                    <td>{text!("{}", deco.data.base_price)}</td>
+                    { gen_category(pedia_ex, deco.product.material_category,
+                        deco.product.point) }
+                    { gen_materials(pedia_ex, &deco.product.item_id_list,
+                        &deco.product.item_num_list, deco.product.item_flag) }
+                </tr>
+            </tbody>
+        </table></div>
+        </section>)
+    });
+
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -148,6 +188,8 @@ pub fn gen_hyakuryu_skill(
                     </table></div>
                     </section>
                 ))}
+
+                { deco }
 
                 { gen_hyakuryu_source_weapon(skill.data.id, pedia_ex) }
 

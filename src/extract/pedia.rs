@@ -121,6 +121,10 @@ pub struct Pedia {
     pub decorations_name_msg: Msg,
     pub decorations_name_msg_mr: Msg,
 
+    pub hyakuryu_decos: HyakuryuDecoBaseUserData,
+    pub hyakuryu_decos_product: HyakuryuDecoProductUserData,
+    pub hyakuryu_decos_name_msg: Msg,
+
     /*pub alchemy_pattern: AlchemyPatturnUserData,
     pub alchemy_pl_skill: AlchemyPlSkillTableUserData,
     pub alchemy_grade_worth: GradeWorthTableUserData,
@@ -219,11 +223,18 @@ pub struct Skill<'a> {
     pub decos: Vec<Deco<'a>>,
 }
 
+pub struct HyakuryuDeco<'a> {
+    pub data: &'a HyakuryuDecoBaseUserDataParam,
+    pub product: &'a HyakuryuDecoProductUserDataParam,
+    pub name: &'a MsgEntry,
+}
+
 pub struct HyakuryuSkill<'a> {
     pub data: &'a PlHyakuryuSkillBaseUserDataParam,
     pub recipe: Option<&'a PlHyakuryuSkillRecipeUserDataParam>,
     pub name: &'a MsgEntry,
     pub explain: &'a MsgEntry,
+    pub deco: Option<HyakuryuDeco<'a>>,
 }
 
 pub struct Armor<'a> {

@@ -454,6 +454,10 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         pak,
         "data/Define/Player/Equip/Decorations/Decorations_Name_MR.msg",
     )?;
+    let hyakuryu_decos_name_msg = get_msg(
+        pak,
+        "data/Define/Player/Equip/HyakuryuDeco/HyakuryuDeco_Name_MR.msg",
+    )?;
 
     let items_name_msg = get_msg(pak, "data/System/ContentsIdSystem/Item/Normal/ItemName.msg")?;
     let items_explain_msg = get_msg(
@@ -626,6 +630,9 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         decorations_product: get_singleton(pak)?,
         decorations_name_msg,
         decorations_name_msg_mr,
+        hyakuryu_decos: get_singleton(pak)?,
+        hyakuryu_decos_product: get_singleton(pak)?,
+        hyakuryu_decos_name_msg,
         /*alchemy_pattern: get_singleton(pak)?,
         alchemy_pl_skill: get_singleton(pak)?,
         alchemy_grade_worth: get_singleton(pak)?,
@@ -1535,8 +1542,66 @@ fn prepare_hyakuryu_skills(
             recipe,
             name,
             explain,
+            deco: None,
         };
         result.insert(skill.id, skill_package);
+    }
+
+    let deco_name_msg = pedia.hyakuryu_decos_name_msg.get_name_map();
+    let mut deco_products = hash_map_unique(
+        pedia
+            .hyakuryu_decos_product
+            .param
+            .iter()
+            .filter(|product| product.id != HyakuryuDecoId::None),
+        |product| (product.id, product),
+        false,
+    )?;
+
+    let mut deco_dedup: HashSet<HyakuryuDecoId> = HashSet::new();
+    for deco in &pedia.hyakuryu_decos.param {
+        let name_tag = match deco.id {
+            HyakuryuDecoId::None => continue,
+            HyakuryuDecoId::Deco(id) => format!("HyakuryuDeco_{id:03}_Name"),
+        };
+        if deco.id == HyakuryuDecoId::None {
+            continue;
+        }
+        if !deco_dedup.insert(deco.id) {
+            bail!("Duplicate deco definition for hyakuryu {:?}", deco.id)
+        }
+        let product = deco_products
+            .remove(&deco.id)
+            .with_context(|| format!("No product for hyakuryu deco {:?}", deco.id))?;
+
+        let name = *deco_name_msg
+            .get(&name_tag)
+            .with_context(|| format!("no name for hyakuryu deco {:?}", deco.id))?;
+
+        let deco_slot = if let Some(skill) = result.get_mut(&deco.hyakuryu_skill_id) {
+            &mut skill.deco
+        } else {
+            eprintln!(
+                "Hyakuryu deco {:?} is for unknown skill {:?}",
+                deco.id, deco.hyakuryu_skill_id
+            );
+            continue;
+        };
+        if deco_slot.is_some() {
+            bail!(
+                "Multiple hyakuryu deco for skill {:?}",
+                deco.hyakuryu_skill_id
+            )
+        }
+        *deco_slot = Some(HyakuryuDeco {
+            data: deco,
+            product,
+            name,
+        });
+    }
+
+    if !deco_products.is_empty() {
+        bail!("Leftover hyakuryu deco product")
     }
 
     Ok(result)

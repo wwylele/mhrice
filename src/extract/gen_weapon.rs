@@ -1,5 +1,5 @@
 use super::gen_common::*;
-//use super::gen_hyakuryu_skill::*;
+use super::gen_hyakuryu_skill::*;
 use super::gen_item::*;
 use super::gen_website::*;
 use super::pedia::*;
@@ -409,9 +409,8 @@ where
                 <span>{text!("{}", main.def_bonus)}</span></p>
                 <p class="mh-kv"><span>"Slot"</span>
                 <span>{gen_slot(&main.slot_num_list, false)}</span></p>
-                <p class="mh-kv"><span>"Rampage Slot"</span>
+                <p class="mh-kv"><span>"Ramp-up Slot"</span>
                 <span>{gen_slot(&main.slot_num_list, true)}</span></p>
-                // TODO: rampage slot
 
                 {first_element.map(|first_element| html!(
                     <p class="mh-kv"><span>"Element"</span>
@@ -442,7 +441,6 @@ where
                 </div>
                 </section>
 
-                /*
                 <section>
                 <h2 >"Ramp-up skills"</h2>
                 <ul> {
@@ -468,7 +466,7 @@ where
                         }
                     })
                 } </ul>
-                </section>*/
+                </section>
 
                 { horn }
 
