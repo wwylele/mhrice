@@ -42,11 +42,6 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], output: &impl Sink) -> Result<()
                 { navbar() }
                 <main>
                 <header><h1>"Armors"</h1></header>
-                <article class="message is-warning">
-                    <div class="message-body">
-                        "Armor names are probably incorrect."
-                    </div>
-                </article>
                 <div class="mh-filters"><ul>
                     <li id="mh-armor-filter-button-all" class="is-active mh-armor-filter-button">
                         <a>"All armors"</a></li>
