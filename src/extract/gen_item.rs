@@ -438,7 +438,7 @@ fn gen_item_usage_hyakuryu(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<di
 
     if !htmls.is_empty() {
         Some(
-            html!(<div class="mh-item-in-out"> <h3>"For enabling ramp-up skills: "</h3>
+            html!(<div class="mh-item-in-out"> <h3>"For enabling rampage skills: "</h3>
             <ul class="mh-item-list">{
                 htmls
             }</ul> </div>),
@@ -492,7 +492,7 @@ fn gen_item_usage_hyakuryu_deco(item_id: ItemId, pedia_ex: &PediaEx) -> Option<B
 
     if !htmls.is_empty() {
         Some(
-            html!(<div class="mh-item-in-out"> <h3>"For crafting ramp-up decorations: "</h3>
+            html!(<div class="mh-item-in-out"> <h3>"For crafting rampage decorations: "</h3>
             <ul class="mh-item-list">{
                 htmls
             }</ul> </div>),

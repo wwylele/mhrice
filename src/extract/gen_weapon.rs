@@ -409,7 +409,7 @@ where
                 <span>{text!("{}", main.def_bonus)}</span></p>
                 <p class="mh-kv"><span>"Slot"</span>
                 <span>{gen_slot(&main.slot_num_list, false)}</span></p>
-                <p class="mh-kv"><span>"Ramp-up Slot"</span>
+                <p class="mh-kv"><span>"Rampage Slot"</span>
                 <span>{gen_slot(&main.slot_num_list, true)}</span></p>
 
                 {first_element.map(|first_element| html!(
@@ -442,7 +442,7 @@ where
                 </section>
 
                 <section>
-                <h2 >"Ramp-up skills"</h2>
+                <h2 >"Rampage skills"</h2>
                 <ul> {
                     let main_list = main.hyakuryu_skill_id_list.iter()
                         .zip(std::iter::repeat(None));

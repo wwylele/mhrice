@@ -945,7 +945,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
     let rskill_icon = message_window_uvs.spriter_groups[0]
         .spriters
         .get(172)
-        .context("Ramp-up skill icon not found")?;
+        .context("Rampage skill icon not found")?;
     let (rskill_r, rskill_a) = message_window
         .sub_image_f(rskill_icon.p0, rskill_icon.p1)?
         .gen_double_mask();

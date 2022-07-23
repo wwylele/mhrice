@@ -103,7 +103,7 @@ pub fn navbar() -> Box<nav<String>> {
                         "Armor skills"
                     </a>
                     <a class="navbar-item" href="/hyakuryu_skill.html">
-                        "Ramp-up skills"
+                        "Rampage skills"
                     </a>
                 </div>
                 </div>

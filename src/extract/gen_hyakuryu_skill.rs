@@ -32,13 +32,13 @@ pub fn gen_hyakuryu_skill_list(
     let doc: DOMTree<String> = html!(
         <html>
             <head>
-                <title>{text!("Ramp-up skills - MHRice")}</title>
+                <title>{text!("Rampage skills - MHRice")}</title>
                 { head_common() }
             </head>
             <body>
                 { navbar() }
                 <main>
-                <header><h1>"Ramp-up skill"</h1></header>
+                <header><h1>"Rampage skill"</h1></header>
                 <ul class="mh-item-list">
                 {
                     skills.iter().map(|(_, skill)|{
@@ -153,7 +153,7 @@ pub fn gen_hyakuryu_skill(
     let doc: DOMTree<String> = html!(
         <html>
             <head>
-                <title>{text!("Ramp-up skill - MHRice")}</title>
+                <title>{text!("Rampage skill - MHRice")}</title>
                 { head_common() }
             </head>
             <body>
