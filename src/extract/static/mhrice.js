@@ -95,7 +95,9 @@ function addEventListenerToId(id, event_name, f) {
 }
 
 function onDropdownClick(e) {
-    e.currentTarget.classList.toggle("is-active");
+    // TODO: make this work well
+    e
+    //e.currentTarget.classList.toggle("is-active");
 }
 
 function check_cookie() {
