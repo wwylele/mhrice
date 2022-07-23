@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     check_cookie();
     switchLanguage();
+    adjustVersionMenu();
     hide_class("mh-ride-cond");
     hide_class("mh-invalid-meat");
     hide_class("mh-invalid-part");
@@ -75,6 +76,7 @@ function addEventListensers() {
         e => onCheckDisplay(e.currentTarget, 'mh-quest-detail', null));
 
     addEventListenerToClass("mh-color-diagram-switch", "click", onChangeDiagramColor);
+    addEventListenerToClass("has-dropdown", "click", onDropdownClick);
 }
 
 function addEventListenerToClass(class_name, event_name, f) {
@@ -88,6 +90,10 @@ function addEventListenerToId(id, event_name, f) {
     if (element) {
         element.addEventListener(event_name, f);
     }
+}
+
+function onDropdownClick(e) {
+    e.currentTarget.classList.toggle("is-active");
 }
 
 function check_cookie() {
@@ -146,6 +152,26 @@ function delete_all_cookie() {
     for (const cookie of cookies) {
         const name = cookie.trim().split("=")[0];
         document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+    }
+}
+
+
+function adjustVersionMenu() {
+    for (const item of document.getElementsByClassName("mh-version-menu")) {
+        let href = item.getAttribute("href");
+        let hostname = window.location.hostname;
+        let current = `https://${hostname}`;
+        if (href === current) {
+            item.classList.add("has-text-weight-bold");
+            if (!item.classList.contains("mh-version-menu-latest")) {
+                let head = document.getElementById("mh-version-menu-head")
+                if (head != null) {
+                    head.textContent = "Version:" + item.textContent;
+                    head.classList.add("has-text-danger")
+                }
+            }
+        }
+        item.setAttribute("href", href + window.location.pathname);
     }
 }
 

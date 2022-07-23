@@ -67,6 +67,8 @@ pub fn head_common() -> Vec<Box<dyn MetadataContent<String>>> {
     ]
 }
 
+const WEBSITE_VERSIONS: &[&str] = &["10.0.2", "10.0.3"];
+
 pub fn navbar() -> Box<nav<String>> {
     html!(<nav><div>
         <div class="navbar-brand">
@@ -157,6 +159,33 @@ pub fn navbar() -> Box<nav<String>> {
                 </a>
             </div>
             <div class="navbar-end">
+                <div class="navbar-item has-dropdown is-hoverable">
+                    <a class="navbar-link" id="mh-version-menu-head">
+                        "Version"
+                    </a>
+                    <div class="navbar-dropdown">{
+                        WEBSITE_VERSIONS.iter().enumerate().map(|(i, &version)| {
+                            let latest = i == WEBSITE_VERSIONS.len() - 1;
+                            let href = if latest {
+                                "https://mhrise.mhrice.info".to_owned()
+                            } else {
+                                format!("https://mhrise-{}.mhrice.info", version.replace('.', "-"))
+                            };
+                            let text = if latest {
+                                format!("{version} (Latest)")
+                            } else {
+                                version.to_owned()
+                            };
+                            let mut class = "navbar-item mh-version-menu".to_owned();
+                            if latest {
+                                class += " mh-version-menu-latest";
+                            }
+                            html!(<a class={class.as_str()} href={href.as_str()}>
+                                {text!("{}", text)}
+                            </a>)
+                        })
+                    }</div>
+                </div>
                 <div class="navbar-item has-dropdown is-hoverable">
                     <a class="navbar-link">
                         "Language"
