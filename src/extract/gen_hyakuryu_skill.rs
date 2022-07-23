@@ -10,8 +10,8 @@ use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
 
 pub fn gen_hyakuryu_skill_label(skill: &HyakuryuSkill) -> Box<a<String>> {
-    html!(<a href={format!("/hyakuryu_skill/{}", hyakuryu_skill_page(skill.data.id))} class="mh-icon-text">
-        {gen_colored_icon(skill.data.item_color, "/resources/rskill", &[])}
+    html!(<a href={format!("/hyakuryu_skill/{}", hyakuryu_skill_page(skill.id()))} class="mh-icon-text">
+        {gen_colored_icon(skill.color(), "/resources/rskill", &[])}
         <span>{gen_multi_lang(skill.name)}</span>
         {skill.recipe.is_some().then(||html!(<span class="tag">"HR"</span>))}
         {skill.deco.is_some().then(||html!(<span class="tag">"MR"</span>))}
@@ -161,7 +161,7 @@ pub fn gen_hyakuryu_skill(
                 <main>
                 <header>
                     <div class="mh-title-icon">
-                        {gen_colored_icon(skill.data.item_color, "/resources/rskill", &[])}
+                        {gen_colored_icon(skill.color(), "/resources/rskill", &[])}
                     </div>
                     <h1>{gen_multi_lang(skill.name)}</h1>
                 </header>
@@ -191,7 +191,7 @@ pub fn gen_hyakuryu_skill(
 
                 { deco }
 
-                { gen_hyakuryu_source_weapon(skill.data.id, pedia_ex) }
+                { gen_hyakuryu_source_weapon(skill.id(), pedia_ex) }
 
                 </main>
             </body>

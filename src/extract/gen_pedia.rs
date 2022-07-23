@@ -1513,13 +1513,33 @@ fn prepare_hyakuryu_skills(
         |r| (r.skill_id, r),
         false,
     )?;
-    let mut result = BTreeMap::new();
-    for skill in &pedia.hyakuryu_skill.param {
-        let raw_id = if let PlHyakuryuSkillId::Skill(id) = skill.id {
+
+    let get_name_explain = |id: PlHyakuryuSkillId| -> Result<(&MsgEntry, &MsgEntry)> {
+        let raw_id = if let PlHyakuryuSkillId::Skill(id) = id {
             id
         } else {
-            continue;
+            bail!("None Hyakuryu skill ID")
         };
+
+        let name_tag = format!("HyakuryuSkill_{:03}_Name", raw_id);
+        let explain_tag = format!("HyakuryuSkill_{:03}_Explain", raw_id);
+        let name = *names
+            .get(&name_tag)
+            .or_else(|| names_mr.get(&name_tag))
+            .with_context(|| format!("No name found for hyakuryu skill {:?}", id))?;
+        let explain = *explains
+            .get(&explain_tag)
+            .or_else(|| explains_mr.get(&explain_tag))
+            .with_context(|| format!("No explain found for hyakuryu skill {:?}", id))?;
+
+        Ok((name, explain))
+    };
+
+    let mut result = BTreeMap::new();
+    for skill in &pedia.hyakuryu_skill.param {
+        if skill.id == PlHyakuryuSkillId::None {
+            continue;
+        }
 
         if result.contains_key(&skill.id) {
             bail!("Multiple definition for hyakuryu skill {:?}", skill.id);
@@ -1527,18 +1547,9 @@ fn prepare_hyakuryu_skills(
 
         let recipe = recipes.remove(&skill.id);
 
-        let name_tag = format!("HyakuryuSkill_{:03}_Name", raw_id);
-        let explain_tag = format!("HyakuryuSkill_{:03}_Explain", raw_id);
-        let name = *names
-            .get(&name_tag)
-            .or_else(|| names_mr.get(&name_tag))
-            .with_context(|| format!("No name found for hyakuryu skill {:?}", skill.id))?;
-        let explain = *explains
-            .get(&explain_tag)
-            .or_else(|| explains_mr.get(&explain_tag))
-            .with_context(|| format!("No explain found for hyakuryu skill {:?}", skill.id))?;
+        let (name, explain) = get_name_explain(skill.id)?;
         let skill_package = HyakuryuSkill {
-            data: skill,
+            data: Some(skill),
             recipe,
             name,
             explain,
@@ -1581,10 +1592,28 @@ fn prepare_hyakuryu_skills(
         let deco_slot = if let Some(skill) = result.get_mut(&deco.hyakuryu_skill_id) {
             &mut skill.deco
         } else {
+            // This happens for Fanged Exploit
             eprintln!(
-                "Hyakuryu deco {:?} is for unknown skill {:?}",
+                "Hyakuryu deco {:?} is for unknown skill {:?}. Going to make up one",
                 deco.id, deco.hyakuryu_skill_id
             );
+
+            let (skill_name, skill_explain) = get_name_explain(deco.hyakuryu_skill_id)?;
+            result.insert(
+                deco.hyakuryu_skill_id,
+                HyakuryuSkill {
+                    data: None,
+                    recipe: None,
+                    name: skill_name,
+                    explain: skill_explain,
+                    deco: Some(HyakuryuDeco {
+                        data: deco,
+                        product,
+                        name,
+                    }),
+                },
+            );
+
             continue;
         };
         if deco_slot.is_some() {

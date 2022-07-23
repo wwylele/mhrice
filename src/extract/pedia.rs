@@ -230,11 +230,29 @@ pub struct HyakuryuDeco<'a> {
 }
 
 pub struct HyakuryuSkill<'a> {
-    pub data: &'a PlHyakuryuSkillBaseUserDataParam,
+    pub data: Option<&'a PlHyakuryuSkillBaseUserDataParam>,
     pub recipe: Option<&'a PlHyakuryuSkillRecipeUserDataParam>,
     pub name: &'a MsgEntry,
     pub explain: &'a MsgEntry,
     pub deco: Option<HyakuryuDeco<'a>>,
+}
+
+impl<'a> HyakuryuSkill<'a> {
+    pub fn id(&self) -> PlHyakuryuSkillId {
+        if let Some(data) = self.data {
+            data.id
+        } else {
+            self.deco.as_ref().unwrap().data.hyakuryu_skill_id
+        }
+    }
+
+    pub fn color(&self) -> i32 {
+        if let Some(data) = self.data {
+            data.item_color
+        } else {
+            self.deco.as_ref().unwrap().data.icon_color
+        }
+    }
 }
 
 pub struct Armor<'a> {
