@@ -36,6 +36,7 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], output: &impl Sink) -> Result<()
             <head>
                 <title>{text!("Armors - MHRice")}</title>
                 { head_common() }
+                <style id="mh-armor-list-style">""</style>
             </head>
             <body>
                 { navbar() }
@@ -46,21 +47,39 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], output: &impl Sink) -> Result<()
                         "Armor names are probably incorrect."
                     </div>
                 </article>
+                <div class="mh-filters"><ul>
+                    <li id="mh-armor-filter-button-all" class="is-active mh-armor-filter-button">
+                        <a>"All armors"</a></li>
+                    <li id="mh-armor-filter-button-lr" class="mh-armor-filter-button">
+                        <a>"Low rank"</a></li>
+                    <li id="mh-armor-filter-button-hr" class="mh-armor-filter-button">
+                        <a>"High rank"</a></li>
+                    <li id="mh-armor-filter-button-mr" class="mh-armor-filter-button">
+                        <a>"Master rank"</a></li>
+                </ul></div>
                 <div class="select"><select id="scombo-armor" class="mh-scombo">
                     <option value="0">"Sort by internal ID"</option>
                     <option value="1">"Sort by in-game order"</option>
                 </select></div>
                 <ul class="mh-armor-series-list" id="slist-armor">{
                     serieses.iter().map(|series|{
-                        let sort_tag = format!("{},{}",
-                            series.series.armor_series.0, series.series.index);
-                        let series_name = if let Some(name) = series.name.as_ref() {
-                            gen_multi_lang(name)
+                        let sort = if series.series.index == 0 {
+                            // index 0 looks like invalid. Put to the end
+                            u32::MAX
                         } else {
-                            html!(<span>"<Unknown>"</span>)
+                            series.series.index
                         };
+                        let sort_tag = format!("{},{}",
+                            series.series.armor_series.0, sort);
+
+                        let filter = match series.series.difficulty_group {
+                            EquipDifficultyGroup::Lower => "lr",
+                            EquipDifficultyGroup::Upper => "hr",
+                            EquipDifficultyGroup::Master => "mr",
+                        };
+                        let series_name = gen_multi_lang(series.name);
                         html!(
-                            <li data-sort=sort_tag>
+                            <li class="mh-armor-filter-item" data-sort=sort_tag data-filter={filter}>
                             <a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
                             <h2>{
                                 series_name
@@ -94,9 +113,8 @@ fn gen_armor(
     mut output: impl Write,
     mut toc_sink: TocSink<'_>,
 ) -> Result<()> {
-    if let Some(name) = series.name {
-        toc_sink.add(name);
-    }
+    toc_sink.add(series.name);
+
     for piece in &series.pieces {
         if let Some(piece) = piece.as_ref() {
             toc_sink.add(piece.name);
@@ -206,11 +224,7 @@ fn gen_armor(
                         gen_rared_icon(rarity, "/resources/equip/006")
                     } </div>
                     <h1> {
-                        if let Some(name) = series.name {
-                            gen_multi_lang(name)
-                        } else {
-                            html!(<span>"<Unknown>"</span>)
-                        }
+                        gen_multi_lang(series.name)
                     } </h1>
                 </header>
 

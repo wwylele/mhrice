@@ -15,6 +15,7 @@ let g_map_layer = 0;
 let g_cur_map_filter = "all";
 
 let g_cur_item_filter = "all";
+let g_cur_armor_filter = "all";
 
 let g_toc = null;
 
@@ -53,6 +54,7 @@ function addEventListensers() {
     addEventListenerToId("mh-search", "keydown", search);
 
     addEventListenerToClass("mh-item-filter-button", "click", changeItemFilter);
+    addEventListenerToClass("mh-armor-filter-button", "click", changeArmorFilter);
     addEventListenerToClass("mh-scombo", "change", onChangeSort);
 
     addEventListenerToClass("mh-map-pop", "click", onShowMapExplain);
@@ -384,26 +386,38 @@ function changeMapFilter(e) {
 }
 
 function changeItemFilter(e) {
-    let filter = removePrefix(e.currentTarget.id, "mh-item-filter-button-");
-    const style = document.getElementById("mh-item-list-style");
+    const global = { ref: g_cur_item_filter };
+    changeFilter(e, 'item', global);
+    g_cur_item_filter = global.ref;
+}
+
+function changeArmorFilter(e) {
+    const global = { ref: g_cur_armor_filter };
+    changeFilter(e, 'armor', global);
+    g_cur_armor_filter = global.ref;
+}
+
+function changeFilter(e, category, global) {
+    let filter = removePrefix(e.currentTarget.id, `mh-${category}-filter-button-`);
+    const style = document.getElementById(`mh-${category}-list-style`);
     if (style) {
         if (filter == "all") {
             style.innerHTML = "";
         } else {
             style.innerHTML =
-                `.mh-item-filter-item:not([data-filter="${filter}"]) { display:none; }`;
+                `.mh-${category}-filter-item:not([data-filter="${filter}"]) { display:none; }`;
         }
     }
 
-    const filter_button_prefix = "mh-item-filter-button-";
-    const prev = document.getElementById(filter_button_prefix + g_cur_item_filter);
+    const filter_button_prefix = `mh-${category}-filter-button-`;
+    const prev = document.getElementById(filter_button_prefix + global.ref);
     if (prev !== null) {
         prev.classList.remove("is-active")
     }
 
-    g_cur_item_filter = filter;
+    global.ref = filter;
 
-    const cur = document.getElementById(filter_button_prefix + g_cur_item_filter);
+    const cur = document.getElementById(filter_button_prefix + global.ref);
     if (cur !== null) {
         cur.classList.add("is-active")
     }

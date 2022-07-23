@@ -1,4 +1,4 @@
-//use super::gen_armor::*;
+use super::gen_armor::*;
 use super::gen_item::*;
 use super::gen_website::*;
 use super::pedia::*;
@@ -61,7 +61,7 @@ pub fn gen_deco_label(deco: &Deco) -> Box<div<String>> {
     </div>)
 }
 
-/*fn gen_skill_source_gear(id: PlEquipSkillId, pedia_ex: &PediaEx) -> Option<Box<section<String>>> {
+fn gen_skill_source_gear(id: PlEquipSkillId, pedia_ex: &PediaEx) -> Option<Box<section<String>>> {
     let mut htmls = vec![];
 
     for series in &pedia_ex.armors {
@@ -84,7 +84,7 @@ pub fn gen_deco_label(deco: &Deco) -> Box<div<String>> {
     } else {
         None
     }
-}*/
+}
 
 pub fn gen_skill(
     id: PlEquipSkillId,
@@ -150,7 +150,7 @@ pub fn gen_skill(
 
                 { deco }
 
-                //{ gen_skill_source_gear(id, pedia_ex) }
+                { gen_skill_source_gear(id, pedia_ex) }
 
                 </main>
             </body>

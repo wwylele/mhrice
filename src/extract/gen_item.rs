@@ -1,4 +1,4 @@
-//use super::gen_armor::*;
+use super::gen_armor::*;
 use super::gen_hyakuryu_skill::*;
 //use super::gen_map::*;
 use super::gen_monster::*;
@@ -242,7 +242,6 @@ fn gen_item_source_weapon(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div
     }
 }
 
-/*
 fn gen_item_source_armor(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
     let mut htmls = vec![];
 
@@ -270,7 +269,7 @@ fn gen_item_source_armor(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<
     } else {
         None
     }
-}*/
+}
 
 fn gen_item_usage_weapon(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
     let mut htmls = vec![];
@@ -333,7 +332,6 @@ fn gen_item_usage_weapon(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<
     }
 }
 
-/*
 fn gen_item_usage_armor(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
     let mut htmls = vec![];
 
@@ -372,6 +370,7 @@ fn gen_item_usage_armor(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<S
     }
 }
 
+/*
 fn gen_item_usage_otomo(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
     let mut htmls = vec![];
 
@@ -664,13 +663,13 @@ pub fn gen_item(
                 {gen_item_source_quest(item.param.id, pedia_ex)}
                 //{gen_item_source_map(item.param.id, pedia, pedia_ex)}
                 {gen_item_source_weapon(item.param.id, pedia_ex)}
-                //{gen_item_source_armor(item.param.id, pedia_ex)}
+                {gen_item_source_armor(item.param.id, pedia_ex)}
                 </section>
 
                 <section>
                 <h2 >"Where to use"</h2>
                 {gen_item_usage_weapon(item.param.id, pedia_ex)}
-                //{gen_item_usage_armor(item.param.id, pedia_ex)}
+                {gen_item_usage_armor(item.param.id, pedia_ex)}
                 //{gen_item_usage_otomo(item.param.id, pedia_ex)}
                 {gen_item_usage_deco(item.param.id, pedia_ex)}
                 {gen_item_usage_hyakuryu(item.param.id, pedia_ex)}

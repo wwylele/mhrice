@@ -388,7 +388,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let quest_arena_msg = get_msg(pak, "Message/Quest/QuestData_Arena.msg")?;
     let quest_dlc_msg = get_msg(pak, "Message/Quest/QuestData_Dlc.msg")?;
 
-    /*let armor_head_name_msg = get_msg(pak, "data/Define/Player/Armor/Head/A_Head_Name.msg")?;
+    let armor_head_name_msg = get_msg(pak, "data/Define/Player/Armor/Head/A_Head_Name.msg")?;
     let armor_chest_name_msg = get_msg(pak, "data/Define/Player/Armor/Chest/A_Chest_Name.msg")?;
     let armor_arm_name_msg = get_msg(pak, "data/Define/Player/Armor/Arm/A_Arm_Name.msg")?;
     let armor_waist_name_msg = get_msg(pak, "data/Define/Player/Armor/Waist/A_Waist_Name.msg")?;
@@ -401,7 +401,29 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         get_msg(pak, "data/Define/Player/Armor/Waist/A_Waist_Explain.msg")?;
     let armor_leg_explain_msg = get_msg(pak, "data/Define/Player/Armor/Leg/A_Leg_Explain.msg")?;
     let armor_series_name_msg =
-        get_msg(pak, "data/Define/Player/Armor/ArmorSeries_Hunter_Name.msg")?;*/
+        get_msg(pak, "data/Define/Player/Armor/ArmorSeries_Hunter_Name.msg")?;
+
+    let armor_head_name_msg_mr = get_msg(pak, "data/Define/Player/Armor/Head/A_Head_Name_MR.msg")?;
+    let armor_chest_name_msg_mr =
+        get_msg(pak, "data/Define/Player/Armor/Chest/A_Chest_Name_MR.msg")?;
+    let armor_arm_name_msg_mr = get_msg(pak, "data/Define/Player/Armor/Arm/A_Arm_Name_MR.msg")?;
+    let armor_waist_name_msg_mr =
+        get_msg(pak, "data/Define/Player/Armor/Waist/A_Waist_Name_MR.msg")?;
+    let armor_leg_name_msg_mr = get_msg(pak, "data/Define/Player/Armor/Leg/A_Leg_Name_MR.msg")?;
+    let armor_head_explain_msg_mr =
+        get_msg(pak, "data/Define/Player/Armor/Head/A_Head_Explain_MR.msg")?;
+    let armor_chest_explain_msg_mr =
+        get_msg(pak, "data/Define/Player/Armor/Chest/A_Chest_Explain_MR.msg")?;
+    let armor_arm_explain_msg_mr =
+        get_msg(pak, "data/Define/Player/Armor/Arm/A_Arm_Explain_MR.msg")?;
+    let armor_waist_explain_msg_mr =
+        get_msg(pak, "data/Define/Player/Armor/Waist/A_Waist_Explain_MR.msg")?;
+    let armor_leg_explain_msg_mr =
+        get_msg(pak, "data/Define/Player/Armor/Leg/A_Leg_Explain_MR.msg")?;
+    let armor_series_name_msg_mr = get_msg(
+        pak,
+        "data/Define/Player/Armor/ArmorSeries_Hunter_Name_MR.msg",
+    )?;
 
     let player_skill_detail_msg = get_msg(
         pak,
@@ -597,7 +619,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         quest_tutorial_msg,
         quest_arena_msg,
         quest_dlc_msg,
-        /*armor: get_singleton(pak)?,
+        armor: get_singleton(pak)?,
         armor_series: get_singleton(pak)?,
         armor_product: get_singleton(pak)?,
         overwear: get_singleton(pak)?,
@@ -612,7 +634,18 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         armor_arm_explain_msg,
         armor_waist_explain_msg,
         armor_leg_explain_msg,
-        armor_series_name_msg,*/
+        armor_series_name_msg,
+        armor_head_name_msg_mr,
+        armor_chest_name_msg_mr,
+        armor_arm_name_msg_mr,
+        armor_waist_name_msg_mr,
+        armor_leg_name_msg_mr,
+        armor_head_explain_msg_mr,
+        armor_chest_explain_msg_mr,
+        armor_arm_explain_msg_mr,
+        armor_waist_explain_msg_mr,
+        armor_leg_explain_msg_mr,
+        armor_series_name_msg_mr,
         equip_skill: get_singleton(pak)?,
         player_skill_detail_msg,
         player_skill_explain_msg,
@@ -1636,7 +1669,6 @@ fn prepare_hyakuryu_skills(
     Ok(result)
 }
 
-/*
 fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
     let mut product_map = hash_map_unique(
         &pedia.armor_product.param,
@@ -1645,6 +1677,15 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
     )?;
     let mut series_map: BTreeMap<PlArmorSeriesTypes, ArmorSeries> = BTreeMap::new();
 
+    fn get_msg<'a>(id: usize, msg: &'a Msg, msg_mr: &'a Msg) -> Option<&'a MsgEntry> {
+        // Why is this index-based
+        if id < 300 {
+            msg.entries.get(id)
+        } else {
+            msg_mr.entries.get(id - 300)
+        }
+    }
+
     for armor_series in &pedia.armor_series.param {
         if series_map.contains_key(&armor_series.armor_series) {
             bail!(
@@ -1652,10 +1693,17 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
                 armor_series.armor_series
             );
         }
-        let name = pedia
-            .armor_series_name_msg
-            .entries
-            .get(armor_series.armor_series.0 as usize); // ?!
+        let name = get_msg(
+            usize::try_from(armor_series.armor_series.0)?,
+            &pedia.armor_series_name_msg,
+            &pedia.armor_series_name_msg_mr,
+        )
+        .with_context(|| {
+            format!(
+                "Cannot find name for armor series {:?}",
+                armor_series.armor_series
+            )
+        })?;
         let series = ArmorSeries {
             name,
             series: armor_series,
@@ -1669,35 +1717,45 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
             continue;
         }
 
-        let (mut slot, msg, explain_msg, id) = match armor.pl_armor_id {
+        let (mut slot, msg, explain_msg, msg_mr, explain_msg_mr, id) = match armor.pl_armor_id {
             PlArmorId::Head(id) => (
                 0,
                 &pedia.armor_head_name_msg,
                 &pedia.armor_head_explain_msg,
+                &pedia.armor_head_name_msg_mr,
+                &pedia.armor_head_explain_msg_mr,
                 id,
             ),
             PlArmorId::Chest(id) => (
                 1,
                 &pedia.armor_chest_name_msg,
                 &pedia.armor_chest_explain_msg,
+                &pedia.armor_chest_name_msg_mr,
+                &pedia.armor_chest_explain_msg_mr,
                 id,
             ),
             PlArmorId::Arm(id) => (
                 2,
                 &pedia.armor_arm_name_msg,
                 &pedia.armor_arm_explain_msg,
+                &pedia.armor_arm_name_msg_mr,
+                &pedia.armor_arm_explain_msg_mr,
                 id,
             ),
             PlArmorId::Waist(id) => (
                 3,
                 &pedia.armor_waist_name_msg,
                 &pedia.armor_waist_explain_msg,
+                &pedia.armor_waist_name_msg_mr,
+                &pedia.armor_waist_explain_msg_mr,
                 id,
             ),
             PlArmorId::Leg(id) => (
                 4,
                 &pedia.armor_leg_name_msg,
                 &pedia.armor_leg_explain_msg,
+                &pedia.armor_leg_name_msg_mr,
+                &pedia.armor_leg_explain_msg_mr,
                 id,
             ),
             _ => bail!("Unknown armor ID {:?}", armor.pl_armor_id),
@@ -1709,14 +1767,10 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
 
         let id = usize::try_from(id)?;
 
-        let name = msg
-            .entries
-            .get(id)
-            .with_context(|| format!("Cannot find name for armor {:?}", armor.pl_armor_id))?; // ?!
-        let explain = explain_msg
-            .entries
-            .get(id)
-            .with_context(|| format!("Cannot find name for armor {:?}", armor.pl_armor_id))?; // ?!
+        let name = get_msg(id, msg, msg_mr)
+            .with_context(|| format!("Cannot find name for armor {:?}", armor.pl_armor_id))?;
+        let explain = get_msg(id, explain_msg, explain_msg_mr)
+            .with_context(|| format!("Cannot find name for armor {:?}", armor.pl_armor_id))?;
 
         let product = product_map.remove(&armor.pl_armor_id);
 
@@ -1805,7 +1859,7 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
     }
 
     Ok(series_map.into_iter().map(|(_, v)| v).collect())
-}*/
+}
 
 fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, Vec<&MsgEntry>>> {
     let msg_map: HashMap<_, _> = pedia.hunter_note_msg.get_name_map();
@@ -2482,7 +2536,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         discoveries: prepare_discoveries(pedia)?,
         skills: prepare_skills(pedia)?,
         hyakuryu_skills: prepare_hyakuryu_skills(pedia)?,
-        //armors: prepare_armors(pedia)?,
+        armors: prepare_armors(pedia)?,
         meat_names: prepare_meat_names(pedia)?,
         items: prepare_items(pedia)?,
         material_categories: prepare_material_categories(pedia),

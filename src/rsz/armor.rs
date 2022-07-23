@@ -52,7 +52,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.ArmorBaseUserData.Param",
-        0xe256b3a6 = 0
+        0x68d0776c = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct ArmorBaseUserDataParam {
@@ -75,10 +75,12 @@ rsz_struct! {
         pub dragon_reg_val: i32,
         pub buildup_table: i32, // snow.data.ArmorBuildupData.TableTypes
         pub buff_formula: i32, // snow.data.GameItemEnum.SeriesBufType
-        pub decorations_num_list: [u32; 3],
+        pub decorations_num_list: [u32; 4],
         pub skill_list: Vec<PlEquipSkillId>,
         pub skill_lv_list: Vec<i32>,
         pub id_after_ex_change: PlArmorId,
+        pub cutom_table_no: u32,
+        pub custom_cost: u32,
     }
 }
 
@@ -100,12 +102,13 @@ rsz_enum! {
     pub enum EquipDifficultyGroup {
         Lower = 0,
         Upper = 1,
+        Master = 2,
     }
 }
 
 rsz_struct! {
     #[rsz("snow.data.ArmorSeriesUserData.Param",
-        0x57e0d148 = 0
+        0xbf2780d1 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct ArmorSeriesUserDataParam {
@@ -131,7 +134,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.ArmorProductUserData.Param",
-        0x9b5b7c58 = 0
+        0x112ceb90 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct ArmorProductUserDataParam {
@@ -174,7 +177,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.equip.PlOverwearBaseUserData.Param",
-        0x069374e8 = 0
+        0x8be3d1fc = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct PlOverwearBaseUserDataParam {
@@ -205,7 +208,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.equip.PlOverwearProductUserData.Param",
-        0x03c08e37 = 0
+        0x2b8f5c1e = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct PlOverwearProductUserDataParam {
@@ -214,6 +217,7 @@ rsz_struct! {
         pub enemy_flag: EmTypes,
         pub progress_flag: i32, // snow.data.DataDef.UnlockProgressTypes
         pub hr_limit_flag: bool,
+        pub mystery_flag: bool,
         pub item: Vec<ItemId>,
         pub item_num: Vec<u32>,
         pub material_category: MaterialCategory,

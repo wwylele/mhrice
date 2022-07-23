@@ -85,7 +85,7 @@ pub struct Pedia {
     pub quest_arena_msg: Msg,
     pub quest_dlc_msg: Msg,
 
-    /*pub armor: ArmorBaseUserData,
+    pub armor: ArmorBaseUserData,
     pub armor_series: ArmorSeriesUserData,
     pub armor_product: ArmorProductUserData,
     pub overwear: PlOverwearBaseUserData,
@@ -100,7 +100,19 @@ pub struct Pedia {
     pub armor_arm_explain_msg: Msg,
     pub armor_waist_explain_msg: Msg,
     pub armor_leg_explain_msg: Msg,
-    pub armor_series_name_msg: Msg,*/
+    pub armor_series_name_msg: Msg,
+    pub armor_head_name_msg_mr: Msg,
+    pub armor_chest_name_msg_mr: Msg,
+    pub armor_arm_name_msg_mr: Msg,
+    pub armor_waist_name_msg_mr: Msg,
+    pub armor_leg_name_msg_mr: Msg,
+    pub armor_head_explain_msg_mr: Msg,
+    pub armor_chest_explain_msg_mr: Msg,
+    pub armor_arm_explain_msg_mr: Msg,
+    pub armor_waist_explain_msg_mr: Msg,
+    pub armor_leg_explain_msg_mr: Msg,
+    pub armor_series_name_msg_mr: Msg,
+
     pub equip_skill: PlEquipSkillBaseUserData,
     pub player_skill_detail_msg: Msg,
     pub player_skill_explain_msg: Msg,
@@ -265,7 +277,7 @@ pub struct Armor<'a> {
 }
 
 pub struct ArmorSeries<'a> {
-    pub name: Option<&'a MsgEntry>,
+    pub name: &'a MsgEntry,
     pub series: &'a ArmorSeriesUserDataParam,
     pub pieces: [Option<Armor<'a>>; 10],
 }
@@ -340,7 +352,7 @@ pub struct PediaEx<'a> {
     pub discoveries: HashMap<EmTypes, &'a DiscoverEmSetDataParam>,
     pub skills: BTreeMap<PlEquipSkillId, Skill<'a>>,
     pub hyakuryu_skills: BTreeMap<PlHyakuryuSkillId, HyakuryuSkill<'a>>,
-    /*pub armors: Vec<ArmorSeries<'a>>,*/
+    pub armors: Vec<ArmorSeries<'a>>,
     pub meat_names: HashMap<MeatKey, Vec<&'a MsgEntry>>,
 
     pub items: BTreeMap<ItemId, Item<'a>>,
