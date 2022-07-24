@@ -366,7 +366,7 @@ enum Mhrice {
         #[clap(short, long)]
         dmp: String,
         /// Hash of the type in hex
-        #[clap(short, long)]
+        #[clap(long)]
         hash: String,
         /// CRC of the type in hex
         #[clap(short, long)]

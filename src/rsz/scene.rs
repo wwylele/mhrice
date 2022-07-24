@@ -7,7 +7,7 @@ use serde::*;
 
 rsz_struct! {
     #[rsz("via.Folder",
-        0xc35a0392 = 0
+        0xadd98040 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct Folder {
@@ -17,26 +17,29 @@ rsz_struct! {
         pub draw_self: bool,
         pub paolumu: bool,
         pub path: Option<String>,
+        pub x: u64,
+        pub y: u64,
+        pub z: u64
     }
 }
 
 rsz_struct! {
     #[rsz("via.GameObject",
-        0xcbcfba78 = 0
+        0x0ce8a1f8 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct GameObject {
         pub name: Option<String>,
         pub tag: Option<String>,
-        pub update_self: bool, // 14
-        pub draw_self: bool, // 15
+        pub update_self: bool,
+        pub draw_self: bool,
         pub time_scale: f32,
     }
 }
 
 rsz_struct! {
     #[rsz("via.Transform",
-        0xb0cc69dd = 0
+        0x239d8ecd = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct Transform {
@@ -44,8 +47,10 @@ rsz_struct! {
         pub rotation: Vec4,
         pub scale: Vec4,
         pub zinogre: Option<String>,
-        pub same_joints_constraint: bool,
-        pub absolute_scaling: bool
+        pub same_joints_constraint: bool, // 102
+        pub absolute_scaling: bool, // 103
+        pub joint_segment_scale: bool, // 104
+        pub joint_fast_lock_scene: bool // 105
     }
 }
 
@@ -61,12 +66,13 @@ rsz_enum! {
         Hyakuryu = 4,
         LastBoss = 5,
         Event = 6,
+        LastBossMR = 7,
     }
 }
 
 rsz_struct! {
     #[rsz("snow.wwise.WwiseMediaLoader",
-        0xaa0cd978 = 0
+        0x1b22997a = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct WwiseMediaLoader {
@@ -104,7 +110,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("via.gui.GUI",
-        0xcd10d77e = 0
+        0x6e83e485 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct ViaGui {
@@ -140,67 +146,74 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("via.render.Mesh",
-        0x8b919d87 = 0
+        0x9b2876b9 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct ViaMesh {
-        render_output_id: u32, // 398
-        enabled: bool, // 12a
+        render_output_id: u32,
+        enabled: bool,
         mesh_path: Option<String>,
         mdf2_path: Option<String>,
-        static_mesh: bool, // 398 << 0x12
-        small_object_culling_factor: f32, // 364
-        draw_default: bool, // 398 << 9
-        frustum_culling: bool, // 398 << 0x11
-        occlusion_culling: bool, // << xf
-        occluder: bool, // << x10
-        occluder_by_lod: u8, // 128
-        draw_late_occluder: bool, // 398 << x14 RenderInFront: bool?
-        draw_voxelize: bool, // << 5
-        draw_envmap: bool, // << 6
-        draw_depth_blocker: bool, // << 7
-        draw_depth_occlusion: bool, // << 0x20
-        draw_raytracing: bool, // << x13
-        ignore_depth: bool, // <<xA
-        ignore_depth_transparent_correction: bool, // <<xB
-        view_spae_scaling: bool, // <<xD
-        mask_ignore_depth_mesh: bool, // <<xC
-        beauty_mask_flag: bool, // <<x1C
-        receive_sssss_flag: bool, // <<x1D
-        streaming_priority: u32, // 0x2e8
-        draw_priority_bias: i32, // 0x35c
-        transparent_bias: f32, // 0x360
-        stencil_value: u8, // 0x368
-        material: Vec<MaterialParam>, // 0x131, 0x3a0, 0x3a8 // via.render.MaterialParam?
-        use_stencil_value_priority: bool, // x398 << 0x1e
-        ignore_depth_stencil_value_write: bool, // < 0x1f
-        decal_recive_mode: i32, // 0x36c // via.landscape.DecalReciveMode
-        draw_pos_decal: bool, // 0x398 << 0xe
-        mesh_decal_priority: u32, // 0x2F0
-        draw_shadow_cast: bool, // 0x398 << 8
-        shadow_cast_mode: i32, // 0x398 << 0x15 // via.render.ShadowCastMode
-        real_mesh_shadow: bool, // 0x163
-        draw_far_cascade_shadow_cast: bool, // 0x398 << 4
-        lod_mode: i32, // 0x2f4 // via.render.LodMode
-        lod_level: u32, // 0x2f8
-        lod_follow_target: Guid, // 0x300...
-        enable_lod_effective_range: bool, // 0x310
-        lod_effective_range_s: u32, // 0x314..
+        static_mesh: bool, // x3d0
+        small_object_culling_factor: f32, // x35c
+        vbvh_rebuild_factor: f32,// x360
+        frustum_culling: bool, // -
+        occlusion_culling: bool, // x3d0 >> 10
+        what: bool, // x3d0 >> 0x12
+        what2: bool, // x3d0 >> 0x10
+        occluder: bool, // x3d0 >> 0x11
+        occluder_by_lod: u8, // x128
+        draw_late_occluder: bool, // x3d0 >> 0x15
+        draw_voxelize: bool, // x3d0 >> 6
+        draw_envmap: bool, // x3d0 >> 7
+        draw_depth_blocker: bool, // x3d0 >> 8
+        draw_depth_occlusion: bool, // x3d0 >> x21
+        draw_raytracing: bool, // x3d0 >> x14
+        ignore_depth: bool, // x3d0 >> xb
+        ignore_depth_transparent_correction: bool, // x3d0 >> xc
+        view_space_scaling: bool, // x3d0 >> xe
+        mask_ignore_depth_mesh: bool, // x3d0 >>xd
+        beauty_mask_flag: bool, // x3d0 >>x1d
+        receive_sssss_flag: bool, // x3d0 >>x1e
+        streaming_priority: u32, // x2e0
+        draw_priority_bias: i32, // x354
+        v27: u32,//material: Vec<MaterialParam>, // x358
+        stencil_value: u8, // x364
+        material: Vec<MaterialParam>,
+        v30: u8,  // x3d0 >>0x1f
+        v31: bool, // x3d0 >> 0x20
+        decal_recive_mode: i32,  // x36c
+        draw_pos_decal: bool, // x3d0 >> 0xf
+        mesh_decal_priority: u32,// x2e8
+        draw_shadow_cast: bool,  // x3d0 >> 9
+        shadow_cast_mode: i32, //v36: u32, // x3d0 >> x16 (+8)
+        real_mesh_shadow: bool, // no
+        draw_far_cascade_shadow_cast: bool, // x3d0 >> 5
+        lod_mode: i32, // 2ec
+        lod_level: u32, // 2f0
+        lod_follow_target: Guid,
+        enable_lod_effective_range: bool, // x308
+        //v43
+        lod_effective_range_s: u32, // x30c~x310
         lod_effective_range_r: u32,
-        shadow_lod_mode: i32, // 0x31c // via.render.LodMode
-        shadow_lod_level: u32, // deci800
-        enable_shadow_lod_effective_range: bool, // 0x324
-        shadow_lod_effective_range_s: u32, // 0x328..
+        //v44
+        shadow_lod_mode: i32, // x314
+        shadow_lod_level: u32, // x318
+        enable_shadow_lod_effective_range: bool, // x31c
+        //v47
+        shadow_lod_effective_range_s: u32, // x320~x324
         shadow_lod_effective_range_r: u32,
-        parts_enable: Vec<bool>, // ? 0x168?
-        parts_caching: bool, // 0x166
-        normal_recalculation_enable: bool, // 0x371
-        nr_edge_excluded: bool, // 0x372
-        use_blend_shape_normal: bool, // 0x118
-        blend_shape_channel_weights: Vec<f32>, // 0x1b8
-        draw_aabb: bool, // 0x12d
-        draw_occluder: bool, // 0x12e
-        v54: u8, // debug
+        shader_lod: i32, // x368
+        parts_enable: Vec<bool>,
+        parts_caching: bool, // x169
+        normal_recalculation_enable: bool, // x371
+        nr_edge_excluded: bool, // x373
+        use_blend_shape_real_time_lod: bool, // x118
+        use_blend_shape_normal: bool, // x119
+        blend_shape_channel_weights: Vec<f32>,
+        draw_aabb: bool, // x12d
+        draw_occluder: bool, // x12e
+        v58: u8,
     }
 }
 
@@ -371,7 +384,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("via.physics.MeshShape",
-        0x8fb90e73 = 0
+        0xa5aad20d = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct MeshShape {
@@ -430,33 +443,36 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("via.motion.TreeLayer",
-        0x5f9047f4 = 0,
+        0x30136f3e = 10_00_02,
     )]
     #[derive(Debug, Serialize)]
     pub struct TreeLayer {
-        pub v0: u32,
+        pub v0: u8,
         pub v1: u32,
-        pub v2: u8,
-        pub v3: Option<String>,
-        pub v4: u32,
-        pub v5: u32,
+        pub v2: u32,
+        pub v3: u32,
+        pub v4: u8,
+        pub v5: Option<String>,
         pub v6: u32,
         pub v7: u32,
         pub v8: u32,
         pub v9: u8,
-        pub v10: u8,
-        pub v11: u8,
-        pub v12: u32,
-        pub v13: u32,
+        pub v10: u32,
+        pub v11: u32,
+        pub v12: u8,
+        pub v13: u8,
         pub v14: u8,
-        pub v15: u8,
-        pub v16: u8,
+        pub v15: u32,
+        pub v16: u32,
         pub v17: u8,
-        pub v18: u32,
-        pub v19: u32,
-        pub v20: u32,
+        pub v18: u8,
+        pub v19: u8,
+        pub v20: u8,
         pub v21: u32,
-        pub v22: u8,
+        pub v22: u32,
+        pub v23: u32,
+        pub v24: u32,
+        pub v25: u8,
     }
 }
 
@@ -495,7 +511,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("via.motion.Motion",
-        0xb8e5e915 = 0
+        0x18a2f773 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct Motion {
@@ -504,26 +520,63 @@ rsz_struct! {
         pub v2: u32,
         pub v3: u8,
         pub v4: u8,
-
         pub v5: u32,
-        pub v6: u8,
+
+        pub v6: u32,
         pub v7: u8,
-        pub v8: Option<String>,
+        pub v8: u8,
         pub v9: Option<String>,
         pub v10: Option<String>,
         pub v11: Option<String>,
-        pub v12: u32,
-        pub v13: u8,
-        pub v14: Vec<TreeLayer>, // 0x198 Layer
-        pub v15: Vec<MotionBank>, // 0x348
-        pub v16: Vec<DynamicMotionBank>, // 800 DynamicMotionBank
-        pub v17: u8,
-        pub v18: u32,
+        pub v12: Option<String>,
+        pub v13: u32,
+        pub v14: u8,
+        pub v15: Vec<TreeLayer>, // 0x198 Layer
+        pub v16: Vec<MotionBank>, // 0x348
+        pub v17: Vec<DynamicMotionBank>, // 800 DynamicMotionBank
+        pub v18: u8,
         pub v19: u32,
         pub v20: u8,
         pub v21: u32,
-        pub v22: u32,
-        pub v23: u32,
+        pub v22: u8,
+        pub v23: u8,
+        pub v24: u32,
+        pub v25: u32,
+        pub v26: u32,
 
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.behaviortree.BehaviorTree.CoreHandle",
+        0xcc8a7873 = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct CoreHandle {
+        pub enabled: bool,
+        pub resource: Option<String>,
+        pub v2: u8,
+        pub v3: u32,
+        pub v4: Guid,
+        pub v5: u8,
+        pub v6: u32
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.behaviortree.BehaviorTree",
+        0xc45759a0 = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct BehaviorTree {
+        pub enabled: bool,
+        pub v1: Vec<CoreHandle>,
+        pub v2: Option<String>,
+        pub v3: u32,
+        pub v4: u32,
+        pub v5: u8,
+        pub v6: u8,
+        pub v7: u8,
+        pub v8: Zero, // A child to something
     }
 }

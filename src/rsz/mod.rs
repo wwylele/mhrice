@@ -780,6 +780,8 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         MotionBank,
         DynamicMotionBank,
         Motion,
+        CoreHandle,
+        BehaviorTree,
     );
 
     r!(
@@ -827,6 +829,13 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         FishSpawnRate,
         FishSpawnGroupInfo,
         FishSpawnData,
+        StageSceneLoader,
+        StageGridRegister,
+        M31IsletArrivalChecker,
+        StageAppTagSetter,
+        ItemPopIgnoreOtomoGathering,
+        TargetScene,
+        StageSceneStateController,
     );
 
     r!(
