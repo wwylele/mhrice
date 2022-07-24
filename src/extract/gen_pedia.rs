@@ -12,7 +12,7 @@ use crate::rsz::*;
 use crate::tex::*;
 use crate::user::User;
 use crate::uvs::*;
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{bail, Context, Result};
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use std::collections::BTreeMap;
@@ -2591,7 +2591,7 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
     Ok(res)
 }
 
-fn prepare_monsters<'a>(pedia: &'a Pedia) -> Result<HashMap<EmTypes, MonsterEx<'a>>> {
+fn prepare_monsters(pedia: &Pedia) -> Result<HashMap<EmTypes, MonsterEx<'_>>> {
     let mut result = HashMap::new();
 
     let names = pedia.monster_names.get_name_map();

@@ -101,11 +101,7 @@ pub fn gen_category(
     html!(<td>{category}{text!("{} pt", material_category_num)}</td>)
 }
 
-fn gen_item_source_monster(
-    item_id: ItemId,
-    pedia: &Pedia,
-    pedia_ex: &PediaEx,
-) -> Option<Box<div<String>>> {
+fn gen_item_source_monster(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
     let mut em_types: Vec<EmTypes> = pedia_ex
         .monster_lot
         .iter()
@@ -127,7 +123,7 @@ fn gen_item_source_monster(
             <ul class="mh-item-list">
                 {
                     em_types.into_iter().map(|em_type|html!(<li>{
-                        gen_monster_tag(pedia, pedia_ex, em_type, false, false, false)
+                        gen_monster_tag(pedia_ex, em_type, false, false, false)
                     }</li>))
                 }
             </ul></div>),
@@ -658,7 +654,7 @@ pub fn gen_item(
 
                 <section>
                 <h2 >"Where to get"</h2>
-                {gen_item_source_monster(item.param.id, pedia, pedia_ex)}
+                {gen_item_source_monster(item.param.id, pedia_ex)}
                 {gen_item_source_quest(item.param.id, pedia_ex)}
                 //{gen_item_source_map(item.param.id, pedia, pedia_ex)}
                 {gen_item_source_weapon(item.param.id, pedia_ex)}

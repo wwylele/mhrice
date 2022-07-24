@@ -366,7 +366,7 @@ impl AnyRsz {
         let symbol = self.type_info.symbol;
         match self.any.downcast() {
             Ok(b) => Ok(*b),
-            Err(e) => {
+            Err(_) => {
                 bail!("Expected {}, found {}", type_name::<T>(), symbol)
             }
         }

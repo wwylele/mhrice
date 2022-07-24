@@ -17,16 +17,16 @@ macro_rules! rsz_inner {
 macro_rules! rsz_inner_trait {
     (rsz($symbol:literal $(,path=$singleton:literal)? $(,$vhash:literal=$version:literal)*),
         $struct_name:ident, $($field_name:ident : $field_type:ty,)*) => {
-        impl crate::rsz::FromRsz for $struct_name {
+        impl $crate::rsz::FromRsz for $struct_name {
             const SYMBOL: &'static str = $symbol;
             const VERSIONS: &'static [(u32, u32)] = &[$(($vhash, $version)),*];
             #[allow(unused_variables)]
-            fn from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
-                crate::rsz_inner!(rsz, $($field_name : $field_type,)*)
+            fn from_rsz(rsz: &mut $crate::rsz::RszDeserializer) -> Result<Self> {
+                $crate::rsz_inner!(rsz, $($field_name : $field_type,)*)
             }
         }
 
-        $(impl crate::rsz::SingletonUser for $struct_name {
+        $(impl $crate::rsz::SingletonUser for $struct_name {
             const PATH: &'static str = $singleton;
             type RszType = Self;
             fn from_rsz(value: Self::RszType) -> Self {
@@ -36,9 +36,9 @@ macro_rules! rsz_inner_trait {
     };
 
     (rsz(), $struct_name:ident, $($field_name:ident : $field_type:ty,)*) => {
-        impl crate::rsz::FieldFromRsz for $struct_name {
-            fn field_from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
-                crate::rsz_inner!(rsz, $($field_name : $field_type,)*)
+        impl $crate::rsz::FieldFromRsz for $struct_name {
+            fn field_from_rsz(rsz: &mut $crate::rsz::RszDeserializer) -> Result<Self> {
+                $crate::rsz_inner!(rsz, $($field_name : $field_type,)*)
             }
         }
     }
@@ -64,7 +64,7 @@ macro_rules! rsz_struct {
             )*
         }
 
-        crate::rsz_inner_trait!(rsz($($symbol $(,path=$singleton)? $(,$vhash=$version)*)?),
+        $crate::rsz_inner_trait!(rsz($($symbol $(,path=$singleton)? $(,$vhash=$version)*)?),
             $struct_name, $($field_name : $field_type,)*);
     };
 }
@@ -118,7 +118,7 @@ macro_rules! rsz_enum {
                 Ok(#[allow(unreachable_patterns)] match raw {
                     $(
                         $value $(..=$end_value)? =>
-                        crate::rsz_enum_arm!($enum_name, $variant, raw, $value $(, $end_value)?),
+                        $crate::rsz_enum_arm!($enum_name, $variant, raw, $value $(, $end_value)?),
                     )*
                     x => bail!("Unknown value {} for enum {}", x, stringify!($enum_name))
                 })
@@ -128,15 +128,15 @@ macro_rules! rsz_enum {
             pub fn into_raw(self) -> $base {
                 match self {
                     $(
-                        crate::rsz_enum_arm_rev_left!(i,$enum_name, $variant, $value $(, $end_value)?)
-                        => crate::rsz_enum_arm_rev_right!(i, $value $(, $end_value)?),
+                        $crate::rsz_enum_arm_rev_left!(i,$enum_name, $variant, $value $(, $end_value)?)
+                        => $crate::rsz_enum_arm_rev_right!(i, $value $(, $end_value)?),
                     )*
                 }
             }
         }
 
-        impl crate::rsz::FieldFromRsz for $enum_name {
-            fn field_from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
+        impl $crate::rsz::FieldFromRsz for $enum_name {
+            fn field_from_rsz(rsz: &mut $crate::rsz::RszDeserializer) -> Result<Self> {
                 let raw = <$base>::field_from_rsz(rsz)?;
                 Self::from_raw(raw)
             }
@@ -159,8 +159,8 @@ macro_rules! rsz_bitflags {
                 $( const $field_name = $field_value; )*
             }
         }
-        impl crate::rsz::FieldFromRsz for $name {
-            fn field_from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
+        impl $crate::rsz::FieldFromRsz for $name {
+            fn field_from_rsz(rsz: &mut $crate::rsz::RszDeserializer) -> Result<Self> {
                 let value = <$base>::field_from_rsz(rsz)?;
                 <$name>::from_bits(value).with_context(|| {
                     format!("Unknown bit flag {:08X} for {}", value, stringify!($name))
@@ -190,8 +190,8 @@ macro_rules! rsz_newtype {
         $(#[$outer_meta])*
         $outer_vis struct $name($inner_vis $base);
 
-        impl crate::rsz::FieldFromRsz for $name {
-            fn field_from_rsz(rsz: &mut crate::rsz::RszDeserializer) -> Result<Self> {
+        impl $crate::rsz::FieldFromRsz for $name {
+            fn field_from_rsz(rsz: &mut $crate::rsz::RszDeserializer) -> Result<Self> {
                 let raw = <$base>::field_from_rsz(rsz)?;
                 Ok($name(raw + $offset))
             }
@@ -221,7 +221,7 @@ macro_rules! rsz_with_singleton {
                     &self.inner
                 }
             }
-            impl crate::rsz::SingletonUser for $name {
+            impl $crate::rsz::SingletonUser for $name {
                 const PATH: &'static str = $path;
                 type RszType = $t;
                 fn from_rsz(value: Self::RszType) -> Self {

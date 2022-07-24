@@ -12,7 +12,6 @@ use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
 
 pub fn gen_monster_tag(
-    pedia: &Pedia,
     pedia_ex: &PediaEx,
     em_type: EmTypes,
     is_target: bool,
@@ -23,13 +22,6 @@ pub fn gen_monster_tag(
         EmTypes::Em(id) => (id, true),
         EmTypes::Ems(id) => (id, false),
     };
-
-    let monster = (if is_large {
-        pedia.monsters.iter()
-    } else {
-        pedia.small_monsters.iter()
-    })
-    .find(|m| (m.id | m.sub_id << 8) == id);
 
     let monster_name = (!short).then(|| {
         (|| {
@@ -770,8 +762,6 @@ pub fn gen_monster(
         monster.sub_id,
     );
 
-    let monster_id = monster.id;
-    let monster_sub_id = monster.sub_id;
     let monster_em_type = monster.em_type;
     let monster_ex = &pedia_ex.monsters[&monster_em_type];
     let condition_preset = &pedia.condition_preset;

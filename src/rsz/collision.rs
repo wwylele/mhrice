@@ -1,5 +1,5 @@
 use super::*;
-use crate::{rsz_bitflags, rsz_enum, rsz_struct, rsz_versioned_choice};
+use crate::{rsz_bitflags, rsz_enum, rsz_struct};
 use serde::*;
 
 rsz_struct! {
