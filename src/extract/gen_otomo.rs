@@ -237,11 +237,22 @@ pub fn gen_otomo_equip_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Resul
                 <head>
                     <title>{text!("{} - MHRice", title)}</title>
                     { head_common() }
+                    <style id="mh-armor-list-style">""</style>
                 </head>
                 <body>
                     { navbar() }
                     <main>
                     <header><h1>{text!("{}", title)}</h1></header>
+                    <div class="mh-filters"><ul>
+                        <li id="mh-armor-filter-button-all" class="is-active mh-armor-filter-button">
+                            <a>"All"</a></li>
+                        <li id="mh-armor-filter-button-lr" class="mh-armor-filter-button">
+                            <a>"Low rank"</a></li>
+                        <li id="mh-armor-filter-button-hr" class="mh-armor-filter-button">
+                            <a>"High rank"</a></li>
+                        <li id="mh-armor-filter-button-mr" class="mh-armor-filter-button">
+                            <a>"Master rank"</a></li>
+                    </ul></div>
                     <div class="select"><select id="scombo-armor" class="mh-scombo">
                         <option value="0">"Sort by internal ID"</option>
                         <option value="1">"Sort by in-game order"</option>
@@ -254,9 +265,14 @@ pub fn gen_otomo_equip_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Resul
                                 series.series.sort_id
                             };
                             let sort_tag = format!("{},{}", index, sort_id);
+                            let filter = match series.series.rank {
+                                OtRankTypes::Lower => "lr",
+                                OtRankTypes::Upper => "hr",
+                                OtRankTypes::Master => "mr",
+                            };
                             let series_name = gen_multi_lang(series.name);
                             html!(
-                                <li data-sort=sort_tag>
+                                <li class="mh-armor-filter-item" data-sort=sort_tag data-filter={filter}>
                                 <a href={format!("/otomo/{}.html", id.to_tag())}>
                                 <h2>{
                                     series_name

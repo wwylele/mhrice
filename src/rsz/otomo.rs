@@ -68,7 +68,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.OtAirouArmorBaseUserData.Param",
-        0x101e83d6 = 0,
+        0xbceb0b3f = 10_00_02,
     )]
     #[derive(Debug, Serialize)]
     pub struct OtAirouArmorBaseUserDataParam {
@@ -90,7 +90,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.OtDogArmorBaseUserData.Param",
-        0xa137ef7c = 0,
+        0x01f414a4 = 10_00_02,
     )]
     #[derive(Debug, Serialize)]
     pub struct OtDogArmorBaseUserDataParam {
@@ -112,7 +112,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.OtArmorProductUserData.Param",
-        0x86abfedf = 0,
+        0xda1d7c07 = 10_00_02,
     )]
     #[derive(Debug, Serialize)]
     pub struct OtArmorProductUserDataParam {
@@ -153,7 +153,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.OtWeaponProductUserData.Param",
-        0x4410d939 = 0,
+        0x097c7cce = 10_00_02,
     )]
     #[derive(Debug, Serialize)]
     pub struct OtWeaponProductUserDataParam {
@@ -204,7 +204,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.OtWeaponBaseUserData.Param",
-        0x972af528 = 0,
+        0x14b3471a = 10_00_02,
     )]
     #[derive(Debug, Serialize)]
     pub struct OtWeaponBaseUserDataParam {
@@ -247,10 +247,10 @@ rsz_with_singleton! {
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize, Copy, Clone, PartialEq, Eq, Hash)]
-    pub enum RankTypes {
+    pub enum OtRankTypes {
         Lower = 0,
         Upper = 1,
-
+        Master = 2,
     }
 }
 
@@ -268,12 +268,12 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.OtEquipSeriesUserData.Param",
-        0xe18c4847 = 0,
+        0x64399daa = 10_00_02,
     )]
     #[derive(Debug, Serialize)]
     pub struct OtEquipSeriesUserDataParam {
         pub id: OtEquipSeriesId,
-        pub rank: RankTypes,
+        pub rank: OtRankTypes,
         pub sort_id: u32,
         pub over_sort_id: u32,
         pub is_collaboration: i32,

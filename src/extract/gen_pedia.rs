@@ -525,7 +525,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     )?;
 
     /*let maps = prepare_maps(pak)?;
-    let map_name = get_msg(pak, "Message/Common_Msg/Stage_Name.msg")?;
+    let map_name = get_msg(pak, "Message/Common_Msg/Stage_Name.msg")?;*/
 
     let airou_armor_head_name = get_msg(
         pak,
@@ -576,7 +576,64 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let dog_series_name = get_msg(
         pak,
         "data/Define/Otomo/Equip/Armor/ArmorSeries_OtDog_Name.msg",
-    )?;*/
+    )?;
+
+    let airou_armor_head_name_mr = get_msg(
+        pak,
+        "data/Define/Otomo/Equip/Armor/OtAirouArmor_Head_Name_MR.msg",
+    )?;
+    let airou_armor_head_explain_mr = get_msg(
+        pak,
+        "data/Define/Otomo/Equip/Armor/OtAirouArmor_Head_Explain_MR.msg",
+    )?;
+    let airou_armor_chest_name_mr = get_msg(
+        pak,
+        "data/Define/Otomo/Equip/Armor/OtAirouArmor_Chest_Name_MR.msg",
+    )?;
+    let airou_armor_chest_explain_mr = get_msg(
+        pak,
+        "data/Define/Otomo/Equip/Armor/OtAirouArmor_Chest_Explain_MR.msg",
+    )?;
+    let dog_armor_head_name_mr = get_msg(
+        pak,
+        "data/Define/Otomo/Equip/Armor/OtDogArmor_Head_Name_MR.msg",
+    )?;
+    let dog_armor_head_explain_mr = get_msg(
+        pak,
+        "data/Define/Otomo/Equip/Armor/OtDogArmor_Head_Explain_MR.msg",
+    )?;
+    let dog_armor_chest_name_mr = get_msg(
+        pak,
+        "data/Define/Otomo/Equip/Armor/OtDogArmor_Chest_Name_MR.msg",
+    )?;
+    let dog_armor_chest_explain_mr = get_msg(
+        pak,
+        "data/Define/Otomo/Equip/Armor/OtDogArmor_Chest_Explain_MR.msg",
+    )?;
+    let airou_weapon_name_mr = get_msg(
+        pak,
+        "data/Define/Otomo/Equip/Weapon/OtAirouWeapon_Name_MR.msg",
+    )?;
+    let airou_weapon_explain_mr = get_msg(
+        pak,
+        "data/Define/Otomo/Equip/Weapon/OtAirouWeapon_Explain_MR.msg",
+    )?;
+    let dog_weapon_name_mr = get_msg(
+        pak,
+        "data/Define/Otomo/Equip/Weapon/OtDogWeapon_Name_MR.msg",
+    )?;
+    let dog_weapon_explain_mr = get_msg(
+        pak,
+        "data/Define/Otomo/Equip/Weapon/OtDogWeapon_Explain_MR.msg",
+    )?;
+    let airou_series_name_mr = get_msg(
+        pak,
+        "data/Define/Otomo/Equip/Armor/ArmorSeries_OtAirou_Name_MR.msg",
+    )?;
+    let dog_series_name_mr = get_msg(
+        pak,
+        "data/Define/Otomo/Equip/Armor/ArmorSeries_OtDog_Name_MR.msg",
+    )?;
 
     Ok(Pedia {
         monsters,
@@ -699,7 +756,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         hyakuryu_weapon_buildup: get_singleton(pak)?,
         /*maps,
         map_name,
-        item_pop_lot: get_singleton(pak)?,
+        item_pop_lot: get_singleton(pak)?,*/
         airou_armor: get_singleton(pak)?,
         airou_armor_product: get_singleton(pak)?,
         dog_armor: get_singleton(pak)?,
@@ -722,7 +779,21 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         dog_weapon_name,
         dog_weapon_explain,
         airou_series_name,
-        dog_series_name,*/
+        dog_series_name,
+        airou_armor_head_name_mr,
+        airou_armor_head_explain_mr,
+        airou_armor_chest_name_mr,
+        airou_armor_chest_explain_mr,
+        dog_armor_head_name_mr,
+        dog_armor_head_explain_mr,
+        dog_armor_chest_name_mr,
+        dog_armor_chest_explain_mr,
+        airou_weapon_name_mr,
+        airou_weapon_explain_mr,
+        dog_weapon_name_mr,
+        dog_weapon_explain_mr,
+        airou_series_name_mr,
+        dog_series_name_mr,
     })
 }
 
@@ -2249,20 +2320,37 @@ fn prepare_horn_melody(pedia: &Pedia) -> HashMap<i32, &'_ MsgEntry> {
     }
     Ok(res)
 }
+*/
 
 fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipSeries<'_>>> {
     let mut res = BTreeMap::new();
 
     let airou_series_name = pedia.airou_series_name.get_name_map();
     let dog_series_name = pedia.dog_series_name.get_name_map();
+    let airou_series_name_mr = pedia.airou_series_name_mr.get_name_map();
+    let dog_series_name_mr = pedia.dog_series_name_mr.get_name_map();
 
     for series in &pedia.ot_equip_series.param {
+        if res.contains_key(&series.id) {
+            eprintln!("Found multiple definition for otomo series {:?}", series.id);
+            if series.id == OtEquipSeriesId::Airou(0) {
+                // this seems to be a placeholder. continue
+                continue;
+            }
+            bail!("multiple otomo series definition")
+        }
         let name = *match series.id {
             OtEquipSeriesId::Airou(id) => {
-                airou_series_name.get(&format!("ArmorSeries_OtAirou_{id:03}_Name"))
+                let tag = format!("ArmorSeries_OtAirou_{id:03}_Name");
+                airou_series_name
+                    .get(&tag)
+                    .or_else(|| airou_series_name_mr.get(&tag))
             }
             OtEquipSeriesId::Dog(id) => {
-                dog_series_name.get(&format!("ArmorSeries_OtDog_{id:03}_Name"))
+                let tag = format!("ArmorSeries_OtDog_{id:03}_Name");
+                dog_series_name
+                    .get(&tag)
+                    .or_else(|| dog_series_name_mr.get(&tag))
             }
         }
         .with_context(|| format!("Cannot find name for otomo series {:?}", series.id))?;
@@ -2274,9 +2362,8 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
             head: None,
             chest: None,
         };
-        if res.insert(series.id, entry).is_some() {
-            bail!("Multiple defintion for otomo series {:?}", series.id)
-        }
+
+        res.insert(series.id, entry);
     }
 
     let weapon_products = pedia
@@ -2286,12 +2373,16 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
         .chain(&pedia.dog_weapon_product.param)
         .filter(|p| p.id != OtWeaponId::None);
 
-    let mut weapon_products = hash_map_unique(weapon_products, |p| (p.id, p), false)?;
+    let mut weapon_products = hash_map_unique(weapon_products, |p| (p.id, p), true)?;
 
     let airou_weapon_name = pedia.airou_weapon_name.get_name_map();
     let dog_weapon_name = pedia.dog_weapon_name.get_name_map();
     let airou_weapon_explain = pedia.airou_weapon_explain.get_name_map();
     let dog_weapon_explain = pedia.dog_weapon_explain.get_name_map();
+    let airou_weapon_name_mr = pedia.airou_weapon_name_mr.get_name_map();
+    let dog_weapon_name_mr = pedia.dog_weapon_name_mr.get_name_map();
+    let airou_weapon_explain_mr = pedia.airou_weapon_explain_mr.get_name_map();
+    let dog_weapon_explain_mr = pedia.dog_weapon_explain_mr.get_name_map();
     let mut weapon_dedup = HashSet::new();
 
     for weapon in pedia
@@ -2302,14 +2393,30 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
     {
         let (name, explain) = match weapon.id {
             OtWeaponId::None => continue,
-            OtWeaponId::Airou(id) => (
-                airou_weapon_name.get(&format!("OtAirouWeapon_{id:03}_Name")),
-                airou_weapon_explain.get(&format!("OtAirouWeapon_{id:03}_Explain")),
-            ),
-            OtWeaponId::Dog(id) => (
-                dog_weapon_name.get(&format!("OtDogWeapon_{id:03}_Name")),
-                dog_weapon_explain.get(&format!("OtDogWeapon_{id:03}_Explain")),
-            ),
+            OtWeaponId::Airou(id) => {
+                let name_tag = format!("OtAirouWeapon_{id:03}_Name");
+                let explain_tag = format!("OtAirouWeapon_{id:03}_Explain");
+                (
+                    airou_weapon_name
+                        .get(&name_tag)
+                        .or_else(|| airou_weapon_name_mr.get(&name_tag)),
+                    airou_weapon_explain
+                        .get(&explain_tag)
+                        .or_else(|| airou_weapon_explain_mr.get(&explain_tag)),
+                )
+            }
+            OtWeaponId::Dog(id) => {
+                let name_tag = format!("OtDogWeapon_{id:03}_Name");
+                let explain_tag = format!("OtDogWeapon_{id:03}_Explain");
+                (
+                    dog_weapon_name
+                        .get(&name_tag)
+                        .or_else(|| dog_weapon_name_mr.get(&name_tag)),
+                    dog_weapon_explain
+                        .get(&explain_tag)
+                        .or_else(|| dog_weapon_explain_mr.get(&explain_tag)),
+                )
+            }
         };
 
         let name =
@@ -2318,7 +2425,8 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
             .with_context(|| format!("Cannot find explain for otomo weapon {:?}", weapon.id))?;
 
         if !weapon_dedup.insert(weapon.id) {
-            bail!("Multiple definition for otomo weapon {:?}", weapon.id)
+            eprintln!("Multiple definition for otomo weapon {:?}", weapon.id);
+            continue;
         }
         let entry = OtWeapon {
             name,
@@ -2358,7 +2466,7 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
         .chain(&pedia.dog_armor_product.param)
         .filter(|p| p.id != OtArmorId::None);
 
-    let mut armor_products = hash_map_unique(armor_products, |p| (p.id, p), false)?;
+    let mut armor_products = hash_map_unique(armor_products, |p| (p.id, p), true)?;
 
     let airou_armor_head_name = pedia.airou_armor_head_name.get_name_map();
     let dog_armor_head_name = pedia.dog_armor_head_name.get_name_map();
@@ -2368,6 +2476,15 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
     let dog_armor_chest_name = pedia.dog_armor_chest_name.get_name_map();
     let airou_armor_chest_explain = pedia.airou_armor_chest_explain.get_name_map();
     let dog_armor_chest_explain = pedia.dog_armor_chest_explain.get_name_map();
+    let airou_armor_head_name_mr = pedia.airou_armor_head_name_mr.get_name_map();
+    let dog_armor_head_name_mr = pedia.dog_armor_head_name_mr.get_name_map();
+    let airou_armor_head_explain_mr = pedia.airou_armor_head_explain_mr.get_name_map();
+    let dog_armor_head_explain_mr = pedia.dog_armor_head_explain_mr.get_name_map();
+    let airou_armor_chest_name_mr = pedia.airou_armor_chest_name_mr.get_name_map();
+    let dog_armor_chest_name_mr = pedia.dog_armor_chest_name_mr.get_name_map();
+    let airou_armor_chest_explain_mr = pedia.airou_armor_chest_explain_mr.get_name_map();
+    let dog_armor_chest_explain_mr = pedia.dog_armor_chest_explain_mr.get_name_map();
+
     let mut armor_dedup = HashSet::new();
 
     for armor in pedia
@@ -2378,22 +2495,54 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
         .chain(pedia.dog_armor.param.iter().map(|a| &a.base))
     {
         let (name, explain) = match armor.id {
-            OtArmorId::AirouHead(id) => (
-                airou_armor_head_name.get(&format!("OtAirouArmor_Head_{id:03}_Name")),
-                airou_armor_head_explain.get(&format!("OtAirouArmor_Head_{id:03}_Explain")),
-            ),
-            OtArmorId::DogHead(id) => (
-                dog_armor_head_name.get(&format!("OtDogArmor_Head_{id:03}_Name")),
-                dog_armor_head_explain.get(&format!("OtDogArmor_Head_{id:03}_Explain")),
-            ),
-            OtArmorId::AirouChest(id) => (
-                airou_armor_chest_name.get(&format!("OtAirouArmor_Chest_{id:03}_Name")),
-                airou_armor_chest_explain.get(&format!("OtAirouArmor_Chest_{id:03}_Explain")),
-            ),
-            OtArmorId::DogChest(id) => (
-                dog_armor_chest_name.get(&format!("OtDogArmor_Chest_{id:03}_Name")),
-                dog_armor_chest_explain.get(&format!("OtDogArmor_Chest_{id:03}_Explain")),
-            ),
+            OtArmorId::AirouHead(id) => {
+                let name_tag = format!("OtAirouArmor_Head_{id:03}_Name");
+                let explain_tag = format!("OtAirouArmor_Head_{id:03}_Explain");
+                (
+                    airou_armor_head_name
+                        .get(&name_tag)
+                        .or_else(|| airou_armor_head_name_mr.get(&name_tag)),
+                    airou_armor_head_explain
+                        .get(&explain_tag)
+                        .or_else(|| airou_armor_head_explain_mr.get(&explain_tag)),
+                )
+            }
+            OtArmorId::DogHead(id) => {
+                let name_tag = format!("OtDogArmor_Head_{id:03}_Name");
+                let explain_tag = format!("OtDogArmor_Head_{id:03}_Explain");
+                (
+                    dog_armor_head_name
+                        .get(&name_tag)
+                        .or_else(|| dog_armor_head_name_mr.get(&name_tag)),
+                    dog_armor_head_explain
+                        .get(&explain_tag)
+                        .or_else(|| dog_armor_head_explain_mr.get(&explain_tag)),
+                )
+            }
+            OtArmorId::AirouChest(id) => {
+                let name_tag = format!("OtAirouArmor_Chest_{id:03}_Name");
+                let explain_tag = format!("OtAirouArmor_Chest_{id:03}_Explain");
+                (
+                    airou_armor_chest_name
+                        .get(&name_tag)
+                        .or_else(|| airou_armor_chest_name_mr.get(&name_tag)),
+                    airou_armor_chest_explain
+                        .get(&explain_tag)
+                        .or_else(|| airou_armor_chest_explain_mr.get(&explain_tag)),
+                )
+            }
+            OtArmorId::DogChest(id) => {
+                let name_tag = format!("OtDogArmor_Chest_{id:03}_Name");
+                let explain_tag = format!("OtDogArmor_Chest_{id:03}_Explain");
+                (
+                    dog_armor_chest_name
+                        .get(&name_tag)
+                        .or_else(|| dog_armor_chest_name_mr.get(&name_tag)),
+                    dog_armor_chest_explain
+                        .get(&explain_tag)
+                        .or_else(|| dog_armor_chest_explain_mr.get(&explain_tag)),
+                )
+            }
             OtArmorId::None => continue,
         };
 
@@ -2402,7 +2551,8 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
             explain.with_context(|| format!("Cannot find explain for armor {:?}", armor.id))?;
 
         if !armor_dedup.insert(armor.id) {
-            bail!("Multiple definition for otomo armor {:?}", armor.id)
+            eprintln!("Multiple definition for otomo armor {:?}", armor.id);
+            continue;
         }
         let entry = OtArmor {
             param: armor,
@@ -2440,7 +2590,6 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
 
     Ok(res)
 }
-*/
 
 fn prepare_monsters<'a>(pedia: &'a Pedia) -> Result<HashMap<EmTypes, MonsterEx<'a>>> {
     let mut result = HashMap::new();
@@ -2559,7 +2708,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         bow: prepare_weapon(&pedia.bow, &mut hyakuryu_weapon_map)?,
         horn_melody: prepare_horn_melody(pedia),
         monster_order,
-        /*item_pop: prepare_item_pop(pedia)?,
-        ot_equip: prepeare_ot_equip(pedia)?,*/
+        //item_pop: prepare_item_pop(pedia)?,
+        ot_equip: prepeare_ot_equip(pedia)?,
     })
 }

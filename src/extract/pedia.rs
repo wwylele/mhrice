@@ -173,8 +173,7 @@ pub struct Pedia {
     pub hyakuryu_weapon_buildup: HyakuryuWeaponHyakuryuBuildupUserData,
     /*pub maps: BTreeMap<i32, GameMap>,
     pub map_name: Msg,
-    pub item_pop_lot: ItemPopLotTableUserData,
-
+    pub item_pop_lot: ItemPopLotTableUserData,*/
     pub airou_armor: OtAirouArmorBaseUserData,
     pub airou_armor_product: OtAirouArmorProductUserData,
     pub dog_armor: OtDogArmorBaseUserData,
@@ -197,7 +196,21 @@ pub struct Pedia {
     pub dog_weapon_name: Msg,
     pub dog_weapon_explain: Msg,
     pub airou_series_name: Msg,
-    pub dog_series_name: Msg,*/
+    pub dog_series_name: Msg,
+    pub airou_armor_head_name_mr: Msg,
+    pub airou_armor_head_explain_mr: Msg,
+    pub airou_armor_chest_name_mr: Msg,
+    pub airou_armor_chest_explain_mr: Msg,
+    pub dog_armor_head_name_mr: Msg,
+    pub dog_armor_head_explain_mr: Msg,
+    pub dog_armor_chest_name_mr: Msg,
+    pub dog_armor_chest_explain_mr: Msg,
+    pub airou_weapon_name_mr: Msg,
+    pub airou_weapon_explain_mr: Msg,
+    pub dog_weapon_name_mr: Msg,
+    pub dog_weapon_explain_mr: Msg,
+    pub airou_series_name_mr: Msg,
+    pub dog_series_name_mr: Msg,
 }
 
 pub struct QuestReward<'a> {
@@ -377,7 +390,6 @@ pub struct PediaEx<'a> {
 
     pub horn_melody: HashMap<i32, &'a MsgEntry>,
     pub monster_order: HashMap<EmTypes, usize>,
-    /*pub item_pop: HashMap<(/*pop_id*/ i32, /*map*/ i32), &'a ItemPopLotTableUserDataParam>,
-
-    pub ot_equip: BTreeMap<OtEquipSeriesId, OtEquipSeries<'a>>,*/
+    //pub item_pop: HashMap<(/*pop_id*/ i32, /*map*/ i32), &'a ItemPopLotTableUserDataParam>,
+    pub ot_equip: BTreeMap<OtEquipSeriesId, OtEquipSeries<'a>>,
 }

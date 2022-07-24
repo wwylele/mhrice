@@ -50,7 +50,7 @@ rsz_enum! {
     }
 }
 
-// snow.data.OtEquipSeriesData.RankTypes
+// snow.data.DataDef.RankTypes
 rsz_enum! {
     #[rsz(i32)]
     #[derive(Debug, Serialize)]
