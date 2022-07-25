@@ -3,6 +3,7 @@ use super::gen_website::*;
 use super::pedia::*;
 use super::prepare_map::*;
 use super::sink::*;
+use crate::msg::*;
 use crate::rsz;
 use anyhow::Result;
 use std::io::Write;
@@ -12,10 +13,26 @@ fn map_page(id: i32) -> String {
     format!("{id:02}.html")
 }
 
+pub fn get_map_name(id: i32, pedia: &Pedia) -> Option<&MsgEntry> {
+    // another brilliant idea from crapcom
+    let name_id = match id {
+        12 => 31,
+        13 => 32,
+        14 => 41,
+        15 => 42,
+        id => id,
+    };
+
+    let name_name = format!("Stage_Name_{name_id:02}");
+    pedia
+        .map_name
+        .get_entry(&name_name)
+        .or_else(|| pedia.map_name_mr.get_entry(&name_name))
+}
+
 pub fn gen_map_label(id: i32, pedia: &Pedia) -> Box<a<String>> {
     let link = format!("/map/{}", map_page(id));
-    let name_name = format!("Stage_Name_{id:02}");
-    let name = pedia.map_name.get_entry(&name_name);
+    let name = get_map_name(id, pedia);
     if let Some(name) = name {
         html!(<a href={link}>{ gen_multi_lang(name) }</a>)
     } else {
@@ -117,8 +134,7 @@ fn gen_map(
                 });
 
                 let relic_explain = relic.as_ref().map(|relic| {
-                    let name_name = format!("Stage_Name_{:02}", relic.note_map_no);
-                    let name = pedia.map_name.get_entry(&name_name);
+                    let name = get_map_name(relic.note_map_no, pedia);
                     let relic_map_name = if let Some(name) = name {
                         gen_multi_lang(name)
                     } else {
@@ -167,6 +183,19 @@ fn gen_map(
                                     &lot.upper_id,
                                     &lot.upper_num,
                                     &lot.upper_probability)
+                            } </tbody>
+                        </table></div></div>
+
+                        <div class="mh-reward-box"><div class="mh-table"><table>
+                            <thead><tr>
+                            <th>"Master rank material"</th>
+                            <th>"Probability"</th>
+                            </tr></thead>
+                            <tbody> {
+                                gen_reward_table(pedia_ex,
+                                    &lot.master_id,
+                                    &lot.master_num,
+                                    &lot.master_probability)
                             } </tbody>
                         </table></div></div>
                     </div>);
@@ -219,6 +248,8 @@ fn gen_map(
                         &behavior.fish_spawn_data.unwrap().spawn_group_list_info_low) }
                     { gen_fish_table("High rank fish",
                         &behavior.fish_spawn_data.unwrap().spawn_group_list_info_high) }
+                    { gen_fish_table("Master rank fish",
+                        &behavior.fish_spawn_data.unwrap().spawn_group_list_info_master) }
                 </div>);
 
                 filter = "fish";
@@ -238,8 +269,7 @@ fn gen_map(
         </div>))
     }
 
-    let name_name = format!("Stage_Name_{id:02}");
-    let name = pedia.map_name.get_entry(&name_name);
+    let name = get_map_name(id, pedia);
 
     let title = if let Some(name) = name {
         toc_sink.add(name);

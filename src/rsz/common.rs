@@ -100,6 +100,34 @@ macro_rules! rsz_enum_arm_rev_right {
 }
 
 #[macro_export]
+macro_rules! rsz_sumtype {
+    (
+        $(#[$outer_meta:meta])*
+        $outer_vis:vis enum $enum_name:ident {
+            $( $variant:ident($variant_type:ty) ),*$(,)?
+        }
+    ) => {
+        $(#[$outer_meta])* #[allow(clippy::enum_variant_names)]
+        $outer_vis enum $enum_name {
+            $( $variant($variant_type), )*
+        }
+
+        impl $crate::rsz::FieldFromRsz for $enum_name {
+            fn field_from_rsz(rsz: &mut $crate::rsz::RszDeserializer) -> Result<Self> {
+                rsz.cursor.seek_align_up(4)?;
+                let child = rsz.get_child_any()?;
+                $(
+                    if child.symbol() == <$variant_type>::SYMBOL {
+                        return Ok($enum_name::$variant(child.downcast().unwrap()))
+                    }
+                )*
+                bail!("Unknown type {} for sum type {}", child.symbol(), stringify!($enum_name))
+            }
+        }
+    }
+}
+
+#[macro_export]
 macro_rules! rsz_enum {
     (
         #[rsz($base:ty)]

@@ -1,4 +1,4 @@
-//use super::prepare_map::*;
+use super::prepare_map::*;
 use crate::msg::*;
 use crate::rsz::*;
 use serde::*;
@@ -171,9 +171,10 @@ pub struct Pedia {
     pub horn_melody: Msg,
     pub horn_melody_mr: Msg,
     pub hyakuryu_weapon_buildup: HyakuryuWeaponHyakuryuBuildupUserData,
-    /*pub maps: BTreeMap<i32, GameMap>,
+    pub maps: BTreeMap<i32, GameMap>,
     pub map_name: Msg,
-    pub item_pop_lot: ItemPopLotTableUserData,*/
+    pub map_name_mr: Msg,
+    pub item_pop_lot: ItemPopLotTableUserData,
     pub airou_armor: OtAirouArmorBaseUserData,
     pub airou_armor_product: OtAirouArmorProductUserData,
     pub dog_armor: OtDogArmorBaseUserData,
@@ -390,6 +391,6 @@ pub struct PediaEx<'a> {
 
     pub horn_melody: HashMap<i32, &'a MsgEntry>,
     pub monster_order: HashMap<EmTypes, usize>,
-    //pub item_pop: HashMap<(/*pop_id*/ i32, /*map*/ i32), &'a ItemPopLotTableUserDataParam>,
+    pub item_pop: HashMap<(/*pop_id*/ i32, /*map*/ i32), &'a ItemPopLotTableUserDataParam>,
     pub ot_equip: BTreeMap<OtEquipSeriesId, OtEquipSeries<'a>>,
 }

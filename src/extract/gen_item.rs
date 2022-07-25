@@ -1,6 +1,6 @@
 use super::gen_armor::*;
 use super::gen_hyakuryu_skill::*;
-//use super::gen_map::*;
+use super::gen_map::*;
 use super::gen_monster::*;
 use super::gen_otomo::*;
 use super::gen_quest::*;
@@ -8,7 +8,7 @@ use super::gen_skill::*;
 use super::gen_weapon::*;
 use super::gen_website::*;
 use super::pedia::*;
-//use super::prepare_map::MapPopKind;
+use super::prepare_map::MapPopKind;
 use super::sink::*;
 use crate::rsz::*;
 use anyhow::Result;
@@ -496,7 +496,7 @@ fn gen_item_usage_hyakuryu_deco(item_id: ItemId, pedia_ex: &PediaEx) -> Option<B
     }
 }
 
-/*fn gen_item_source_map(
+fn gen_item_source_map(
     item_id: ItemId,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
@@ -512,7 +512,10 @@ fn gen_item_usage_hyakuryu_deco(item_id: ItemId, pedia_ex: &PediaEx) -> Option<B
                         .get(&(behavior.pop_id, id))
                         .or_else(|| pedia_ex.item_pop.get(&(behavior.pop_id, -1)))
                     {
-                        if lot.lower_id.contains(&item_id) || lot.upper_id.contains(&item_id) {
+                        if lot.lower_id.contains(&item_id)
+                            || lot.upper_id.contains(&item_id)
+                            || lot.master_id.contains(&item_id)
+                        {
                             found = true;
                             break;
                         }
@@ -524,6 +527,7 @@ fn gen_item_usage_hyakuryu_deco(item_id: ItemId, pedia_ex: &PediaEx) -> Option<B
                         .spawn_group_list_info_low
                         .iter()
                         .chain(spawn.spawn_group_list_info_high.iter())
+                        .chain(spawn.spawn_group_list_info_master.iter())
                         .flat_map(|f| f.fish_spawn_rate_list.iter());
                     for fish in fishes {
                         if get_fish_item_id(fish.fish_id) == Some(item_id) {
@@ -548,7 +552,7 @@ fn gen_item_usage_hyakuryu_deco(item_id: ItemId, pedia_ex: &PediaEx) -> Option<B
     } else {
         None
     }
-}*/
+}
 
 static ITEM_TYPES: Lazy<BTreeMap<ItemTypes, (&'static str, &'static str)>> = Lazy::new(|| {
     BTreeMap::from_iter([
@@ -656,7 +660,7 @@ pub fn gen_item(
                 <h2 >"Where to get"</h2>
                 {gen_item_source_monster(item.param.id, pedia_ex)}
                 {gen_item_source_quest(item.param.id, pedia_ex)}
-                //{gen_item_source_map(item.param.id, pedia, pedia_ex)}
+                {gen_item_source_map(item.param.id, pedia, pedia_ex)}
                 {gen_item_source_weapon(item.param.id, pedia_ex)}
                 {gen_item_source_armor(item.param.id, pedia_ex)}
                 </section>

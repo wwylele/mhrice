@@ -1,5 +1,5 @@
 use super::pedia::*;
-//use super::prepare_map::*;
+use super::prepare_map::*;
 use super::sink::*;
 use crate::gpu::*;
 use crate::gui::*;
@@ -524,8 +524,9 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         "data/Define/Player/Weapon/Horn/Horn_UniqueParam_MR.msg",
     )?;
 
-    /*let maps = prepare_maps(pak)?;
-    let map_name = get_msg(pak, "Message/Common_Msg/Stage_Name.msg")?;*/
+    let maps = prepare_maps(pak)?;
+    let map_name = get_msg(pak, "Message/Common_Msg/Stage_Name.msg")?;
+    let map_name_mr = get_msg(pak, "Message/Common_Msg_MR/Stage_Name_MR.msg")?;
 
     let airou_armor_head_name = get_msg(
         pak,
@@ -754,9 +755,10 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         horn_melody,
         horn_melody_mr,
         hyakuryu_weapon_buildup: get_singleton(pak)?,
-        /*maps,
+        maps,
         map_name,
-        item_pop_lot: get_singleton(pak)?,*/
+        map_name_mr,
+        item_pop_lot: get_singleton(pak)?,
         airou_armor: get_singleton(pak)?,
         airou_armor_product: get_singleton(pak)?,
         dog_armor: get_singleton(pak)?,
@@ -1131,7 +1133,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
     let item_colors_path = output.create("rarity_color.css")?;
     gen_rarity_colors(pak, item_colors_path)?;
 
-    //gen_map_resource(pak, output)?;
+    gen_map_resource(pak, output)?;
 
     Ok(())
 }
@@ -2302,7 +2304,7 @@ fn prepare_horn_melody(pedia: &Pedia) -> HashMap<i32, &'_ MsgEntry> {
     res
 }
 
-/*fn prepare_item_pop(
+fn prepare_item_pop(
     pedia: &Pedia,
 ) -> Result<HashMap<(i32, i32), &'_ ItemPopLotTableUserDataParam>> {
     let mut res = HashMap::new();
@@ -2320,7 +2322,6 @@ fn prepare_horn_melody(pedia: &Pedia) -> HashMap<i32, &'_ MsgEntry> {
     }
     Ok(res)
 }
-*/
 
 fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipSeries<'_>>> {
     let mut res = BTreeMap::new();
@@ -2708,7 +2709,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         bow: prepare_weapon(&pedia.bow, &mut hyakuryu_weapon_map)?,
         horn_melody: prepare_horn_melody(pedia),
         monster_order,
-        //item_pop: prepare_item_pop(pedia)?,
+        item_pop: prepare_item_pop(pedia)?,
         ot_equip: prepeare_ot_equip(pedia)?,
     })
 }

@@ -17,7 +17,7 @@ struct MapFiles {
     scene_file: &'static str,
 }
 
-static MAP_FILES: [Option<MapFiles>; 15] = [
+static MAP_FILES: [Option<MapFiles>; 16] = [
     None, // 0
     Some(MapFiles {
         // 1
@@ -91,9 +91,36 @@ static MAP_FILES: [Option<MapFiles>; 15] = [
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_011.user",
         scene_file: "scene/m22/normal/m22_normal.scn",
     }),
-    None, // 12
-    None, // 13
+    Some(MapFiles {
+        // 12
+        tex_files: &[
+            "gui/80_Texture/map/map_031_IAM.tex",
+            "gui/80_Texture/map/map_031_2_IAM.tex",
+        ],
+        scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_031.user",
+        scene_file: "scene/m31/normal/m31_normal.scn",
+    }),
+    Some(MapFiles {
+        // 13
+        tex_files: &[
+            "gui/80_Texture/map/map_032_IAM.tex",
+            "gui/80_Texture/map/map_032_2_IAM.tex",
+        ],
+        scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_032.user",
+        scene_file: "scene/m32/normal/m32_normal.scn",
+    }),
     None, // 14
+    Some(MapFiles {
+        // 15
+        tex_files: &[
+            "gui/80_Texture/map/map_042_IAM.tex",
+            "gui/80_Texture/map/map_042_2_IAM.tex",
+            "gui/80_Texture/map/map_042_3_IAM.tex",
+        ],
+        // This scale doesn't look right
+        scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_042.user",
+        scene_file: "scene/m42/normal/m42_normal.scn",
+    }),
 ];
 
 #[derive(Debug, Serialize)]
@@ -139,6 +166,7 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<G
 
     let mut pops = vec![];
 
+    // TODO: check inside of M31IsletArrivalChecker
     scene.for_each_free_object(&mut |object: &GameObject| {
         if let Ok(behavior) = object.get_component::<rsz::ItemPopBehavior>() {
             let transform = object

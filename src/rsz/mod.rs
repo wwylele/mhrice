@@ -280,13 +280,24 @@ pub struct RszDeserializer<'a, 'b> {
 }
 
 impl<'a, 'b> RszDeserializer<'a, 'b> {
-    fn get_child_inner<T: 'static>(&mut self, index: u32) -> Result<T> {
+    fn get_child_any_inner(&mut self, index: u32) -> Result<AnyRsz> {
         let node = self
             .node_buf
             .get_mut(usize::try_from(index)?)
             .context("Child index out of bound")?
             .take()
-            .context("None child")?
+            .context("None child")?;
+        Ok(node)
+    }
+
+    pub fn get_child_any(&mut self) -> Result<AnyRsz> {
+        let index = self.cursor.read_u32()?;
+        self.get_child_any_inner(index)
+    }
+
+    fn get_child_inner<T: 'static>(&mut self, index: u32) -> Result<T> {
+        let node = self
+            .get_child_any_inner(index)?
             .downcast()
             .context("Type mismatch")?;
         Ok(node)
@@ -378,6 +389,10 @@ impl AnyRsz {
 
     pub fn to_json(&self) -> Result<String> {
         (self.type_info.to_json)(&*self.any)
+    }
+
+    pub fn symbol(&self) -> &'static str {
+        self.type_info.symbol
     }
 }
 
@@ -836,6 +851,19 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         ItemPopIgnoreOtomoGathering,
         TargetScene,
         StageSceneStateController,
+        KeyHash,
+        StageDemoCameraSceneRequeterRequestData,
+        StageDemoCameraSceneRequeter,
+        StageAreaMoveSceneRequesterRequestData,
+        StageAreaMoveSceneRequester,
+        KillCameraConditionRegisterBlockNo,
+        QuestAreaMoveRequest,
+        QuestPhaseCondition,
+        CountCondition,
+        AreaMoveInfo,
+        QuestAreaMovePopMarker,
+        StageObjectStateControllerTargetObject,
+        StageObjectStateController,
     );
 
     r!(
