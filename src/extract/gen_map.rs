@@ -324,10 +324,10 @@ fn gen_map(
 
                 <div class="mh-map-buttons">
                     <button class="button" id="button-scale-down" disabled=true>
-                        <span class="icon"><i class="fas fa-search-minus"></i></span>
+                        <span class="icon"><i class="fas fa-magnifying-glass-minus"></i></span>
                     </button>
                     <button class="button" id="button-scale-up">
-                        <span class="icon"><i class="fas fa-search-plus"></i></span>
+                        <span class="icon"><i class="fas fa-magnifying-glass-plus"></i></span>
                     </button>
                     {
                         (map.layer_count > 1).then(||html!(

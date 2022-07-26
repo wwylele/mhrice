@@ -61,8 +61,10 @@ pub fn head_common() -> Vec<Box<dyn MetadataContent<String>>> {
         html!(<link rel="stylesheet" href="/part_color.css" />),
         html!(<link rel="stylesheet" href="/resources/item_color.css" />),
         html!(<link rel="stylesheet" href="/resources/rarity_color.css" />),
-        html!(<script src="https://kit.fontawesome.com/ceb13a2ba1.js" crossorigin="anonymous" />),
-        html!(<script src="/mhrice.js" crossorigin="anonymous" />),
+        html!(<script src="/mhrice.js"/>),
+        html!(<script defer=true src="/fontawesome/brands.js"/>),
+        html!(<script defer=true src="/fontawesome/solid.js"/>),
+        html!(<script defer=true src="/fontawesome/fontawesome.min.js"/>),
         html!(<style id="mh-lang-style">".mh-lang:not(.lang-default) { display:none; }"</style>),
     ]
 }
@@ -75,7 +77,7 @@ pub fn navbar() -> Box<nav<String>> {
             <a class="navbar-item" href="/index.html">
                 <img alt="Logo" src="/favicon.png"/>
                 <div class="mh-logo-text">"MHRice "</div>
-                <i class="fas fa-search"/>
+                <i class="fas fa-magnifying-glass"/>
             </a>
 
             <a id="navbarBurger" class="navbar-burger" data-target="navbarMenu">
@@ -396,7 +398,7 @@ pub fn gen_multi_lang(msg: &MsgEntry) -> Box<span<String>> {
             let language_code: LanguageTag = language_code.parse().unwrap();
             let (msg, warning) = translate_msg(&msg.content[i]);
             let warning = warning.then(||html!(<span class="icon has-text-warning">
-                <i class="fas fa-exclamation-triangle" title="There is a parsing error"/>
+                <i class="fas fa-triangle-exclamation" title="There is a parsing error"/>
             </span>));
             Some(html! (<span class={class_string} lang={language_code} >
                 {msg} {warning}
@@ -443,7 +445,7 @@ pub fn gen_search(output: &impl Sink) -> Result<()> {
                 <div class="control has-icons-left">
                     <input class="input is-large" type="text" placeholder="Nargacuga" id="mh-search"/>
                     <span class="icon is-large is-left">
-                        <i class="fas fa-search" />
+                        <i class="fas fa-magnifying-glass" />
                     </span>
                 </div>
                 <ul id="mh-search-result">
@@ -544,6 +546,16 @@ pub fn gen_static(output: &impl Sink) -> Result<()> {
     output
         .create("error.html")?
         .write_all(include_bytes!("static/error.html"))?;
+    let fontawesome = output.sub_sink("fontawesome")?;
+    fontawesome
+        .create("brands.js")?
+        .write_all(include_bytes!("static/fontawesome/brands.js"))?;
+    fontawesome
+        .create("solid.js")?
+        .write_all(include_bytes!("static/fontawesome/solid.js"))?;
+    fontawesome
+        .create("fontawesome.min.js")?
+        .write_all(include_bytes!("static/fontawesome/fontawesome.min.js"))?;
     Ok(())
 }
 
