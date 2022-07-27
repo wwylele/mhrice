@@ -36,7 +36,7 @@ fn gen_item_icon(item: &Item) -> Box<div<String>> {
         IconRank::Lv1 => addons.push("mh-addon-lv1"),
         IconRank::Lv2 => addons.push("mh-addon-lv2"),
         IconRank::Lv3 => addons.push("mh-addon-lv3"),
-        // TODO: curio icon
+        IconRank::Mystery => addons.push("mh-addon-afflicted"),
         _ => (),
     }
 

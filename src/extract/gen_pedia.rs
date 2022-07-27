@@ -1074,6 +1074,20 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
         equip_icon_a.save_png(equip_icon_path.create(&format!("{:03}.a.png", i))?)?;
     }
 
+    let icon_uvs = pak.find_file("gui/70_UVSequence/Arms_addonicon_MR.uvs")?;
+    let icon_uvs = Uvs::new(Cursor::new(pak.read_file(icon_uvs)?))?;
+    if icon_uvs.textures.is_empty() || equip_icon_uvs.spriter_groups.is_empty() {
+        bail!("Broken Arms_addonicon_MR.uvs");
+    }
+    let equip_icon = pak.find_file(&icon_uvs.textures[0].path)?;
+    let icon = Tex::new(Cursor::new(pak.read_file(equip_icon)?))?.to_rgba(0, 0)?;
+    let spriter = icon_uvs.spriter_groups[0]
+        .spriters
+        .get(0)
+        .context("Broken Arms_addonicon_MR.uvs")?;
+    icon.sub_image_f(spriter.p0, spriter.p1)?
+        .save_png(output.create("afflicted.png")?)?;
+
     let common_uvs = pak.find_file("gui/70_UVSequence/common.uvs")?;
     let common_uvs = Uvs::new(Cursor::new(pak.read_file(common_uvs)?))?;
     if common_uvs.textures.len() != 1 || common_uvs.spriter_groups.len() != 2 {
@@ -1197,15 +1211,20 @@ fn gen_gui_colors(
     Ok(())
 }
 
-fn gen_item_colors(pak: &mut PakReader<impl Read + Seek>, output: impl Write) -> Result<()> {
+fn gen_item_colors(pak: &mut PakReader<impl Read + Seek>, mut output: impl Write) -> Result<()> {
     gen_gui_colors(
         pak,
-        output,
+        &mut output,
         "gui/01_Common/ItemIcon.gui",
         "pnl_ItemIcon_Color",
         "ITEM_ICON_COLOR_",
         "mh-item-color-",
-    )
+    )?;
+
+    // I can't find this in game so just add it hered
+    output.write_all(b".mh-item-color-51 {background-color: #FF5687}\n")?;
+
+    Ok(())
 }
 
 fn gen_rarity_colors(pak: &mut PakReader<impl Read + Seek>, output: impl Write) -> Result<()> {
