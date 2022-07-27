@@ -1025,7 +1025,8 @@ fn dump_tree(pak: Vec<String>, list: String, output: String) -> Result<()> {
                 if c.is_ascii_alphanumeric() {
                     format.push(*c as char);
                 } else {
-                    format += &format!("_{:02x}", c);
+                    use std::fmt::Write as _;
+                    write!(format, "_{:02x}", c)?;
                 }
             }
             format
