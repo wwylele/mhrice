@@ -285,6 +285,18 @@ impl GameObject {
         }
         component.context("No component found")
     }
+
+    pub fn for_each_child<F: FnMut(&GameObject) -> Result<bool /*scan_child*/>>(
+        &self,
+        f: &mut F,
+    ) -> Result<()> {
+        for object in &self.children {
+            if f(object)? {
+                object.for_each_child(f)?;
+            }
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug)]
@@ -296,20 +308,22 @@ pub struct Folder {
 }
 
 impl Folder {
-    pub fn for_each_free_object<F: FnMut(&GameObject) -> Result<()>>(
+    pub fn for_each_object<F: FnMut(&GameObject) -> Result<bool /*scan_child*/>>(
         &self,
         f: &mut F,
     ) -> Result<()> {
         for object in &self.children {
-            f(object)?
+            if f(object)? {
+                object.for_each_child(f)?;
+            }
         }
 
         for folders in &self.subfolders {
-            folders.for_each_free_object(f)?
+            folders.for_each_object(f)?
         }
 
         if let Some(Ok(subscene)) = &self.subscene {
-            subscene.for_each_free_object(f)?
+            subscene.for_each_object(f)?
         }
 
         Ok(())
@@ -450,16 +464,18 @@ impl Scene {
         Ok(Scene { objects, folders })
     }
 
-    pub fn for_each_free_object<F: FnMut(&GameObject) -> Result<()>>(
+    pub fn for_each_object<F: FnMut(&GameObject) -> Result<bool /*scan_child*/>>(
         &self,
         f: &mut F,
     ) -> Result<()> {
         for object in &self.objects {
-            f(object)?
+            if f(object)? {
+                object.for_each_child(f)?;
+            }
         }
 
         for folder in &self.folders {
-            folder.for_each_free_object(f)?;
+            folder.for_each_object(f)?;
         }
 
         Ok(())

@@ -166,9 +166,13 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<G
 
     let mut pops = vec![];
 
-    // TODO: check inside of M31IsletArrivalChecker
-    scene.for_each_free_object(&mut |object: &GameObject| {
-        if let Ok(behavior) = object.get_component::<rsz::ItemPopBehavior>() {
+    scene.for_each_object(&mut |object: &GameObject| {
+        if object
+            .get_component::<rsz::M31IsletArrivalChecker>()
+            .is_ok()
+        {
+            return Ok(true);
+        } else if let Ok(behavior) = object.get_component::<rsz::ItemPopBehavior>() {
             let transform = object
                 .get_component::<rsz::Transform>()
                 .context("Lack of transform")?;
@@ -243,7 +247,7 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<G
             }
         }
 
-        Ok(())
+        Ok(false)
     })?;
 
     Ok(GameMap {

@@ -1281,7 +1281,7 @@ fn map(pak: Vec<String>, name: String, scale: String, tex: String, output: Strin
     let tex = Tex::new(File::open(tex)?)?;
     let mut rgba = tex.to_rgba(0, 0)?;
 
-    scene.for_each_free_object(&mut |object: &GameObject| {
+    scene.for_each_object(&mut |object: &GameObject| {
         if let Ok(_pop) = object.get_component::<rsz::ItemPopBehavior>() {
             let transform = object.get_component::<rsz::Transform>()?;
             let x = (transform.position.x + scale.map_wide_min_pos) / scale.map_scale;
@@ -1289,13 +1289,13 @@ fn map(pak: Vec<String>, name: String, scale: String, tex: String, output: Strin
             let x = (x * rgba.width() as f32) as i32;
             let y = (y * rgba.height() as f32) as i32;
             if x < 0 || y < 0 || x >= rgba.width() as i32 || y >= rgba.height() as i32 {
-                return Ok(());
+                return Ok(false);
             }
             let pixel = rgba.pixel(x as u32, y as u32);
             pixel.copy_from_slice(&[255, 0, 0, 255]);
         }
 
-        Ok(())
+        Ok(false)
     })?;
 
     rgba.save_png(File::create(output)?)?;
