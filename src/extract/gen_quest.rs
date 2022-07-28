@@ -1,4 +1,5 @@
 use super::gen_item::*;
+use super::gen_map::*;
 use super::gen_monster::*;
 use super::gen_website::*;
 use super::pedia::*;
@@ -468,7 +469,7 @@ fn gen_quest(
                 <h2 >"Basic data"</h2>
                 <div class="mh-kvlist">
                 <p class="mh-kv"><span>"Map"</span>
-                    <span>{ text!("{}", quest.param.map_no) }</span></p>
+                    <span>{ gen_map_label(quest.param.map_no, pedia) }</span></p>
                 <p class="mh-kv"><span>"Base time"</span>
                     <span>{ text!("{}", quest.param.base_time) }</span></p>
                 <p class="mh-kv"><span>"Time variation"</span>
