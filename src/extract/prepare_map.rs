@@ -1,10 +1,11 @@
 use super::sink::Sink;
 use crate::pak::*;
 use crate::rsz;
+use crate::rsz::FromRsz;
 use crate::scn::*;
 use crate::tex::*;
 use crate::user::*;
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use nalgebra::*;
 use nalgebra_glm::*;
 use serde::*;
@@ -62,13 +63,12 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         scene_file: "scene/m05/normal/m05_normal.scn",
     }),
     None, // 6
-    None, // 7
-    /*Some(MapFiles {
+    Some(MapFiles {
         // 7
         tex_files: &["gui/80_Texture/map/map_007_IAM.tex"],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_007_sp.user", // special type
-        scene_file: "scene/m01/hyakuryu/m_01_hyakuryo_A.scn",
-    }),*/
+        scene_file: "scene/m01/hyakuryu/m01_hyakuryu_A.scn",
+    }),
     None, // 8
     Some(MapFiles {
         // 9
@@ -158,9 +158,19 @@ pub struct GameMap {
 
 fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<GameMap> {
     let scale = pak.find_file(files.scale_file)?;
-    let scale: rsz::GuiMapScaleDefineData = User::new(Cursor::new(pak.read_file(scale)?))?
+    let scale = User::new(Cursor::new(pak.read_file(scale)?))?
         .rsz
-        .deserialize_single()?;
+        .deserialize_single_any()?;
+
+    let scale: rsz::GuiMapScaleDefineData = if scale.symbol() == rsz::GuiMapScaleDefineData::SYMBOL
+    {
+        scale.downcast().unwrap()
+    } else if scale.symbol() == rsz::GuiMap07DefineData::SYMBOL {
+        let scale: rsz::GuiMap07DefineData = scale.downcast().unwrap();
+        scale.base.0
+    } else {
+        bail!("Unknown map scale type {}", scale.symbol())
+    };
 
     let scene = Scene::new(pak, files.scene_file)?;
 

@@ -249,6 +249,14 @@ impl Rsz {
         Ok(result)
     }
 
+    pub fn deserialize_single_any(&self) -> Result<AnyRsz> {
+        let mut result = self.deserialize()?;
+        if result.len() != 1 {
+            bail!("Not a single-valued RSZ");
+        }
+        Ok(result.pop().unwrap())
+    }
+
     pub fn deserialize_single<T: 'static>(&self) -> Result<T> {
         let mut result = self.deserialize()?;
         if result.len() != 1 {
@@ -804,6 +812,8 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
     r!(
         MaskSetting,
         GuiMapScaleDefineData,
+        MapHyakuryuLayoutSetting,
+        GuiMap07DefineData,
         GuiQuestStart,
         GuiQuestEnd,
         QuestUIManage,

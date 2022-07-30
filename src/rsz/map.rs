@@ -269,6 +269,34 @@ rsz_struct! {
 }
 
 rsz_struct! {
+    #[rsz("snow.gui.userdata.GuiMap07DefineData.MapHyakuryuLayoutSetting",
+        0x8e07822f = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct MapHyakuryuLayoutSetting {
+        pub add_hyakuryu_texture_pos: Vec3,
+        pub add_hyakuryu_mask_pos: Vec3,
+        pub hyakuryu_mask_size_w: f32,
+        pub hyakuryu_mask_size_h: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.gui.userdata.GuiMap07DefineData",
+        0x162be1f2 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct GuiMap07DefineData {
+        #[serde(flatten)]
+        pub base: Flatten<GuiMapScaleDefineData>,
+        pub map_layout_setting: Vec<MapHyakuryuLayoutSetting>,
+        pub start_menu_map_layout_setting: Vec<MapHyakuryuLayoutSetting>,
+        pub detail_map_layout_setting: Vec<MapHyakuryuLayoutSetting>,
+
+    }
+}
+
+rsz_struct! {
     #[rsz("snow.gui.GuiQuestStart",
         0xe295d8a4 = 0,
     )]
