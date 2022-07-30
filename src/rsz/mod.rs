@@ -654,6 +654,8 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         HyakuryuQuestDataWaveData,
         HyakuryuQuestData,
         HyakuryuQuestDataTbl,
+        MysteryRewardItemUserDataParam,
+        MysteryRewardItemUserData,
     );
 
     r!(

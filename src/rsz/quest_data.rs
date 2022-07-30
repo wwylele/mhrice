@@ -908,3 +908,32 @@ rsz_struct! {
         pub data_list_390: Vec<HyakuryuQuestData>,
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.data.MysteryRewardItemUserData.Param",
+        0xc3438c68 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct MysteryRewardItemUserDataParam {
+        pub em_type:EmTypes,
+        pub lv_lower_limit: u32,
+        pub lv_upper_limit: u32,
+        pub quest_no: i32,
+        pub hagibui_probability: u32,
+        pub reward_item: ItemId,
+        pub item_num: u32,
+        pub quest_reward_table_index: u32,
+        pub additional_quest_reward_table_index: Vec<u32>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.MysteryRewardItemUserData",
+        path = "data/Define/Quest/System/QuestRewardSystem/MysteryRewardItemUserData.user",
+        0x1479db1b = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct MysteryRewardItemUserData {
+        pub param: Vec<MysteryRewardItemUserDataParam>
+    }
+}

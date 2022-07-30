@@ -76,6 +76,7 @@ pub struct Pedia {
     pub reward_id_lot_table_mr: RewardIdLotTableUserDataMr,
     pub main_target_reward_lot_num: MainTargetRewardLotNumDefineUserData,
     pub fixed_hyakuryu_quest: HyakuryuQuestDataTbl,
+    pub mystery_reward_item: MysteryRewardItemUserData,
     pub quest_hall_msg: Msg,
     pub quest_hall_msg_mr: Msg,
     pub quest_hall_msg_mr2: Msg,
@@ -356,6 +357,7 @@ pub struct MonsterEx<'a> {
     pub alias: Option<&'a MsgEntry>,
     pub explain1: Option<&'a MsgEntry>,
     pub explain2: Option<&'a MsgEntry>,
+    pub mystery_reward: Option<&'a MysteryRewardItemUserDataParam>,
 }
 
 pub struct PediaEx<'a> {

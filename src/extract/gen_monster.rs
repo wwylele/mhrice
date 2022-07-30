@@ -728,6 +728,27 @@ pub fn gen_lot(
         </table></div>
         </div>
 
+        { (rank == QuestRank::Master).then(||()).and_then(|_|
+            pedia_ex.monsters[&monster.em_type].mystery_reward
+            ).map(|mystery| {
+
+            html!(<div class="mh-reward-box">
+            <div class="mh-table"><table>
+                <thead><tr>
+                    <th>"Afflicted carves"</th>
+                    <th>"Probability"</th>
+                </tr></thead>
+                <tbody> {
+                    gen_reward_table(pedia_ex,
+                        &[mystery.reward_item],
+                        &[mystery.item_num],
+                        &[mystery.hagibui_probability])
+                } </tbody>
+            </table></div>
+            </div>)
+
+        })}
+
         </div>
     </section>)
 }

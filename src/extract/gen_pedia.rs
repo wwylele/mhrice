@@ -669,6 +669,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         reward_id_lot_table_mr: get_singleton(pak)?,
         main_target_reward_lot_num: get_singleton(pak)?,
         fixed_hyakuryu_quest: get_singleton(pak)?,
+        mystery_reward_item: get_singleton(pak)?,
         quest_hall_msg,
         quest_hall_msg_mr,
         quest_hall_msg_mr2,
@@ -2621,8 +2622,33 @@ fn prepare_monsters(pedia: &Pedia) -> Result<HashMap<EmTypes, MonsterEx<'_>>> {
     let explains = pedia.monster_explains.get_name_map();
     let explains_mr = pedia.monster_explains_mr.get_name_map();
 
+    let mut mystery_rewards = hash_map_unique(
+        pedia
+            .mystery_reward_item
+            .param
+            .iter()
+            .filter(|p| p.em_type != EmTypes::Em(0)),
+        |p| (p.em_type, p),
+        false,
+    )?;
+
+    for mystery_reward in mystery_rewards.values() {
+        if mystery_reward.quest_no != -1
+            || mystery_reward.lv_lower_limit != 0
+            || mystery_reward.lv_upper_limit != 0
+            || mystery_reward.quest_reward_table_index != 0
+            || mystery_reward
+                .additional_quest_reward_table_index
+                .iter()
+                .any(|&q| q != 0)
+        {
+            bail!("Found interesting mystery reward {mystery_reward:?}")
+        }
+    }
+
     let monsters = pedia.monsters.iter().chain(&pedia.small_monsters);
     for monster in monsters {
+        let mystery_reward = mystery_rewards.remove(&monster.em_type);
         let entry = if let Some(index) = monster.enemy_type {
             let name = names
                 .get(&format!("EnemyIndex{index:03}"))
@@ -2658,6 +2684,7 @@ fn prepare_monsters(pedia: &Pedia) -> Result<HashMap<EmTypes, MonsterEx<'_>>> {
                 alias,
                 explain1,
                 explain2,
+                mystery_reward,
             }
         } else {
             MonsterEx {
@@ -2665,6 +2692,7 @@ fn prepare_monsters(pedia: &Pedia) -> Result<HashMap<EmTypes, MonsterEx<'_>>> {
                 alias: None,
                 explain1: None,
                 explain2: None,
+                mystery_reward,
             }
         };
         result.insert(monster.em_type, entry);
