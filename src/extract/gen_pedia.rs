@@ -644,6 +644,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         "data/Define/Otomo/Equip/Armor/ArmorSeries_OtDog_Name_MR.msg",
     )?;
 
+    let servant_profile = get_msg(pak, "Message/Servant/ServantProfile_MR.msg")?;
+
     Ok(Pedia {
         monsters,
         small_monsters,
@@ -806,6 +808,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         dog_weapon_explain_mr,
         airou_series_name_mr,
         dog_series_name_mr,
+        servant_profile,
     })
 }
 
@@ -2717,6 +2720,21 @@ fn prepare_monsters(pedia: &Pedia) -> Result<HashMap<EmTypes, MonsterEx<'_>>> {
     Ok(result)
 }
 
+pub fn prepare_servant(pedia: &Pedia) -> Result<HashMap<i32, Servant<'_>>> {
+    let mut result = HashMap::new();
+    for entry in &pedia.servant_profile.entries {
+        if let Some(id) = entry.name.strip_prefix("Name_ServantId") {
+            let id: i32 = id
+                .strip_suffix("_MR")
+                .and_then(|id| id.parse().ok())
+                .with_context(|| format!("Unexpected servant name tag {}", entry.name))?;
+            let servant = Servant { name: entry };
+            result.insert(id, servant);
+        }
+    }
+    Ok(result)
+}
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     let monster_order = pedia
         .monster_list
@@ -2774,5 +2792,6 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         monster_order,
         item_pop: prepare_item_pop(pedia)?,
         ot_equip: prepeare_ot_equip(pedia)?,
+        servant: prepare_servant(pedia)?,
     })
 }

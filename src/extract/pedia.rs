@@ -214,6 +214,8 @@ pub struct Pedia {
     pub dog_weapon_explain_mr: Msg,
     pub airou_series_name_mr: Msg,
     pub dog_series_name_mr: Msg,
+
+    pub servant_profile: Msg,
 }
 
 pub struct QuestReward<'a> {
@@ -362,6 +364,10 @@ pub struct MonsterEx<'a> {
     pub mystery_reward: Option<&'a MysteryRewardItemUserDataParam>,
 }
 
+pub struct Servant<'a> {
+    pub name: &'a MsgEntry,
+}
+
 pub struct PediaEx<'a> {
     pub monsters: HashMap<EmTypes, MonsterEx<'a>>,
     pub sizes: HashMap<EmTypes, &'a SizeInfo>,
@@ -397,4 +403,6 @@ pub struct PediaEx<'a> {
     pub monster_order: HashMap<EmTypes, usize>,
     pub item_pop: HashMap<(/*pop_id*/ i32, /*map*/ i32), &'a ItemPopLotTableUserDataParam>,
     pub ot_equip: BTreeMap<OtEquipSeriesId, OtEquipSeries<'a>>,
+
+    pub servant: HashMap<i32, Servant<'a>>,
 }

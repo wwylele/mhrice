@@ -538,9 +538,11 @@ fn gen_quest(
                     html!(<section><h2>"Fixed followers"</h2>
                         <ul> {
                             servants.servant_info_list.iter().map(|servant| {
-                                html!(<li> {
-                                    text!("NPC: {}, Weapon: {}",
-                                        servant.servant_id, servant.weapon_type.name())
+                                let name = pedia_ex.servant.get(&servant.servant_id)
+                                    .map_or_else(||html!(<span>{text!("{}", servant.servant_id)}</span>),
+                                    |s|gen_multi_lang(s.name));
+                                html!(<li> "NPC: " {name} ", " {
+                                    text!("Weapon: {}", servant.weapon_type.name())
                                 } </li>)
                             })
                         } </ul>
