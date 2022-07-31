@@ -10,22 +10,68 @@ use std::collections::BTreeMap;
 use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
 
-pub fn gen_quest_tag(quest: &Quest, is_target: bool, is_mystery: bool) -> Box<div<String>> {
+pub fn quest_level_tag(quest: &Quest) -> Box<span<String>> {
+    let (quest_level_tag, name) = match quest.param.enemy_level {
+        EnemyLevel::Village => ("mh-quest-village", "Vi"),
+        EnemyLevel::Low => ("mh-quest-low", "LR"),
+        EnemyLevel::High => ("mh-quest-high", "HR"),
+        EnemyLevel::Master => ("mh-quest-master", "MR"),
+    };
+    let level = match quest.param.quest_level {
+        QuestLevel::QL1 => "1",
+        QuestLevel::QL2 => "2",
+        QuestLevel::QL3 => "3",
+        QuestLevel::QL4 => "4",
+        QuestLevel::QL5 => "5",
+        QuestLevel::QL6 => "6",
+        QuestLevel::QL7 => "7",
+        QuestLevel::QL7Ex => "7+",
+    };
+    let level_tag_class = format!("tag {quest_level_tag}");
+    html!(<span class={level_tag_class.as_str()}>{
+        text!("{}{}", name, level)}</span>)
+}
+
+pub fn gen_quest_tag(
+    quest: &Quest,
+    tag_level: bool,
+    is_target: bool,
+    is_mystery: bool,
+) -> Box<div<String>> {
+    let img = format!(
+        "/resources/questtype_{}.png",
+        quest.param.quest_type.icon_index()
+    );
     html!(<div>
-        <span class="tag">{text!("{:?}-{:?}", quest.param.enemy_level, quest.param.quest_level)}</span>
+        <a href={format!("/quest/{:06}.html", quest.param.quest_no)} class="mh-icon-text">
+        <img alt="Quest icon" src={img} class="mh-quest-icon"/>
         {
-            quest.is_dl.then(
-                ||html!(<span class="tag">{text!("Event")}</span>)
+            tag_level.then(
+                ||quest_level_tag(quest)
             )
         }
-        <a href={format!("/quest/{:06}.html", quest.param.quest_no)}>
+        {
+            quest.is_dl.then(
+                ||html!(<span class="tag mh-quest-event">{text!("Event")}</span>)
+            )
+        }
+        {
+            quest.param.is_servant_request().then(
+                ||html!(<span class="tag mh-quest-follower">{text!("Follower")}</span>)
+            )
+        }
+        {
+            quest.param.is_kingdom().then(
+                ||html!(<span class="tag mh-quest-follower">{text!("Survey")}</span>)
+            )
+        }
         {quest.name.map_or(
             html!(<span>{text!("Quest {:06}", quest.param.quest_no)}</span>),
             gen_multi_lang
         )}
-        </a>
         {is_target.then(||html!(<span class="tag is-primary">"Target"</span>))}
         {is_mystery.then(||html!(<span class="tag is-danger">"Afflicted"</span>))}
+        </a>
     </div>)
 }
 
@@ -60,23 +106,8 @@ pub fn gen_quest_list(quests: &[Quest], output: &impl Sink) -> Result<()> {
                                     <h3>{text!("{:?}", quest_level)}</h3>
                                     <ul class="mh-quest-list">{
                                         quests.into_iter().map(|quest|{
-                                            let link = format!("/quest/{:06}.html", quest.param.quest_no);
-                                            let name = quest.name.map_or(
-                                                html!(<span>{text!("Quest {:06}", quest.param.quest_no)}</span>),
-                                                gen_multi_lang
-                                            );
-                                            let img = format!("/resources/questtype_{}.png",
-                                                quest.param.quest_type.icon_index());
                                             html!{<li>
-                                                <a href={link} class="mh-icon-text">
-                                                <img alt="Quest icon" src={img} class="mh-quest-icon"/>
-                                                {
-                                                    quest.is_dl.then(
-                                                        ||html!(<span class="tag">{text!("Event")}</span>)
-                                                    )
-                                                }
-                                                {name}
-                                                </a>
+                                                { gen_quest_tag(quest, false, false, false) }
                                             </li>}
                                         })
                                     }</ul>
@@ -130,22 +161,20 @@ pub fn gen_quest_monster_data(
             }
 
             let small = (small_chance != 0).then(|| {
-                html!(<span>
+                html!(<span class="mh-crown">
                     <img alt="Small crown" src="/resources/small_crown.png" />
                     {text!("{}%", small_chance)}
                 </span>)
             });
 
             let large = (large_chance != 0).then(|| {
-                html!(<span>
+                html!(<span class="mh-crown">
                     <img alt="Large crown" src="/resources/king_crown.png" />
                     {text!("{}%", large_chance)}
                 </span>)
             });
 
-            let br = (small.is_some() && large.is_some()).then(|| html!(<br/>));
-
-            html!(<span>{small}{br}{large}</span>)
+            html!(<span>{small}{large}</span>)
         } else {
             html!(<span>"-"</span>)
         }
@@ -431,10 +460,20 @@ fn gen_quest(
                         <img alt="Quest icon" src={img} class="mh-quest-icon"/>
                     </div>
                     <h1>
-                    <span class="tag">{text!("{:?}-{:?}", quest.param.enemy_level, quest.param.quest_level)}</span>
+                    {quest_level_tag(quest)}
                     {
                         quest.is_dl.then(
-                            ||html!(<span class="tag">{text!("Event")}</span>)
+                            ||html!(<span class="tag mh-quest-event">{text!("Event")}</span>)
+                        )
+                    }
+                    {
+                        quest.param.is_servant_request().then(
+                            ||html!(<span class="tag mh-quest-follower">{text!("Follower")}</span>)
+                        )
+                    }
+                    {
+                        quest.param.is_kingdom().then(
+                            ||html!(<span class="tag mh-quest-follower">{text!("Survey")}</span>)
                         )
                     }
                     {
@@ -494,6 +533,19 @@ fn gen_quest(
                     <span>{ text!("{}", quest.param.auto_match_hr) }</span></p>
                 </div>
                 </section>
+
+                { quest.servant.map(|servants| {
+                    html!(<section><h2>"Fixed followers"</h2>
+                        <ul> {
+                            servants.servant_info_list.iter().map(|servant| {
+                                html!(<li> {
+                                    text!("NPC: {}, Weapon: {}",
+                                        servant.servant_id, servant.weapon_type.name())
+                                } </li>)
+                            })
+                        } </ul>
+                    </section>)
+                })}
 
                 { target_material }
 

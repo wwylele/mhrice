@@ -839,7 +839,7 @@ pub fn gen_monster(
                         };
                         html!(<tr class={class}>
                             <td> {
-                                gen_quest_tag(quest, is_target, is_mystery)
+                                gen_quest_tag(quest, true, is_target, is_mystery)
                             } </td>
                             { gen_quest_monster_data(quest.enemy_param, em_type, i, pedia, pedia_ex) }
                         </tr>)

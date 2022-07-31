@@ -175,7 +175,7 @@ fn gen_item_source_quest(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<
         Some(html!(<div class="mh-item-in-out"> <h3>"From quests: "</h3>
         <ul class="mh-item-list">{
             quests.into_iter().map(|quest| {
-                html!(<li>{gen_quest_tag(quest, false, false)}</li>)
+                html!(<li>{gen_quest_tag(quest, true, false, false)}</li>)
             })
         }</ul> </div>))
     } else {

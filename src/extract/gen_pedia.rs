@@ -678,6 +678,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         main_target_reward_lot_num: get_singleton(pak)?,
         fixed_hyakuryu_quest: get_singleton(pak)?,
         mystery_reward_item: get_singleton(pak)?,
+        quest_servant: get_singleton(pak)?,
         quest_hall_msg,
         quest_hall_msg_mr,
         quest_hall_msg_mr2,
@@ -1322,7 +1323,7 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
         .chain(&pedia.quest_hall_msg_mr.entries)
         .chain(&pedia.quest_hall_msg_mr2.entries);
 
-    let mut all_msg = hash_map_unique(all_msg, |e| (&e.name, e), false)?;
+    let all_msg = hash_map_unique(all_msg, |e| (&e.name, e), false)?;
 
     let enemy_params = pedia
         .normal_quest_data_for_enemy
@@ -1332,9 +1333,9 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
         .chain(&pedia.normal_quest_data_for_enemy_mr.param)
         .filter(|e| e.quest_no != 0);
 
-    let mut enemy_params = hash_map_unique(enemy_params, |param| (param.quest_no, param), false)?;
+    let enemy_params = hash_map_unique(enemy_params, |param| (param.quest_no, param), false)?;
 
-    let mut reward_params = hash_map_unique(
+    let reward_params = hash_map_unique(
         pedia
             .quest_data_for_reward
             .param
@@ -1366,10 +1367,16 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
         .chain(pedia.fixed_hyakuryu_quest.data_list_380.iter())
         .chain(pedia.fixed_hyakuryu_quest.data_list_390.iter());
 
-    let mut hyakuryus = hash_map_unique(
+    let hyakuryus = hash_map_unique(
         hyakuryu_list,
         |hyakuryu| (hyakuryu.quest_no, hyakuryu),
         false,
+    )?;
+
+    let servant = hash_map_unique(
+        &pedia.quest_servant.quest_servant_data_list,
+        |s| (s.quest_no, s),
+        true,
     )?;
 
     pedia
@@ -1401,7 +1408,7 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
             let target_msg_name = format!("QN{:06}_04", param.quest_no);
             let condition_msg_name = format!("QN{:06}_05", param.quest_no);
 
-            let reward = if let Some(reward) = reward_params.remove(&param.quest_no) {
+            let reward = if let Some(&reward) = reward_params.get(&param.quest_no) {
                 let additional_target_reward = if reward.additional_target_reward_table_index != 0 {
                     Some(
                         *reward_lot
@@ -1474,15 +1481,16 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
 
             Ok(Quest {
                 param,
-                enemy_param: enemy_params.remove(&param.quest_no),
-                name: all_msg.remove(&name_msg_name),
-                requester: all_msg.remove(&requester_msg_name),
-                detail: all_msg.remove(&detail_msg_name),
-                target: all_msg.remove(&target_msg_name),
-                condition: all_msg.remove(&condition_msg_name),
+                enemy_param: enemy_params.get(&param.quest_no).cloned(),
+                name: all_msg.get(&name_msg_name).cloned(),
+                requester: all_msg.get(&requester_msg_name).cloned(),
+                detail: all_msg.get(&detail_msg_name).cloned(),
+                target: all_msg.get(&target_msg_name).cloned(),
+                condition: all_msg.get(&condition_msg_name).cloned(),
                 is_dl,
                 reward,
-                hyakuryu: hyakuryus.remove(&param.quest_no),
+                hyakuryu: hyakuryus.get(&param.quest_no).cloned(),
+                servant: servant.get(&param.quest_no).cloned(),
             })
         })
         .collect::<Result<Vec<_>>>()

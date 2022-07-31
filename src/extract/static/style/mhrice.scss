@@ -489,6 +489,42 @@ img.mh-quest-icon {
     height: 2rem;
 }
 
+/** Quest tag**/
+.tag.mh-quest-village {
+    color: #FFFFFF;
+    background-color: rgb(66, 84, 121);
+}
+
+.tag.mh-quest-low {
+    color: #FFFFFF;
+    background-color: rgb(28, 60, 128);
+}
+
+.tag.mh-quest-high {
+    color: #FFFFFF;
+    background-color: rgb(22, 109, 83);
+}
+
+.tag.mh-quest-master {
+    color: #FFFFFF;
+    background-color: rgb(116, 87, 34);
+}
+
+.tag.mh-quest-event {
+    color: #FFFFFF;
+    background-color: rgb(107, 45, 109);
+}
+
+.tag.mh-quest-follower {
+    color: #FFFFFF;
+    background-color: rgb(90, 100, 44);
+}
+
+/** Crown tag **/
+.mh-crown {
+    display: inline-block;
+}
+
 /** Monster part color **/
 div.mh-color-diagram {
     display: grid;

@@ -352,6 +352,16 @@ impl NormalQuestDataParam {
 
         self.tgt_em_type.contains(&em_type)
     }
+
+    // snow.quest.QuestUtility.isKingdomQuest
+    pub fn is_kingdom(&self) -> bool {
+        (self.quest_no / 100000) % 10 == 4 && (self.quest_no / 10000) % 10 == 5
+    }
+
+    // snow.quest.QuestUtility.isServantRequestQuest
+    pub fn is_servant_request(&self) -> bool {
+        (self.quest_no / 100000) % 10 == 4 && (self.quest_no / 10000) % 10 == 6
+    }
 }
 
 rsz_struct! {
@@ -935,5 +945,81 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct MysteryRewardItemUserData {
         pub param: Vec<MysteryRewardItemUserDataParam>
+    }
+}
+
+// snow.player.PlayerWeaponType
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Clone, Copy)]
+    pub enum PlayerWeaponType {
+        GreatSword = 0,
+        SlashAxe = 1,
+        LongSword = 2,
+        LightBowgun = 3,
+        HeavyBowgun = 4,
+        Hammer = 5,
+        GunLance = 6,
+        Lance = 7,
+        ShortSword = 8,
+        DualBlades = 9,
+        Horn = 10,
+        ChargeAxe = 11,
+        InsectGlaive = 12,
+        Bow = 13,
+    }
+}
+
+impl PlayerWeaponType {
+    pub fn name(self) -> &'static str {
+        match self {
+            PlayerWeaponType::GreatSword => "Great sword",
+            PlayerWeaponType::SlashAxe => "Switch axe",
+            PlayerWeaponType::LongSword => "Long sword",
+            PlayerWeaponType::LightBowgun => "Light bowgun",
+            PlayerWeaponType::HeavyBowgun => "Heavy bowgun",
+            PlayerWeaponType::Hammer => "Hammer",
+            PlayerWeaponType::GunLance => "Gunlance",
+            PlayerWeaponType::Lance => "Lance",
+            PlayerWeaponType::ShortSword => "Sword & sheild",
+            PlayerWeaponType::DualBlades => "Dual blades",
+            PlayerWeaponType::Horn => "Hunting horn",
+            PlayerWeaponType::ChargeAxe => "Charge blade",
+            PlayerWeaponType::InsectGlaive => "Insect glaive",
+            PlayerWeaponType::Bow => "Bow",
+        }
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.ai.QuestServantDataList.SelectQuestServantInfo",
+        0xaf9d45b8 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct SelectQuestServantInfo {
+        pub servant_id: i32, // snow.ai.ServantDefine.ServantId
+        pub weapon_type: PlayerWeaponType, // snow.player.PlayerWeaponType
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.ai.QuestServantDataList.QuestServantData",
+        0x29c450b1 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct QuestServantData {
+        pub quest_no: i32,
+        pub servant_info_list: Vec<SelectQuestServantInfo>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.ai.QuestServantDataList",
+        path = "servant/prefab/ServantManager/QuestServantDataList.user",
+        0x35f0b1a7 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct QuestServantDataList {
+        pub quest_servant_data_list: Vec<QuestServantData>
     }
 }
