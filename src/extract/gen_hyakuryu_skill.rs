@@ -139,7 +139,7 @@ pub fn gen_hyakuryu_skill(
             <tbody>
                 <tr>
                     <td>{gen_hyakuryu_deco_label(deco)}</td>
-                    <td>{text!("{}", deco.data.base_price)}</td>
+                    <td>{text!("{}z", deco.data.base_price)}</td>
                     { gen_category(pedia_ex, deco.product.material_category,
                         deco.product.point) }
                     { gen_materials(pedia_ex, &deco.product.item_id_list,
@@ -180,7 +180,7 @@ pub fn gen_hyakuryu_skill(
                         </tr></thead>
                         <tbody>
                         <tr>
-                            <td>{ text!("{}", recipe.cost) }</td>
+                            <td>{ text!("{}z", recipe.cost) }</td>
                             { gen_materials(pedia_ex, &recipe.recipe_item_id_list,
                                 &recipe.recipe_item_num_list, ItemId::None) }
                         </tr>

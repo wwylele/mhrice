@@ -92,6 +92,7 @@ pub struct Pedia {
     pub armor_product: ArmorProductUserData,
     pub overwear: PlOverwearBaseUserData,
     pub overwear_product: PlOverwearProductUserData,
+    pub armor_buildup: ArmorBuildupTableUserData,
     pub armor_head_name_msg: Msg,
     pub armor_chest_name_msg: Msg,
     pub armor_arm_name_msg: Msg,
@@ -377,6 +378,7 @@ pub struct PediaEx<'a> {
     pub skills: BTreeMap<PlEquipSkillId, Skill<'a>>,
     pub hyakuryu_skills: BTreeMap<PlHyakuryuSkillId, HyakuryuSkill<'a>>,
     pub armors: Vec<ArmorSeries<'a>>,
+    pub armor_buildup: HashMap<i32, Vec<&'a ArmorBuildupTableUserDataParam>>,
     pub meat_names: HashMap<MeatKey, Vec<&'a MsgEntry>>,
 
     pub items: BTreeMap<ItemId, Item<'a>>,

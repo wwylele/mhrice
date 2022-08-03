@@ -789,30 +789,58 @@ rsz_enum! {
 // snow.progress.VillageProgress
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone, Copy)]
     pub enum VillageProgress {
         None = 0,
         VillageProgress(i32) = 1..=7
     }
 }
 
+impl VillageProgress {
+    pub fn display(self) -> Option<String> {
+        match self {
+            VillageProgress::None => None,
+            VillageProgress::VillageProgress(x) => Some(format!("Village {}☆", x)),
+        }
+    }
+}
+
 // snow.progress.HallProgress
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone, Copy)]
     pub enum HallProgress {
         None = 0,
         HallProgress(i32) = 1..=9
     }
 }
 
+impl HallProgress {
+    pub fn display(self) -> Option<String> {
+        match self {
+            HallProgress::None => None,
+            HallProgress::HallProgress(8) => Some("Hall 7☆+".to_owned()),
+            HallProgress::HallProgress(x) => Some(format!("Hub {}☆", x)),
+        }
+    }
+}
+
 // snow.progress.MasterRankProgress
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone, Copy)]
     pub enum MasterRankProgress {
         None = 0,
         MasterRankProgress(i32) = 1..=8
+    }
+}
+
+impl MasterRankProgress {
+    pub fn display(self) -> Option<String> {
+        match self {
+            MasterRankProgress::None => None,
+            MasterRankProgress::MasterRankProgress(x) => Some(format!("MR {}☆", x)),
+        }
     }
 }
 

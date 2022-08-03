@@ -637,9 +637,9 @@ pub fn gen_item(
                 /*<p class="mh-kv"><span>"SE type"</span>
                 <span>{text!("{:?}", item.param.se_type)}</span></p>*/
                 <p class="mh-kv"><span>"Sell price"</span>
-                <span>{text!("{}", item.param.sell_price)}</span></p>
+                <span>{text!("{}z", item.param.sell_price)}</span></p>
                 <p class="mh-kv"><span>"Buy price"</span>
-                <span>{text!("{}", item.param.buy_price)}</span></p>
+                <span>{text!("{}z", item.param.buy_price)}</span></p>
                 /*<p class="mh-kv"><span>"Rank type"</span>
                 <span>{text!("{:?}", item.param.rank_type)}</span></p>*/
                 <p class="mh-kv"><span>"Item group"</span>

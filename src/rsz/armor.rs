@@ -277,3 +277,31 @@ macro_rules! impl_armor_product {
 
 impl_armor_product!(ArmorProductUserDataParam);
 impl_armor_product!(PlOverwearProductUserDataParam);
+
+rsz_struct! {
+    #[rsz("snow.data.ArmorBuildupTableUserData.Param",
+        0xaaffea67 = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ArmorBuildupTableUserDataParam {
+        pub table_type: i32, // snow.data.ArmorBuildupData.TableTypes
+        pub village_progress: VillageProgress,
+        pub hub_progress: HallProgress,
+        pub master_rank_progress: MasterRankProgress,
+        pub limit_lv: u32,
+        pub lv_up_rate: i32,
+        pub up_val: i32,
+        pub cost: i32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.ArmorBuildupTableUserData",
+    path = "data/System/ContentsIdSystem/Armor/ArmorBuildupTableData.user",
+        0x85fb2c77 = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ArmorBuildupTableUserData {
+        pub param: Vec<ArmorBuildupTableUserDataParam>
+    }
+}

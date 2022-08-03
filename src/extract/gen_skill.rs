@@ -110,7 +110,7 @@ pub fn gen_skill(
                     <tr>
                         <td>{gen_deco_label(deco)}</td>
                         <td>{text!("{}", deco.data.skill_lv_list[0])}</td>
-                        <td>{text!("{}", deco.data.base_price)}</td>
+                        <td>{text!("{}z", deco.data.base_price)}</td>
                         { gen_materials(pedia_ex, &deco.product.item_id_list,
                             &deco.product.item_num_list, deco.product.item_flag) }
                     </tr>

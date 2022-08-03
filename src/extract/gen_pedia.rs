@@ -694,6 +694,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         armor_product: get_singleton(pak)?,
         overwear: get_singleton(pak)?,
         overwear_product: get_singleton(pak)?,
+        armor_buildup: get_singleton(pak)?,
         armor_head_name_msg,
         armor_chest_name_msg,
         armor_arm_name_msg,
@@ -2735,6 +2736,25 @@ pub fn prepare_servant(pedia: &Pedia) -> Result<HashMap<i32, Servant<'_>>> {
     Ok(result)
 }
 
+pub fn prepare_armor_buildup(
+    pedia: &Pedia,
+) -> Result<HashMap<i32, Vec<&ArmorBuildupTableUserDataParam>>> {
+    let mut result: HashMap<i32, Vec<&ArmorBuildupTableUserDataParam>> = HashMap::new();
+    for param in &pedia.armor_buildup.param {
+        result.entry(param.table_type).or_default().push(param);
+    }
+    for (table_type, series) in &mut result {
+        series.sort_unstable_by_key(|e| e.limit_lv);
+        if series
+            .windows(2)
+            .any(|window| window[0].limit_lv == window[1].limit_lv)
+        {
+            bail!("Duplicate limit lv for armor buildup type {table_type}");
+        }
+    }
+    Ok(result)
+}
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     let monster_order = pedia
         .monster_list
@@ -2768,6 +2788,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         skills: prepare_skills(pedia)?,
         hyakuryu_skills: prepare_hyakuryu_skills(pedia)?,
         armors: prepare_armors(pedia)?,
+        armor_buildup: prepare_armor_buildup(pedia)?,
         meat_names: prepare_meat_names(pedia)?,
         items: prepare_items(pedia)?,
         material_categories: prepare_material_categories(pedia),

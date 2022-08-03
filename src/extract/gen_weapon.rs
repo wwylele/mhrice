@@ -50,7 +50,7 @@ fn gen_craft_row(
     output: Option<(&[ItemId], &[u32])>,
 ) -> Box<tr<String>> {
     let cost = if let Some(cost) = cost {
-        html!(<td>{text!("{}", cost)}</td>)
+        html!(<td>{text!("{}z", cost)}</td>)
     } else {
         html!(<td></td>) // TODO: what this should be for layered?
     };
@@ -488,7 +488,7 @@ where
                         { (main.base.buy_val != 0).then(|| {
                             html!(<tr>
                                 <td>"Buy"</td>
-                                <td>{text!("{}", main.base.buy_val)}</td>
+                                <td>{text!("{}z", main.base.buy_val)}</td>
                                 <td/><td/><td/>
                             </tr>)
                         })}

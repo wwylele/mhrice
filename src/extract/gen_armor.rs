@@ -184,7 +184,7 @@ fn gen_armor(
 
                     html!(<tr>
                         <td>{gen_armor_label(Some(piece))}</td>
-                        <td>{text!("{}", piece.data.buy_value)}</td>
+                        <td>{text!("{}z", piece.data.buy_value)}</td>
                         <td>{text!("{}", piece.data.def_val)}</td>
                         <td>{text!("{}", piece.data.fire_reg_val)}</td>
                         <td>{text!("{}", piece.data.water_reg_val)}</td>
@@ -197,6 +197,58 @@ fn gen_armor(
                 })
             } </tbody>
         </table></div>)
+    };
+
+    let gen_buildup = |pieces: &[Option<Armor<'_>>]| {
+        let mut buildup_tables: Vec<(i32, Vec<&Armor>)> = vec![];
+        'outer: for piece in pieces.iter().flatten() {
+            for table in &mut buildup_tables {
+                if table.0 == piece.data.buildup_table {
+                    table.1.push(piece);
+                    continue 'outer;
+                }
+            }
+            buildup_tables.push((piece.data.buildup_table, vec![piece]))
+        }
+
+        buildup_tables
+            .into_iter()
+            .map(|table| {
+                let table_out = if let Some(table) = pedia_ex.armor_buildup.get(&table.0) {
+                    html!(<div class="mh-table"><table>
+                    <thead><tr>
+                        <th>"Levels"</th>
+                        <th>"Unlock at"</th>
+                        <th>"+Def / level"</th>
+                        <th>"Armor sphere"</th>
+                        <th>"Cost increase / level"</th>
+                    </tr></thead>
+                    <tbody> {table.iter().map(|upgrade|{
+                        let progress = [upgrade.village_progress.display(),
+                            upgrade.hub_progress.display(),
+                            upgrade.master_rank_progress.display()];
+                        let progress = html!(<ul class="mh-progress">{
+                            progress.into_iter().flatten().map(|p|html!(<li>{text!("{}", p)}</li>))
+                        }</ul>);
+                        html!(<tr>
+                            <td>{text!("Up to {}", upgrade.limit_lv)}</td>
+                            <td>{progress}</td>
+                            <td>{text!("{}", upgrade.up_val)}</td>
+                            <td>{text!("{}", upgrade.lv_up_rate)}</td>
+                            <td>{text!("{}z", upgrade.cost)}</td>
+                        </tr>)
+                    })}
+                    </tbody>
+                    </table></div>)
+                } else {
+                    html!(<div>{text!("Unknown upgrade table {}", table.0)}</div>)
+                };
+                html!(<div>
+            <div>{table.1.into_iter().map(|piece|gen_armor_label(Some(piece)))}</div>
+            {table_out}
+            </div>)
+            })
+            .collect::<Vec<_>>()
     };
 
     let rarity = series
@@ -233,6 +285,7 @@ fn gen_armor(
                 { gen_stat(&series.pieces[0..5])}
                 </section>
 
+
                 {
                     series.pieces[5..10].iter().any(|p|p.is_some()).then(||{
                         [
@@ -245,7 +298,7 @@ fn gen_armor(
                                 <h2 >"EX Stat"</h2>
                                 { gen_stat(&series.pieces[5..10])}
                                 </section>
-                            )
+                            ),
                         ]
                     }).into_iter().flatten()
                 }
@@ -280,7 +333,7 @@ fn gen_armor(
 
                             html!(<tr>
                                 <td>{gen_armor_label(Some(armor))}</td>
-                                <td>{text!("{}", armor.data.value)}</td>
+                                <td>{text!("{}z", armor.data.value)}</td>
                                 {category}
                                 {materials}
                                 {output}
@@ -324,6 +377,19 @@ fn gen_armor(
                 </table></div>
 
                 </section>
+
+                <section>
+                <h2 >"Upgrades"</h2>
+                { gen_buildup(&series.pieces[0..5])}
+                </section>
+
+                {series.pieces[5..10].iter().any(|p|p.is_some()).then(||{
+                    html!(<section>
+                        <h2 >"EX Upgrades"</h2>
+                        { gen_buildup(&series.pieces[5..10])}
+                        </section>
+                    )
+                })}
 
                 </main>
             </body>
