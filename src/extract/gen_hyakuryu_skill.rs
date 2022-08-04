@@ -39,6 +39,16 @@ pub fn gen_hyakuryu_skill_list(
                 { navbar() }
                 <main>
                 <header><h1>"Rampage skill"</h1></header>
+
+                <div>
+                    <a href="/skill.html"><span class="icon-text">
+                    <span class="icon">
+                    <i class="fas fa-arrow-right"></i>
+                    </span>
+                    <span>"go to armor skill"</span>
+                    </span></a>
+                </div>
+
                 <ul class="mh-item-list">
                 {
                     skills.iter().map(|(_, skill)|{

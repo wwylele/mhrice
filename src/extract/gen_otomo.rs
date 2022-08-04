@@ -231,6 +231,7 @@ pub fn gen_otomo_equip_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Resul
         filter: impl Fn(OtEquipSeriesId) -> bool,
         title: &str,
         file_name: &str,
+        interlink: Box<div<String>>,
     ) -> Result<()> {
         let doc: DOMTree<String> = html!(
             <html>
@@ -243,6 +244,7 @@ pub fn gen_otomo_equip_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Resul
                     { navbar() }
                     <main>
                     <header><h1>{text!("{}", title)}</h1></header>
+                    { interlink }
                     <div class="mh-filters"><ul>
                         <li id="mh-armor-filter-button-all" class="is-active mh-armor-filter-button">
                             <a>"All"</a></li>
@@ -303,19 +305,39 @@ pub fn gen_otomo_equip_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Resul
         Ok(())
     }
 
+    let dog_link = html!(<div>
+        <a href="/dog.html"><span class="icon-text">
+        <span class="icon">
+          <i class="fas fa-arrow-right"></i>
+        </span>
+        <span>"go to palamute equipment"</span>
+        </span></a>
+    </div>);
+
+    let airou_link = html!(<div>
+        <a href="/airou.html"><span class="icon-text">
+        <span class="icon">
+          <i class="fas fa-arrow-right"></i>
+        </span>
+        <span>"go to palico equipment"</span>
+        </span></a>
+    </div>);
+
     gen_list(
         pedia_ex,
         output,
         |id| matches!(id, OtEquipSeriesId::Airou(_)),
-        "Palico equipement",
+        "Palico equipment",
         "airou.html",
+        dog_link,
     )?;
     gen_list(
         pedia_ex,
         output,
         |id| matches!(id, OtEquipSeriesId::Dog(_)),
-        "Palamute equipement",
+        "Palamute equipment",
         "dog.html",
+        airou_link,
     )?;
 
     Ok(())

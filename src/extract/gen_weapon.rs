@@ -10,9 +10,14 @@ use std::collections::HashSet;
 use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
 
-pub fn gen_weapon_icon(weapon: &WeaponBaseData) -> Box<div<String>> {
+pub fn gen_weapon_icon(weapon: &WeaponBaseData, white: bool) -> Box<div<String>> {
     let icon = format!("/resources/equip/{:03}", weapon.id.icon_index());
-    gen_rared_icon(weapon.rare_type, &icon)
+    let rare = if white {
+        RareTypes(1)
+    } else {
+        weapon.rare_type
+    };
+    gen_rared_icon(rare, &icon)
 }
 
 pub fn gen_weapon_label<Param>(weapon: &Weapon<Param>) -> Box<a<String>>
@@ -23,7 +28,7 @@ where
     let link = format!("/weapon/{}.html", main.id.to_tag());
     html!(
         <a href={link} class="mh-icon-text">
-            {gen_weapon_icon(main)}
+            {gen_weapon_icon(main, false)}
             <span>{gen_multi_lang(weapon.name)}</span>
         </a>
     )
@@ -301,26 +306,25 @@ where
         </section>)
     });
 
-    let more_bullet: HashSet<BulletType> = HashSet::new();
-    /*main
-    .hyakuryu_skill_id_list
-    .iter()
-    .flat_map(|skill| {
-        pedia_ex
-            .hyakuryu_skills
-            .get(skill)
-            .map(|skill| {
-                skill
-                    .data
-                    .add_bullet_type_list
-                    .iter()
-                    .cloned()
-                    .filter(|&bullet| bullet != BulletType::None)
-            })
-            .into_iter()
-            .flatten()
-    })
-    .collect();*/
+    let more_bullet: HashSet<BulletType> = main
+        .hyakuryu_skill_id_list
+        .iter()
+        .flat_map(|skill| {
+            pedia_ex
+                .hyakuryu_skills
+                .get(skill)
+                .and_then(|skill| skill.data)
+                .map(|skill| {
+                    skill
+                        .add_bullet_type_list
+                        .iter()
+                        .cloned()
+                        .filter(|&bullet| bullet != BulletType::None)
+                })
+                .into_iter()
+                .flatten()
+        })
+        .collect();
 
     let rapid = lbg.map_or(&[][..], |lbg| &lbg.rapid_shot_list[..]);
 
@@ -389,7 +393,7 @@ where
                 <main>
                 <header>
                     <div class="mh-title-icon">
-                        {gen_weapon_icon(main)}
+                        {gen_weapon_icon(main, false)}
                     </div>
                     <h1> {gen_multi_lang(weapon.name)} </h1>
                 </header>
@@ -570,6 +574,14 @@ where
                 { navbar() }
                 <main>
                 <header><h1> {text!("{}", name)} </h1></header>
+                <div>
+                    <a href="/weapon.html"><span class="icon-text">
+                    <span class="icon">
+                    <i class="fas fa-arrow-right"></i>
+                    </span>
+                    <span>"go to other weapon classes"</span>
+                    </span></a>
+                </div>
                 <div class="mh-weapon-tree">
                 { gen_tree_rec(weapon_tree, &weapon_tree.roots) }
                 </div>
@@ -628,6 +640,8 @@ fn heavy_bowgun(param: &HeavyBowgunBaseUserDataParam) -> Vec<Box<p<String>>> {
 pub fn gen_weapons(pedia_ex: &PediaEx, output: &impl Sink, toc: &mut Toc) -> Result<()> {
     let path = output.sub_sink("weapon")?;
 
+    let mut entry_label = vec![];
+
     macro_rules! weapon {
         ($label:ident, $name:expr,
             element:$element:ident,
@@ -639,6 +653,16 @@ pub fn gen_weapons(pedia_ex: &PediaEx, output: &impl Sink, toc: &mut Toc) -> Res
             bow:$bow:ident,
             special:$special:expr
         ) => {{
+            let entry_link = format!("/weapon/{}.html", stringify!($label));
+            entry_label.push(html!(<li>
+                <a href={entry_link.as_str()} class="mh-icon-text">
+                    {
+                        pedia_ex.$label.weapons.values().next().map(
+                            |first|gen_weapon_icon(&first.param, true))
+                    }
+                    <span>{text!("{}", $name)}</span>
+                </a>
+            </li>));
             gen_tree(&pedia_ex.$label, &path, stringify!($label), $name)?;
             for (weapon_id, weapon) in &pedia_ex.$label.weapons {
                 let (file_path, toc_sink) =
@@ -830,6 +854,28 @@ pub fn gen_weapons(pedia_ex: &PediaEx, output: &impl Sink, toc: &mut Toc) -> Res
         bow: yes,
         special: None
     );
+
+    let doc: DOMTree<String> = html!(
+        <html>
+            <head>
+                <title>{text!("Weapon - MHRice")}</title>
+                { head_common() }
+            </head>
+            <body>
+                { navbar() }
+                <main>
+                <header><h1> "Weapon" </h1></header>
+                <ul class="mh-item-list">
+                {entry_label}
+                </ul>
+                </main>
+            </body>
+        </html>
+    );
+
+    output
+        .create_html("weapon.html")?
+        .write_all(doc.to_string().as_bytes())?;
 
     Ok(())
 }

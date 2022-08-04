@@ -23,7 +23,17 @@ pub fn gen_skill_list(skills: &BTreeMap<PlEquipSkillId, Skill>, output: &impl Si
             <body>
                 { navbar() }
                 <main>
-                <header><h1>"Skill"</h1></header>
+                <header><h1>"Armor skill"</h1></header>
+
+                <div>
+                    <a href="/hyakuryu_skill.html"><span class="icon-text">
+                    <span class="icon">
+                    <i class="fas fa-arrow-right"></i>
+                    </span>
+                    <span>"go to rampage skill"</span>
+                    </span></a>
+                </div>
+
                 <ul class="mh-item-list">
                 {
                     skills.iter().map(|(&id, skill)|{
