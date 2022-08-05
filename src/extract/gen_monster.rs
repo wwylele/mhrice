@@ -6,10 +6,49 @@ use super::sink::*;
 use crate::part_color::PART_COLORS;
 use crate::rsz::*;
 use anyhow::Result;
+use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
+
+// snow.enemy.....MeatType or MeatChangeNo or MeatGroup
+const MEAT_TYPES: &[(u32, &[&str])] = &[
+    (4, &["Normal", "Glowing", "Broken", "Broken & glowing"]),
+    (19, &["Normal", "Guarding", "Broken"]),
+    (25, &["Normal", "Stealth"]),
+    (27, &["Normal", "Flame", "Blast"]),
+    (44, &["Normal", "Mud", "MR normal", "MR mud"]),
+    (57, &["Normal", "Charged", "Charged & enraged"]),
+    (81, &["Normal", "Charged", "Broken"]),
+    (82, &["Normal", "Enraged", "Broken", "Wet", "Wet & enraged"]),
+    (
+        86,
+        &[
+            "Normal",
+            "Dragon energy",
+            "Enraged",
+            "Dragon energy & enraged",
+        ],
+    ),
+    (
+        89, // only apply to 89_05 but 89_00 doesn't have multi phase anyway
+        &[
+            "Normal",
+            "Concentrated hellfire (1 pole)",
+            "Raging hellfire (2 pole)",
+        ],
+    ),
+    (100, &["Normal", "Broken"]),
+    (108, &["Normal", "Mud"]),
+];
+
+const SPECIFIC_MEAT_TYPES: &[((u32, usize), &[&str])] = &[((81, 3), &["Normal", "Broken"])];
+
+static MEAT_TYPE_MAP: Lazy<HashMap<u32, &[&str]>> =
+    Lazy::new(|| HashMap::from_iter(MEAT_TYPES.iter().cloned()));
+static SPECIFIC_MEAT_TYPE_MAP: Lazy<HashMap<(u32, usize), &[&str]>> =
+    Lazy::new(|| HashMap::from_iter(SPECIFIC_MEAT_TYPES.iter().cloned()));
 
 pub fn gen_monster_tag(
     pedia_ex: &PediaEx,
@@ -876,6 +915,7 @@ pub fn gen_monster(
     );
 
     let monster_alias = monster_ex.alias;
+    let phase_map = MEAT_TYPE_MAP.get(&monster.id).copied();
 
     let doc: DOMTree<String> = html!(
         <html>
@@ -1006,8 +1046,21 @@ pub fn gen_monster(
                                     }).map(|v|v.as_slice()).unwrap_or_default();
 
                                     let mut tds = part_common.take().unwrap_or_default();
+
+                                    let phase_text = if let Some(phase_text) = SPECIFIC_MEAT_TYPE_MAP
+                                        .get(&(monster.id, part)).copied().and_then(|m|m.get(phase)) {
+
+                                        phase_text.to_string()
+                                    } else if let Some(phase_text) =
+                                        phase_map.and_then(|m|m.get(phase)) {
+
+                                        phase_text.to_string()
+                                    } else {
+                                        format!("{}", phase)
+                                    };
+
                                     tds.extend(vec![
-                                        html!(<td>{text!("{}", phase)}</td>),
+                                        html!(<td>{text!("{}", phase_text)}</td>),
                                         html!(<td>{
                                             names.iter().enumerate().map(|(i, n)| html!(<span>
                                                 { text!("{}", if i == 0 {""} else {", "}) }
