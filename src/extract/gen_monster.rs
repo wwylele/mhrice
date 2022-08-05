@@ -888,19 +888,23 @@ pub fn gen_monster(
             {
                 if let Some(&discovery) = pedia_ex.discoveries.get(&monster_em_type) {
                     vec![
-                        html!(<tr><td>"Village tour"</td>{
+                        html!(<tr><td>{text!("Village tour ({})",
+                            discovery.cond_village.display().unwrap_or_default())}</td>{
                             gen_quest_monster_data(Some(discovery),
                                 monster_em_type, 0, pedia, pedia_ex)
                         }</tr>),
-                        html!(<tr><td>"Low rank tour"</td>{
+                        html!(<tr><td>{text!("Low rank tour ({})",
+                            discovery.cond_low.display().unwrap_or_default())}</td>{
                             gen_quest_monster_data(Some(discovery),
                                 monster_em_type, 1, pedia, pedia_ex)
                         }</tr>),
-                        html!(<tr><td>"High rank tour"</td>{
+                        html!(<tr><td>{text!("High rank tour ({})",
+                            discovery.cond_high.display().unwrap_or_default())}</td>{
                             gen_quest_monster_data(Some(discovery),
                                 monster_em_type, 2, pedia, pedia_ex)
                         }</tr>),
-                        html!(<tr><td>"Master rank tour"</td>{
+                        html!(<tr><td>{text!("Master rank tour ({})",
+                            discovery.cond_master.display().unwrap_or_default())}</td>{
                             gen_quest_monster_data(Some(discovery),
                                 monster_em_type, 3, pedia, pedia_ex)
                         }</tr>)

@@ -706,9 +706,9 @@ rsz_struct! {
     pub struct DiscoverEmSetDataParam {
         pub em_type: EmTypes,
         pub cond_village: VillageProgress,
-        pub cond_low: i32, // snow.progress.HallProgress
-        pub cond_high: i32, // snow.progress.HallProgress
-        pub cond_master: i32, // snow.progress.MasterRankProgress
+        pub cond_low: HallProgress,
+        pub cond_high: HallProgress,
+        pub cond_master: MasterRankProgress,
         pub map_flag: [bool; 7],
         pub route_no: [u8; 7],
         pub init_set_name: [String; 7],
