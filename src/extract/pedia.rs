@@ -326,6 +326,7 @@ pub struct Weapon<'a, Param> {
     pub children: Vec<WeaponId>,
     pub parent: Option<WeaponId>,
     pub hyakuryu_weapon_buildup: BTreeMap<i32, &'a HyakuryuWeaponHyakuryuBuildupUserDataParam>,
+    pub update: Option<&'a WeaponUpdateTreeUserDataParam>,
 }
 
 pub struct WeaponTree<'a, Param> {

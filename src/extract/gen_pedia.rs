@@ -2165,6 +2165,7 @@ where
             children: vec![],
             parent: None,
             hyakuryu_weapon_buildup: hyakuryu_weapon_map.remove(&id).unwrap_or_default(),
+            update: None,
         };
         weapons.insert(param.to_base().id, weapon);
     }
@@ -2190,7 +2191,9 @@ where
         if tree_id_set.contains(&node.weapon_id) {
             bail!("Multiple tree node for weapon {:?}", node.weapon_id)
         }
-        if !weapons.contains_key(&node.weapon_id) {
+        if let Some(weapon) = weapons.get_mut(&node.weapon_id) {
+            weapon.update = Some(node);
+        } else {
             bail!("Unknown weapon in tree node {:?}", node.weapon_id);
         }
         tree_id_set.insert(node.weapon_id);

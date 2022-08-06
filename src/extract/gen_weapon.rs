@@ -480,6 +480,12 @@ where
 
                 <section>
                 <h2 >"Crafting"</h2>
+                { weapon.update.map(|update| {
+                    html!(<p>{text!("Unlock at: {} {} {}",
+                        update.village_progress.display().unwrap_or_default(),
+                        update.hall_progress.display().unwrap_or_default(),
+                        update.mr_progress.display().unwrap_or_default())}</p>)
+                }) }
                 <div class="mh-table"><table>
                     <thead><tr>
                         <th>""</th>
