@@ -38,7 +38,7 @@ pub fn gen_hyakuryu_skill_list(
             <body>
                 { navbar() }
                 <main>
-                <header><h1>"Rampage skill"</h1></header>
+                <header><h1>"Rampage skills"</h1></header>
 
                 <div>
                     <a href="/skill.html"><span class="icon-text">

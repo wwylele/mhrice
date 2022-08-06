@@ -864,13 +864,13 @@ pub fn gen_weapons(pedia_ex: &PediaEx, output: &impl Sink, toc: &mut Toc) -> Res
     let doc: DOMTree<String> = html!(
         <html>
             <head>
-                <title>{text!("Weapon - MHRice")}</title>
+                <title>{text!("Weapons - MHRice")}</title>
                 { head_common() }
             </head>
             <body>
                 { navbar() }
                 <main>
-                <header><h1> "Weapon" </h1></header>
+                <header><h1> "Weapons" </h1></header>
                 <ul class="mh-item-list">
                 {entry_label}
                 </ul>

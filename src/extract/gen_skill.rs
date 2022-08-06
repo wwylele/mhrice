@@ -17,13 +17,13 @@ pub fn gen_skill_list(skills: &BTreeMap<PlEquipSkillId, Skill>, output: &impl Si
     let doc: DOMTree<String> = html!(
         <html>
             <head>
-                <title>{text!("Skills - MHRice")}</title>
+                <title>{text!("Armor skills - MHRice")}</title>
                 { head_common() }
             </head>
             <body>
                 { navbar() }
                 <main>
-                <header><h1>"Armor skill"</h1></header>
+                <header><h1>"Armor skills"</h1></header>
 
                 <div>
                     <a href="/hyakuryu_skill.html"><span class="icon-text">

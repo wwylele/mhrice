@@ -385,7 +385,7 @@ pub fn gen_map_list(pedia: &Pedia, output: &impl Sink) -> Result<()> {
             <body>
                 { navbar() }
                 <main>
-                <header><h1>"Map"</h1></header>
+                <header><h1>"Maps"</h1></header>
                 <ul>
                 {
                     pedia.maps.iter().map(|(&i, _)|{

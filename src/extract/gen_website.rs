@@ -118,11 +118,11 @@ pub fn navbar() -> Box<nav<String>> {
                 </a>
 
                 <a class="navbar-item navbar-folded" href="/weapon.html">
-                    "Weapon"
+                    "Weapons"
                 </a>
                 <div class="navbar-item has-dropdown is-hoverable navbar-expanded">
                 <a class="navbar-link">
-                    "Weapon"
+                    "Weapons"
                 </a>
                 <div class="navbar-dropdown">
                     <a class="navbar-item" href="/weapon/great_sword.html">"Great sword"</a>
