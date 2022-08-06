@@ -96,7 +96,10 @@ pub fn navbar() -> Box<nav<String>> {
                     "Quests"
                 </a>
 
-                <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-item navbar-folded" href="/skill.html">
+                    "Skills"
+                </a>
+                <div class="navbar-item has-dropdown is-hoverable navbar-expanded">
                 <a class="navbar-link">
                     "Skills"
                 </a>
@@ -114,7 +117,10 @@ pub fn navbar() -> Box<nav<String>> {
                     "Armors"
                 </a>
 
-                <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-item navbar-folded" href="/weapon.html">
+                    "Weapon"
+                </a>
+                <div class="navbar-item has-dropdown is-hoverable navbar-expanded">
                 <a class="navbar-link">
                     "Weapon"
                 </a>
@@ -136,7 +142,10 @@ pub fn navbar() -> Box<nav<String>> {
                 </div>
                 </div>
 
-                <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-item navbar-folded" href="/airou.html">
+                    "Buddy"
+                </a>
+                <div class="navbar-item has-dropdown is-hoverable navbar-expanded">
                 <a class="navbar-link">
                     "Buddy"
                 </a>

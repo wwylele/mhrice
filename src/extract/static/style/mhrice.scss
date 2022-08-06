@@ -30,6 +30,18 @@ nav {
     >div {
         @extend .container;
     }
+
+    .navbar-folded {
+        @include from($navbar-breakpoint) {
+            display: none;
+        }
+    }
+
+    .navbar-expanded {
+        @include until($navbar-breakpoint) {
+            display: none;
+        }
+    }
 }
 
 main {
