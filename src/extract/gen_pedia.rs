@@ -2703,6 +2703,7 @@ fn prepare_monsters(pedia: &Pedia) -> Result<HashMap<EmTypes, MonsterEx<'_>>> {
                 });
 
             MonsterEx {
+                data: monster,
                 name,
                 alias,
                 explain1,
@@ -2711,6 +2712,7 @@ fn prepare_monsters(pedia: &Pedia) -> Result<HashMap<EmTypes, MonsterEx<'_>>> {
             }
         } else {
             MonsterEx {
+                data: monster,
                 name: None,
                 alias: None,
                 explain1: None,

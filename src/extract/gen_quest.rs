@@ -652,6 +652,59 @@ fn gen_quest(
 
                 </section>)) }
 
+                { has_normal_em.then(|| {
+                    let mut span = 1;
+                    let init_sets: Vec<_> = quest.param.boss_em_type.iter().copied().enumerate()
+                        .filter(|&(_, em_type)|em_type != EmTypes::Em(0))
+                        .map(|(i, em_type)|{
+                            let is_target = quest.param.has_target(em_type);
+                            let is_mystery = quest.enemy_param
+                                .and_then(|p|p.individual_type.get(i))
+                                .map(|&t|t == EnemyIndividualType::Mystery)
+                                .unwrap_or(false);
+                            let init_set_name = quest.enemy_param.as_ref()
+                                .and_then(|p|p.init_set_name.get(i))
+                                .map(|s|s.as_str());
+                            let init_set = pedia_ex.monsters.get(&em_type)
+                                .and_then(|m|m.data.boss_init_set_data.as_ref())
+                                .and_then(|i|i.stage_info_list.iter().find(
+                                    |s|s.map_type == quest.param.map_no))
+                                .and_then(|s|s.set_info_list.iter().find(
+                                    |s|Some(s.set_name.as_str()) == init_set_name));
+                            if let Some(init_set) = init_set {
+                                span = std::cmp::max(span,
+                                    init_set.info.iter().filter(|i|i.lot != 0).count());
+                            }
+                            let class = if !is_target {
+                                "mh-non-target"
+                            } else {
+                                ""
+                            };
+                            html!(<tr class={class}>
+                                <td>{ gen_monster_tag(pedia_ex, em_type, is_target, false, is_mystery)}</td>
+                                <td>{ text!("{}", init_set_name.unwrap_or_default()) }</td>
+                                {init_set.into_iter().flat_map(|init_set|
+                                    init_set.info.iter().filter(|i|i.lot != 0).map(|i|html!(<td> {
+                                    text!("Area {}, {}%", i.block, i.lot)
+                                } </td>)))}
+                            </tr>)
+                        }).collect();
+
+                    html!(<section>
+                    <h2 >"Spawning area"</h2>
+                    <div class="mh-table"><table>
+                    <thead><tr>
+                        <th>"Monster"</th>
+                        <th>"Preset name"</th>
+                        <th colspan={span}>"Initial area"</th>
+                    </tr></thead>
+                    <tbody>
+                    {init_sets}
+                    </tbody>
+                    </table></div>
+                    </section>)
+                }) }
+
                 { quest.hyakuryu.map(|h| {
                     [html!(<section>
                     <h2 >"Rampage information"</h2>

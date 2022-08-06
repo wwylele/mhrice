@@ -359,6 +359,7 @@ pub struct OtEquipSeries<'a> {
 
 #[derive(Debug)]
 pub struct MonsterEx<'a> {
+    pub data: &'a Monster,
     pub name: Option<&'a MsgEntry>,
     pub alias: Option<&'a MsgEntry>,
     pub explain1: Option<&'a MsgEntry>,
