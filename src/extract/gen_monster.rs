@@ -561,11 +561,11 @@ pub fn gen_lot(
     em_type: EmTypes,
     rank: QuestRank,
     pedia_ex: &PediaEx<'_>,
-) -> Box<section<String>> {
+) -> Option<Box<section<String>>> {
     let lot = if let Some(lot) = pedia_ex.monster_lot.get(&(em_type, rank)) {
         *lot
     } else {
-        return html!(<section></section>);
+        return None;
     };
 
     let mut drop_dictionary = HashMap::new();
@@ -605,7 +605,7 @@ pub fn gen_lot(
         QuestRank::Master => "Master rank reward",
     };
 
-    html!(<section>
+    Some(html!(<section>
         <h2 >{text!("{}", header)}</h2>
         <div class="mh-reward-tables">
 
@@ -789,7 +789,7 @@ pub fn gen_lot(
         })}
 
         </div>
-    </section>)
+    </section>))
 }
 
 pub fn gen_monster(
