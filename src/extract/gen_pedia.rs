@@ -198,14 +198,10 @@ pub fn gen_monsters(
                 None
             };
 
-            let enemy_type = if id == 99 && sub_id == 5 {
-                Some(39)
-            } else {
-                boss_init_set_data
-                    .as_ref()
-                    .map(|b: &EnemyBossInitSetData| b.enemy_type)
-                    .or_else(|| EMS_ID_MAP.get(&(id + (sub_id << 8) + 0x1000)).cloned())
-            };
+            let enemy_type = boss_init_set_data
+                .as_ref()
+                .map(|b: &EnemyBossInitSetData| b.enemy_type)
+                .or_else(|| EMS_ID_MAP.get(&(id + (sub_id << 8) + 0x1000)).cloned());
 
             let rcol_path = collider_path_gen(id, sub_id);
             let rcol_index = pak.find_file(&rcol_path)?;
@@ -328,6 +324,20 @@ fn get_weapon_list<BaseData: 'static>(
 }
 
 pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
+    fn boss_init_set_path(id: u32, sub_id: u32) -> Option<String> {
+        if id == 99 && sub_id == 5 {
+            // wow
+            return Some(format!(
+                "enemy/em{0:03}/00/user_data/em{0:03}_{1:02}_boss_init_set_data.user",
+                id, sub_id
+            ));
+        }
+        Some(format!(
+            "enemy/em{0:03}/{1:02}/user_data/em{0:03}_{1:02}_boss_init_set_data.user",
+            id, sub_id
+        ))
+    }
+
     let monsters = gen_monsters(
         pak,
         |id, sub_id| {
@@ -336,12 +346,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
                 id, sub_id
             )
         },
-        |id, sub_id| {
-            Some(format!(
-                "enemy/em{0:03}/{1:02}/user_data/em{0:03}_{1:02}_boss_init_set_data.user",
-                id, sub_id
-            ))
-        },
+        boss_init_set_path,
         gen_em_collider_path,
         |id, sub_id| {
             format!(
