@@ -270,6 +270,11 @@ ul.mh-item-list {
     }
 }
 
+.mh-kvlist.mh-wide {
+    column-width: 40rem;
+    column-count: 3;
+}
+
 /** Armor page **/
 ul.mh-armor-skill-list {
     list-style: none;
@@ -537,6 +542,10 @@ img.mh-quest-icon {
     display: inline-block;
 }
 
+.mh-crown-icon {
+    vertical-align: middle;
+}
+
 /** Monster part color **/
 div.mh-color-diagram {
     display: grid;
@@ -565,6 +574,16 @@ span.mh-part {
     height: 1.5rem;
     width: 1.5rem;
     border-radius: 2px;
+    box-shadow: 0 2px 3px 0 $grey, inset 0 0 0 1px $grey;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+}
+
+span.mh-part-group {
+    display: inline-block;
+    height: 1.5rem;
+    width: 1.5rem;
+    border-radius: 60% 0 60% 0;
     box-shadow: 0 2px 3px 0 $grey, inset 0 0 0 1px $grey;
     margin-right: 0.5rem;
     vertical-align: middle;

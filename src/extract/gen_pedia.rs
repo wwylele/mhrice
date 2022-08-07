@@ -996,6 +996,10 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
         .save_png(output.create("king_crown.png")?)?;
 
     guild_card
+        .sub_image(302, 424, 24, 24)?
+        .save_png(output.create("large_crown.png")?)?;
+
+    guild_card
         .sub_image(302, 453, 24, 24)?
         .save_png(output.create("small_crown.png")?)?;
 

@@ -162,14 +162,14 @@ pub fn gen_quest_monster_data(
 
             let small = (small_chance != 0).then(|| {
                 html!(<span class="mh-crown">
-                    <img alt="Small crown" src="/resources/small_crown.png" />
+                    <img class="mh-crown-icon" alt="Small crown" src="/resources/small_crown.png" />
                     {text!("{}%", small_chance)}
                 </span>)
             });
 
             let large = (large_chance != 0).then(|| {
                 html!(<span class="mh-crown">
-                    <img alt="Large crown" src="/resources/king_crown.png" />
+                    <img class="mh-crown-icon" alt="Large crown" src="/resources/king_crown.png" />
                     {text!("{}%", large_chance)}
                 </span>)
             });

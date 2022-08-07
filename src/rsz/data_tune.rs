@@ -161,19 +161,8 @@ rsz_struct! {
     )]
     #[derive(Debug, Serialize)]
     pub struct EnemyMultiPartsSystemVitalData {
-        pub use_type: UseDataType,
-        pub priority: u32,
-        pub enable_parts_data: Vec<EnablePartsGroup>,
-        pub enable_last_attack_parts: Vec<String>,
-        pub is_enable_hyakuryu: bool,
-        pub is_enable_overwrite_down: bool,
-        pub is_prio_damage_customize: bool,
-        pub prio_damage_catagory_flag: DamageCategoryFlag,
-        pub is_not_use_difficulty_rate: bool,
-        pub is_multi_rate_ex: bool,
-        pub multi_parts_vital_data: Vec<MultiPartsVital>,
-        pub enable_parts_names: Vec<String>,
-        pub enable_parts_values: Vec<i32>,
+        #[serde(flatten)]
+        pub base: Flatten<EnemyMultiPartsVitalData>
     }
 }
 
@@ -185,7 +174,7 @@ rsz_struct! {
     pub struct EnemyMultiPartsVitalData {
         pub use_type: UseDataType,
         pub priority: u32,
-        pub enable_parts_data: Vec<EnablePartsGroup>,
+        pub enable_parts_data: [EnablePartsGroup; 1],
         pub enable_last_attack_parts: Vec<String>,
         pub is_enable_hyakuryu: bool,
         pub is_enable_overwrite_down: bool,
@@ -267,7 +256,7 @@ rsz_struct! {
         pub enemy_parts_data: Vec<EnemyPartsData>,
         pub enemy_parts_break_data_list: Vec<DataTuneEnemyPartsBreakData>,
         pub enemy_parts_loss_data_list: Vec<DataTuneEnemyPartsLossData>,
-        pub enemy_multi_parts_vital_system_data: Vec<EnemyMultiPartsSystemVitalData>,
+        pub enemy_multi_parts_vital_system_data: [EnemyMultiPartsSystemVitalData; 3],
         pub enemy_multi_parts_vital_data_list: Vec<EnemyMultiPartsVitalData>,
         pub gimmick_vital_data: EnemyGimmickVitalData,
         pub marionette_vital_data: EnemyMarionetteVitalData,
