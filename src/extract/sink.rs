@@ -1,9 +1,10 @@
 use anyhow::{anyhow, Context, Result};
 use futures::{StreamExt, TryStreamExt};
+use md5::{Digest, Md5};
 use rusoto_core::{ByteStream, Region};
 use rusoto_s3::*;
 use serde::Serialize;
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -227,7 +228,7 @@ impl S3SinkInner {
             let result = rt.block_on(async move {
                 let client = S3Client::new(Region::UsEast1);
 
-                let mut existing_objects = HashSet::new();
+                let mut existing_objects = HashMap::new();
                 let mut continuation_token = None;
                 loop {
                     eprintln!("Listing existing files in the bucket..");
@@ -245,8 +246,13 @@ impl S3SinkInner {
                     };
                     let result = client.list_objects_v2(request).await?;
 
-                    existing_objects
-                        .extend(result.contents.into_iter().flatten().flat_map(|o| o.key));
+                    existing_objects.extend(
+                        result
+                            .contents
+                            .into_iter()
+                            .flatten()
+                            .flat_map(|o| o.key.map(|key| (key, o.e_tag))),
+                    );
 
                     if result.is_truncated.unwrap_or(false) {
                         continuation_token = result.next_continuation_token;
@@ -258,14 +264,29 @@ impl S3SinkInner {
 
                 reciver
                     .take_while(|message| std::future::ready(!matches!(message, Message::Finalize)))
-                    .map(|message| {
+                    .filter_map(|message| {
                         let (name, data) = if let Message::Request { name, data } = message {
                             (name, data)
                         } else {
                             unreachable!()
                         };
 
-                        existing_objects.remove(&name);
+                        if let Some(etag) = existing_objects.remove(&name).flatten() {
+                            let md5: [u8; 16] = Md5::digest(&data).try_into().unwrap();
+                            let md5_tag: String = md5
+                                .into_iter()
+                                .map(|b| format!("{b:02x}"))
+                                .fold("\"".to_owned(), |a, b| a + &b)
+                                + "\"";
+                            let etag = etag.to_ascii_lowercase();
+                            if md5_tag == etag {
+                                eprintln!("Skipped unchanged {name}");
+                                return std::future::ready(None);
+                            }
+                        }
+                        std::future::ready(Some((name, data)))
+                    })
+                    .map(|(name, data)| {
                         eprintln!("Uploading {name}...");
 
                         let mime = match name.split('.').last() {
@@ -297,7 +318,7 @@ impl S3SinkInner {
 
                 eprintln!("Finished uploading");
 
-                let mut objects = existing_objects.into_iter();
+                let mut objects = existing_objects.into_keys();
 
                 loop {
                     let batch: Vec<_> = objects

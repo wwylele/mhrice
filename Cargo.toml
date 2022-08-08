@@ -26,16 +26,17 @@ rayon = "1.5"
 bitflags = "1.2"
 nalgebra-glm = { version = "0.17", features = ["serde-serialize"]}
 nalgebra = "*"
-glium = "0.31"
+glium = "0.32"
 png = "0.17"
 ordered-float = "3"
-half = "1.7"
+half = "2.1"
 compress = "0.2"
 astc-decode = "0.3"
 num-bigint = "0.4"
 base64 = "0.13"
-minidump = "0.11"
+minidump = "0.14"
 quick-xml = { version = "0.23" }
+md-5 = "0.10"
 
 [build-dependencies]
 built = { version = "0.5", features = ["git2"] }
