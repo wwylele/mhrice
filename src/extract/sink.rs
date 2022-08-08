@@ -1,6 +1,5 @@
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, Context, Result};
 use futures::{StreamExt, TryStreamExt};
-use once_cell::sync::OnceCell;
 use rusoto_core::{ByteStream, Region};
 use rusoto_s3::*;
 use serde::Serialize;
@@ -8,7 +7,7 @@ use std::collections::HashSet;
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::thread::{spawn, JoinHandle};
 
 use super::gen_website::LANGUAGE_MAP;
@@ -219,7 +218,7 @@ struct S3SinkInner {
 }
 
 impl S3SinkInner {
-    fn init(bucket: String, error: Arc<OnceCell<anyhow::Error>>) -> Result<S3SinkInner> {
+    fn init(bucket: String, error: Arc<Mutex<Option<anyhow::Error>>>) -> Result<S3SinkInner> {
         let (sender, reciver) = futures::channel::mpsc::channel(10);
         let uploader = Some(spawn(move || {
             use tokio::runtime::Runtime;
@@ -334,7 +333,7 @@ impl S3SinkInner {
             });
 
             if let Err(e) = result {
-                let _ = error.set(e);
+                error.lock().unwrap().get_or_insert(e);
             }
         }));
 
@@ -366,14 +365,14 @@ impl Drop for S3SinkInner {
 pub struct S3Sink {
     path: String,
     inner: Arc<S3SinkInner>,
-    error: Arc<OnceCell<anyhow::Error>>,
+    error: Arc<Mutex<Option<anyhow::Error>>>,
 }
 
 pub struct S3File {
     path: String,
     buffer: Vec<u8>,
     sender: futures::channel::mpsc::Sender<Message>,
-    error: Arc<OnceCell<anyhow::Error>>,
+    error: Arc<Mutex<Option<anyhow::Error>>>,
 }
 
 enum Message {
@@ -383,7 +382,7 @@ enum Message {
 
 impl S3Sink {
     pub fn init(bucket: String) -> Result<S3Sink> {
-        let error = Arc::new(OnceCell::new());
+        let error = Arc::new(Mutex::new(None));
         let inner = Arc::new(S3SinkInner::init(bucket, error.clone())?);
         Ok(S3Sink {
             inner,
@@ -397,8 +396,8 @@ impl Sink for S3Sink {
     type File = S3File;
 
     fn create(&self, name: &str) -> Result<Self::File> {
-        if let Some(e) = self.error.get() {
-            bail!("S3Sink detected error from previous operation: {e}");
+        if let Some(e) = self.error.lock().unwrap().take() {
+            return Err(e.context("S3Sink detected error from previous operation"));
         }
         let path = self.path.clone() + name;
         let inner = self.inner.clone();
@@ -414,8 +413,8 @@ impl Sink for S3Sink {
     where
         Self: Sized,
     {
-        if let Some(e) = self.error.get() {
-            bail!("S3Sink detected error from previous operation: {e}");
+        if let Some(e) = self.error.lock().unwrap().take() {
+            return Err(e.context("S3Sink detected error from previous operation"));
         }
         let path = self.path.clone() + name + "/";
         let inner = self.inner.clone();
@@ -438,8 +437,8 @@ impl Sink for S3Sink {
             std::mem::forget(e);
             anyhow!("S3Sink finalized with files still open")
         })?;
-        if let Some(e) = error.get() {
-            bail!("S3Sink detected error from previous operation: {e}");
+        if let Some(e) = error.lock().unwrap().take() {
+            return Err(e.context("S3Sink detected error from previous operation"));
         }
         Ok(())
     }
@@ -467,8 +466,8 @@ impl Drop for S3File {
             name: std::mem::take(&mut self.path),
             data: std::mem::take(&mut self.buffer),
         })) {
-            println!("Failed to send file because {e}");
-            let _ = self.error.set(anyhow!("{e}"));
+            eprintln!("Failed to send file because {e}");
+            self.error.lock().unwrap().get_or_insert(anyhow!("{e}"));
         }
     }
 }
