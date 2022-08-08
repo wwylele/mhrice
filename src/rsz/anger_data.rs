@@ -8,25 +8,25 @@ rsz_struct! {
     )]
     #[derive(Debug, Serialize)]
     pub struct EnemyAngerSeparateData {
-        val: i32,
+        pub val: i32,
     }
 }
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyAngerData",
-        0x96BC1534 = 0
+        0x96BC1534 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct EnemyAngerData {
-        data_info: Vec<Rc<EnemyAngerSeparateData>>,
-        timer: i32,
-        hyakuryu_cool_timer: i32,
-        mot_rate: f32,
-        atk_rate: f32,
-        def_rate: f32,
-        compensation_rate: Vec<f32>,
-        hyakuryu_compensation_rate: Vec<f32>,
-        anger_stay_add_sec: f32,
-        life_area_timer_rate: f32,
+        pub data_info: [EnemyAngerSeparateData; 4],
+        pub timer: i32,
+        pub hyakuryu_cool_timer: i32,
+        pub mot_rate: f32,
+        pub atk_rate: f32,
+        pub def_rate: f32,
+        pub compensation_rate: [f32; 10],
+        pub hyakuryu_compensation_rate: [f32; 10],
+        pub anger_stay_add_sec: f32,
+        pub life_area_timer_rate: f32,
     }
 }
