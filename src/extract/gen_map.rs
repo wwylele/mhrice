@@ -254,6 +254,20 @@ fn gen_map(
 
                 filter = "fish";
             }
+            MapPopKind::Recon { behavior } => {
+                icon_inner = Box::new(|| {
+                    html!(<div class="mh-icon-container">
+                        <img alt="Recon point" src="/resources/recon.png"
+                            class="mh-recon" draggable=false/>
+                    </div>)
+                });
+
+                explain_inner = html!(<div class="mh-reward-tables">
+                    { text!("ID: {:?}", behavior.spot_index) }
+                </div>);
+
+                filter = "camp";
+            }
         }
         let map_icon_id = format!("mh-map-icon-{i}");
         let map_explain_id = format!("mh-map-explain-{i}");

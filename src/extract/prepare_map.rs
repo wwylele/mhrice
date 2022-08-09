@@ -139,6 +139,9 @@ pub enum MapPopKind {
     FishingPoint {
         behavior: rsz::FishingPoint,
     },
+    Recon {
+        behavior: rsz::OtomoReconSpot,
+    },
 }
 
 #[derive(Debug, Serialize)]
@@ -226,6 +229,17 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<G
             let kind = MapPopKind::FishingPoint { behavior };
 
             pops.push(MapPop { position, kind });
+        } else if let Ok(behavior) = object.get_component::<rsz::OtomoReconSpot>() {
+            let transform = object
+                .get_component::<rsz::Transform>()
+                .context("Lack of transform")?;
+            let position = transform.position.xzy();
+            pops.push(MapPop {
+                position,
+                kind: MapPopKind::Recon {
+                    behavior: behavior.clone(),
+                },
+            });
         } else if let Ok(behavior) = object.get_component::<rsz::TentBehavior>() {
             let transform = object
                 .get_component::<rsz::Transform>()

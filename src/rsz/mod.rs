@@ -188,22 +188,23 @@ impl Rsz {
                 continue;
             }
 
+            let pos = cursor.tell().unwrap();
             let type_info = RSZ_TYPE_MAP.get(&hash).with_context(|| {
                 let mut buffer = [0; 0x100];
                 let read = cursor.read(&mut buffer).unwrap();
                 format!(
-                    "Unsupported type {:08X}: {:02X?}...",
+                    "Unsupported type {:08X} at {:08X}: {:02X?}...",
                     hash,
+                    pos,
                     &buffer[0..read]
                 )
             })?;
             let version = *type_info.versions.get(&crc).with_context(|| {
                 format!(
-                    "Unknown type CRC {:08X} for type {:08X} ({})",
-                    crc, hash, type_info.symbol
+                    "Unknown type CRC {:08X} for type {:08X} ({}) at {:08X}",
+                    crc, hash, type_info.symbol, pos
                 )
             })?;
-            let pos = cursor.tell().unwrap();
             let mut rsz_deserializer = RszDeserializer {
                 node_buf: &mut node_buf,
                 node_rc_buf: &mut node_rc_buf,
@@ -877,6 +878,13 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         QuestAreaMovePopMarker,
         StageObjectStateControllerTargetObject,
         StageObjectStateController,
+        OtomoReconSpot,
+        StageObjectStateControllerMotionTarget,
+        StageObjectMotionController,
+        EffectFollowTarget,
+        EffectKeyHash,
+        StageObjectEffectController,
+        WwiseContainerApp,
     );
 
     r!(

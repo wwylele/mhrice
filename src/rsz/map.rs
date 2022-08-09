@@ -363,11 +363,12 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("via.effect.script.ObjectEffectManager",
-        0xcb881936 = 0
+        0xCC942F81 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct ObjectEffectManager {
         pub enabled: bool,
+        pub disable_request_effect: bool,
         pub data_container: Prefab,
         pub external_data_containers: Vec<()>, // via.effect.script.ObjectEffectManager.ExternalDataContainer
         pub target_game_object: Guid,
@@ -962,5 +963,102 @@ rsz_struct! {
         pub enabled: bool,
         pub data: ExternUser<()>, // snow.stage.StageObjectStateUserData
         pub targets: Vec<StageObjectStateControllerTargetObject>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.pop.OtomoReconSpot",
+        0x7d930914 = 10_00_02
+    )]
+    #[derive(Debug, Serialize, Clone)]
+    pub struct OtomoReconSpot {
+        pub enabled: bool,
+        pub spot_index: i32,
+        pub unlock_time_lag: f32,
+        pub find_distance: f32,
+        pub spot_effet_key: Option<String>,
+        pub unlock_key: Option<String>,
+    }
+}
+
+// Untested
+rsz_struct! {
+    #[rsz("snow.stage.StageObjectMotionController.MotionTarget",
+        0x21ab60fc = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct StageObjectStateControllerMotionTarget {
+        pub key: String,
+        pub key_hash: u32,
+        pub game_object: Guid,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.StageObjectMotionController",
+        0x10d6929c = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct StageObjectMotionController {
+        pub enabled: bool,
+        pub data: ExternUser<()>, // snow.stage.StageObjectMotionUserData
+        pub auto_play_keys: Vec<KeyHash>,
+        pub targets: Vec<StageObjectStateControllerMotionTarget>,
+    }
+}
+
+// Untested
+rsz_struct! {
+    #[rsz("snow.stage.StageObjectEffectController.EffectFollowTarget",
+        0x4b47ef79 = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EffectFollowTarget {
+        pub key: String,
+        pub key_hash: u32,
+        pub game_object: Guid,
+    }
+}
+
+// Untested
+rsz_struct! {
+    #[rsz("snow.stage.StageObjectEffectController.EffectKeyHash",
+        0x4610af1e = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EffectKeyHash {
+        pub key: String,
+        pub hash: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.StageObjectEffectController",
+        0x0501d21d = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct StageObjectEffectController {
+        pub enabled: bool,
+        pub effect_container_owner: i32, // snow.stage.StageObjectEffectController.EffectContainerOwner
+        pub object_effect_manager_owner: Guid,
+        pub data: ExternUser<()>, // snow.stage.StageObjectEffectUserData,
+        pub follow_targets: Vec<EffectFollowTarget>,
+        pub auto_request_keys: Vec<EffectKeyHash>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.wwise.WwiseContainerApp",
+        0x111dddbb = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct WwiseContainerApp {
+        pub enabled: bool,
+
+        pub v1: Vec<Option<String>>,
+        pub v2: u16,
+        pub v3: u8,
+
+        pub is_master: bool,
     }
 }

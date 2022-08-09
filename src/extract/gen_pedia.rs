@@ -1012,6 +1012,12 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
         .sub_image(0, 64, 31, 30)?
         .save_png(output.create("sub_camp.png")?)?;
 
+    let map_icon = pak.find_file("gui/80_Texture/map/map_icon02_MR_IAM.tex")?;
+    let map_icon = Tex::new(Cursor::new(pak.read_file(map_icon)?))?.to_rgba(0, 0)?;
+    map_icon
+        .sub_image(35, 68, 32, 32)?
+        .save_png(output.create("recon.png")?)?;
+
     let item_icon_path = output.sub_sink("item")?;
 
     let item_icon_files = [
