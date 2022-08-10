@@ -38,7 +38,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyBossInitSetData",
-        0x6D38BB8A = 0
+        0x6D38BB8A = 10_00_02,
+        0x32A44979 = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct EnemyBossInitSetData {

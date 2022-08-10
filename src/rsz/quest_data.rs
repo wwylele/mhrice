@@ -1,3 +1,4 @@
+use super::common::Versioned;
 use super::*;
 use crate::rsz_bitflags;
 use crate::rsz_enum;
@@ -277,6 +278,7 @@ impl Ord for EmTypes {
 rsz_struct! {
     #[rsz("snow.quest.NormalQuestData.Param",
         0x708b71d8 = 10_00_02,
+        0x6213ED03 = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct NormalQuestDataParam {
@@ -446,7 +448,7 @@ rsz_enum! {
 }
 
 pub trait EnemyParam {
-    fn sub_type(&self, i: usize) -> Option<u8>;
+    // fn sub_type(&self, i: usize) -> Option<u8>;
     fn vital_tbl(&self, i: usize) -> Option<u16>;
     fn attack_tbl(&self, i: usize) -> Option<u16>;
     fn parts_tbl(&self, i: usize) -> Option<u16>;
@@ -461,9 +463,9 @@ pub trait EnemyParam {
 macro_rules! impl_enemy_param {
     ($t:ty) => {
         impl EnemyParam for $t {
-            fn sub_type(&self, i: usize) -> Option<u8> {
-                self.sub_type.get(i).copied()
-            }
+            /*fn sub_type(&self, i: usize) -> Option<u8> {
+                unimplemented!()
+            }*/
             fn vital_tbl(&self, i: usize) -> Option<u16> {
                 self.vital_tbl.get(i).copied().map(Into::into)
             }
@@ -497,7 +499,8 @@ macro_rules! impl_enemy_param {
 
 rsz_struct! {
     #[rsz("snow.quest.NormalQuestDataForEnemy.Param",
-        0x7E1E92C8 = 10_00_02
+        0x7E1E92C8 = 10_00_02,
+        0x3663ECD6 = 11_00_01,
     )]
     #[derive(Debug, Serialize, Clone)]
     pub struct NormalQuestDataForEnemyParam {
@@ -510,8 +513,9 @@ rsz_struct! {
         pub zako_multi: u8,
         pub route_no: Vec<u8>,
         pub init_set_name: Vec<String>,
+        pub sub_type_v11: Versioned<Vec<u8>, 11_00_01, 0xFFFFFFFF>,
         pub individual_type: Vec<EnemyIndividualType>,
-        pub sub_type: Vec<u8>,
+        pub sub_type: Versioned<Vec<u8>, 10_00_00, 10_99_99>,
         pub vital_tbl: Vec<u16>,
         pub attack_tbl: Vec<u16>,
         pub parts_tbl: Vec<u16>,
@@ -674,7 +678,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.enemy.SystemEnemySizeListData.SizeInfo",
-        0xB66C1F4D = 10_00_02
+        0xB66C1F4D = 10_00_02,
+        0x198674C0 = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct SizeInfo {
@@ -700,7 +705,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.DiscoverEmSetData.Param",
-        0xa9f8ec2d = 10_00_02
+        0xa9f8ec2d = 10_00_02,
+        0x761D06CD = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct DiscoverEmSetDataParam {
@@ -811,7 +817,8 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.RewardIdLotTableUserData.Param",
-        0x11de5dc7 = 10_00_02
+        0x11de5dc7 = 10_00_02,
+        0x0F2FF775 = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct RewardIdLotTableUserDataParam {
@@ -843,7 +850,8 @@ rsz_with_singleton! {
 
 rsz_struct! {
     #[rsz("snow.quest.HyakuryuQuestData.WaveData",
-        0x43C9A46C = 10_00_02
+        0x43C9A46C = 10_00_02,
+        0x65A33E4E = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct HyakuryuQuestDataWaveData {
@@ -922,6 +930,7 @@ rsz_struct! {
 rsz_struct! {
     #[rsz("snow.data.MysteryRewardItemUserData.Param",
         0xc3438c68 = 10_00_02,
+        0x15C40983 = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct MysteryRewardItemUserDataParam {
@@ -934,6 +943,9 @@ rsz_struct! {
         pub item_num: u32,
         pub quest_reward_table_index: u32,
         pub additional_quest_reward_table_index: Vec<u32>,
+        pub special_quest_reward_table_index: Versioned<u32, 11_00_01, 0xFFFFFFFF>,
+        pub multiple_target_reward_table_index: Versioned<u32, 11_00_01, 0xFFFFFFFF>,
+        pub multiple_fix_reward_table_index: Versioned<u32, 11_00_01, 0xFFFFFFFF>,
     }
 }
 
@@ -1005,6 +1017,7 @@ rsz_struct! {
 rsz_struct! {
     #[rsz("snow.ai.QuestServantDataList.QuestServantData",
         0x29c450b1 = 10_00_02,
+        0x44843229 = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct QuestServantData {

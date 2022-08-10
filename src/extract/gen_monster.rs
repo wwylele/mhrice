@@ -774,7 +774,7 @@ pub fn gen_lot(
             html!(<div class="mh-reward-box">
             <div class="mh-table"><table>
                 <thead><tr>
-                    <th>"Afflicted carves / part breaks"</th>
+                    <th>"Afflicted (pending update for v11)"</th>
                     <th>"Probability"</th>
                 </tr></thead>
                 <tbody> {

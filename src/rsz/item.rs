@@ -116,7 +116,8 @@ impl MaterialCategory {
 
 rsz_struct! {
     #[rsz("snow.data.ItemUserData.Param",
-        0xc4940266 = 10_00_02
+        0xc4940266 = 10_00_02,
+        0xB8376E37 = 11_00_01
     )]
     #[derive(Debug, Serialize)]
     pub struct ItemUserDataParam {

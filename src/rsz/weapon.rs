@@ -1,3 +1,4 @@
+use super::common::Versioned;
 use super::*;
 use crate::rsz_enum;
 use crate::rsz_struct;
@@ -166,6 +167,8 @@ rsz_struct! {
         pub hyakuryu_skill_id_list: Vec<PlHyakuryuSkillId>,
         pub slot_num_list: [u32; 4],
         pub hyakuryu_slot_num_list: [u32; 3],
+        pub custom_table_no: Versioned<u32, 11_00_01, 0xFFFFFFFF>,
+        pub custom_cost: Versioned<u32, 11_00_01, 0xFFFFFFFF>,
     }
 }
 
@@ -213,7 +216,8 @@ macro_rules! melee {
 
 rsz_struct! {
     #[rsz("snow.equip.GreatSwordBaseUserData.Param",
-        0xf17703d9 = 10_00_02
+        0xf17703d9 = 10_00_02,
+        0x9B59CD38 = 11_00_01
     )]
     #[derive(Debug, Serialize)]
     pub struct GreatSwordBaseUserDataParam {
@@ -237,7 +241,8 @@ params!(GreatSwordBaseUserData, GreatSwordBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.ShortSwordBaseUserData.Param",
-        0xf71c3203 = 10_00_02
+        0xf71c3203 = 10_00_02,
+        0x27D5F4E3 = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct ShortSwordBaseUserDataParam {
@@ -261,7 +266,8 @@ params!(ShortSwordBaseUserData, ShortSwordBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.HammerBaseUserData.Param",
-        0x7c10448c = 10_00_02
+        0x7c10448c = 10_00_02,
+        0x97061C3A = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct HammerBaseUserDataParam {
@@ -285,7 +291,8 @@ params!(HammerBaseUserData, HammerBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.LanceBaseUserData.Param",
-        0xfe640a21 = 10_00_02
+        0xfe640a21 = 10_00_02,
+        0x2265A48B = 11_00_01
     )]
     #[derive(Debug, Serialize)]
     pub struct LanceBaseUserDataParam {
@@ -309,7 +316,8 @@ params!(LanceBaseUserData, LanceBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.LongSwordBaseUserData.Param",
-        0x37c07dd2 = 10_00_02
+        0x37c07dd2 = 10_00_02,
+        0x4B3F304F = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct LongSwordBaseUserDataParam {
@@ -333,7 +341,8 @@ params!(LongSwordBaseUserData, LongSwordBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.SlashAxeBaseUserData.Param",
-        0xcd4494da = 10_00_02
+        0xcd4494da = 10_00_02,
+        0x08FAAB11 = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct SlashAxeBaseUserDataParam {
@@ -359,7 +368,8 @@ params!(SlashAxeBaseUserData, SlashAxeBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.GunLanceBaseUserData.Param",
-        0x45ba4e4d = 10_00_02
+        0x45ba4e4d = 10_00_02,
+        0xC8EC34BA = 11_00_01
     )]
     #[derive(Debug, Serialize)]
     pub struct GunLanceBaseUserDataParam {
@@ -385,7 +395,8 @@ params!(GunLanceBaseUserData, GunLanceBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.DualBladesBaseUserData.Param",
-        0xc45eb4a1 = 10_00_02
+        0xc45eb4a1 = 10_00_02,
+        0xF1C26C8C = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct DualBladesBaseUserDataParam {
@@ -411,7 +422,8 @@ params!(DualBladesBaseUserData, DualBladesBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.HornBaseUserData.Param",
-        0x09da93b1 = 10_00_02
+        0x09da93b1 = 10_00_02,
+        0xC0D8A3C4 = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct HornBaseUserDataParam {
@@ -436,7 +448,8 @@ params!(HornBaseUserData, HornBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.InsectGlaiveBaseUserData.Param",
-        0x68846de6 = 10_00_02
+        0x68846de6 = 10_00_02,
+        0xE746A91F = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct InsectGlaiveBaseUserDataParam {
@@ -461,7 +474,8 @@ params!(InsectGlaiveBaseUserData, InsectGlaiveBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.ChargeAxeBaseUserData.Param",
-        0x64c2b751 = 10_00_02
+        0x64c2b751 = 10_00_02,
+        0xFB1BB20B = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct ChargeAxeBaseUserDataParam {
@@ -603,7 +617,8 @@ impl_base!(BulletWeaponBaseUserDataParam, MainWeaponBaseData);
 
 rsz_struct! {
     #[rsz("snow.equip.LightBowgunBaseUserData.Param",
-        0x1d6c8de0 = 10_00_02
+        0x1d6c8de0 = 10_00_02,
+        0x00A5BA0D = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct LightBowgunBaseUserDataParam {
@@ -634,7 +649,8 @@ params!(LightBowgunBaseUserData, LightBowgunBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.HeavyBowgunBaseUserData.Param",
-        0xcc0cbbf5 = 10_00_02
+        0xcc0cbbf5 = 10_00_02,
+        0x1637B3CF = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct HeavyBowgunBaseUserDataParam {
@@ -664,7 +680,8 @@ params!(HeavyBowgunBaseUserData, HeavyBowgunBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.BowBaseUserData.Param",
-        0x4d471e21 = 10_00_02
+        0x4d471e21 = 10_00_02,
+        0x7D7323A3 = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct BowBaseUserDataParam {
@@ -713,7 +730,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.WeaponProcessUserData.Param",
-        0xfc3932c0 = 10_00_02
+        0xfc3932c0 = 10_00_02,
+        0xE80653C6 = 11_00_01
     )]
     #[derive(Debug, Serialize)]
     pub struct WeaponProcessUserDataParam {
@@ -725,7 +743,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.WeaponProcessUserData",
-        0x89685262 = 10_00_02
+        0x89685262 = 10_00_02,
+        0x70E98303 = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct WeaponProcessUserData {
@@ -735,7 +754,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.WeaponProductUserData.Param",
-        0xcd1faa31 = 10_00_02
+        0xcd1faa31 = 10_00_02,
+        0x5FB3B9BC = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct WeaponProductUserDataParam {
@@ -757,7 +777,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.WeaponChangeUserData.Param",
-        0x342cb994 = 10_00_02
+        0x342cb994 = 10_00_02,
+        0x38ED5D56 = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct WeaponChangeUserDataParam {
@@ -846,7 +867,8 @@ impl MasterRankProgress {
 
 rsz_struct! {
     #[rsz("snow.data.WeaponUpdateTreeUserData.Param",
-        0x1b7a9494 = 10_00_02
+        0x1b7a9494 = 10_00_02,
+        0x9E07F166 = 11_00_01
     )]
     #[derive(Debug, Serialize)]
     pub struct WeaponUpdateTreeUserDataParam {
@@ -875,7 +897,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.HyakuryuWeaponHyakuryuBuildupUserData.Param",
-        0x7BA03F20 = 10_00_02
+        0x7BA03F20 = 10_00_02,
+        0xF1DE3243 = 11_00_01
     )]
     #[derive(Debug, Serialize)]
     pub struct HyakuryuWeaponHyakuryuBuildupUserDataParam {

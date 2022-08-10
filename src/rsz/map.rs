@@ -34,7 +34,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.access.ItemPopBehavior",
-        0x0c330360 = 10_00_02
+        0x0c330360 = 10_00_02,
+        0xB05CAFAA = 11_00_01
     )]
     #[derive(Debug, Serialize, Clone)]
     pub struct ItemPopBehavior {
@@ -216,7 +217,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.stage.pop.CampFindCheck",
-        0x5588A2F2 = 10_00_02
+        0x5588A2F2 = 10_00_02,
+        0xA0F8501B = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct CampFindCheck {
@@ -385,7 +387,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.ItemPopLotTableUserData.Param",
-        0xa1800433 = 10_00_02
+        0xa1800433 = 10_00_02,
+        0xF99CD6BA = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct ItemPopLotTableUserDataParam {

@@ -52,7 +52,8 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.ArmorBaseUserData.Param",
-        0x68d0776c = 10_00_02
+        0x68d0776c = 10_00_02,
+        0x66F1403B = 11_00_01
     )]
     #[derive(Debug, Serialize)]
     pub struct ArmorBaseUserDataParam {
@@ -108,7 +109,8 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.ArmorSeriesUserData.Param",
-        0xbf2780d1 = 10_00_02
+        0xbf2780d1 = 10_00_02,
+        0xD5F71201 = 11_00_01
     )]
     #[derive(Debug, Serialize)]
     pub struct ArmorSeriesUserDataParam {
@@ -134,7 +136,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.ArmorProductUserData.Param",
-        0x112ceb90 = 10_00_02
+        0x112ceb90 = 10_00_02,
+        0x65A6C25B = 11_00_01
     )]
     #[derive(Debug, Serialize)]
     pub struct ArmorProductUserDataParam {
@@ -177,7 +180,8 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.equip.PlOverwearBaseUserData.Param",
-        0x8be3d1fc = 10_00_02
+        0x8be3d1fc = 10_00_02,
+        0x0C9D7C44 = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct PlOverwearBaseUserDataParam {
@@ -208,7 +212,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.equip.PlOverwearProductUserData.Param",
-        0x2b8f5c1e = 10_00_02
+        0x2b8f5c1e = 10_00_02,
+        0xBBF493FF = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct PlOverwearProductUserDataParam {

@@ -92,7 +92,7 @@ pub static SUFFIX_MAP: Lazy<HashMap<&'static str, &'static [u32]>> = Lazy::new(|
         ("mottree", &[0xe][..]),
         ("mov", &[1][..]),
         ("mpci", &[1][..]),
-        ("msg", &[0x11][..]),
+        ("msg", &[0x11, 0x20220626][..]),
         ("nar", &[1][..]),
         ("ncf", &[10][..]),
         ("nmr", &[0x11][..]),

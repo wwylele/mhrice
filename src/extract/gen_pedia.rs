@@ -2515,7 +2515,7 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
     }
 
     if !weapon_products.is_empty() {
-        bail!("Left over otomo weapon product")
+        eprintln!("Left over otomo weapon product {weapon_products:?}")
     }
 
     let armor_products = pedia
@@ -2660,29 +2660,17 @@ fn prepare_monsters(pedia: &Pedia) -> Result<HashMap<EmTypes, MonsterEx<'_>>> {
     let explains = pedia.monster_explains.get_name_map();
     let explains_mr = pedia.monster_explains_mr.get_name_map();
 
+    // TODO: v11 data
     let mut mystery_rewards = hash_map_unique(
-        pedia
-            .mystery_reward_item
-            .param
-            .iter()
-            .filter(|p| p.em_type != EmTypes::Em(0)),
+        pedia.mystery_reward_item.param.iter().filter(|p| {
+            p.em_type != EmTypes::Em(0)
+                && p.quest_no == -1
+                && p.lv_lower_limit == 0
+                && p.lv_upper_limit == 0
+        }),
         |p| (p.em_type, p),
         false,
     )?;
-
-    for mystery_reward in mystery_rewards.values() {
-        if mystery_reward.quest_no != -1
-            || mystery_reward.lv_lower_limit != 0
-            || mystery_reward.lv_upper_limit != 0
-            || mystery_reward.quest_reward_table_index != 0
-            || mystery_reward
-                .additional_quest_reward_table_index
-                .iter()
-                .any(|&q| q != 0)
-        {
-            bail!("Found interesting mystery reward {mystery_reward:?}")
-        }
-    }
 
     let monsters = pedia.monsters.iter().chain(&pedia.small_monsters);
     for monster in monsters {

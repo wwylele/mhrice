@@ -34,7 +34,8 @@ impl PlEquipSkillId {
 
 rsz_struct! {
     #[rsz("snow.data.PlEquipSkillBaseUserData.Param",
-        0xac747724 = 10_00_02
+        0xac747724 = 10_00_02,
+        0xCCCC00F1 = 11_00_01
     )]
     #[derive(Debug, Serialize)]
     pub struct PlEquipSkillBaseUserDataParam {
@@ -349,7 +350,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.PlHyakuryuSkillRecipeUserData.Param",
-        0xa10bbbc4 = 10_00_02
+        0xa10bbbc4 = 10_00_02,
+        0xFBAE98EE = 11_00_01
     )]
     #[derive(Debug, Serialize)]
     pub struct PlHyakuryuSkillRecipeUserDataParam {
@@ -395,7 +397,8 @@ impl DecorationsId {
 
 rsz_struct! {
     #[rsz("snow.data.DecorationsBaseUserData.Param",
-        0x041e623d = 10_00_02
+        0x041e623d = 10_00_02,
+        0x5A02A160 = 11_00_01
     )]
     #[derive(Debug, Serialize)]
     pub struct DecorationsBaseUserDataParam {
@@ -423,7 +426,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.DecorationsProductUserData.Param",
-        0x1B205AA6 = 10_00_02
+        0x1B205AA6 = 10_00_02,
+        0x63B17027 = 11_00_01
     )]
     #[derive(Debug, Serialize)]
     pub struct DecorationsProductUserDataParam {
@@ -459,7 +463,8 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.HyakuryuDecoBaseUserData.Param",
-        0xd431117c = 10_00_02
+        0xd431117c = 10_00_02,
+        0x68E28EFF = 11_00_01
     )]
     #[derive(Debug, Serialize)]
     pub struct HyakuryuDecoBaseUserDataParam {
@@ -488,7 +493,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.HyakuryuDecoProductUserData.Param",
-        0x4788eebf = 10_00_02
+        0x4788eebf = 10_00_02,
+        0xB62082FD = 11_00_01
     )]
     #[derive(Debug, Serialize)]
     pub struct HyakuryuDecoProductUserDataParam {
