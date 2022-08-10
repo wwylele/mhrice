@@ -30,8 +30,9 @@ pub struct Msg {
 
 impl Msg {
     pub fn new<F: Read + Seek>(mut file: F) -> Result<Msg> {
-        if file.read_u32()? != 17 {
-            bail!("Wrong version for MSG")
+        let version = file.read_u32()?;
+        if version != 17 && version != 539100710 {
+            bail!("Wrong version {version} for MSG")
         }
         if &file.read_magic()? != b"GMSG" {
             bail!("Wrong magic for MSG")

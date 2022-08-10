@@ -69,7 +69,7 @@ pub fn head_common() -> Vec<Box<dyn MetadataContent<String>>> {
     ]
 }
 
-const WEBSITE_VERSIONS: &[&str] = &["10.0.2", "10.0.3"];
+const WEBSITE_VERSIONS: &[&str] = &["10.0.2", "10.0.3", "11.0.1"];
 
 pub fn navbar() -> Box<nav<String>> {
     html!(<nav><div>
