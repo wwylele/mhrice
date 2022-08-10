@@ -414,7 +414,7 @@ where
                 <p class="mh-kv"><span>"Slot"</span>
                 <span>{gen_slot(&main.slot_num_list, false)}</span></p>
                 <p class="mh-kv"><span>"Rampage Slot"</span>
-                <span>{gen_slot(&main.slot_num_list, true)}</span></p>
+                <span>{gen_slot(&main.hyakuryu_slot_num_list, true)}</span></p>
 
                 {first_element.map(|first_element| html!(
                     <p class="mh-kv"><span>"Element"</span>

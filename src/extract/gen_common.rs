@@ -1,6 +1,6 @@
 use typed_html::{elements::*, html};
 
-pub fn gen_slot(decorations_num_list: &[u32; 4], is_rampage_slot: bool) -> Box<span<String>> {
+pub fn gen_slot(decorations_num_list: &[u32], is_rampage_slot: bool) -> Box<span<String>> {
     let mut slot_list = vec![];
 
     for (i, num) in decorations_num_list.iter().enumerate().rev() {
