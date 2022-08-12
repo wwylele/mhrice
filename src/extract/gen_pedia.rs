@@ -1329,7 +1329,10 @@ fn prepare_size_dist_map(
     Ok(result)
 }
 
-fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
+fn prepare_quests<'a>(
+    pedia: &'a Pedia,
+    reward_lot: &'_ HashMap<u32, &'a RewardIdLotTableUserDataParam>,
+) -> Result<Vec<Quest<'a>>> {
     let all_msg = pedia
         .quest_hall_msg
         .entries
@@ -1362,16 +1365,6 @@ fn prepare_quests(pedia: &Pedia) -> Result<Vec<Quest<'_>>> {
             .chain(&pedia.quest_data_for_reward_mr.param)
             .filter(|e| e.quest_numer != 0),
         |param| (param.quest_numer, param),
-        false,
-    )?;
-
-    let reward_lot = hash_map_unique(
-        pedia
-            .reward_id_lot_table
-            .param
-            .iter()
-            .chain(&pedia.reward_id_lot_table_mr.param),
-        |param| (param.id, param),
         false,
     )?;
 
@@ -2650,7 +2643,10 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
     Ok(res)
 }
 
-fn prepare_monsters(pedia: &Pedia) -> Result<HashMap<EmTypes, MonsterEx<'_>>> {
+fn prepare_monsters<'a>(
+    pedia: &'a Pedia,
+    reward_lot: &'_ HashMap<u32, &'a RewardIdLotTableUserDataParam>,
+) -> Result<HashMap<EmTypes, MonsterEx<'a>>> {
     let mut result = HashMap::new();
 
     let names = pedia.monster_names.get_name_map();
@@ -2660,21 +2656,90 @@ fn prepare_monsters(pedia: &Pedia) -> Result<HashMap<EmTypes, MonsterEx<'_>>> {
     let explains = pedia.monster_explains.get_name_map();
     let explains_mr = pedia.monster_explains_mr.get_name_map();
 
-    // TODO: v11 data
-    let mut mystery_rewards = hash_map_unique(
-        pedia.mystery_reward_item.param.iter().filter(|p| {
-            p.em_type != EmTypes::Em(0)
-                && p.quest_no == -1
-                && p.lv_lower_limit == 0
-                && p.lv_upper_limit == 0
-        }),
-        |p| (p.em_type, p),
-        false,
-    )?;
+    let mut mystery_rewards: HashMap<EmTypes, Vec<MysteryReward>> = HashMap::new();
+
+    for mystery_reward in &pedia.mystery_reward_item.param {
+        if mystery_reward.em_type == EmTypes::Em(0) {
+            continue;
+        }
+        if mystery_reward.quest_no != -1 {
+            bail!("Mystery reward with quest_no: {mystery_reward:?}")
+        }
+
+        let quest_reward = (mystery_reward.quest_reward_table_index != 0)
+            .then(|| {
+                reward_lot
+                    .get(&mystery_reward.quest_reward_table_index)
+                    .copied()
+                    .with_context(|| format!("Quest reward not found for {mystery_reward:?}"))
+            })
+            .transpose()?;
+
+        let additional_quest_reward = mystery_reward
+            .additional_quest_reward_table_index
+            .iter()
+            .filter(|&&i| i != 0)
+            .map(|i| -> Result<&RewardIdLotTableUserDataParam> {
+                reward_lot.get(i).copied().with_context(|| {
+                    format!("additional quest reward not found for {mystery_reward:?}")
+                })
+            })
+            .collect::<Result<Vec<&RewardIdLotTableUserDataParam>>>()?;
+
+        let special_quest_reward = mystery_reward
+            .special_quest_reward_table_index
+            .0
+            .filter(|&i| i != 0)
+            .map(|i| {
+                reward_lot.get(&i).copied().with_context(|| {
+                    format!("Special quest reward not found for {mystery_reward:?}")
+                })
+            })
+            .transpose()?;
+
+        let multiple_target_reward = mystery_reward
+            .multiple_target_reward_table_index
+            .0
+            .filter(|&i| i != 0)
+            .map(|i| {
+                reward_lot.get(&i).copied().with_context(|| {
+                    format!("Multiple target quest reward not found for {mystery_reward:?}")
+                })
+            })
+            .transpose()?;
+
+        let multiple_fix_reward = mystery_reward
+            .multiple_fix_reward_table_index
+            .0
+            .filter(|&i| i != 0)
+            .map(|i| {
+                reward_lot.get(&i).copied().with_context(|| {
+                    format!("Multiple fix quest reward not found for {mystery_reward:?}")
+                })
+            })
+            .transpose()?;
+
+        mystery_rewards
+            .entry(mystery_reward.em_type)
+            .or_default()
+            .push(MysteryReward {
+                lv_lower_limit: mystery_reward.lv_lower_limit,
+                lv_upper_limit: mystery_reward.lv_upper_limit,
+                hagibui_probability: mystery_reward.hagibui_probability,
+                reward_item: mystery_reward.reward_item,
+                item_num: mystery_reward.item_num,
+                quest_reward,
+                additional_quest_reward,
+                special_quest_reward,
+                multiple_target_reward,
+                multiple_fix_reward,
+            })
+    }
 
     let monsters = pedia.monsters.iter().chain(&pedia.small_monsters);
     for monster in monsters {
-        let mystery_reward = mystery_rewards.remove(&monster.em_type);
+        let mut mystery_reward = mystery_rewards.remove(&monster.em_type).unwrap_or_default();
+        mystery_reward.sort_by_key(|m| m.lv_lower_limit);
         let entry = if let Some(index) = monster.enemy_type {
             let name = names
                 .get(&format!("EnemyIndex{index:03}"))
@@ -2787,11 +2852,21 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         }
     }
 
+    let reward_lot = hash_map_unique(
+        pedia
+            .reward_id_lot_table
+            .param
+            .iter()
+            .chain(&pedia.reward_id_lot_table_mr.param),
+        |param| (param.id, param),
+        false,
+    )?;
+
     Ok(PediaEx {
-        monsters: prepare_monsters(pedia)?,
+        monsters: prepare_monsters(pedia, &reward_lot)?,
         sizes: prepare_size_map(&pedia.size_list)?,
         size_dists: prepare_size_dist_map(&pedia.random_scale)?,
-        quests: prepare_quests(pedia)?,
+        quests: prepare_quests(pedia, &reward_lot)?,
         discoveries: prepare_discoveries(pedia)?,
         skills: prepare_skills(pedia)?,
         hyakuryu_skills: prepare_hyakuryu_skills(pedia)?,

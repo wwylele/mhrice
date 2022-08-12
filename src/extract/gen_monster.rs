@@ -767,27 +767,6 @@ pub fn gen_lot(
         </table></div>
         </div>
 
-        { (rank == QuestRank::Master).then(||()).and_then(|_|
-            pedia_ex.monsters[&monster.em_type].mystery_reward
-            ).map(|mystery| {
-
-            html!(<div class="mh-reward-box">
-            <div class="mh-table"><table>
-                <thead><tr>
-                    <th>"Afflicted (pending update for v11)"</th>
-                    <th>"Probability"</th>
-                </tr></thead>
-                <tbody> {
-                    gen_reward_table(pedia_ex,
-                        &[mystery.reward_item],
-                        &[mystery.item_num],
-                        &[mystery.hagibui_probability])
-                } </tbody>
-            </table></div>
-            </div>)
-
-        })}
-
         </div>
     </section>))
 }
@@ -1422,6 +1401,108 @@ pub fn gen_monster(
                 {gen_lot(monster, monster_em_type, QuestRank::Low, pedia_ex)}
                 {gen_lot(monster, monster_em_type, QuestRank::High, pedia_ex)}
                 {gen_lot(monster, monster_em_type, QuestRank::Master, pedia_ex)}
+
+                {monster_ex.mystery_reward.iter().map(|reward| {
+                    html!(<section>
+                        <h2>{
+                            if reward.lv_lower_limit == 0 && reward.lv_upper_limit == 0 {
+                                text!("Anomaly quest reward")
+                            } else {
+                                text!("Anomaly investigation reward (lv{} ~ lv{})",
+                                    reward.lv_lower_limit, reward.lv_upper_limit)
+                            }
+                        }</h2>
+                        <div class="mh-reward-tables">
+                        <div class="mh-reward-box"><div class="mh-table"><table>
+                            <thead><tr>
+                                <th>"Carve & part break"</th>
+                                <th>"Probability"</th>
+                            </tr></thead>
+                            <tbody> {
+                                gen_reward_table(pedia_ex,
+                                    &[reward.reward_item],
+                                    &[reward.item_num],
+                                    &[reward.hagibui_probability])
+                            } </tbody>
+                        </table></div></div>
+                        {reward.quest_reward.map(|r| html!(
+                            <div class="mh-reward-box"><div class="mh-table"><table>
+                                <thead><tr>
+                                    <th>"Quest rewards"<br/>
+                                    {translate_rule(r.lot_rule)}</th>
+                                    <th>"Probability"</th>
+                                </tr></thead>
+                                <tbody> {
+                                    gen_reward_table(pedia_ex,
+                                        &r.item_id_list,
+                                        &r.num_list,
+                                        &r.probability_list)
+                                } </tbody>
+                            </table></div></div>
+                        ))}
+                        {reward.additional_quest_reward.iter().map(|r| html!(
+                            <div class="mh-reward-box"><div class="mh-table"><table>
+                                <thead><tr>
+                                    <th>"Additional quest rewards"<br/>
+                                    {translate_rule(r.lot_rule)}</th>
+                                    <th>"Probability"</th>
+                                </tr></thead>
+                                <tbody> {
+                                    gen_reward_table(pedia_ex,
+                                        &r.item_id_list,
+                                        &r.num_list,
+                                        &r.probability_list)
+                                } </tbody>
+                            </table></div></div>
+                        ))}
+                        {reward.special_quest_reward.map(|r| html!(
+                            <div class="mh-reward-box"><div class="mh-table"><table>
+                                <thead><tr>
+                                    <th>"Special quest rewards"<br/>
+                                    {translate_rule(r.lot_rule)}</th>
+                                    <th>"Probability"</th>
+                                </tr></thead>
+                                <tbody> {
+                                    gen_reward_table(pedia_ex,
+                                        &r.item_id_list,
+                                        &r.num_list,
+                                        &r.probability_list)
+                                } </tbody>
+                            </table></div></div>
+                        ))}
+                        {reward.multiple_target_reward.map(|r| html!(
+                            <div class="mh-reward-box"><div class="mh-table"><table>
+                                <thead><tr>
+                                    <th>"Multi-target quest rewards"<br/>
+                                    {translate_rule(r.lot_rule)}</th>
+                                    <th>"Probability"</th>
+                                </tr></thead>
+                                <tbody> {
+                                    gen_reward_table(pedia_ex,
+                                        &r.item_id_list,
+                                        &r.num_list,
+                                        &r.probability_list)
+                                } </tbody>
+                            </table></div></div>
+                        ))}
+                        {reward.multiple_fix_reward.map(|r| html!(
+                            <div class="mh-reward-box"><div class="mh-table"><table>
+                                <thead><tr>
+                                    <th>"Multi-target fixed rewards"<br/>
+                                    {translate_rule(r.lot_rule)}</th>
+                                    <th>"Probability"</th>
+                                </tr></thead>
+                                <tbody> {
+                                    gen_reward_table(pedia_ex,
+                                        &r.item_id_list,
+                                        &r.num_list,
+                                        &r.probability_list)
+                                } </tbody>
+                            </table></div></div>
+                        ))}
+                        </div>
+                    </section>)
+                })}
                 </main>
             </body>
         </html>

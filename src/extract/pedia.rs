@@ -357,14 +357,26 @@ pub struct OtEquipSeries<'a> {
     pub chest: Option<OtArmor<'a>>,
 }
 
-#[derive(Debug)]
+pub struct MysteryReward<'a> {
+    pub lv_lower_limit: u32,
+    pub lv_upper_limit: u32,
+    pub hagibui_probability: u32,
+    pub reward_item: ItemId,
+    pub item_num: u32,
+    pub quest_reward: Option<&'a RewardIdLotTableUserDataParam>,
+    pub additional_quest_reward: Vec<&'a RewardIdLotTableUserDataParam>,
+    pub special_quest_reward: Option<&'a RewardIdLotTableUserDataParam>,
+    pub multiple_target_reward: Option<&'a RewardIdLotTableUserDataParam>,
+    pub multiple_fix_reward: Option<&'a RewardIdLotTableUserDataParam>,
+}
+
 pub struct MonsterEx<'a> {
     pub data: &'a Monster,
     pub name: Option<&'a MsgEntry>,
     pub alias: Option<&'a MsgEntry>,
     pub explain1: Option<&'a MsgEntry>,
     pub explain2: Option<&'a MsgEntry>,
-    pub mystery_reward: Option<&'a MysteryRewardItemUserDataParam>,
+    pub mystery_reward: Vec<MysteryReward<'a>>,
 }
 
 pub struct Servant<'a> {

@@ -934,7 +934,7 @@ rsz_struct! {
     )]
     #[derive(Debug, Serialize)]
     pub struct MysteryRewardItemUserDataParam {
-        pub em_type:EmTypes,
+        pub em_type: EmTypes,
         pub lv_lower_limit: u32,
         pub lv_upper_limit: u32,
         pub quest_no: i32,

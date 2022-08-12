@@ -291,7 +291,7 @@ fn gen_multi_factor(data: &MultiData) -> Box<div<String>> {
     </ul></div>)
 }
 
-fn translate_rule(rule: LotRule) -> Box<span<String>> {
+pub fn translate_rule(rule: LotRule) -> Box<span<String>> {
     let desc = match rule {
         LotRule::Random => "Get random amount",
         LotRule::RandomOut1 => "Get one",
