@@ -115,15 +115,57 @@ fn gen_item_source_monster(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<di
         })
         .map(|((em_types, _), _)| *em_types)
         .collect();
+    let mut afflicted_em_types: Vec<EmTypes> = pedia_ex
+        .monsters
+        .iter()
+        .filter(|(_, m)| {
+            m.mystery_reward.iter().any(|reward| {
+                reward.reward_item == item_id
+                    || reward
+                        .quest_reward
+                        .iter()
+                        .flat_map(|r| r.item_id_list.iter())
+                        .any(|&i| i == item_id)
+                    || reward
+                        .additional_quest_reward
+                        .iter()
+                        .flat_map(|r| r.item_id_list.iter())
+                        .any(|&i| i == item_id)
+                    || reward
+                        .special_quest_reward
+                        .iter()
+                        .flat_map(|r| r.item_id_list.iter())
+                        .any(|&i| i == item_id)
+                    || reward
+                        .multiple_target_reward
+                        .iter()
+                        .flat_map(|r| r.item_id_list.iter())
+                        .any(|&i| i == item_id)
+                    || reward
+                        .multiple_fix_reward
+                        .iter()
+                        .flat_map(|r| r.item_id_list.iter())
+                        .any(|&i| i == item_id)
+            })
+        })
+        .map(|(em_types, _)| *em_types)
+        .collect();
     em_types.sort_unstable();
     em_types.dedup();
-    if !em_types.is_empty() {
+    afflicted_em_types.sort_unstable();
+    if !em_types.is_empty() || !afflicted_em_types.is_empty() {
         Some(
             html!(<div class="mh-item-in-out"> <h3>"From monsters, and their quests: "</h3>
             <ul class="mh-item-list">
                 {
                     em_types.into_iter().map(|em_type|html!(<li>{
                         gen_monster_tag(pedia_ex, em_type, false, false, false)
+                    }</li>))
+                }
+
+                {
+                    afflicted_em_types.into_iter().map(|em_type|html!(<li>{
+                        gen_monster_tag(pedia_ex, em_type, false, false, true)
                     }</li>))
                 }
             </ul></div>),
