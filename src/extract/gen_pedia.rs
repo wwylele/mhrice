@@ -1038,11 +1038,11 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
     let item_icon_path = output.sub_sink("item")?;
 
     let item_icon_files = [
-        ("gui/70_UVSequence/cmn_icon.uvs", 0),
-        ("gui/70_UVSequence/cmn_icon_MR.uvs", 200),
+        ("gui/70_UVSequence/cmn_icon.uvs", 0, 200),
+        ("gui/70_UVSequence/cmn_icon_MR.uvs", 200, usize::MAX),
     ];
 
-    for (file, offset) in item_icon_files {
+    for (file, offset, max_i) in item_icon_files {
         let item_icon_uvs = pak.find_file(file)?;
         let item_icon_uvs = Uvs::new(Cursor::new(pak.read_file(item_icon_uvs)?))?;
         if item_icon_uvs.textures.len() != 1 || item_icon_uvs.spriter_groups.len() != 1 {
@@ -1051,6 +1051,9 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
         let item_icon = pak.find_file(&item_icon_uvs.textures[0].path)?;
         let item_icon = Tex::new(Cursor::new(pak.read_file(item_icon)?))?.to_rgba(0, 0)?;
         for (i, spriter) in item_icon_uvs.spriter_groups[0].spriters.iter().enumerate() {
+            if i >= max_i {
+                break;
+            }
             let i = i + offset;
             let item_icon = item_icon.sub_image_f(spriter.p0, spriter.p1)?;
 
@@ -1062,19 +1065,19 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
                 item_icon_a.save_png(item_icon_path.create(&format!("{:03}.a.png", i))?)?;
             }
         }
+    }
 
-        let item_addon_uvs = pak.find_file("gui/70_UVSequence/Item_addonicon.uvs")?;
-        let item_addon_uvs = Uvs::new(Cursor::new(pak.read_file(item_addon_uvs)?))?;
-        if item_addon_uvs.textures.len() != 1 || item_addon_uvs.spriter_groups.len() != 1 {
-            bail!("Broken item_addon.uvs");
-        }
-        let item_addon = pak.find_file(&item_addon_uvs.textures[0].path)?;
-        let item_addon = Tex::new(Cursor::new(pak.read_file(item_addon)?))?.to_rgba(0, 0)?;
-        for (i, spriter) in item_addon_uvs.spriter_groups[0].spriters.iter().enumerate() {
-            item_addon
-                .sub_image_f(spriter.p0, spriter.p1)?
-                .save_png(output.create(&format!("item_addon_{}.png", i))?)?;
-        }
+    let item_addon_uvs = pak.find_file("gui/70_UVSequence/Item_addonicon.uvs")?;
+    let item_addon_uvs = Uvs::new(Cursor::new(pak.read_file(item_addon_uvs)?))?;
+    if item_addon_uvs.textures.len() != 1 || item_addon_uvs.spriter_groups.len() != 1 {
+        bail!("Broken item_addon.uvs");
+    }
+    let item_addon = pak.find_file(&item_addon_uvs.textures[0].path)?;
+    let item_addon = Tex::new(Cursor::new(pak.read_file(item_addon)?))?.to_rgba(0, 0)?;
+    for (i, spriter) in item_addon_uvs.spriter_groups[0].spriters.iter().enumerate() {
+        item_addon
+            .sub_image_f(spriter.p0, spriter.p1)?
+            .save_png(output.create(&format!("item_addon_{}.png", i))?)?;
     }
 
     let message_window_uvs = pak.find_file("gui/70_UVSequence/message_window.uvs")?;
