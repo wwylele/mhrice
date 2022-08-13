@@ -255,6 +255,21 @@ fn get_singleton<T: 'static + SingletonUser>(pak: &mut PakReader<impl Read + See
     Ok(T::from_rsz(get_user(pak, T::PATH)?))
 }
 
+fn get_singleton_opt<T: 'static + SingletonUser>(
+    pak: &mut PakReader<impl Read + Seek>,
+) -> Result<Option<T>> {
+    let index = if let Ok(index) = pak.find_file(T::PATH) {
+        index
+    } else {
+        return Ok(None);
+    };
+    let user = User::new(Cursor::new(pak.read_file(index)?))?
+        .rsz
+        .deserialize_single()
+        .with_context(|| T::PATH.to_string())?;
+    Ok(Some(T::from_rsz(user)))
+}
+
 fn get_weapon_list<BaseData: 'static>(
     pak: &mut PakReader<impl Read + Seek>,
     weapon_class: &str,
@@ -674,6 +689,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         normal_quest_data_for_enemy_mr: get_singleton(pak)?,
         dl_quest_data: get_singleton(pak)?,
         dl_quest_data_for_enemy: get_singleton(pak)?,
+        dl_quest_data_mr: get_singleton_opt(pak)?,
+        dl_quest_data_for_enemy_mr: get_singleton_opt(pak)?,
         difficulty_rate: get_singleton(pak)?,
         random_scale: get_singleton(pak)?,
         size_list: get_singleton(pak)?,
@@ -1353,6 +1370,12 @@ fn prepare_quests<'a>(
         .iter()
         .chain(&pedia.dl_quest_data_for_enemy.param)
         .chain(&pedia.normal_quest_data_for_enemy_mr.param)
+        .chain(
+            pedia
+                .dl_quest_data_for_enemy_mr
+                .iter()
+                .flat_map(|p| &p.param),
+        )
         .filter(|e| e.quest_no != 0);
 
     let enemy_params = hash_map_unique(enemy_params, |param| (param.quest_no, param), false)?;
@@ -1410,6 +1433,14 @@ fn prepare_quests<'a>(
                 .dl_quest_data
                 .param
                 .iter()
+                .filter(|param| param.quest_no != 0)
+                .map(|param| (param, true)),
+        )
+        .chain(
+            pedia
+                .dl_quest_data_mr
+                .iter()
+                .flat_map(|p| &p.param)
                 .filter(|param| param.quest_no != 0)
                 .map(|param| (param, true)),
         )

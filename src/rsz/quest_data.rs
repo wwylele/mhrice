@@ -384,7 +384,10 @@ rsz_with_singleton! {
     pub struct BaseNormalQuestDataMr(NormalQuestData);
 
     #[path("Quest/QuestData/DlQuestData.user")]
-    pub struct DlNormalQuestData(NormalQuestData);
+    pub struct DlNormalQuestDataLrHr(NormalQuestData);
+
+    #[path("Quest/QuestData/DlQuestData_MR.user")]
+    pub struct DlNormalQuestDataMr(NormalQuestData);
 }
 
 /*rsz_enum! {
@@ -549,7 +552,10 @@ rsz_with_singleton! {
     pub struct BaseNormalQuestDataForEnemyMr(NormalQuestDataForEnemy);
 
     #[path("Quest/QuestData/DlQuestDataForEnemy.user")]
-    pub struct DlNormalQuestDataForEnemy(NormalQuestDataForEnemy);
+    pub struct DlNormalQuestDataForEnemyLrHr(NormalQuestDataForEnemy);
+
+    #[path("Quest/QuestData/DlQuestDataForEnemy_MR.user")]
+    pub struct DlNormalQuestDataForEnemyMr(NormalQuestDataForEnemy);
 }
 
 rsz_struct! {
