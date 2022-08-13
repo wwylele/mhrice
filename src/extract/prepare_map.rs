@@ -109,7 +109,12 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_032.user",
         scene_file: "scene/m32/normal/m32_normal.scn",
     }),
-    None, // 14
+    Some(MapFiles {
+        // 14
+        tex_files: &["gui/80_Texture/map/map_041_IAM.tex"],
+        scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_041.user",
+        scene_file: "scene/m41/normal/m41_normal.scn",
+    }),
     Some(MapFiles {
         // 15
         tex_files: &[
@@ -159,7 +164,11 @@ pub struct GameMap {
     pub pops: Vec<MapPop>,
 }
 
-fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<GameMap> {
+fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<Option<GameMap>> {
+    if pak.find_file(files.scene_file).is_err() {
+        return Ok(None);
+    }
+
     let scale = pak.find_file(files.scale_file)?;
     let scale = User::new(Cursor::new(pak.read_file(scale)?))?
         .rsz
@@ -274,13 +283,13 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<G
         Ok(false)
     })?;
 
-    Ok(GameMap {
+    Ok(Some(GameMap {
         layer_count: files.tex_files.len(),
         x_offset: scale.map_wide_min_pos,
         y_offset: scale.map_height_min_pos,
         map_scale: scale.map_scale,
         pops,
-    })
+    }))
 }
 
 pub fn prepare_maps(pak: &mut PakReader<impl Read + Seek>) -> Result<BTreeMap<i32, GameMap>> {
@@ -288,7 +297,13 @@ pub fn prepare_maps(pak: &mut PakReader<impl Read + Seek>) -> Result<BTreeMap<i3
         .iter()
         .enumerate()
         .filter_map(|(i, f)| f.as_ref().map(|f| (i as i32, f)))
-        .map(|(i, f)| Ok((i, get_map(pak, f)?)))
+        .filter_map(|(i, f)| {
+            let game_map = match get_map(pak, f) {
+                Ok(m) => m,
+                Err(e) => return Some(Err(e)),
+            };
+            game_map.map(|game_map| Ok((i, game_map)))
+        })
         .collect()
 }
 
