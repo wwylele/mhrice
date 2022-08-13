@@ -364,6 +364,14 @@ impl NormalQuestDataParam {
     pub fn is_servant_request(&self) -> bool {
         (self.quest_no / 100000) % 10 == 4 && (self.quest_no / 10000) % 10 == 6
     }
+
+    pub fn anomaly_level(&self) -> Option<i32> {
+        // snow.quest.QuestUtility.isMysteryQuest
+        if (self.quest_no / 10000) % 10 != 8 || (self.quest_no / 100000) % 10 == 9 {
+            return None;
+        }
+        Some((self.quest_no / 100) % 10)
+    }
 }
 
 rsz_struct! {

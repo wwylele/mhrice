@@ -77,13 +77,18 @@ pub fn gen_quest_tag(
 
 pub fn gen_quest_list(quests: &[Quest], output: &impl Sink) -> Result<()> {
     let mut quests_ordered: BTreeMap<_, BTreeMap<_, Vec<&Quest>>> = BTreeMap::new();
+    let mut anomaly_ordered: BTreeMap<i32, Vec<&Quest>> = BTreeMap::new();
     for quest in quests {
-        quests_ordered
-            .entry(quest.param.enemy_level)
-            .or_default()
-            .entry(quest.param.quest_level)
-            .or_default()
-            .push(quest);
+        if let Some(anomaly) = quest.param.anomaly_level() {
+            anomaly_ordered.entry(anomaly).or_default().push(quest);
+        } else {
+            quests_ordered
+                .entry(quest.param.enemy_level)
+                .or_default()
+                .entry(quest.param.quest_level)
+                .or_default()
+                .push(quest);
+        }
     }
 
     let doc: DOMTree<String> = html!(
@@ -116,6 +121,25 @@ pub fn gen_quest_list(quests: &[Quest], output: &impl Sink) -> Result<()> {
                         })}</section>)
                     })
                 }
+                <section>
+                <h2>"Anomaly quests"</h2>
+                {
+                    anomaly_ordered.into_iter().map(|(quest_level, quests)|{
+                        html!(
+                            <section class="mh-quest-list">
+                                <h3>{text!("A{}", quest_level)}</h3>
+                                <ul class="mh-quest-list">{
+                                    quests.into_iter().map(|quest|{
+                                        html!{<li>
+                                            { gen_quest_tag(quest, false, false, false) }
+                                        </li>}
+                                    })
+                                }</ul>
+                            </section>
+                        )
+                    })
+                }
+                </section>
                 </main>
             </body>
         </html>
