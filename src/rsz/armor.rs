@@ -302,7 +302,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.ArmorBuildupTableUserData",
-    path = "data/System/ContentsIdSystem/Armor/ArmorBuildupTableData.user",
+        path = "data/System/ContentsIdSystem/Armor/ArmorBuildupTableData.user",
         0x85fb2c77 = 10_00_02
     )]
     #[derive(Debug, Serialize)]

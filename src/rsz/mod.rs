@@ -6,6 +6,7 @@ mod collision;
 mod common;
 mod condition_damage_data;
 mod condition_damage_preset;
+mod custom_buildup;
 mod data_base;
 mod data_tune;
 mod item;
@@ -28,6 +29,7 @@ pub use collision::*;
 pub use common::*;
 pub use condition_damage_data::*;
 pub use condition_damage_preset::*;
+pub use custom_buildup::*;
 pub use data_base::*;
 pub use data_tune::*;
 pub use item::*;
@@ -902,6 +904,25 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         OtWeaponBaseUserData,
         OtEquipSeriesUserDataParam,
         OtEquipSeriesUserData,
+    );
+
+    r!(
+        CustomBuildupBaseUserDataParam,
+        CustomBuildupBaseUserData,
+        CustomBuildupOpenUserDataParam,
+        CustomBuildupOpenUserData,
+        CustomBuildupArmorMaterialUserDataParam,
+        CustomBuildupArmorMaterialUserData,
+        CustomBuildupArmorLotUserDataParam,
+        CustomBuildupArmorLotUserData,
+        CustomBuildupArmorCategoryLotUserDataParam,
+        CustomBuildupArmorCategoryLotUserData,
+        CustomBuildupEquipSkillDetailUserDataParam,
+        CustomBuildupEquipSkillDetailUserData,
+        CustomBuildupWeaponMaterialUserDataParam,
+        CustomBuildupWeaponMaterialUserData,
+        CustomBuildupWepTableUserDataParam,
+        CustomBuildupWepTableUserData,
     );
 
     m
