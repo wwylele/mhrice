@@ -11,6 +11,10 @@ use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
 
 pub fn quest_level_tag(quest: &Quest) -> Box<span<String>> {
+    if let Some(anomaly) = quest.param.anomaly_level() {
+        return html!(<span class="tag is-danger">{
+            text!("MR-A{}", anomaly)}</span>);
+    }
     let (quest_level_tag, name) = match quest.param.enemy_level {
         EnemyLevel::Village => ("mh-quest-village", "Vi"),
         EnemyLevel::Low => ("mh-quest-low", "LR"),
