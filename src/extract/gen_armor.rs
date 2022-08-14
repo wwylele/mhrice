@@ -303,7 +303,7 @@ fn gen_armor(
                             let rowspan = category.pieces.len();
                             let category_name = match category_id {
                                 13 => text!("Defense"),
-                                14 => text!("Element resistence"),
+                                14 => text!("Element resistance"),
                                 19 => text!("Slot"),
                                 20 => text!("Skill"),
                                 c => text!("{}", c)
