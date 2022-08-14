@@ -34,6 +34,7 @@ pub fn gen_hyakuryu_skill_list(
             <head>
                 <title>{text!("Rampage skills - MHRice")}</title>
                 { head_common() }
+                <style id="mh-skill-list-style">""</style>
             </head>
             <body>
                 { navbar() }
@@ -49,10 +50,31 @@ pub fn gen_hyakuryu_skill_list(
                     </span></a>
                 </div>
 
+                <div class="mh-filters"><ul>
+                    <li id="mh-skill-filter-button-all" class="is-active mh-skill-filter-button">
+                        <a>"All skills"</a></li>
+                    <li id="mh-skill-filter-button-hr" class="is-active mh-skill-filter-button">
+                        <a>"HR"</a></li>
+                    <li id="mh-skill-filter-button-deco1" class="mh-skill-filter-button">
+                        <a>"Lv1 deco"</a></li>
+                    <li id="mh-skill-filter-button-deco2" class="mh-skill-filter-button">
+                        <a>"Lv2 deco"</a></li>
+                    <li id="mh-skill-filter-button-deco3" class="mh-skill-filter-button">
+                        <a>"Lv3 deco"</a></li>
+                </ul></div>
+
                 <ul class="mh-item-list">
                 {
                     skills.iter().map(|(_, skill)|{
-                        html!(<li> {
+                        let mut filter_tags = vec![];
+                        if skill.recipe.is_some() {
+                            filter_tags.push("hr".to_owned())
+                        }
+                        if let Some(deco) = &skill.deco {
+                            filter_tags.push(format!("deco{}", deco.data.decoration_lv))
+                        }
+                        let filter = filter_tags.join(" ");
+                        html!(<li data-filter={filter} class="mh-skill-filter-item"> {
                             gen_hyakuryu_skill_label(skill)
                         } </li>)
                     })
