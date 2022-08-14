@@ -16,6 +16,7 @@ let g_cur_map_filter = "all";
 
 let g_cur_item_filter = "all";
 let g_cur_armor_filter = "all";
+let g_cur_skill_filter = "all";
 
 let g_toc = null;
 
@@ -55,6 +56,7 @@ function addEventListensers() {
 
     addEventListenerToClass("mh-item-filter-button", "click", changeItemFilter);
     addEventListenerToClass("mh-armor-filter-button", "click", changeArmorFilter);
+    addEventListenerToClass("mh-skill-filter-button", "click", changeSkillFilter);
     addEventListenerToClass("mh-scombo", "change", onChangeSort);
 
     addEventListenerToClass("mh-map-pop", "click", onShowMapExplain);
@@ -399,6 +401,12 @@ function changeArmorFilter(e) {
     g_cur_armor_filter = global.ref;
 }
 
+function changeSkillFilter(e) {
+    const global = { ref: g_cur_skill_filter };
+    changeFilter(e, 'skill', global);
+    g_cur_skill_filter = global.ref;
+}
+
 function changeFilter(e, category, global) {
     let filter = removePrefix(e.currentTarget.id, `mh-${category}-filter-button-`);
     const style = document.getElementById(`mh-${category}-list-style`);
@@ -407,7 +415,7 @@ function changeFilter(e, category, global) {
             style.innerHTML = "";
         } else {
             style.innerHTML =
-                `.mh-${category}-filter-item:not([data-filter="${filter}"]) { display:none; }`;
+                `.mh-${category}-filter-item:not([data-filter*="${filter}"]) { display:none; }`;
         }
     }
 

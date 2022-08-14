@@ -80,7 +80,7 @@ rsz_struct! {
         pub skill_list: Vec<PlEquipSkillId>,
         pub skill_lv_list: Vec<i32>,
         pub id_after_ex_change: PlArmorId,
-        pub cutom_table_no: u32,
+        pub custom_table_no: u32,
         pub custom_cost: u32,
     }
 }

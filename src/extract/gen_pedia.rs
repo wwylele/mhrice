@@ -832,6 +832,15 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         airou_series_name_mr,
         dog_series_name_mr,
         servant_profile,
+        custom_buildup_base: get_singleton_opt(pak)?,
+        custom_buildup_armor_open: get_singleton_opt(pak)?,
+        custom_buildup_weapon_open: get_singleton_opt(pak)?,
+        custom_buildup_armor_material: get_singleton_opt(pak)?,
+        custom_buildup_weapon_material: get_singleton_opt(pak)?,
+        custom_buildup_armor_lot: get_singleton_opt(pak)?,
+        custom_buildup_armor_category_lot: get_singleton_opt(pak)?,
+        custom_buildup_equip_skill_detail: get_singleton_opt(pak)?,
+        custom_buildup_wep_table: get_singleton_opt(pak)?,
     })
 }
 
@@ -1576,6 +1585,15 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> 
     let mut detail_msg_mr: HashMap<&String, &MsgEntry> =
         pedia.player_skill_detail_msg_mr.get_name_map();
 
+    let custom_buildup_costs: HashMap<PlEquipSkillId, u32> = hash_map_unique(
+        pedia
+            .custom_buildup_equip_skill_detail
+            .iter()
+            .flat_map(|p| &p.param),
+        |p| (p.skill_id, p.cost),
+        false,
+    )?;
+
     for skill in &pedia.equip_skill.param {
         if skill.id == PlEquipSkillId::None {
             continue;
@@ -1624,6 +1642,7 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> 
                 levels,
                 icon_color: skill.icon_color,
                 decos: vec![],
+                custom_buildup_cost: custom_buildup_costs.get(&skill.id).copied(),
             },
         );
     }
@@ -2862,6 +2881,82 @@ pub fn prepare_armor_buildup(
     Ok(result)
 }
 
+// Hardcoded in snow.data.ArmorCustomBuildupData..cctor
+const ARMOR_CUSTOM_BUILDUP_CATEGORIES: [u16; 4] = [
+    13, // Def
+    14, // Ele res
+    19, // Slot
+    20, // Skill
+];
+
+pub fn prepare_armor_custom_buildup<'a>(
+    pedia: &'a Pedia,
+    custom_buildup_pieces: &mut HashMap<(u32, u16, u16), &'a CustomBuildupBaseUserDataParam>,
+) -> Result<HashMap<u32, ArmorCustomBuildup<'a>>> {
+    let mut result = HashMap::new();
+    for category_lot in pedia
+        .custom_buildup_armor_category_lot
+        .iter()
+        .flat_map(|p| &p.param)
+    {
+        if category_lot.table_no == 0 {
+            continue;
+        }
+        if result.contains_key(&category_lot.table_no) {
+            bail!(
+                "Duplicate armor custom buildup category entry for table {}",
+                category_lot.table_no
+            )
+        }
+        let categories = ARMOR_CUSTOM_BUILDUP_CATEGORIES
+            .into_iter()
+            .zip(category_lot.lot_num.iter().copied())
+            .filter(|(_, l)| *l != 0)
+            .map(|(c, lot)| {
+                (
+                    c,
+                    ArmorCustomBuildupCategory {
+                        lot,
+                        pieces: BTreeMap::new(),
+                    },
+                )
+            })
+            .collect();
+        result.insert(category_lot.table_no, ArmorCustomBuildup { categories });
+    }
+
+    for piece_lot in pedia.custom_buildup_armor_lot.iter().flat_map(|p| &p.param) {
+        if piece_lot.table_no == 0 {
+            continue;
+        }
+        let category = result
+            .get_mut(&piece_lot.table_no)
+            .with_context(|| format!("Armor customer buildup table not found for {:?}", piece_lot))?
+            .categories
+            .get_mut(&piece_lot.category_id)
+            .with_context(|| {
+                format!(
+                    "Armor customer buildup category not found for {:?}",
+                    piece_lot
+                )
+            })?;
+        if category.pieces.contains_key(&piece_lot.id) {
+            bail!("Duplicate armor custom buildup piece entry {:?}", piece_lot)
+        }
+        let data = custom_buildup_pieces
+            .remove(&(piece_lot.table_no, piece_lot.category_id, piece_lot.id))
+            .with_context(|| format!("No data found for custom buildup {:?}", piece_lot))?;
+        category.pieces.insert(
+            piece_lot.id,
+            ArmorCustomBuildupPiece {
+                lot: piece_lot.lot_num,
+                data,
+            },
+        );
+    }
+    Ok(result)
+}
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     let monster_order = pedia
         .monster_list
@@ -2895,6 +2990,18 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         |param| (param.id, param),
         false,
     )?;
+
+    let mut custom_buildup_pieces = hash_map_unique(
+        pedia
+            .custom_buildup_base
+            .iter()
+            .flat_map(|p| &p.param)
+            .filter(|p| p.table_no != 0),
+        |p| ((p.table_no, p.category_id, p.id), p),
+        false,
+    )?;
+
+    let armor_custom_buildup = prepare_armor_custom_buildup(pedia, &mut custom_buildup_pieces)?;
 
     Ok(PediaEx {
         monsters: prepare_monsters(pedia, &reward_lot)?,
@@ -2931,5 +3038,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         item_pop: prepare_item_pop(pedia)?,
         ot_equip: prepeare_ot_equip(pedia)?,
         servant: prepare_servant(pedia)?,
+
+        armor_custom_buildup,
     })
 }

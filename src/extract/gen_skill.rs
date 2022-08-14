@@ -19,6 +19,7 @@ pub fn gen_skill_list(skills: &BTreeMap<PlEquipSkillId, Skill>, output: &impl Si
             <head>
                 <title>{text!("Armor skills - MHRice")}</title>
                 { head_common() }
+                <style id="mh-skill-list-style">""</style>
             </head>
             <body>
                 { navbar() }
@@ -34,10 +35,41 @@ pub fn gen_skill_list(skills: &BTreeMap<PlEquipSkillId, Skill>, output: &impl Si
                     </span></a>
                 </div>
 
+                <div class="mh-filters"><ul>
+                    <li id="mh-skill-filter-button-all" class="is-active mh-skill-filter-button">
+                        <a>"All skills"</a></li>
+                    <li id="mh-skill-filter-button-deco1" class="mh-skill-filter-button">
+                        <a>"Lv1 deco"</a></li>
+                    <li id="mh-skill-filter-button-deco2" class="mh-skill-filter-button">
+                        <a>"Lv2 deco"</a></li>
+                    <li id="mh-skill-filter-button-deco3" class="mh-skill-filter-button">
+                        <a>"Lv3 deco"</a></li>
+                    <li id="mh-skill-filter-button-deco4" class="mh-skill-filter-button">
+                        <a>"Lv4 deco"</a></li>
+                    <li id="mh-skill-filter-button-cb3" class="mh-skill-filter-button">
+                        <a><span class="tag mh-cb-lv3">"Pt3"</span>"qurious"</a></li>
+                    <li id="mh-skill-filter-button-cb6" class="mh-skill-filter-button">
+                        <a><span class="tag mh-cb-lv6">"Pt6"</span>"qurious"</a></li>
+                    <li id="mh-skill-filter-button-cb9" class="mh-skill-filter-button">
+                        <a><span class="tag mh-cb-lv9">"Pt9"</span>"qurious"</a></li>
+                    <li id="mh-skill-filter-button-cb12" class="mh-skill-filter-button">
+                        <a><span class="tag mh-cb-lv12">"Pt12"</span>"qurious"</a></li>
+                    <li id="mh-skill-filter-button-cb15" class="mh-skill-filter-button">
+                        <a><span class="tag mh-cb-lv15">"Pt15"</span>"qurious"</a></li>
+                </ul></div>
+
                 <ul class="mh-item-list">
                 {
                     skills.iter().map(|(&id, skill)|{
-                        html!(<li>
+                        let mut filter_tags = vec![];
+                        for deco in &skill.decos {
+                            filter_tags.push(format!("deco{}", deco.data.decoration_lv));
+                        }
+                        if let Some(cost) = skill.custom_buildup_cost {
+                            filter_tags.push(format!("cb{cost}"));
+                        }
+                        let filter = filter_tags.join(" ");
+                        html!(<li data-filter={filter} class="mh-skill-filter-item">
                             <a href={format!("/skill/{}", skill_page(id))} class="mh-icon-text">
                             {gen_colored_icon(skill.icon_color, "/resources/skill", &[])}
                             <span>{gen_multi_lang(skill.name)}</span>
@@ -58,13 +90,13 @@ pub fn gen_skill_list(skills: &BTreeMap<PlEquipSkillId, Skill>, output: &impl Si
     Ok(())
 }
 
+fn deco_icon_path(lv: i32) -> String {
+    let icon_id = if lv == 4 { 200 } else { 63 + lv };
+    format!("/resources/item/{:03}", icon_id)
+}
+
 pub fn gen_deco_label(deco: &Deco) -> Box<div<String>> {
-    let icon_id = if deco.data.decoration_lv == 4 {
-        200
-    } else {
-        63 + deco.data.decoration_lv
-    };
-    let icon = format!("/resources/item/{:03}", icon_id);
+    let icon = deco_icon_path(deco.data.decoration_lv);
     html!(<div class="mh-icon-text">
         { gen_colored_icon(deco.data.icon_color, &icon, &[]) }
         <span>{gen_multi_lang(deco.name)}</span>
@@ -159,6 +191,18 @@ pub fn gen_skill(
                 </section>
 
                 { deco }
+
+                {skill.custom_buildup_cost.map(|cost| {
+                    let class=format!("tag mh-cb-lv{}", cost);
+                    html!(
+                        <section>
+                        <h2>"Qurious crafting"</h2>
+                        <p><span class={class.as_str()}>
+                            {text!("Pt{} skill", cost)}
+                        </span></p>
+                        </section>
+                    )
+                })}
 
                 { gen_skill_source_gear(id, pedia_ex) }
 

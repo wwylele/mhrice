@@ -219,6 +219,16 @@ pub struct Pedia {
     pub dog_series_name_mr: Msg,
 
     pub servant_profile: Msg,
+
+    pub custom_buildup_base: Option<CustomBuildupBaseUserData>,
+    pub custom_buildup_armor_open: Option<CustomBuildupArmorOpenUserData>,
+    pub custom_buildup_weapon_open: Option<CustomBuildupWeaponOpenUserData>,
+    pub custom_buildup_armor_material: Option<CustomBuildupArmorMaterialUserData>,
+    pub custom_buildup_weapon_material: Option<CustomBuildupWeaponMaterialUserData>,
+    pub custom_buildup_armor_lot: Option<CustomBuildupArmorLotUserData>,
+    pub custom_buildup_armor_category_lot: Option<CustomBuildupArmorCategoryLotUserData>,
+    pub custom_buildup_equip_skill_detail: Option<CustomBuildupEquipSkillDetailUserData>,
+    pub custom_buildup_wep_table: Option<CustomBuildupWepTableUserData>,
 }
 
 pub struct QuestReward<'a> {
@@ -255,6 +265,7 @@ pub struct Skill<'a> {
     pub levels: Vec<&'a MsgEntry>,
     pub icon_color: i32,
     pub decos: Vec<Deco<'a>>,
+    pub custom_buildup_cost: Option<u32>,
 }
 
 pub struct HyakuryuDeco<'a> {
@@ -385,6 +396,23 @@ pub struct Servant<'a> {
     pub name: &'a MsgEntry,
 }
 
+#[derive(Debug)]
+pub struct ArmorCustomBuildupPiece<'a> {
+    pub lot: u32,
+    pub data: &'a CustomBuildupBaseUserDataParam,
+}
+
+#[derive(Debug)]
+pub struct ArmorCustomBuildupCategory<'a> {
+    pub lot: u32,
+    pub pieces: BTreeMap<u16, ArmorCustomBuildupPiece<'a>>,
+}
+
+#[derive(Debug)]
+pub struct ArmorCustomBuildup<'a> {
+    pub categories: BTreeMap<u16, ArmorCustomBuildupCategory<'a>>,
+}
+
 pub struct PediaEx<'a> {
     pub monsters: HashMap<EmTypes, MonsterEx<'a>>,
     pub sizes: HashMap<EmTypes, &'a SizeInfo>,
@@ -423,4 +451,6 @@ pub struct PediaEx<'a> {
     pub ot_equip: BTreeMap<OtEquipSeriesId, OtEquipSeries<'a>>,
 
     pub servant: HashMap<i32, Servant<'a>>,
+
+    pub armor_custom_buildup: HashMap<u32, ArmorCustomBuildup<'a>>,
 }

@@ -87,7 +87,7 @@ rsz_enum! {
 // snow.data.DataDef.RareTypes
 rsz_newtype! {
     #[rsz_offset(1)]
-    #[derive(Debug, Serialize, Clone, Copy)]
+    #[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq)]
     #[serde(transparent)]
     pub struct RareTypes(pub u8);
 }

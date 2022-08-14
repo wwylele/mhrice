@@ -311,7 +311,11 @@ pub fn gen_map_resource(pak: &mut PakReader<impl Read + Seek>, output: &impl Sin
     for (i, f) in MAP_FILES.iter().enumerate() {
         if let Some(f) = f {
             for (j, &name) in f.tex_files.iter().enumerate() {
-                let tex = pak.find_file(name)?;
+                let tex = if let Ok(tex) = pak.find_file(name) {
+                    tex
+                } else {
+                    continue;
+                };
                 let output_file = output.create(&format!("map{i:02}_{j}.png"))?;
                 Tex::new(Cursor::new(pak.read_file(tex)?))?.save_png(0, 0, output_file)?
             }

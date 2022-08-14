@@ -104,6 +104,7 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], output: &impl Sink) -> Result<()
 
 fn gen_armor(
     series: &ArmorSeries,
+    pedia: &Pedia,
     pedia_ex: &PediaEx,
     mut output: impl Write,
     mut toc_sink: TocSink<'_>,
@@ -244,11 +245,141 @@ fn gen_armor(
                     html!(<div>{text!("Unknown upgrade table {}", table.0)}</div>)
                 };
                 html!(<div>
-            <div>{table.1.into_iter().map(|piece|gen_armor_label(Some(piece)))}</div>
-            {table_out}
-            </div>)
+                    <ul class="mh-item-list">{table.1.into_iter().map(|piece|
+                        html!(<li>{gen_armor_label(Some(piece))}</li>)
+                    )}</ul>
+                {table_out}
+                </div>)
             })
             .collect::<Vec<_>>()
+    };
+
+    #[derive(PartialEq, Eq)]
+    struct CbDedupKey {
+        custom_table_no: u32,
+        custom_cost: u32,
+        rare: RareTypes,
+    }
+
+    let gen_custom_buildup = |pieces: &[Option<Armor<'_>>]| {
+        let mut buildup_tables: Vec<(CbDedupKey, Vec<&Armor>)> = vec![];
+        'outer: for piece in pieces.iter().flatten() {
+            if piece.data.custom_table_no == 0 {
+                continue;
+            }
+            let key = CbDedupKey {
+                custom_table_no: piece.data.custom_table_no,
+                custom_cost: piece.data.custom_cost,
+                rare: piece.data.rare,
+            };
+            for table in &mut buildup_tables {
+                if table.0 == key {
+                    table.1.push(piece);
+                    continue 'outer;
+                }
+            }
+            buildup_tables.push((key, vec![piece]))
+        }
+        if buildup_tables.is_empty() {
+            return None;
+        }
+        Some(html!(<section>
+            <h2>"Qurious crafting"</h2>
+            {buildup_tables.into_iter().map(|(key, armor)| {
+                let table_out = if let Some(table) =
+                    pedia_ex.armor_custom_buildup.get(&key.custom_table_no) {
+                    html!(<div class="mh-table"><table>
+                    <thead><tr>
+                        <th>"Category"</th>
+                        <th>"Category probability"</th>
+                        <th>"Probability"</th>
+                        //<th>"Level"</th>
+                        //<th>"Color"</th>
+                        <th>{text!("Points (credit: {})", key.custom_cost)}</th>
+                        <th>"Bonus"</th>
+                    </tr></thead>
+                    <tbody> {
+                        table.categories.iter().flat_map(|(&category_id, category)| {
+                            let rowspan = category.pieces.len();
+                            let category_name = match category_id {
+                                13 => text!("Defense"),
+                                14 => text!("Element resistence"),
+                                19 => text!("Slot"),
+                                20 => text!("Skill"),
+                                c => text!("{}", c)
+                            };
+                            let mut category_cell = Some(html!(<td rowspan={rowspan}>
+                                { category_name }
+                            </td>));
+                            let mut probability_cell = Some(html!(<td rowspan={rowspan}>
+                                { text!("{}%", category.lot)}
+                            </td>));
+                            category.pieces.iter().map(move |(_, piece)| {
+                                html!(<tr>
+                                    {category_cell.take()}
+                                    {probability_cell.take()}
+                                    <td>{ text!("{}%", piece.lot) }</td>
+                                    //<td>{ text!("{}", piece.data.lv) }</td>
+                                    //<td>{ text!("{}", piece.data.icon_color) }</td>
+                                    <td>{ text!("{:+}", piece.data.cost) }</td>
+                                    <td>
+                                    { (category_id == 20 && piece.data.cost > 0).then(||{
+                                        let class=format!("tag mh-cb-lv{}", piece.data.cost);
+                                        html!(<span class={class.as_str()}>
+                                            {text!("Pt{} skill", piece.data.cost)}
+                                        </span>)}
+                                    ) }
+                                    <ul class="mh-custom-lot"> {
+                                        piece.data.value_table.iter().zip(&piece.data.lot_table)
+                                        .filter(|(_, lot)| **lot != 0)
+                                        .map(|(value, lot)| html!(<li> {
+                                            text!("{:+}, {}%", value, lot)
+                                        } </li>))
+                                    } </ul>
+                                    </td>
+                                </tr>)
+                            })
+                        })
+                    } </tbody>
+                    </table>
+                    </div>)
+                } else {
+                    html!(<div>{text!("Unknown custom upgrade table {}", key.custom_table_no)}</div>)
+                };
+                html!(
+                <div>
+                    <ul class="mh-item-list">{armor.into_iter().map(|piece|
+                        html!(<li>{gen_armor_label(Some(piece))}</li>)
+                    )}</ul>
+                    <div class="mh-table"><table>
+                    <thead><tr>
+                        <th>""</th>
+                        <th>"Cost"</th>
+                        <th>"Categorized Material"</th>
+                        <th>"Material"</th>
+                    </tr></thead>
+                    <tbody>
+                    { pedia.custom_buildup_armor_open.as_ref().and_then(
+                        |m|m.param.iter().find(|m|m.rare == key.rare).map(|m|html!(<tr>
+                        <td>"Enable"</td>
+                        <td>{text!("{}z", m.price)}</td>
+                        {gen_category(pedia_ex, m.material_category, m.material_category_num)}
+                        {gen_materials(pedia_ex, &m.item, &m.item_num, ItemId::Null)}
+                    </tr>))) }
+                    { pedia.custom_buildup_armor_material.as_ref().and_then(
+                        |m|m.param.iter().find(|m|m.rare == key.rare).map(|m|html!(<tr>
+                        <td>"Augment"</td>
+                        <td>{text!("{}z", m.price)}</td>
+                        {gen_category(pedia_ex, m.material_category, m.material_category_num)}
+                        <td></td>
+                    </tr>))) }
+                    </tbody>
+                    </table>
+                    </div>
+                    {table_out}
+                </div>)
+            })}
+        </section>))
     };
 
     let rarity = series
@@ -391,6 +522,8 @@ fn gen_armor(
                     )
                 })}
 
+                {gen_custom_buildup(&series.pieces)}
+
                 </main>
             </body>
         </html>
@@ -400,12 +533,17 @@ fn gen_armor(
     Ok(())
 }
 
-pub fn gen_armors(pedia_ex: &PediaEx<'_>, output: &impl Sink, toc: &mut Toc) -> Result<()> {
+pub fn gen_armors(
+    pedia: &Pedia,
+    pedia_ex: &PediaEx<'_>,
+    output: &impl Sink,
+    toc: &mut Toc,
+) -> Result<()> {
     let armor_path = output.sub_sink("armor")?;
     for series in &pedia_ex.armors {
         let (output, toc_sink) = armor_path
             .create_html_with_toc(&format!("{:03}.html", series.series.armor_series.0), toc)?;
-        gen_armor(series, pedia_ex, output, toc_sink)?
+        gen_armor(series, pedia, pedia_ex, output, toc_sink)?
     }
     Ok(())
 }

@@ -723,3 +723,41 @@ ul.mh-progress {
     margin-left: 0;
     margin-top: 0;
 }
+
+/** custom buildup **/
+ul.mh-custom-lot {
+    list-style: none;
+    margin-left: 0;
+    margin-top: 0;
+    white-space: nowrap;
+}
+
+.tag.mh-cb-lv3 {
+    color: #FFFFFF;
+    background-color: rgb(30, 28, 128);
+}
+
+.tag.mh-cb-lv6 {
+    color: #FFFFFF;
+    background-color: rgb(21, 91, 100);
+}
+
+.tag.mh-cb-lv9 {
+    color: #FFFFFF;
+    background-color: rgb(19, 99, 39);
+}
+
+.tag.mh-cb-lv12 {
+    color: #FFFFFF;
+    background-color: rgb(87, 95, 18);
+}
+
+.tag.mh-cb-lv15 {
+    color: #FFFFFF;
+    background-color: rgb(107, 53, 16);
+}
+
+.tag.mh-cb-lv10 {
+    color: #FFFFFF;
+    background-color: rgb(0, 0, 0);
+}

@@ -118,7 +118,7 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct CustomBuildupArmorCategoryLotUserDataParam {
         pub table_no: u32,
-        pub lot_num: Vec<u32>,
+        pub lot_num: [u32; 4],
     }
 }
 
