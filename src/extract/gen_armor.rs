@@ -295,7 +295,7 @@ fn gen_armor(
                         <th>"Probability"</th>
                         //<th>"Level"</th>
                         //<th>"Color"</th>
-                        <th>{text!("Points (credit: {})", key.custom_cost)}</th>
+                        <th>{text!("Anomaly slots (available: {})", key.custom_cost)}</th>
                         <th>"Bonus"</th>
                     </tr></thead>
                     <tbody> {
@@ -321,7 +321,7 @@ fn gen_armor(
                                     <td>{ text!("{}%", piece.lot) }</td>
                                     //<td>{ text!("{}", piece.data.lv) }</td>
                                     //<td>{ text!("{}", piece.data.icon_color) }</td>
-                                    <td>{ text!("{:+}", piece.data.cost) }</td>
+                                    <td>{ text!("{}", piece.data.cost) }</td>
                                     <td>
                                     { (category_id == 20 && piece.data.cost > 0).then(||{
                                         let class=format!("tag mh-cb-lv{}", piece.data.cost);
@@ -332,8 +332,12 @@ fn gen_armor(
                                     <ul class="mh-custom-lot"> {
                                         piece.data.value_table.iter().zip(&piece.data.lot_table)
                                         .filter(|(_, lot)| **lot != 0)
-                                        .map(|(value, lot)| html!(<li> {
-                                            text!("{:+}, {}%", value, lot)
+                                        .map(|(value, &lot)| html!(<li> {
+                                            if lot != 100 {
+                                                text!("{:+}, {}%", value, lot)
+                                            } else {
+                                                text!("{:+}", value)
+                                            }
                                         } </li>))
                                     } </ul>
                                     </td>

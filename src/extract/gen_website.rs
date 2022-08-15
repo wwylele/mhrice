@@ -591,7 +591,7 @@ pub fn gen_website(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &impl Sink) ->
     gen_monsters(pedia, pedia_ex, output, &mut toc)?;
     gen_items(pedia, pedia_ex, output, &mut toc)?;
     gen_item_list(pedia_ex, output)?;
-    gen_weapons(pedia_ex, output, &mut toc)?;
+    gen_weapons(pedia, pedia_ex, output, &mut toc)?;
     gen_maps(pedia, pedia_ex, output, &mut toc)?;
     gen_map_list(pedia, output)?;
     gen_otomo_equips(pedia_ex, output, &mut toc)?;

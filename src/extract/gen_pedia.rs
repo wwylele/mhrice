@@ -2957,6 +2957,54 @@ pub fn prepare_armor_custom_buildup<'a>(
     Ok(result)
 }
 
+pub fn prepare_weapon_custom_buildup<'a>(
+    pedia: &'a Pedia,
+    custom_buildup_pieces: &mut HashMap<(u32, u16, u16), &'a CustomBuildupBaseUserDataParam>,
+) -> Result<HashMap<u32, WeaponCustomBuildup<'a>>> {
+    let mut result = HashMap::<u32, WeaponCustomBuildup>::new();
+    let material = hash_map_unique(
+        pedia
+            .custom_buildup_weapon_material
+            .iter()
+            .flat_map(|p| &p.param)
+            .filter(|p| p.id != 0),
+        |p| (p.id, p),
+        false,
+    )?;
+    for category in pedia.custom_buildup_wep_table.iter().flat_map(|p| &p.param) {
+        if category.table_no == 0 {
+            continue;
+        }
+        let pieces = category
+            .id
+            .iter()
+            .filter(|&&id| id != 0)
+            .map(|&id| {
+                let data = custom_buildup_pieces
+                    .remove(&(category.table_no, category.category_id, id))
+                    .with_context(|| format!("Weapon custom buildup data not found for {id}"))?;
+                let material = material.get(&id).with_context(|| {
+                    format!("Weapon custom buildup material not found for {id}")
+                })?;
+                Ok((id, WeaponCustomBuildupPiece { data, material }))
+            })
+            .collect::<Result<BTreeMap<_, _>>>()?;
+        let categories = &mut result.entry(category.table_no).or_default().categories;
+        if categories
+            .insert(category.category_id, WeaponCustomBuildupCategory { pieces })
+            .is_some()
+        {
+            bail!(
+                "Multiple weapon buildup definition for table {}, category {}",
+                category.table_no,
+                category.category_id
+            );
+        }
+    }
+
+    Ok(result)
+}
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     let monster_order = pedia
         .monster_list
@@ -3002,6 +3050,11 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     )?;
 
     let armor_custom_buildup = prepare_armor_custom_buildup(pedia, &mut custom_buildup_pieces)?;
+    let weapon_custom_buildup = prepare_weapon_custom_buildup(pedia, &mut custom_buildup_pieces)?;
+
+    if !custom_buildup_pieces.is_empty() {
+        bail!("Leftover custom buildup pieces {custom_buildup_pieces:?}");
+    }
 
     Ok(PediaEx {
         monsters: prepare_monsters(pedia, &reward_lot)?,
@@ -3040,5 +3093,6 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         servant: prepare_servant(pedia)?,
 
         armor_custom_buildup,
+        weapon_custom_buildup,
     })
 }

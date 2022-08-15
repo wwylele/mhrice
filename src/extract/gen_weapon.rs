@@ -140,6 +140,7 @@ fn display_bullet_type(bullet: BulletType) -> &'static str {
 fn gen_weapon<Param>(
     weapon: &Weapon<Param>,
     weapon_tree: &WeaponTree<'_, Param>,
+    pedia: &Pedia,
     pedia_ex: &PediaEx,
     mut output: impl Write,
     mut toc_sink: TocSink<'_>,
@@ -535,6 +536,85 @@ where
                 } </ul>
                 </section>
 
+                {main.custom_table_no.0.and_then(|table|Some((table, main.custom_cost.0?)))
+                .filter(|&(table_no, _)| table_no != 0).map(|(table_no, cost)| {
+                    let table = pedia_ex.weapon_custom_buildup.get(&table_no);
+                    let table = if let Some(table) = table {
+                        html!(<div class="mh-table"><table>
+                        <thead><tr>
+                        <th>"Category"</th>
+                        <th>"Level"</th>
+                        <th>{text!("Anomaly slots (available: {})", cost)}</th>
+                        <th>"Bonus"</th>
+                        <th>"Cost"</th>
+                        <th>"Categorized Material"</th>
+                        <th>"Material"</th>
+                        </tr></thead>
+                        <tbody>
+                        { pedia.custom_buildup_weapon_open.as_ref().and_then(
+                            |m|m.param.iter().find(|m|m.rare == main.base.rare_type).map(|m|html!(<tr>
+                            <td>"Enable"</td>
+                            <td/>
+                            <td/>
+                            <td/>
+                            <td>{text!("{}z", m.price)}</td>
+                            {gen_category(pedia_ex, m.material_category, m.material_category_num)}
+                            {gen_materials(pedia_ex, &m.item, &m.item_num, ItemId::Null)}
+                        </tr>))) }
+                        {
+                        table.categories.iter().flat_map(|(&category_id, category)| {
+                            let rowspan = category.pieces.len();
+                            let category_name = match category_id {
+                                1 => text!("Attack boost"),
+                                2 => text!("Affinity boost"),
+                                3 => text!("Elemental boost"),
+                                4 => text!("Status effect boost"),
+                                5 => text!("Sharpness boost"),
+                                6 => text!("Rampage slot upgrade"),
+                                7 => text!("Add anomaly slot"),
+                                8 => text!("Element/status boost"),
+                                c => text!("{}", c)
+                            };
+                            let mut category_cell = Some(html!(<td rowspan={rowspan}>
+                                { category_name }
+                            </td>));
+                            category.pieces.iter().map(move |(_, piece)| {
+                                html!(<tr>
+                                {category_cell.take()}
+                                <td>{text!("{}", piece.data.lv)}</td>
+                                <td>{text!("{}", piece.data.cost)}</td>
+                                <td>
+                                <ul class="mh-custom-lot"> {
+                                    piece.data.value_table.iter().zip(&piece.data.lot_table)
+                                    .filter(|(_, lot)| **lot != 0)
+                                    .map(|(value, &lot)| html!(<li> {
+                                        if lot != 100 {
+                                            text!("{:+}, {}%", value, lot)
+                                        } else {
+                                            text!("{:+}", value)
+                                        }
+                                    } </li>))
+                                } </ul>
+                                </td>
+                                <td>{text!("{}z", piece.material.price)}</td>
+                                {gen_category(pedia_ex, piece.material.material_category, piece.material.material_category_num)}
+                                {gen_materials(pedia_ex, &piece.material.item, &piece.material.item_num, ItemId::Null)}
+
+                                </tr>)
+                            })
+                        })
+                        } </tbody>
+                        </table>
+                        </div>)
+                    } else {
+                        html!(<div>{text!("Unknown table {}", table_no)}</div>)
+                    };
+                    html!(<section>
+                    <h2>"Qurious crafting"</h2>
+                    {table}
+                    </section>)
+                })}
+
                 </main>
             </body>
         </html>
@@ -643,7 +723,12 @@ fn heavy_bowgun(param: &HeavyBowgunBaseUserDataParam) -> Vec<Box<p<String>>> {
     </p>)]
 }
 
-pub fn gen_weapons(pedia_ex: &PediaEx, output: &impl Sink, toc: &mut Toc) -> Result<()> {
+pub fn gen_weapons(
+    pedia: &Pedia,
+    pedia_ex: &PediaEx,
+    output: &impl Sink,
+    toc: &mut Toc,
+) -> Result<()> {
     let path = output.sub_sink("weapon")?;
 
     let mut entry_label = vec![];
@@ -676,6 +761,7 @@ pub fn gen_weapons(pedia_ex: &PediaEx, output: &impl Sink, toc: &mut Toc) -> Res
                 gen_weapon(
                     weapon,
                     &pedia_ex.$label,
+                    pedia,
                     pedia_ex,
                     file_path,
                     toc_sink,

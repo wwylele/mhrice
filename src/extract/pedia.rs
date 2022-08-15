@@ -413,6 +413,22 @@ pub struct ArmorCustomBuildup<'a> {
     pub categories: BTreeMap<u16, ArmorCustomBuildupCategory<'a>>,
 }
 
+#[derive(Debug)]
+pub struct WeaponCustomBuildupPiece<'a> {
+    pub data: &'a CustomBuildupBaseUserDataParam,
+    pub material: &'a CustomBuildupWeaponMaterialUserDataParam,
+}
+
+#[derive(Debug)]
+pub struct WeaponCustomBuildupCategory<'a> {
+    pub pieces: BTreeMap<u16, WeaponCustomBuildupPiece<'a>>,
+}
+
+#[derive(Default, Debug)]
+pub struct WeaponCustomBuildup<'a> {
+    pub categories: BTreeMap<u16, WeaponCustomBuildupCategory<'a>>,
+}
+
 pub struct PediaEx<'a> {
     pub monsters: HashMap<EmTypes, MonsterEx<'a>>,
     pub sizes: HashMap<EmTypes, &'a SizeInfo>,
@@ -453,4 +469,5 @@ pub struct PediaEx<'a> {
     pub servant: HashMap<i32, Servant<'a>>,
 
     pub armor_custom_buildup: HashMap<u32, ArmorCustomBuildup<'a>>,
+    pub weapon_custom_buildup: HashMap<u32, WeaponCustomBuildup<'a>>,
 }
