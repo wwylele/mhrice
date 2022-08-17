@@ -17,6 +17,7 @@ mod monster_list;
 mod otomo;
 mod parts_break_data;
 mod quest_data;
+mod random_quest;
 mod scene;
 mod skill;
 mod weapon;
@@ -40,6 +41,7 @@ pub use monster_list::*;
 pub use otomo::*;
 pub use parts_break_data::*;
 pub use quest_data::*;
+pub use random_quest::*;
 pub use scene::*;
 pub use skill::*;
 pub use weapon::*;
@@ -923,6 +925,20 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         CustomBuildupWeaponMaterialUserData,
         CustomBuildupWepTableUserDataParam,
         CustomBuildupWepTableUserData,
+    );
+
+    r!(
+        RefTableData,
+        RefDifficultyTable,
+        RandomMysteryDifficultyRateKindData,
+        RandomMysteryDifficultyRateListDataDifficultyDataKinds,
+        RandomMysteryDifficultyRateListDataDifficultyData,
+        RandomMysteryDifficultyRateListData,
+        StageData,
+        ShellScaleData,
+        NGAppearanceData,
+        LotEnemyData,
+        RandomMysteryLotEnemyData,
     );
 
     m

@@ -68,7 +68,8 @@ pub struct Pedia {
     pub dl_quest_data_for_enemy: DlNormalQuestDataForEnemyLrHr,
     pub dl_quest_data_mr: Option<DlNormalQuestDataMr>,
     pub dl_quest_data_for_enemy_mr: Option<DlNormalQuestDataForEnemyMr>,
-    pub difficulty_rate: SystemDifficultyRateData,
+    pub difficulty_rate: SystemDifficultyRateDataNormal,
+    pub difficulty_rate_anomaly: SystemDifficultyRateDataAnomaly,
     pub random_scale: EnemyBossRandomScaleData,
     pub size_list: EnemySizeListData,
     pub discover_em_set_data: DiscoverEmSetData,
@@ -229,6 +230,8 @@ pub struct Pedia {
     pub custom_buildup_armor_category_lot: Option<CustomBuildupArmorCategoryLotUserData>,
     pub custom_buildup_equip_skill_detail: Option<CustomBuildupEquipSkillDetailUserData>,
     pub custom_buildup_wep_table: Option<CustomBuildupWepTableUserData>,
+
+    pub random_mystery_difficulty: Option<RandomMysteryDifficultyRateListData>,
 }
 
 pub struct QuestReward<'a> {

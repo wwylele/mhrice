@@ -666,6 +666,17 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
 
     let servant_profile = get_msg(pak, "Message/Servant/ServantProfile_MR.msg")?;
 
+    let mut random_mystery_difficulty: Option<RandomMysteryDifficultyRateListData> =
+        get_singleton_opt(pak)?;
+
+    if let Some(rmd) = &mut random_mystery_difficulty {
+        for nand_data in &mut rmd.nand_data {
+            for nand_kinds_data in &mut nand_data.nand_kinds_data {
+                nand_kinds_data.nando_ref_table.load(pak)?;
+            }
+        }
+    }
+
     Ok(Pedia {
         monsters,
         small_monsters,
@@ -692,6 +703,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         dl_quest_data_mr: get_singleton_opt(pak)?,
         dl_quest_data_for_enemy_mr: get_singleton_opt(pak)?,
         difficulty_rate: get_singleton(pak)?,
+        difficulty_rate_anomaly: get_singleton(pak)?,
         random_scale: get_singleton(pak)?,
         size_list: get_singleton(pak)?,
         discover_em_set_data: get_singleton(pak)?,
@@ -841,6 +853,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         custom_buildup_armor_category_lot: get_singleton_opt(pak)?,
         custom_buildup_equip_skill_detail: get_singleton_opt(pak)?,
         custom_buildup_wep_table: get_singleton_opt(pak)?,
+        random_mystery_difficulty,
     })
 }
 

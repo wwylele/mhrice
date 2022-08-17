@@ -158,9 +158,9 @@ pub fn gen_quest_list(quests: &[Quest], output: &impl Sink) -> Result<()> {
 
 pub fn gen_quest_monster_data(
     enemy_param: Option<&impl EnemyParam>,
-    em_type: EmTypes,
+    em_type_for_scale: Option<EmTypes>,
     index: usize,
-    pedia: &Pedia,
+    difficulty_rate: &SystemDifficultyRateData,
     pedia_ex: &PediaEx<'_>,
 ) -> impl IntoIterator<Item = Box<td<String>>> {
     let enemy_param = if let Some(enemy_param) = enemy_param.as_ref() {
@@ -169,52 +169,53 @@ pub fn gen_quest_monster_data(
         return vec![html!(<td colspan=12>"[NO DATA]"</td>)];
     };
 
-    let size = if let (Some(scale_tbl_i), Some(base_scale)) =
-        (enemy_param.scale_tbl(index), enemy_param.scale(index))
-    {
-        if let (Some(size), Some(size_dist)) = (
-            pedia_ex.sizes.get(&em_type),
-            pedia_ex.size_dists.get(&scale_tbl_i),
-        ) {
-            let mut small_chance = 0;
-            let mut large_chance = 0;
-            for sample in *size_dist {
-                let scale = sample.scale * (base_scale as f32) / 100.0;
-                if scale <= size.small_boarder {
-                    small_chance += sample.rate;
+    let size = em_type_for_scale.map(|em_type| {
+        if let (Some(scale_tbl_i), Some(base_scale)) =
+            (enemy_param.scale_tbl(index), enemy_param.scale(index))
+        {
+            if let (Some(size), Some(size_dist)) = (
+                pedia_ex.sizes.get(&em_type),
+                pedia_ex.size_dists.get(&scale_tbl_i),
+            ) {
+                let mut small_chance = 0;
+                let mut large_chance = 0;
+                for sample in *size_dist {
+                    let scale = sample.scale * (base_scale as f32) / 100.0;
+                    if scale <= size.small_boarder {
+                        small_chance += sample.rate;
+                    }
+                    if scale >= size.king_boarder {
+                        large_chance += sample.rate;
+                    }
                 }
-                if scale >= size.king_boarder {
-                    large_chance += sample.rate;
-                }
-            }
 
-            let small = (small_chance != 0).then(|| {
-                html!(<span class="mh-crown">
+                let small = (small_chance != 0).then(|| {
+                    html!(<span class="mh-crown">
                     <img class="mh-crown-icon" alt="Small crown" src="/resources/small_crown.png" />
                     {text!("{}%", small_chance)}
                 </span>)
-            });
+                });
 
-            let large = (large_chance != 0).then(|| {
-                html!(<span class="mh-crown">
+                let large = (large_chance != 0).then(|| {
+                    html!(<span class="mh-crown">
                     <img class="mh-crown-icon" alt="Large crown" src="/resources/king_crown.png" />
                     {text!("{}%", large_chance)}
                 </span>)
-            });
+                });
 
-            html!(<span>{small}{large}</span>)
+                html!(<span>{small}{large}</span>)
+            } else {
+                html!(<span>"-"</span>)
+            }
         } else {
             html!(<span>"-"</span>)
         }
-    } else {
-        html!(<span>"-"</span>)
-    };
+    });
 
     let hp = enemy_param.vital_tbl(index).map_or_else(
         || "-".to_owned(),
         |v| {
-            pedia
-                .difficulty_rate
+            difficulty_rate
                 .vital_rate_table_list
                 .get(usize::from(v))
                 .map_or_else(|| format!("~ {}", v), |r| format!("x{}", r.vital_rate))
@@ -223,8 +224,7 @@ pub fn gen_quest_monster_data(
     let attack = enemy_param.attack_tbl(index).map_or_else(
         || "-".to_owned(),
         |v| {
-            pedia
-                .difficulty_rate
+            difficulty_rate
                 .attack_rate_table_list
                 .get(usize::from(v))
                 .map_or_else(|| format!("~ {}", v), |r| format!("x{}", r.attack_rate))
@@ -233,8 +233,7 @@ pub fn gen_quest_monster_data(
     let parts = enemy_param.parts_tbl(index).map_or_else(
         || "-".to_owned(),
         |v| {
-            pedia
-                .difficulty_rate
+            difficulty_rate
                 .parts_rate_table_list
                 .get(usize::from(v))
                 .map_or_else(
@@ -253,11 +252,7 @@ pub fn gen_quest_monster_data(
     let ride;
 
     if let Some(v) = enemy_param.other_tbl(index) {
-        if let Some(r) = pedia
-            .difficulty_rate
-            .other_rate_table_list
-            .get(usize::from(v))
-        {
+        if let Some(r) = difficulty_rate.other_rate_table_list.get(usize::from(v)) {
             defense = html!(<span>{text!("x{}", r.defense_rate)}</span>);
             element_ab = html!(<span>{text!("Ax{}, Bx{}", r.damage_element_rate_a, r.damage_element_rate_b)}
                 <br/>{text!("①Ax{}, Bx{}", r.damage_element_first_rate_a, r.damage_element_first_rate_b)}</span>);
@@ -295,8 +290,13 @@ pub fn gen_quest_monster_data(
         .stamina_tbl(index)
         .map_or_else(|| "-".to_owned(), |v| format!("{}", v));
 
-    vec![
-        html!(<td>{size}</td>),
+    let mut result = if let Some(size) = size {
+        vec![html!(<td>{size}</td>)]
+    } else {
+        vec![]
+    };
+
+    result.extend([
         html!(<td>{text!("{}", hp)}</td>),
         html!(<td>{text!("{}", attack)}</td>),
         html!(<td>{text!("{}", parts)}</td>),
@@ -308,7 +308,8 @@ pub fn gen_quest_monster_data(
         html!(<td class="mh-quest-detail">{sleep}</td>),
         html!(<td class="mh-quest-detail">{ride}</td>),
         html!(<td class="mh-quest-detail">{text!("{}", stamina)}</td>),
-    ]
+    ]);
+    result
 }
 
 fn gen_multi_factor(data: &MultiData) -> Box<div<String>> {
@@ -628,7 +629,7 @@ fn gen_quest(
                                 <td>{
                                     gen_monster_tag(pedia_ex, em_type, is_target, false, is_mystery)
                                 }</td>
-                                { gen_quest_monster_data(quest.enemy_param, em_type, i, pedia, pedia_ex) }
+                                { gen_quest_monster_data(quest.enemy_param, Some(em_type), i, &pedia.difficulty_rate, pedia_ex) }
                             </tr>)
                         })
                     } </tbody>
@@ -914,6 +915,65 @@ fn gen_quest(
     Ok(())
 }
 
+pub fn gen_random_mystery_difficulty(
+    pedia: &Pedia,
+    pedia_ex: &PediaEx<'_>,
+    category: usize,
+    kind: usize,
+    table: &RandomMysteryDifficultyRateKindData,
+    mut output: impl Write,
+) -> Result<()> {
+    let doc: DOMTree<String> = html!(
+        <html>
+        <head>
+            <title>{text!("Anomaly investigation difficulty")}</title>
+            { head_common() }
+        </head>
+        <body>
+            { navbar() }
+            <main>
+            <h1>{text!("Anomaly investigation difficulty table {} {}", category, kind)}</h1>
+
+            <div>
+                <input type="checkbox" id="mh-quest-detail-check"/>
+                <label for="mh-quest-detail-check">"More detailed stat"</label>
+            </div>
+            <div class="mh-table"><table>
+            <thead><tr>
+                <th>"Level"</th>
+                <th>"HP"</th>
+                <th>"Attack"</th>
+                <th>"Parts"</th>
+                <th class="mh-quest-detail">"Defense"</th>
+                <th class="mh-quest-detail">"Element"</th>
+                <th class="mh-quest-detail">"Stun"</th>
+                <th class="mh-quest-detail">"Exhaust"</th>
+                <th class="mh-quest-detail">"Ride"</th>
+                <th class="mh-quest-detail">"Paralyze"</th>
+                <th class="mh-quest-detail">"Sleep"</th>
+                <th class="mh-quest-detail">"Stamina"</th>
+            </tr></thead>
+            <tbody>
+            {
+                table.ref_table.ref_rate_table.iter().enumerate().map(|(level, diff)| {
+                    html!(<tr>
+                        <td>{text!("{}", level + 1)}</td>
+                        {
+                            gen_quest_monster_data(Some(diff), None, 0, &pedia.difficulty_rate_anomaly, pedia_ex)
+                        }
+                    </tr>)
+                })
+            }
+            </tbody>
+            </table></div>
+            </main>
+        </body>
+        </html>
+    );
+    output.write_all(doc.to_string().as_bytes())?;
+    Ok(())
+}
+
 pub fn gen_quests(
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
@@ -924,7 +984,24 @@ pub fn gen_quests(
     for quest in &pedia_ex.quests {
         let (path, toc_sink) =
             quest_path.create_html_with_toc(&format!("{:06}.html", quest.param.quest_no), toc)?;
-        gen_quest(quest, pedia, pedia_ex, path, toc_sink)?
+        gen_quest(quest, pedia, pedia_ex, path, toc_sink)?;
+
+        if let Some(table) = &pedia.random_mystery_difficulty {
+            for (category, t) in table.nand_data.iter().enumerate() {
+                for (kind, t) in t.nand_kinds_data.iter().enumerate() {
+                    let output = quest_path
+                        .create_html(&format!("anomaly_difficulty_{}_{}.html", category, kind))?;
+                    gen_random_mystery_difficulty(
+                        pedia,
+                        pedia_ex,
+                        category,
+                        kind,
+                        t.nando_ref_table.unwrap(),
+                        output,
+                    )?
+                }
+            }
+        }
     }
     Ok(())
 }

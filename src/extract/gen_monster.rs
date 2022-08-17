@@ -930,7 +930,7 @@ pub fn gen_monster(
                             <td> {
                                 gen_quest_tag(quest, true, is_target, is_mystery)
                             } </td>
-                            { gen_quest_monster_data(quest.enemy_param, em_type, i, pedia, pedia_ex) }
+                            { gen_quest_monster_data(quest.enemy_param, Some(em_type), i, &pedia.difficulty_rate, pedia_ex) }
                         </tr>)
                     })
                 })
@@ -941,22 +941,22 @@ pub fn gen_monster(
                         html!(<tr><td>{text!("Village tour ({})",
                             discovery.cond_village.display().unwrap_or_default())}</td>{
                             gen_quest_monster_data(Some(discovery),
-                                monster_em_type, 0, pedia, pedia_ex)
+                                Some(monster_em_type), 0, &pedia.difficulty_rate, pedia_ex)
                         }</tr>),
                         html!(<tr><td>{text!("Low rank tour ({})",
                             discovery.cond_low.display().unwrap_or_default())}</td>{
                             gen_quest_monster_data(Some(discovery),
-                                monster_em_type, 1, pedia, pedia_ex)
+                                Some(monster_em_type), 1, &pedia.difficulty_rate, pedia_ex)
                         }</tr>),
                         html!(<tr><td>{text!("High rank tour ({})",
                             discovery.cond_high.display().unwrap_or_default())}</td>{
                             gen_quest_monster_data(Some(discovery),
-                                monster_em_type, 2, pedia, pedia_ex)
+                                Some(monster_em_type), 2, &pedia.difficulty_rate, pedia_ex)
                         }</tr>),
                         html!(<tr><td>{text!("Master rank tour ({})",
                             discovery.cond_master.display().unwrap_or_default())}</td>{
                             gen_quest_monster_data(Some(discovery),
-                                monster_em_type, 3, pedia, pedia_ex)
+                                Some(monster_em_type), 3, &pedia.difficulty_rate, pedia_ex)
                         }</tr>)
                     ]
                 } else {

@@ -468,7 +468,7 @@ pub trait EnemyParam {
     fn scale(&self, i: usize) -> Option<u8>;
     fn scale_tbl(&self, i: usize) -> Option<i32>;
     fn difficulty(&self, i: usize) -> Option<NandoYuragi>;
-    fn boss_multi(&self, i: usize) -> Option<u8>;
+    fn boss_multi(&self, i: usize) -> Option<u16>;
 }
 
 macro_rules! impl_enemy_param {
@@ -501,8 +501,8 @@ macro_rules! impl_enemy_param {
             fn difficulty(&self, i: usize) -> Option<NandoYuragi> {
                 self.difficulty.get(i).copied()
             }
-            fn boss_multi(&self, i: usize) -> Option<u8> {
-                self.boss_multi.get(i).copied()
+            fn boss_multi(&self, i: usize) -> Option<u16> {
+                self.boss_multi.get(i).copied().map(Into::into)
             }
         }
     };
@@ -655,6 +655,14 @@ rsz_struct! {
         pub other_rate_table_list: Vec<OtherRateTableData>,
         pub multi_rate_table_list: Vec<MultiRateTableData>,
     }
+}
+
+rsz_with_singleton! {
+    #[path("enemy/user_data/system_difficulty_rate_data.user")]
+    pub struct SystemDifficultyRateDataNormal(SystemDifficultyRateData);
+
+    #[path("Quest/RandomMystery/RandomMysterySystemDifficutyRateBaseData.user")]
+    pub struct SystemDifficultyRateDataAnomaly(SystemDifficultyRateData);
 }
 
 rsz_struct! {

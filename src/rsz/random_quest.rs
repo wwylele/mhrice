@@ -1,0 +1,191 @@
+use super::*;
+use crate::{rsz_newtype, rsz_struct};
+use serde::*;
+
+rsz_struct! {
+    #[rsz("snow.quest.RandomMysteryDifficultyRateKindData.RefTableData",
+        0x56E82E4A = 11_00_01,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RefTableData {
+        pub vital_tbl_no: u16,
+        pub attack_tbl_no: u16,
+        pub parts_tbl_no: u16,
+        pub core_tbl_no: u16,
+        pub other_tbl_no: u16,
+        pub multi_tbl_no: u16,
+    }
+}
+
+impl EnemyParam for RefTableData {
+    fn vital_tbl(&self, _: usize) -> Option<u16> {
+        Some(self.vital_tbl_no)
+    }
+
+    fn attack_tbl(&self, _: usize) -> Option<u16> {
+        Some(self.attack_tbl_no)
+    }
+
+    fn parts_tbl(&self, _: usize) -> Option<u16> {
+        Some(self.parts_tbl_no)
+    }
+
+    fn other_tbl(&self, _: usize) -> Option<u16> {
+        Some(self.other_tbl_no)
+    }
+
+    fn stamina_tbl(&self, _: usize) -> Option<u8> {
+        None
+    }
+
+    fn scale(&self, _: usize) -> Option<u8> {
+        None
+    }
+
+    fn scale_tbl(&self, _: usize) -> Option<i32> {
+        None
+    }
+
+    fn difficulty(&self, _: usize) -> Option<NandoYuragi> {
+        None
+    }
+
+    fn boss_multi(&self, _: usize) -> Option<u16> {
+        Some(self.multi_tbl_no)
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.RandomMysteryDifficultyRateKindData.RefDifficultyTable",
+        0xCA57CD6D = 11_00_01,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RefDifficultyTable {
+        pub ref_rate_table: Vec<RefTableData>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.RandomMysteryDifficultyRateKindData",
+        0x81573281 = 11_00_01,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RandomMysteryDifficultyRateKindData {
+        pub ref_table: RefDifficultyTable,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.RandomMysteryDifficultyRateListData.DifficultyDataKinds",
+        0xE7D86AF8 = 11_00_01,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RandomMysteryDifficultyRateListDataDifficultyDataKinds {
+        pub nando_ref_table: ExternUser<RandomMysteryDifficultyRateKindData>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.RandomMysteryDifficultyRateListData.DifficultyData",
+        0x6C80604A = 11_00_01,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RandomMysteryDifficultyRateListDataDifficultyData {
+        pub nand_kinds_data: Vec<RandomMysteryDifficultyRateListDataDifficultyDataKinds>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.RandomMysteryDifficultyRateListData",
+        path = "Quest/RandomMystery/RandomMysteryDifficultyRefData.user",
+        0xF385B2AE = 11_00_01,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RandomMysteryDifficultyRateListData {
+        pub sub_nand_adjust_param: i32,
+        pub nand_data: [RandomMysteryDifficultyRateListDataDifficultyData; 2]
+    }
+}
+
+// snow.enemy.EnemyDef.MysteryRank
+rsz_newtype! {
+    #[rsz_offset(1)]
+    #[derive(Debug, Serialize)]
+    #[serde(transparent)]
+    pub struct MysteryRank(pub i32);
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.RandomMysteryLotEnemyData.StageData",
+        0x381880F8 = 11_00_01,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct StageData {
+        pub is_map_01: bool,
+        pub is_map_02: bool,
+        pub is_map_03: bool,
+        pub is_map_04: bool,
+        pub is_map_05: bool,
+        pub is_map_31: bool,
+        pub is_map_32: bool,
+        pub is_map_09: bool,
+        pub is_map_10: bool,
+        pub is_map_41: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.RandomMysteryLotEnemyData.ShellScaleData",
+        0x7ee657be = 11_00_01,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ShellScaleData {
+        pub release_level: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.RandomMysteryLotEnemyData.NGAppearanceData",
+        0xe609a59a = 11_00_01,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct NGAppearanceData {
+        pub ng_stage_no: i32, // snow.QuestMapManager.MapNoType
+        pub ng_em_type: EmTypes,
+
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.RandomMysteryLotEnemyData.LotEnemyData",
+        0xBA8468A5 = 11_00_01,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct LotEnemyData {
+        pub em_type: EmTypes,
+        pub mystery_rank: MysteryRank,
+        pub release_level: i32,
+        pub normal_rank: MysteryRank,
+        pub release_level_normal: i32,
+        pub stage_data: StageData,
+        pub is_mystery: bool,
+        pub is_enable_sub: bool,
+        pub is_enable_extra: bool,
+        pub is_intrusion: bool,
+        pub difficulty_table_type: i32,
+        pub difficulty_table_type_extra: i32,
+        pub shell_scale_data_list: Vec<ShellScaleData>,
+        pub ng_data_list: Vec<NGAppearanceData>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.RandomMysteryLotEnemyData",
+        path = "Quest/RandomMystery/RandomMysteryLotEnemyListData.user",
+        0x65E2357E = 11_00_01,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RandomMysteryLotEnemyData {
+        pub lot_enemy_list: Vec<LotEnemyData>,
+    }
+}
