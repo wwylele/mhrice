@@ -69,7 +69,7 @@ pub struct Pedia {
     pub dl_quest_data_mr: Option<DlNormalQuestDataMr>,
     pub dl_quest_data_for_enemy_mr: Option<DlNormalQuestDataForEnemyMr>,
     pub difficulty_rate: SystemDifficultyRateDataNormal,
-    pub difficulty_rate_anomaly: SystemDifficultyRateDataAnomaly,
+    pub difficulty_rate_anomaly: Option<SystemDifficultyRateDataAnomaly>,
     pub random_scale: EnemyBossRandomScaleData,
     pub size_list: EnemySizeListData,
     pub discover_em_set_data: DiscoverEmSetData,

@@ -923,6 +923,12 @@ pub fn gen_random_mystery_difficulty(
     table: &RandomMysteryDifficultyRateKindData,
     mut output: impl Write,
 ) -> Result<()> {
+    let difficulty_rate_anomaly =
+        if let Some(difficulty_rate_anomaly) = &pedia.difficulty_rate_anomaly {
+            difficulty_rate_anomaly
+        } else {
+            return Ok(());
+        };
     let doc: DOMTree<String> = html!(
         <html>
         <head>
@@ -959,7 +965,7 @@ pub fn gen_random_mystery_difficulty(
                     html!(<tr>
                         <td>{text!("{}", level + 1)}</td>
                         {
-                            gen_quest_monster_data(Some(diff), None, 0, &pedia.difficulty_rate_anomaly, pedia_ex)
+                            gen_quest_monster_data(Some(diff), None, 0, difficulty_rate_anomaly, pedia_ex)
                         }
                     </tr>)
                 })
@@ -985,23 +991,24 @@ pub fn gen_quests(
         let (path, toc_sink) =
             quest_path.create_html_with_toc(&format!("{:06}.html", quest.param.quest_no), toc)?;
         gen_quest(quest, pedia, pedia_ex, path, toc_sink)?;
+    }
 
-        if let Some(table) = &pedia.random_mystery_difficulty {
-            for (category, t) in table.nand_data.iter().enumerate() {
-                for (kind, t) in t.nand_kinds_data.iter().enumerate() {
-                    let output = quest_path
-                        .create_html(&format!("anomaly_difficulty_{}_{}.html", category, kind))?;
-                    gen_random_mystery_difficulty(
-                        pedia,
-                        pedia_ex,
-                        category,
-                        kind,
-                        t.nando_ref_table.unwrap(),
-                        output,
-                    )?
-                }
+    if let Some(table) = &pedia.random_mystery_difficulty {
+        for (category, t) in table.nand_data.iter().enumerate() {
+            for (kind, t) in t.nand_kinds_data.iter().enumerate() {
+                let output = quest_path
+                    .create_html(&format!("anomaly_difficulty_{}_{}.html", category, kind))?;
+                gen_random_mystery_difficulty(
+                    pedia,
+                    pedia_ex,
+                    category,
+                    kind,
+                    t.nando_ref_table.unwrap(),
+                    output,
+                )?
             }
         }
     }
+
     Ok(())
 }

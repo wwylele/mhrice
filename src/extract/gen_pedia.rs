@@ -703,7 +703,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         dl_quest_data_mr: get_singleton_opt(pak)?,
         dl_quest_data_for_enemy_mr: get_singleton_opt(pak)?,
         difficulty_rate: get_singleton(pak)?,
-        difficulty_rate_anomaly: get_singleton(pak)?,
+        difficulty_rate_anomaly: get_singleton_opt(pak)?,
         random_scale: get_singleton(pak)?,
         size_list: get_singleton(pak)?,
         discover_em_set_data: get_singleton(pak)?,
