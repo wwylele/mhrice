@@ -53,7 +53,7 @@ pub fn gen_hyakuryu_skill_list(
                 <div class="mh-filters"><ul>
                     <li id="mh-skill-filter-button-all" class="is-active mh-skill-filter-button">
                         <a>"All skills"</a></li>
-                    <li id="mh-skill-filter-button-hr" class="is-active mh-skill-filter-button">
+                    <li id="mh-skill-filter-button-hr" class="mh-skill-filter-button">
                         <a>"HR"</a></li>
                     <li id="mh-skill-filter-button-deco1" class="mh-skill-filter-button">
                         <a>"Lv1 deco"</a></li>

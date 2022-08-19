@@ -232,6 +232,7 @@ pub struct Pedia {
     pub custom_buildup_wep_table: Option<CustomBuildupWepTableUserData>,
 
     pub random_mystery_difficulty: Option<RandomMysteryDifficultyRateListData>,
+    pub random_mystery_enemy: Option<RandomMysteryLotEnemyData>,
 }
 
 pub struct QuestReward<'a> {
@@ -393,6 +394,7 @@ pub struct MonsterEx<'a> {
     pub explain1: Option<&'a MsgEntry>,
     pub explain2: Option<&'a MsgEntry>,
     pub mystery_reward: Vec<MysteryReward<'a>>,
+    pub random_quest: Option<&'a LotEnemyData>,
 }
 
 pub struct Servant<'a> {

@@ -1,4 +1,5 @@
 use super::gen_item::*;
+use super::gen_map::*;
 use super::gen_quest::*;
 use super::gen_website::{gen_multi_lang, head_common, navbar};
 use super::pedia::*;
@@ -1100,6 +1101,80 @@ pub fn gen_monster(
                 </section>
 
                 { quest_list }
+
+                { monster_ex.random_quest.map(|random_quest| {
+                    let diff_table = format!("/quest/anomaly_difficulty_0_{}.html",
+                        random_quest.difficulty_table_type);
+                    let extra_diff_table = format!("/quest/anomaly_difficulty_1_{}.html",
+                    random_quest.difficulty_table_type_extra);
+                    html!(<section>
+                    <h2>"Anomaly investigation"</h2>
+                    <div class="mh-kvlist">
+                    <p class="mh-kv"><span>"Appear at"</span>
+                    {
+                        let rank = (random_quest.mystery_rank.0 != 12).then(||
+                            text!("A{}", random_quest.mystery_rank.0));
+                        let level = (random_quest.release_level != -1).then(||
+                            text!("Lv{}", random_quest.release_level));
+                        let or = (rank.is_some() && level.is_some()).then(||text!(" Or "));
+                        let none = (rank.is_none() && level.is_none()).then(||text!("None"));
+                        html!(<span>{rank}{or}{level}{none}</span>)
+                    }
+                    </p>
+                    <p class="mh-kv"><span>"Appear as sub target at"</span>
+                    {
+                        let rank = (random_quest.normal_rank.0 != 12).then(||
+                            text!("A{}", random_quest.normal_rank.0));
+                        let level = (random_quest.release_level_normal != -1).then(||
+                            text!("Lv{}", random_quest.release_level_normal));
+                        let or = (rank.is_some() && level.is_some()).then(||text!(" Or "));
+                        let none = (rank.is_none() && level.is_none()).then(||text!("None"));
+                        html!(<span>{rank}{or}{level}{none}</span>)
+                    }
+                    </p>
+                    <p class="mh-kv"><span>"Afflicted"</span>
+                        <span>{text!("{}", random_quest.is_mystery)}</span>
+                    </p>
+                    <p class="mh-kv"><span>"Sub target"</span>
+                        <span>{text!("{}", random_quest.is_enable_sub)}</span>
+                    </p>
+                    <p class="mh-kv"><span>"Extra"</span>
+                        <span>{text!("{}", random_quest.is_enable_extra)}</span>
+                    </p>
+                    <p class="mh-kv"><span>"Intrusion"</span>
+                        <span>{text!("{}", random_quest.is_intrusion)}</span>
+                    </p>
+                    <p class="mh-kv"><span>"Stats table as main target"</span>
+                        <span><a href={diff_table.as_str()}>{
+                        text!("Table {}", random_quest.difficulty_table_type)}</a></span>
+                    </p>
+                    <p class="mh-kv"><span>"Stats table as sub target"</span>
+                        <span><a href={extra_diff_table.as_str()}>{
+                        text!("Table {}", random_quest.difficulty_table_type_extra)}</a></span>
+                    </p>
+                    </div>
+
+                    <div class="mh-anomaly-maps"> <h3>"Allowed map"</h3>
+                    <ul class="mh-item-list">{
+                        let mut ids = vec![];
+                        let stages = &random_quest.stage_data;
+                        if stages.is_map_01 { ids.push(1); }
+                        if stages.is_map_02 { ids.push(2); }
+                        if stages.is_map_03 { ids.push(3); }
+                        if stages.is_map_04 { ids.push(4); }
+                        if stages.is_map_05 { ids.push(5); }
+                        if stages.is_map_31 { ids.push(12); }
+                        if stages.is_map_32 { ids.push(13); }
+                        if stages.is_map_09 { ids.push(9); }
+                        if stages.is_map_10 { ids.push(10); }
+                        if stages.is_map_41 { ids.push(14); }
+                        ids.into_iter().map(|id|
+                            html!(<li> {gen_map_label(id, pedia)} </li>)
+                        )
+                    }</ul>
+                    </div>
+                    </section>)
+                })}
 
                 <section>
                 <h2 >"Hitzone data"</h2>

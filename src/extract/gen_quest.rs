@@ -932,13 +932,20 @@ pub fn gen_random_mystery_difficulty(
     let doc: DOMTree<String> = html!(
         <html>
         <head>
-            <title>{text!("Anomaly investigation difficulty")}</title>
+            <title>{text!("Anomaly investigation stat table")}</title>
             { head_common() }
         </head>
         <body>
             { navbar() }
             <main>
-            <h1>{text!("Anomaly investigation difficulty table {} {}", category, kind)}</h1>
+            <h1>{
+                let category = match category {
+                    0 => "main target",
+                    1 => "sub target",
+                    _ => "?",
+                };
+                text!("Anomaly investigation stats table {} for {}", kind, category)
+            }</h1>
 
             <div>
                 <input type="checkbox" id="mh-quest-detail-check"/>
