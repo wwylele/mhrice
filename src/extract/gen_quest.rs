@@ -938,14 +938,14 @@ pub fn gen_random_mystery_difficulty(
         <body>
             { navbar() }
             <main>
-            <h1>{
+            <header><h1>{
                 let category = match category {
                     0 => "main target",
                     1 => "sub target",
                     _ => "?",
                 };
                 text!("Anomaly investigation stats table {} for {}", kind, category)
-            }</h1>
+            }</h1></header>
 
             <div>
                 <input type="checkbox" id="mh-quest-detail-check"/>
