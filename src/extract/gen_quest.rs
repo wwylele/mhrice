@@ -709,9 +709,33 @@ fn gen_quest(
                             } else {
                                 ""
                             };
+                            let condition = if let (Some(condition), Some(param)) =
+                                (quest.param.boss_set_condition.get(i),
+                                quest.param.boss_set_param.get(i)) {
+                                match (condition, param) {
+                                    (BossSetCondition::Default, 0) => text!("Initial"),
+                                    (BossSetCondition::Free1, 0) => text!("After one hunted"),
+                                    (BossSetCondition::Free2, 0) => text!("After two hunted"),
+                                    (BossSetCondition::Free3, 0) => text!("After three hunted"),
+                                    (BossSetCondition::Timer1, param) => text!("After {} minutes", param),
+                                    (BossSetCondition::Em1Hp, param) => text!("1st monster {}% hp left", param),
+                                    (BossSetCondition::Em2Hp, param) => text!("2nd monster {}% hp left", param),
+                                    (BossSetCondition::Em3Hp, param) => text!("3rd monster {}% hp left", param),
+                                    (BossSetCondition::Em4Hp, param) => text!("4th monster {}% hp left", param),
+                                    (BossSetCondition::Em5Hp, param) => text!("5th monster {}% hp left", param),
+                                    (BossSetCondition::HpEmx1 , param) => text!("One monster {}% hp left", param),
+                                    (BossSetCondition::HpEmx2 , param) => text!("Two monster {}% hp left", param),
+                                    (BossSetCondition::InitRandom, param) => text!("{}% chance initial", param),
+                                    (BossSetCondition::SwapRandom, 0) => text!("Random swap"),
+                                    (condition, param) => text!("{:?}({})", condition, param)
+                                }
+                            } else {
+                                text!("-")
+                            };
+
                             html!(<tr class={class}>
                                 <td>{ gen_monster_tag(pedia_ex, em_type, is_target, false, is_mystery)}</td>
-                                <td>{ text!("{}", init_set_name.unwrap_or_default()) }</td>
+                                <td>{ condition }</td>
                                 {init_set.into_iter().flat_map(|init_set|
                                     init_set.info.iter().filter(|i|i.lot != 0).map(|i|html!(<td> {
                                     text!("Area {}, {}%", i.block, i.lot)
@@ -720,11 +744,11 @@ fn gen_quest(
                         }).collect();
 
                     html!(<section>
-                    <h2 >"Spawning area"</h2>
+                    <h2 >"Spawning"</h2>
                     <div class="mh-table"><table>
                     <thead><tr>
                         <th>"Monster"</th>
-                        <th>"Preset name"</th>
+                        <th>"Spawning condition"</th>
                         <th colspan={span}>"Initial area"</th>
                     </tr></thead>
                     <tbody>
