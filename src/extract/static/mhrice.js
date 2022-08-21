@@ -198,13 +198,6 @@ function adjustVersionMenu() {
         let current = `https://${hostname}`;
         if (href === current) {
             item.classList.add("has-text-weight-bold");
-            if (!item.classList.contains("mh-version-menu-latest")) {
-                let head = document.getElementById("mh-version-menu-head")
-                if (head != null) {
-                    head.textContent = "Version:" + item.textContent;
-                    head.classList.add("has-text-danger")
-                }
-            }
         }
         item.setAttribute("href", href + window.location.pathname);
     }
