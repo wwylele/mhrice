@@ -469,7 +469,7 @@ function doSearch() {
     }
     const matchers = text.split(' ').filter(m => m.length > 0);
 
-    const results = [];
+    let results = [];
     for (const entry of g_toc) {
         let matched = 0;
         let matched_length = 0;
@@ -489,6 +489,7 @@ function doSearch() {
     }
 
     results.sort((a, b) => b.score - a.score);
+    results = results.slice(0, 100);
 
     const ul = document.getElementById("mh-search-result");
     ul.replaceChildren();
