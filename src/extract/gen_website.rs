@@ -169,10 +169,6 @@ pub fn navbar() -> Box<nav<String>> {
                 <a class="navbar-item" href="/item.html">
                    "Items"
                 </a>
-
-                <a class="navbar-item" href="/about.html">
-                    "About"
-                </a>
             </div>
         </div>
     </div></nav>)

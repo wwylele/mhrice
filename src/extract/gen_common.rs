@@ -55,7 +55,7 @@ pub fn right_aside() -> Box<aside<String>> {
 
     <p class="menu-label">
         "Version"
-        </p>
+    </p>
     <ul class="menu-list">{
         WEBSITE_VERSIONS.iter().enumerate().map(|(i, &version)| {
             let latest = i == WEBSITE_VERSIONS.len() - 1;
@@ -78,6 +78,16 @@ pub fn right_aside() -> Box<aside<String>> {
             </a></li>)
         })
     }</ul>
+
+
+    <p class="menu-label">
+        "Website info"
+    </p>
+    <ul class="menu-list">
+    <li><a class="navbar-item" href="/about.html">
+        "About MHRise"
+    </a></li>
+    </ul>
 
     </div>
     </aside>)
