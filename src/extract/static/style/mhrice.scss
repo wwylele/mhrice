@@ -23,10 +23,9 @@ $sidebar-button-width: 30px;
 $sidebar-button-height: 50px;
 
 /** Page layout **/
-div.mh-logo-text {
+#mh-logo-text {
     font-weight: bold;
     margin-left: 1em;
-    margin-right: 1em;
 }
 
 .lr-padded {
@@ -70,6 +69,20 @@ nav {
             display: none;
         }
     }
+
+    .nav-search-item {
+        flex-grow: 1;
+        flex-shrink: 1;
+        width: 10rem;
+
+        >div {
+            width: 100%;
+        }
+    }
+}
+
+#nav-search {
+    @extend .is-small
 }
 
 aside {

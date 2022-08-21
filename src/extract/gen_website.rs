@@ -75,9 +75,17 @@ pub fn navbar() -> Box<nav<String>> {
         <div class="navbar-brand">
             <a class="navbar-item" href="/index.html">
                 <img alt="Logo" src="/favicon.png"/>
-                <div class="mh-logo-text">"MHRice "</div>
-                <i class="fas fa-magnifying-glass"/>
+                <div id="mh-logo-text">"MHRice "</div>
             </a>
+
+            <div class="navbar-item nav-search-item">
+                <div class="control has-icons-left">
+                <input id="nav-search" class="input" type="search" placeholder="Search"/>
+                <span class="icon is-small is-left">
+                    <i class="fas fa-magnifying-glass" />
+                </span>
+                </div>
+            </div>
 
             <a id="navbarBurger" class="navbar-burger" data-target="navbarMenu">
                 <span></span>
@@ -397,7 +405,7 @@ pub fn gen_search(output: &impl Sink) -> Result<()> {
                 <main>
                 <header><h1>"Search"</h1></header>
                 <div class="control has-icons-left">
-                    <input class="input is-large" type="text" placeholder="Nargacuga" id="mh-search"/>
+                    <input class="input is-large" type="search" placeholder="Nargacuga" id="mh-search"/>
                     <span class="icon is-large is-left">
                         <i class="fas fa-magnifying-glass" />
                     </span>

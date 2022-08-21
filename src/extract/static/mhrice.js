@@ -44,6 +44,8 @@ document.addEventListener('DOMContentLoaded', function () {
     change_sort("monster", 1);
     change_sort("item", 1);
     change_sort("armor", 1);
+
+    autoSearch();
 });
 
 function addEventListensers() {
@@ -58,6 +60,7 @@ function addEventListensers() {
     // addEventListenerToClass("left-aside-item", "click", onLeftAsideItem);
 
     addEventListenerToId("mh-search", "keydown", search);
+    addEventListenerToId("nav-search", "keydown", goSearch);
 
     addEventListenerToClass("mh-item-filter-button", "click", changeItemFilter);
     addEventListenerToClass("mh-armor-filter-button", "click", changeArmorFilter);
@@ -538,6 +541,10 @@ function search(e) {
         return;
     }
 
+    loadTocAndDoSearch();
+}
+
+function loadTocAndDoSearch() {
     if (g_toc === null) {
         fetch(`/toc/${g_language_code}.json`)
             .then(response => response.json())
@@ -548,6 +555,32 @@ function search(e) {
     } else {
         doSearch();
     }
+}
+
+function goSearch(e) {
+    if (e.key !== 'Enter') {
+        return;
+    }
+
+    const text = document.getElementById("nav-search").value.trim();
+
+    window.location.assign(`/index.html?search=${encodeURIComponent(text)}`)
+}
+
+
+function autoSearch() {
+    const param = new URLSearchParams(window.location.search);
+    const text = param.get("search");
+    if (text === null || text === "") {
+        return;
+    }
+
+    const searchBox = document.getElementById("mh-search");
+    if (searchBox === null) {
+        return;
+    }
+    searchBox.value = text;
+    loadTocAndDoSearch();
 }
 
 function startDragMap(e) {
