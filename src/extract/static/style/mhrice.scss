@@ -445,7 +445,6 @@ ul.mh-armor-skill-list {
         top: 0.3rem;
         width: 1.65rem;
         height: 1.25rem;
-        vertical-align: middle;
     }
 
     >.mh-slot-large {
@@ -455,7 +454,6 @@ ul.mh-armor-skill-list {
         top: 0rem;
         width: 1.85rem;
         height: 1.85rem;
-        vertical-align: middle;
     }
 
     >.mh-slot-rampage {
@@ -463,6 +461,16 @@ ul.mh-armor-skill-list {
         position: absolute;
         left: 0.75rem;
         top: 0rem;
+    }
+
+    >.mh-slot-0 {
+        display: inline-block;
+        position: absolute;
+        left: 0.1rem;
+        top: 0.875rem;
+        width: 1.65rem;
+        height: 0.2rem;
+        background-color: black;
     }
 }
 

@@ -109,7 +109,6 @@ pub fn gen_slot(decorations_num_list: &[u32], is_rampage_slot: bool) -> Box<span
     };
 
     html!(<span>
-        {(0..placeholder).map(|_| html!(<span class="mh-slot-outer" />))}
         {slot_list.into_iter().map(|s| {
             let alt = format!("A level-{} slot", s + 1);
             let class = if s == 3 {
@@ -126,5 +125,8 @@ pub fn gen_slot(decorations_num_list: &[u32], is_rampage_slot: bool) -> Box<span
                 </span>
             )
         })}
+        {(0..placeholder).map(|_| html!(<span class="mh-slot-outer">
+            <span class="mh-slot-0"/>
+        </span>))}
     </span>)
 }
