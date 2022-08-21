@@ -52,6 +52,10 @@ function addEventListensers() {
     addEventListenerToId("cookie-no", "click", disableCookie);
     addEventListenerToId("navbarBurger", "click", onToggleNavbarMenu);
 
+    addEventListenerToId("left-aside-button", "click", onToggleLeftAside);
+    // doesn't work on all platform
+    // addEventListenerToClass("left-aside-item", "click", onLeftAsideItem);
+
     addEventListenerToId("mh-search", "keydown", search);
 
     addEventListenerToClass("mh-item-filter-button", "click", changeItemFilter);
@@ -95,6 +99,20 @@ function addEventListenerToId(id, event_name, f) {
         element.addEventListener(event_name, f);
     }
 }
+
+function onToggleLeftAside() {
+    const left_aside = document.getElementById("left-aside");
+    if (left_aside) {
+        left_aside.classList.toggle("is-active");
+    }
+}
+
+//function onLeftAsideItem() {
+//    const left_aside = document.getElementById("left-aside");
+//    if (left_aside) {
+//        left_aside.classList.remove("is-active");
+//    }
+//}
 
 function onDropdownClick(e) {
     // TODO: make this work well

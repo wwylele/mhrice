@@ -1,3 +1,4 @@
+use super::gen_common::*;
 use super::gen_item::*;
 use super::gen_map::*;
 use super::gen_quest::*;
@@ -600,13 +601,13 @@ pub fn gen_lot(
         }
     }
 
-    let header = match rank {
-        QuestRank::Low => "Low rank reward",
-        QuestRank::High => "High rank reward",
-        QuestRank::Master => "Master rank reward",
+    let (header, id) = match rank {
+        QuestRank::Low => ("Low rank reward", "s-reward-lr"),
+        QuestRank::High => ("High rank reward", "s-reward-hr"),
+        QuestRank::Master => ("Master rank reward", "s-reward-mr"),
     };
 
-    Some(html!(<section>
+    Some(html!(<section id={id}>
         <h2 >{text!("{}", header)}</h2>
         <div class="mh-reward-tables">
 
@@ -884,8 +885,129 @@ pub fn gen_monster(
         .explain2
         .map(|m| html!(<pre> {gen_multi_lang(m)} </pre>));
 
-    let quest_list = html!(
-        <section>
+    let monster_alias = monster_ex.alias;
+    let phase_map = MEAT_TYPE_MAP.get(&monster.id).copied();
+    let size_range = pedia_ex.sizes.get(&monster.em_type).copied();
+
+    let mut sections = vec![];
+    sections.push(Section {
+        title: "Description".to_owned(),
+        content: html!(
+            <section id="s-description">
+            <h2 >"Description"</h2>
+            { explain1 }
+            { explain2 }
+            </section>
+        ),
+    });
+
+    sections.push(Section { title: "Basic data".to_owned(), content: html!(
+        <section id="s-basic">
+        <h2 >"Basic data"</h2>
+        <div class="mh-kvlist mh-wide">
+        <p class="mh-kv"><span>"Base HP"</span>
+            <span>{ text!("(LR/HR) {}, (MR) {}", monster.data_tune.base_hp_vital,
+            monster.data_tune.master_hp_vital) }</span></p>
+        <p class="mh-kv"><span>"Limping threshold"</span>
+            <span>{ text!("(village) {}% / (LR) {}% / (HR) {}% / (MR) {}%",
+            monster.data_tune.dying_village_hp_vital_rate,
+            monster.data_tune.dying_low_level_hp_vital_rate,
+            monster.data_tune.dying_high_level_hp_vital_rate,
+            monster.data_tune.dying_master_class_hp_vital_rate
+        ) }</span></p>
+        <p class="mh-kv"><span>"Capturing threshold"</span>
+            <span>{ text!("(village) {}% / (LR) {}% / (HR) {}% / (MR) {}%",
+            monster.data_tune.capture_village_hp_vital_rate,
+            monster.data_tune.capture_low_level_hp_vital_rate,
+            monster.data_tune.capture_high_level_hp_vital_rate,
+            monster.data_tune.capture_master_level_hp_vital_rate
+        ) }</span></p>
+        <p class="mh-kv"><span>"Sleep recovering"</span>
+            <span>{ text!("{} seconds / recover {}% HP",
+            monster.data_tune.self_sleep_time,
+            monster.data_tune.self_sleep_recover_hp_vital_rate
+        ) }</span></p>
+        {size_range.map(|size_range| html!(<p class="mh-kv"><span>"Size"</span>
+            <span>
+                {text!("{}", size_range.base_size)}
+                {(!size_range.no_size_scale).then(||html!(<span>
+                    " ("
+                    <img class="mh-crown-icon" alt="Small crown" src="/resources/small_crown.png" />
+                    {text!("{}, ", size_range.base_size * size_range.small_boarder)}
+                    <img class="mh-crown-icon" alt="Silver large crown" src="/resources/large_crown.png" />
+                    {text!("{}, ", size_range.base_size * size_range.big_boarder)}
+                    <img class="mh-crown-icon" alt="Large crown" src="/resources/king_crown.png" />
+                    {text!("{})", size_range.base_size * size_range.king_boarder)}
+                </span>))}
+            </span>
+        </p>))}
+        <p class="mh-kv"><span>"GimmickVital"</span>
+            <span>{text!("(S) {} / (M) {} / (L) {} / (KB) {}",
+                monster.data_tune.gimmick_vital_data.vital_s,
+                monster.data_tune.gimmick_vital_data.vital_m,
+                monster.data_tune.gimmick_vital_data.vital_l,
+                monster.data_tune.gimmick_vital_data.vital_knock_back
+            )}</span>
+        </p>
+        <p class="mh-kv"><span>"Riding HP"</span>
+            <span>{text!("(S) {} / (M) {} / (L) {}",
+                monster.data_tune.marionette_vital_data.vital_s,
+                monster.data_tune.marionette_vital_data.vital_m,
+                monster.data_tune.marionette_vital_data.vital_l
+            )}</span>
+        </p>
+        <p class="mh-kv"><span>"Weight"</span>
+            <span>{text!("{:?}", monster.data_tune.weight)}</span>
+        </p>
+        <p class="mh-kv"><span>"Caution to combat timer"</span>
+            <span>{text!("{}", monster.data_base.caution_to_combat_vision_timer)}</span>
+        </p>
+        <p class="mh-kv"><span>"Caution to normal timer"</span>
+            <span>{text!("{}", monster.data_base.caution_to_non_combat_timer)}</span>
+        </p>
+        <p class="mh-kv"><span>"Combat to normal timer"</span>
+            <span>{text!("{}", monster.data_base.combat_to_non_combat_timer)}</span>
+        </p>
+        <p class="mh-kv"><span>"Enrage threshold"</span>
+            <span>{text!("(LR) {} / (HR) {} / (Rampage) {} / (MR) {}",
+                monster.anger_data.data_info[0].val,
+                monster.anger_data.data_info[1].val,
+                monster.anger_data.data_info[2].val,
+                monster.anger_data.data_info[3].val)}</span>
+        </p>
+        <p class="mh-kv"><span>"Enrage timer"</span>
+            <span>{text!("{}", monster.anger_data.timer)}</span>
+        </p>
+        <p class="mh-kv"><span>"Rampage enrage timer"</span>
+            <span>{text!("{}", monster.anger_data.hyakuryu_cool_timer)}</span>
+        </p>
+        <p class="mh-kv"><span>"Enrage motion multiplier"</span>
+            <span>{text!("{}", monster.anger_data.mot_rate)}</span>
+        </p>
+        <p class="mh-kv"><span>"Enrage attack multiplier"</span>
+            <span>{text!("{}", monster.anger_data.atk_rate)}</span>
+        </p>
+        <p class="mh-kv"><span>"Enrage defense multiplier"</span>
+            <span>{text!("{}", monster.anger_data.def_rate)}</span>
+        </p>
+        <p class="mh-kv"><span>"Enrage compensation rate"</span>
+            <span>{text!("{:?}", monster.anger_data.compensation_rate)}</span>
+        </p>
+        <p class="mh-kv"><span>"Enrage compensation rate (rampage)"</span>
+            <span>{text!("{:?}", monster.anger_data.hyakuryu_compensation_rate)}</span>
+        </p>
+        <p class="mh-kv"><span>"Enrage add staying time"</span>
+            <span>{text!("{}", monster.anger_data.anger_stay_add_sec)}</span>
+        </p>
+        <p class="mh-kv"><span>"life_area_timer_rate"</span>
+            <span>{text!("{}", monster.anger_data.life_area_timer_rate)}</span>
+        </p>
+        </div>
+        </section>
+    )});
+
+    sections.push(Section { title: "Quests".to_owned(), content: html!(
+        <section id="s-quest">
         <h2 >"Quests"</h2>
         <div>
             <input type="checkbox" id="mh-non-target-check"/>
@@ -967,11 +1089,532 @@ pub fn gen_monster(
             </tbody>
         </table></div>
         </section>
-    );
+    ) });
 
-    let monster_alias = monster_ex.alias;
-    let phase_map = MEAT_TYPE_MAP.get(&monster.id).copied();
-    let size_range = pedia_ex.sizes.get(&monster.em_type).copied();
+    if let Some(random_quest) = monster_ex.random_quest {
+        let diff_table = format!(
+            "/quest/anomaly_difficulty_0_{}.html",
+            random_quest.difficulty_table_type
+        );
+        let extra_diff_table = format!(
+            "/quest/anomaly_difficulty_1_{}.html",
+            random_quest.difficulty_table_type_extra
+        );
+        sections.push(Section {
+            title: "Anomaly investigation".to_owned(),
+            content: html!(
+            <section id="s-anomaly">
+            <h2>"Anomaly investigation"</h2>
+            <div class="mh-kvlist">
+            <p class="mh-kv"><span>"Appear at"</span>
+            {
+                let rank = (random_quest.mystery_rank.0 != 12).then(||
+                    text!("A{}", random_quest.mystery_rank.0));
+                let level = (random_quest.release_level != -1).then(||
+                    text!("Lv{}", random_quest.release_level));
+                let or = (rank.is_some() && level.is_some()).then(||text!(" Or "));
+                let none = (rank.is_none() && level.is_none()).then(||text!("None"));
+                html!(<span>{rank}{or}{level}{none}</span>)
+            }
+            </p>
+            <p class="mh-kv"><span>"Appear as sub target at"</span>
+            {
+                let rank = (random_quest.normal_rank.0 != 12).then(||
+                    text!("A{}", random_quest.normal_rank.0));
+                let level = (random_quest.release_level_normal != -1).then(||
+                    text!("Lv{}", random_quest.release_level_normal));
+                let or = (rank.is_some() && level.is_some()).then(||text!(" Or "));
+                let none = (rank.is_none() && level.is_none()).then(||text!("None"));
+                html!(<span>{rank}{or}{level}{none}</span>)
+            }
+            </p>
+            <p class="mh-kv"><span>"Afflicted"</span>
+                <span>{text!("{}", random_quest.is_mystery)}</span>
+            </p>
+            <p class="mh-kv"><span>"Sub target"</span>
+                <span>{text!("{}", random_quest.is_enable_sub)}</span>
+            </p>
+            <p class="mh-kv"><span>"Extra"</span>
+                <span>{text!("{}", random_quest.is_enable_extra)}</span>
+            </p>
+            <p class="mh-kv"><span>"Intrusion"</span>
+                <span>{text!("{}", random_quest.is_intrusion)}</span>
+            </p>
+            <p class="mh-kv"><span>"Stats table as main target"</span>
+                <span><a href={diff_table.as_str()}>{
+                text!("Table {}", random_quest.difficulty_table_type)}</a></span>
+            </p>
+            <p class="mh-kv"><span>"Stats table as sub target"</span>
+                <span><a href={extra_diff_table.as_str()}>{
+                text!("Table {}", random_quest.difficulty_table_type_extra)}</a></span>
+            </p>
+            </div>
+
+            <div class="mh-anomaly-maps"> <h3>"Allowed map"</h3>
+            <ul class="mh-item-list">{
+                let mut ids = vec![];
+                let stages = &random_quest.stage_data;
+                if stages.is_map_01 { ids.push(1); }
+                if stages.is_map_02 { ids.push(2); }
+                if stages.is_map_03 { ids.push(3); }
+                if stages.is_map_04 { ids.push(4); }
+                if stages.is_map_05 { ids.push(5); }
+                if stages.is_map_31 { ids.push(12); }
+                if stages.is_map_32 { ids.push(13); }
+                if stages.is_map_09 { ids.push(9); }
+                if stages.is_map_10 { ids.push(10); }
+                if stages.is_map_41 { ids.push(14); }
+                ids.into_iter().map(|id|
+                    html!(<li> {gen_map_label(id, pedia)} </li>)
+                )
+            }</ul>
+            </div>
+            </section>),
+        });
+    }
+
+    sections.push(Section {
+        title: "Hitzone data".to_owned(),
+        content: html!(
+            <section id="s-hitzone">
+            <h2 >"Hitzone data"</h2>
+            <div class="mh-color-diagram">
+                <img id="mh-hitzone-img" alt="Monster hitzone diagram" src=meat_figure />
+                <canvas id="mh-hitzone-canvas" width=1 height=1 />
+            </div>
+            <div>
+                <input type="checkbox" id="mh-invalid-meat-check"/>
+                <label for="mh-invalid-meat-check">"Display invalid parts"</label>
+            </div>
+            <div class="mh-table"><table>
+                <thead>
+                <tr>
+                    <th>"Hitzone"</th>
+                    <th>"Phase"</th>
+                    <th>"Name"</th>
+                    <th>"Slash"</th>
+                    <th>"Impact"</th>
+                    <th>"Shot"</th>
+                    <th>"Fire"</th>
+                    <th>"Water"</th>
+                    <th>"Ice"</th>
+                    <th>"Thunder"</th>
+                    <th>"Dragon"</th>
+                    <th>"Dizzy"</th>
+                </tr>
+                </thead>
+                {
+                    monster.meat_data.meat_container.iter()
+                        .enumerate().map(|(part, meats)| {
+
+                        let part_name = if let Some(names) = collider_mapping.meat_map.get(&part) {
+                            names.iter().map(|s|s.as_str()).collect::<Vec<&str>>().join(", ")
+                        } else {
+                            format!("{}", part)
+                        };
+
+                        let part_color = format!("mh-part mh-part-{}", part);
+
+                        let span = meats.meat_group_info.len();
+                        let mut part_common: Option<Vec<Box<td<String>>>> = Some(vec![
+                            html!(<td rowspan={span}>
+                                <span class=part_color.as_str()/>
+                                { text!("{}", part_name) }
+                            </td>),
+                        ]);
+
+                        let invalid = meats.meat_group_info == [
+                            MeatGroupInfo {
+                                slash: 0,
+                                strike: 0,
+                                shell: 0,
+                                fire: 0,
+                                water: 0,
+                                ice: 0,
+                                elect: 0,
+                                dragon: 0,
+                                piyo: 0,
+                            }
+                        ];
+
+                        let hidden = if invalid {
+                            "mh-invalid-meat"
+                        } else {
+                            ""
+                        };
+
+                        let id = format!("mh-hitzone-dt-{part}");
+
+                        html!(<tbody id={id.as_str()} class="mh-color-diagram-switch"
+                            data-color={ PART_COLORS[part] } data-diagram="mh-hitzone"> {
+
+                            meats.meat_group_info.iter().enumerate()
+                            .map(move |(phase, group_info)| {
+                                let names = pedia_ex.meat_names.get(&MeatKey {
+                                    em_type: monster_em_type,
+                                    part,
+                                    phase
+                                }).map(|v|v.as_slice()).unwrap_or_default();
+
+                                let mut tds = part_common.take().unwrap_or_default();
+
+                                let phase_text = if let Some(phase_text) = SPECIFIC_MEAT_TYPE_MAP
+                                    .get(&(monster.id, part)).copied().and_then(|m|m.get(phase)) {
+
+                                    phase_text.to_string()
+                                } else if let Some(phase_text) =
+                                    phase_map.and_then(|m|m.get(phase)) {
+
+                                    phase_text.to_string()
+                                } else {
+                                    format!("{}", phase)
+                                };
+
+                                tds.extend(vec![
+                                    html!(<td>{text!("{}", phase_text)}</td>),
+                                    html!(<td>{
+                                        names.iter().enumerate().map(|(i, n)| html!(<span>
+                                            { text!("{}", if i == 0 {""} else {", "}) }
+                                            { gen_multi_lang(n) }
+                                        </span>))
+                                    }</td>),
+                                    html!(<td>{text!("{}", group_info.slash)}</td>),
+                                    html!(<td>{text!("{}", group_info.strike)}</td>),
+                                    html!(<td>{text!("{}", group_info.shell)}</td>),
+                                    html!(<td>{text!("{}", group_info.fire)}</td>),
+                                    html!(<td>{text!("{}", group_info.water)}</td>),
+                                    html!(<td>{text!("{}", group_info.ice)}</td>),
+                                    html!(<td>{text!("{}", group_info.elect)}</td>),
+                                    html!(<td>{text!("{}", group_info.dragon)}</td>),
+                                    html!(<td>{text!("{}", group_info.piyo)}</td>),
+                                ]);
+                                html!(<tr class=hidden> {tds} </tr>)
+                            })
+                        } </tbody>)
+                    })
+                }
+            </table></div>
+            </section>
+        ),
+    });
+
+    sections.push(Section {
+        title: "Parts".to_owned(),
+        content: html!(
+        <section id="s-parts">
+        <h2 >
+            "Parts"
+        </h2>
+        <div class="mh-color-diagram">
+            <img id="mh-part-img" alt="Monster parts diagram" src=parts_group_figure />
+            <canvas id="mh-part-canvas" width=1 height=1 />
+        </div>
+        <div>
+            <input type="checkbox" id="mh-invalid-part-check"/>
+            <label for="mh-invalid-part-check">"Display invalid parts"</label>
+        </div>
+        <div class="mh-table"><table>
+            <thead>
+                <tr>
+                    <th>"Part"</th>
+                    <th>"Stagger"</th>
+                    <th>"Break"</th>
+                    <th>"Sever"</th>
+                    <th>"Extract"</th>
+                </tr>
+            </thead>
+            <tbody>{
+                monster.data_tune.enemy_parts_data.iter().enumerate().map(|(index, part)| {
+                    let part_name = if let Some(names) = collider_mapping.part_map.get(&index) {
+                        names.iter().map(|s|s.as_str()).collect::<Vec<&str>>().join(", ")
+                    } else {
+                        format!("{}", index)
+                    };
+
+                    let part_color = format!("mh-part-group mh-part-{}", index);
+
+                    let class_str = if part.extractive_type == ExtractiveType::None {
+                        "mh-invalid-part mh-color-diagram-switch"
+                    } else {
+                        "mh-color-diagram-switch"
+                    };
+
+                    let index_u16 = u16::try_from(index);
+
+                    let part_break = enemy_parts_break_data_list.iter()
+                        .filter(|p| Ok(p.parts_group) == index_u16)
+                        .map(|part_break|{
+                            part_break.parts_break_data_list.iter().map(
+                                |p| if p.master_vital == -1 {
+                                    format!("(x{}) {}", p.break_level, p.vital)
+                                } else {
+                                    format!("(x{}) (LR/HR) {}, (MR) {}", p.break_level, p.vital, p.master_vital)
+                                }
+                            ).collect::<Vec<_>>().join(" / ")
+                        }).collect::<Vec<_>>().join(" , ");
+
+                    let part_loss = enemy_parts_loss_data_list.iter()
+                        .filter(|p| Ok(p.parts_group) == index_u16)
+                        .map(|part_loss| {
+                            let attr = match part_loss.parts_loss_data.permit_damage_attr {
+                                PermitDamageAttrEnum::Slash => "(Slash) ",
+                                PermitDamageAttrEnum::Strike => "(Impact) ",
+                                PermitDamageAttrEnum::All => "",
+                            };
+                            if part_loss.parts_loss_data.master_vital == -1 {
+                                format!("{} {}", attr, part_loss.parts_loss_data.vital)
+                            } else {
+                                format!("{} (LR/HR) {}, (MR) {}", attr, part_loss.parts_loss_data.vital,
+                                    part_loss.parts_loss_data.master_vital)
+                            }
+                        }).collect::<Vec<_>>().join(" , ");
+
+                    let id = format!("mh-part-dt-{index}");
+
+                    html!(<tr id = {id.as_str()} class=class_str data-color={ PART_COLORS[index] }
+                        data-diagram="mh-part">
+                        <td>
+                            <span class=part_color.as_str()/>
+                            { text!("[{}]", index) }
+                            { text!("{}", part_name) }
+                        </td>
+                        <td>{ if part.master_vital == -1 {
+                            text!("{}", part.vital)
+                        } else {
+                            text!("(LR/HR) {}, (MR) {}", part.vital, part.master_vital)
+                        }}</td>
+                        <td>{ text!("{}", part_break) }</td>
+                        <td>{ text!("{}", part_loss) }</td>
+                        <td>{ gen_extractive_type(part.extractive_type) }</td>
+                    </tr>)
+                }).collect::<Vec<_>>()
+            }</tbody>
+        </table></div>
+        </section>
+    )});
+
+    sections.push(Section {
+        title: "Multi-part vital".to_owned(),
+        content: html!(
+            <section id="s-multipart">
+            <h2>"Multi-part vital"</h2>
+            {
+                let system = monster.data_tune.enemy_multi_parts_vital_system_data
+                    .iter().enumerate().map(|(i, m)|(true, i, &m.base.0));
+                let additional = monster.data_tune.enemy_multi_parts_vital_data_list
+                    .iter().enumerate().map(|(i, m)|(false, i, m));
+                gen_multipart(system.chain(additional))
+            }
+            </section>
+        ),
+    });
+
+    sections.push(Section{title: "Abnormal status".to_owned(), content: html!(
+        <section id="s-status">
+        <h2 >
+            "Abnormal status"
+        </h2>
+        <div>
+            <input type="checkbox" id="mh-ride-cond-check"/>
+            <label for="mh-ride-cond-check">"Display data for riding"</label>
+        </div>
+        <div>
+            <input type="checkbox" id="mh-preset-check"/>
+            <label for="mh-preset-check">"Don't override with preset data"</label>
+        </div>
+        <div class="mh-table"><table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>"Threshold"</th>
+                    <th>"Decay"</th>
+                    <th>"Max stock"</th>
+                    <th>"Active time"</th>
+                    <th>"Add tired time"</th>
+                    <th>"Damage"</th>
+                    <th>"Additional information"</th>
+                </tr>
+            </thead>
+            <tbody>
+                {gen_condition_paralyze(false, &monster.condition_damage_data.paralyze_data, monster.condition_damage_data.use_paralyze)}
+                {gen_condition_sleep(false, &monster.condition_damage_data.sleep_data, monster.condition_damage_data.use_sleep)}
+                {gen_condition_stun(false, &monster.condition_damage_data.stun_data, monster.condition_damage_data.use_stun)}
+                {gen_condition_stamina(false, &monster.condition_damage_data.stamina_data, monster.condition_damage_data.use_stamina)}
+
+                {gen_condition_paralyze(true, monster.condition_damage_data.paralyze_data.or_preset(condition_preset), monster.condition_damage_data.use_paralyze)}
+                {gen_condition_sleep(true, monster.condition_damage_data.sleep_data.or_preset(condition_preset), monster.condition_damage_data.use_sleep)}
+                {gen_condition_stun(true, monster.condition_damage_data.stun_data.or_preset(condition_preset), monster.condition_damage_data.use_stun)}
+                {gen_condition_stamina(true, monster.condition_damage_data.stamina_data.or_preset(condition_preset), monster.condition_damage_data.use_stamina)}
+
+                {gen_condition_flash(false, &monster.condition_damage_data.flash_data, monster.condition_damage_data.use_flash)}
+                {gen_condition_flash(true, monster.condition_damage_data.flash_data.or_preset(condition_preset), monster.condition_damage_data.use_flash)}
+
+                {gen_condition_poison(false, &monster.condition_damage_data.poison_data, monster.condition_damage_data.use_poison)}
+                {gen_condition_blast(false, &monster.condition_damage_data.blast_data, monster.condition_damage_data.use_blast)}
+
+                {gen_condition_poison(true, monster.condition_damage_data.poison_data.or_preset(condition_preset), monster.condition_damage_data.use_poison)}
+                {gen_condition_blast(true, monster.condition_damage_data.blast_data.or_preset(condition_preset), monster.condition_damage_data.use_blast)}
+
+                {gen_condition_ride(&monster.condition_damage_data.marionette_data, monster.condition_damage_data.use_ride)}
+
+                {gen_condition_water(false, &monster.condition_damage_data.water_data, monster.condition_damage_data.use_water)}
+                {gen_condition_fire(false, &monster.condition_damage_data.fire_data, monster.condition_damage_data.use_fire)}
+                {gen_condition_ice(false, &monster.condition_damage_data.ice_data, monster.condition_damage_data.use_ice)}
+                {gen_condition_thunder(false, &monster.condition_damage_data.thunder_data, monster.condition_damage_data.use_thunder)}
+                {gen_condition_fall_trap(false, &monster.condition_damage_data.fall_trap_data, monster.condition_damage_data.use_fall_trap)}
+                {gen_condition_fall_quick_sand(false, &monster.condition_damage_data.fall_quick_sand_data, monster.condition_damage_data.use_fall_quick_sand)}
+                {gen_condition_fall_otomo_trap(false, &monster.condition_damage_data.fall_otomo_trap_data, monster.condition_damage_data.use_fall_otomo_trap)}
+                {gen_condition_shock_trap(false, &monster.condition_damage_data.shock_trap_data, monster.condition_damage_data.use_shock_trap)}
+                {gen_condition_shock_otomo_trap(false, &monster.condition_damage_data.shock_otomo_trap_data, monster.condition_damage_data.use_shock_otomo_trap)}
+                {gen_condition_capture(false, &monster.condition_damage_data.capture_data, monster.condition_damage_data.use_capture)}
+                {gen_condition_dung(false, &monster.condition_damage_data.koyashi_data, monster.condition_damage_data.use_dung)}
+                {gen_condition_steel_fang(false, &monster.condition_damage_data.steel_fang_data, monster.condition_damage_data.use_steel_fang)}
+
+                {gen_condition_water(true, monster.condition_damage_data.water_data.or_preset(condition_preset), monster.condition_damage_data.use_water)}
+                {gen_condition_fire(true, monster.condition_damage_data.fire_data.or_preset(condition_preset), monster.condition_damage_data.use_fire)}
+                {gen_condition_ice(true, monster.condition_damage_data.ice_data.or_preset(condition_preset), monster.condition_damage_data.use_ice)}
+                {gen_condition_thunder(true, monster.condition_damage_data.thunder_data.or_preset(condition_preset), monster.condition_damage_data.use_thunder)}
+                {gen_condition_fall_trap(true, monster.condition_damage_data.fall_trap_data.or_preset(condition_preset), monster.condition_damage_data.use_fall_trap)}
+                {gen_condition_fall_quick_sand(true, monster.condition_damage_data.fall_quick_sand_data.or_preset(condition_preset), monster.condition_damage_data.use_fall_quick_sand)}
+                {gen_condition_fall_otomo_trap(true, monster.condition_damage_data.fall_otomo_trap_data.or_preset(condition_preset), monster.condition_damage_data.use_fall_otomo_trap)}
+                {gen_condition_shock_trap(true, <ShockTrapDamageData as ConditionDamage<PresetShockTrapData>>::or_preset(&monster.condition_damage_data.shock_trap_data, condition_preset), monster.condition_damage_data.use_shock_trap)}
+                {gen_condition_shock_otomo_trap(true, <ShockTrapDamageData as ConditionDamage<PresetShockOtomoTrapData>>::or_preset(&monster.condition_damage_data.shock_trap_data, condition_preset), monster.condition_damage_data.use_shock_otomo_trap)}
+                {gen_condition_capture(true, monster.condition_damage_data.capture_data.or_preset(condition_preset), monster.condition_damage_data.use_capture)}
+                {gen_condition_dung(true, monster.condition_damage_data.koyashi_data.or_preset(condition_preset), monster.condition_damage_data.use_dung)}
+                {gen_condition_steel_fang(true, monster.condition_damage_data.steel_fang_data.or_preset(condition_preset), monster.condition_damage_data.use_steel_fang)}
+            </tbody>
+        </table></div>
+        </section>
+    )});
+
+    if let Some(lot) = gen_lot(monster, monster_em_type, QuestRank::Low, pedia_ex) {
+        sections.push(Section {
+            title: "Low rank reward".to_owned(),
+            content: lot,
+        });
+    }
+
+    if let Some(lot) = gen_lot(monster, monster_em_type, QuestRank::High, pedia_ex) {
+        sections.push(Section {
+            title: "High rank reward".to_owned(),
+            content: lot,
+        });
+    }
+
+    if let Some(lot) = gen_lot(monster, monster_em_type, QuestRank::Master, pedia_ex) {
+        sections.push(Section {
+            title: "Master rank reward".to_owned(),
+            content: lot,
+        });
+    }
+
+    for (index, reward) in monster_ex.mystery_reward.iter().enumerate() {
+        let title = if reward.lv_lower_limit == 0 && reward.lv_upper_limit == 0 {
+            "Anomaly quest reward".to_owned()
+        } else {
+            format!(
+                "Anomaly investigation reward (lv{} ~ lv{})",
+                reward.lv_lower_limit, reward.lv_upper_limit
+            )
+        };
+        let id = format!("s-mystery-reward-{index}");
+
+        sections.push(Section {
+            content: html!(<section id={id.as_str()}>
+                <h2>{ text!("{}", title) }</h2>
+                <div class="mh-reward-tables">
+                <div class="mh-reward-box"><div class="mh-table"><table>
+                    <thead><tr>
+                        <th>"Carve & part break"</th>
+                        <th>"Probability"</th>
+                    </tr></thead>
+                    <tbody> {
+                        gen_reward_table(pedia_ex,
+                            &[reward.reward_item],
+                            &[reward.item_num],
+                            &[reward.hagibui_probability])
+                    } </tbody>
+                </table></div></div>
+                {reward.quest_reward.map(|r| html!(
+                    <div class="mh-reward-box"><div class="mh-table"><table>
+                        <thead><tr>
+                            <th>"Quest rewards"<br/>
+                            {translate_rule(r.lot_rule)}</th>
+                            <th>"Probability"</th>
+                        </tr></thead>
+                        <tbody> {
+                            gen_reward_table(pedia_ex,
+                                &r.item_id_list,
+                                &r.num_list,
+                                &r.probability_list)
+                        } </tbody>
+                    </table></div></div>
+                ))}
+                {reward.additional_quest_reward.iter().map(|r| html!(
+                    <div class="mh-reward-box"><div class="mh-table"><table>
+                        <thead><tr>
+                            <th>"Additional quest rewards"<br/>
+                            {translate_rule(r.lot_rule)}</th>
+                            <th>"Probability"</th>
+                        </tr></thead>
+                        <tbody> {
+                            gen_reward_table(pedia_ex,
+                                &r.item_id_list,
+                                &r.num_list,
+                                &r.probability_list)
+                        } </tbody>
+                    </table></div></div>
+                ))}
+                {reward.special_quest_reward.map(|r| html!(
+                    <div class="mh-reward-box"><div class="mh-table"><table>
+                        <thead><tr>
+                            <th>"Special quest rewards"<br/>
+                            {translate_rule(r.lot_rule)}</th>
+                            <th>"Probability"</th>
+                        </tr></thead>
+                        <tbody> {
+                            gen_reward_table(pedia_ex,
+                                &r.item_id_list,
+                                &r.num_list,
+                                &r.probability_list)
+                        } </tbody>
+                    </table></div></div>
+                ))}
+                {reward.multiple_target_reward.map(|r| html!(
+                    <div class="mh-reward-box"><div class="mh-table"><table>
+                        <thead><tr>
+                            <th>"Multi-target quest rewards"<br/>
+                            {translate_rule(r.lot_rule)}</th>
+                            <th>"Probability"</th>
+                        </tr></thead>
+                        <tbody> {
+                            gen_reward_table(pedia_ex,
+                                &r.item_id_list,
+                                &r.num_list,
+                                &r.probability_list)
+                        } </tbody>
+                    </table></div></div>
+                ))}
+                {reward.multiple_fix_reward.map(|r| html!(
+                    <div class="mh-reward-box"><div class="mh-table"><table>
+                        <thead><tr>
+                            <th>"Multi-target fixed rewards"<br/>
+                            {translate_rule(r.lot_rule)}</th>
+                            <th>"Probability"</th>
+                        </tr></thead>
+                        <tbody> {
+                            gen_reward_table(pedia_ex,
+                                &r.item_id_list,
+                                &r.num_list,
+                                &r.probability_list)
+                        } </tbody>
+                    </table></div></div>
+                ))}
+                </div>
+            </section>),
+            title,
+        });
+    }
 
     let doc: DOMTree<String> = html!(
         <html>
@@ -981,6 +1624,7 @@ pub fn gen_monster(
             </head>
             <body>
                 { navbar() }
+                { gen_menu(&sections) }
                 <main>
                 <header class="mh-monster-header">
                     <img alt="Monster icon" src=icon />
@@ -992,592 +1636,9 @@ pub fn gen_monster(
                         }
                     }</h1>
                 </header>
-                <section>
-                <h2 >"Description"</h2>
-                { explain1 }
-                { explain2 }
-                </section>
-                <section>
-                <h2 >"Basic data"</h2>
-                <div class="mh-kvlist mh-wide">
-                <p class="mh-kv"><span>"Base HP"</span>
-                    <span>{ text!("(LR/HR) {}, (MR) {}", monster.data_tune.base_hp_vital,
-                    monster.data_tune.master_hp_vital) }</span></p>
-                <p class="mh-kv"><span>"Limping threshold"</span>
-                    <span>{ text!("(village) {}% / (LR) {}% / (HR) {}% / (MR) {}%",
-                    monster.data_tune.dying_village_hp_vital_rate,
-                    monster.data_tune.dying_low_level_hp_vital_rate,
-                    monster.data_tune.dying_high_level_hp_vital_rate,
-                    monster.data_tune.dying_master_class_hp_vital_rate
-                ) }</span></p>
-                <p class="mh-kv"><span>"Capturing threshold"</span>
-                    <span>{ text!("(village) {}% / (LR) {}% / (HR) {}% / (MR) {}%",
-                    monster.data_tune.capture_village_hp_vital_rate,
-                    monster.data_tune.capture_low_level_hp_vital_rate,
-                    monster.data_tune.capture_high_level_hp_vital_rate,
-                    monster.data_tune.capture_master_level_hp_vital_rate
-                ) }</span></p>
-                <p class="mh-kv"><span>"Sleep recovering"</span>
-                    <span>{ text!("{} seconds / recover {}% HP",
-                    monster.data_tune.self_sleep_time,
-                    monster.data_tune.self_sleep_recover_hp_vital_rate
-                ) }</span></p>
-                {size_range.map(|size_range| html!(<p class="mh-kv"><span>"Size"</span>
-                    <span>
-                        {text!("{}", size_range.base_size)}
-                        {(!size_range.no_size_scale).then(||html!(<span>
-                            " ("
-                            <img class="mh-crown-icon" alt="Small crown" src="/resources/small_crown.png" />
-                            {text!("{}, ", size_range.base_size * size_range.small_boarder)}
-                            <img class="mh-crown-icon" alt="Silver large crown" src="/resources/large_crown.png" />
-                            {text!("{}, ", size_range.base_size * size_range.big_boarder)}
-                            <img class="mh-crown-icon" alt="Large crown" src="/resources/king_crown.png" />
-                            {text!("{})", size_range.base_size * size_range.king_boarder)}
-                        </span>))}
-                    </span>
-                </p>))}
-                <p class="mh-kv"><span>"GimmickVital"</span>
-                    <span>{text!("(S) {} / (M) {} / (L) {} / (KB) {}",
-                        monster.data_tune.gimmick_vital_data.vital_s,
-                        monster.data_tune.gimmick_vital_data.vital_m,
-                        monster.data_tune.gimmick_vital_data.vital_l,
-                        monster.data_tune.gimmick_vital_data.vital_knock_back
-                    )}</span>
-                </p>
-                <p class="mh-kv"><span>"Riding HP"</span>
-                    <span>{text!("(S) {} / (M) {} / (L) {}",
-                        monster.data_tune.marionette_vital_data.vital_s,
-                        monster.data_tune.marionette_vital_data.vital_m,
-                        monster.data_tune.marionette_vital_data.vital_l
-                    )}</span>
-                </p>
-                <p class="mh-kv"><span>"Weight"</span>
-                    <span>{text!("{:?}", monster.data_tune.weight)}</span>
-                </p>
-                <p class="mh-kv"><span>"Caution to combat timer"</span>
-                    <span>{text!("{}", monster.data_base.caution_to_combat_vision_timer)}</span>
-                </p>
-                <p class="mh-kv"><span>"Caution to normal timer"</span>
-                    <span>{text!("{}", monster.data_base.caution_to_non_combat_timer)}</span>
-                </p>
-                <p class="mh-kv"><span>"Combat to normal timer"</span>
-                    <span>{text!("{}", monster.data_base.combat_to_non_combat_timer)}</span>
-                </p>
-                <p class="mh-kv"><span>"Enrage threshold"</span>
-                    <span>{text!("(LR) {} / (HR) {} / (Rampage) {} / (MR) {}",
-                        monster.anger_data.data_info[0].val,
-                        monster.anger_data.data_info[1].val,
-                        monster.anger_data.data_info[2].val,
-                        monster.anger_data.data_info[3].val)}</span>
-                </p>
-                <p class="mh-kv"><span>"Enrage timer"</span>
-                    <span>{text!("{}", monster.anger_data.timer)}</span>
-                </p>
-                <p class="mh-kv"><span>"Rampage enrage timer"</span>
-                    <span>{text!("{}", monster.anger_data.hyakuryu_cool_timer)}</span>
-                </p>
-                <p class="mh-kv"><span>"Enrage motion multiplier"</span>
-                    <span>{text!("{}", monster.anger_data.mot_rate)}</span>
-                </p>
-                <p class="mh-kv"><span>"Enrage attack multiplier"</span>
-                    <span>{text!("{}", monster.anger_data.atk_rate)}</span>
-                </p>
-                <p class="mh-kv"><span>"Enrage defense multiplier"</span>
-                    <span>{text!("{}", monster.anger_data.def_rate)}</span>
-                </p>
-                <p class="mh-kv"><span>"Enrage compensation rate"</span>
-                    <span>{text!("{:?}", monster.anger_data.compensation_rate)}</span>
-                </p>
-                <p class="mh-kv"><span>"Enrage compensation rate (rampage)"</span>
-                    <span>{text!("{:?}", monster.anger_data.hyakuryu_compensation_rate)}</span>
-                </p>
-                <p class="mh-kv"><span>"Enrage add staying time"</span>
-                    <span>{text!("{}", monster.anger_data.anger_stay_add_sec)}</span>
-                </p>
-                <p class="mh-kv"><span>"life_area_timer_rate"</span>
-                    <span>{text!("{}", monster.anger_data.life_area_timer_rate)}</span>
-                </p>
-                </div>
-                </section>
 
-                { quest_list }
+                { sections.into_iter().map(|s|s.content) }
 
-                { monster_ex.random_quest.map(|random_quest| {
-                    let diff_table = format!("/quest/anomaly_difficulty_0_{}.html",
-                        random_quest.difficulty_table_type);
-                    let extra_diff_table = format!("/quest/anomaly_difficulty_1_{}.html",
-                    random_quest.difficulty_table_type_extra);
-                    html!(<section>
-                    <h2>"Anomaly investigation"</h2>
-                    <div class="mh-kvlist">
-                    <p class="mh-kv"><span>"Appear at"</span>
-                    {
-                        let rank = (random_quest.mystery_rank.0 != 12).then(||
-                            text!("A{}", random_quest.mystery_rank.0));
-                        let level = (random_quest.release_level != -1).then(||
-                            text!("Lv{}", random_quest.release_level));
-                        let or = (rank.is_some() && level.is_some()).then(||text!(" Or "));
-                        let none = (rank.is_none() && level.is_none()).then(||text!("None"));
-                        html!(<span>{rank}{or}{level}{none}</span>)
-                    }
-                    </p>
-                    <p class="mh-kv"><span>"Appear as sub target at"</span>
-                    {
-                        let rank = (random_quest.normal_rank.0 != 12).then(||
-                            text!("A{}", random_quest.normal_rank.0));
-                        let level = (random_quest.release_level_normal != -1).then(||
-                            text!("Lv{}", random_quest.release_level_normal));
-                        let or = (rank.is_some() && level.is_some()).then(||text!(" Or "));
-                        let none = (rank.is_none() && level.is_none()).then(||text!("None"));
-                        html!(<span>{rank}{or}{level}{none}</span>)
-                    }
-                    </p>
-                    <p class="mh-kv"><span>"Afflicted"</span>
-                        <span>{text!("{}", random_quest.is_mystery)}</span>
-                    </p>
-                    <p class="mh-kv"><span>"Sub target"</span>
-                        <span>{text!("{}", random_quest.is_enable_sub)}</span>
-                    </p>
-                    <p class="mh-kv"><span>"Extra"</span>
-                        <span>{text!("{}", random_quest.is_enable_extra)}</span>
-                    </p>
-                    <p class="mh-kv"><span>"Intrusion"</span>
-                        <span>{text!("{}", random_quest.is_intrusion)}</span>
-                    </p>
-                    <p class="mh-kv"><span>"Stats table as main target"</span>
-                        <span><a href={diff_table.as_str()}>{
-                        text!("Table {}", random_quest.difficulty_table_type)}</a></span>
-                    </p>
-                    <p class="mh-kv"><span>"Stats table as sub target"</span>
-                        <span><a href={extra_diff_table.as_str()}>{
-                        text!("Table {}", random_quest.difficulty_table_type_extra)}</a></span>
-                    </p>
-                    </div>
-
-                    <div class="mh-anomaly-maps"> <h3>"Allowed map"</h3>
-                    <ul class="mh-item-list">{
-                        let mut ids = vec![];
-                        let stages = &random_quest.stage_data;
-                        if stages.is_map_01 { ids.push(1); }
-                        if stages.is_map_02 { ids.push(2); }
-                        if stages.is_map_03 { ids.push(3); }
-                        if stages.is_map_04 { ids.push(4); }
-                        if stages.is_map_05 { ids.push(5); }
-                        if stages.is_map_31 { ids.push(12); }
-                        if stages.is_map_32 { ids.push(13); }
-                        if stages.is_map_09 { ids.push(9); }
-                        if stages.is_map_10 { ids.push(10); }
-                        if stages.is_map_41 { ids.push(14); }
-                        ids.into_iter().map(|id|
-                            html!(<li> {gen_map_label(id, pedia)} </li>)
-                        )
-                    }</ul>
-                    </div>
-                    </section>)
-                })}
-
-                <section>
-                <h2 >"Hitzone data"</h2>
-                <div class="mh-color-diagram">
-                    <img id="mh-hitzone-img" alt="Monster hitzone diagram" src=meat_figure />
-                    <canvas id="mh-hitzone-canvas" width=1 height=1 />
-                </div>
-                <div>
-                    <input type="checkbox" id="mh-invalid-meat-check"/>
-                    <label for="mh-invalid-meat-check">"Display invalid parts"</label>
-                </div>
-                <div class="mh-table"><table>
-                    <thead>
-                    <tr>
-                        <th>"Hitzone"</th>
-                        <th>"Phase"</th>
-                        <th>"Name"</th>
-                        <th>"Slash"</th>
-                        <th>"Impact"</th>
-                        <th>"Shot"</th>
-                        <th>"Fire"</th>
-                        <th>"Water"</th>
-                        <th>"Ice"</th>
-                        <th>"Thunder"</th>
-                        <th>"Dragon"</th>
-                        <th>"Dizzy"</th>
-                    </tr>
-                    </thead>
-                    {
-                        monster.meat_data.meat_container.iter()
-                            .enumerate().map(|(part, meats)| {
-
-                            let part_name = if let Some(names) = collider_mapping.meat_map.get(&part) {
-                                names.iter().map(|s|s.as_str()).collect::<Vec<&str>>().join(", ")
-                            } else {
-                                format!("{}", part)
-                            };
-
-                            let part_color = format!("mh-part mh-part-{}", part);
-
-                            let span = meats.meat_group_info.len();
-                            let mut part_common: Option<Vec<Box<td<String>>>> = Some(vec![
-                                html!(<td rowspan={span}>
-                                    <span class=part_color.as_str()/>
-                                    { text!("{}", part_name) }
-                                </td>),
-                            ]);
-
-                            let invalid = meats.meat_group_info == [
-                                MeatGroupInfo {
-                                    slash: 0,
-                                    strike: 0,
-                                    shell: 0,
-                                    fire: 0,
-                                    water: 0,
-                                    ice: 0,
-                                    elect: 0,
-                                    dragon: 0,
-                                    piyo: 0,
-                                }
-                            ];
-
-                            let hidden = if invalid {
-                                "mh-invalid-meat"
-                            } else {
-                                ""
-                            };
-
-                            let id = format!("mh-hitzone-dt-{part}");
-
-                            html!(<tbody id={id.as_str()} class="mh-color-diagram-switch"
-                                data-color={ PART_COLORS[part] } data-diagram="mh-hitzone"> {
-
-                                meats.meat_group_info.iter().enumerate()
-                                .map(move |(phase, group_info)| {
-                                    let names = pedia_ex.meat_names.get(&MeatKey {
-                                        em_type: monster_em_type,
-                                        part,
-                                        phase
-                                    }).map(|v|v.as_slice()).unwrap_or_default();
-
-                                    let mut tds = part_common.take().unwrap_or_default();
-
-                                    let phase_text = if let Some(phase_text) = SPECIFIC_MEAT_TYPE_MAP
-                                        .get(&(monster.id, part)).copied().and_then(|m|m.get(phase)) {
-
-                                        phase_text.to_string()
-                                    } else if let Some(phase_text) =
-                                        phase_map.and_then(|m|m.get(phase)) {
-
-                                        phase_text.to_string()
-                                    } else {
-                                        format!("{}", phase)
-                                    };
-
-                                    tds.extend(vec![
-                                        html!(<td>{text!("{}", phase_text)}</td>),
-                                        html!(<td>{
-                                            names.iter().enumerate().map(|(i, n)| html!(<span>
-                                                { text!("{}", if i == 0 {""} else {", "}) }
-                                                { gen_multi_lang(n) }
-                                            </span>))
-                                        }</td>),
-                                        html!(<td>{text!("{}", group_info.slash)}</td>),
-                                        html!(<td>{text!("{}", group_info.strike)}</td>),
-                                        html!(<td>{text!("{}", group_info.shell)}</td>),
-                                        html!(<td>{text!("{}", group_info.fire)}</td>),
-                                        html!(<td>{text!("{}", group_info.water)}</td>),
-                                        html!(<td>{text!("{}", group_info.ice)}</td>),
-                                        html!(<td>{text!("{}", group_info.elect)}</td>),
-                                        html!(<td>{text!("{}", group_info.dragon)}</td>),
-                                        html!(<td>{text!("{}", group_info.piyo)}</td>),
-                                    ]);
-                                    html!(<tr class=hidden> {tds} </tr>)
-                                })
-                            } </tbody>)
-                        })
-                    }
-                </table></div>
-                </section>
-                <section>
-                <h2 >
-                    "Parts"
-                </h2>
-                <div class="mh-color-diagram">
-                    <img id="mh-part-img" alt="Monster parts diagram" src=parts_group_figure />
-                    <canvas id="mh-part-canvas" width=1 height=1 />
-                </div>
-                <div>
-                    <input type="checkbox" id="mh-invalid-part-check"/>
-                    <label for="mh-invalid-part-check">"Display invalid parts"</label>
-                </div>
-                <div class="mh-table"><table>
-                    <thead>
-                        <tr>
-                            <th>"Part"</th>
-                            <th>"Stagger"</th>
-                            <th>"Break"</th>
-                            <th>"Sever"</th>
-                            <th>"Extract"</th>
-                        </tr>
-                    </thead>
-                    <tbody>{
-                        monster.data_tune.enemy_parts_data.iter().enumerate().map(|(index, part)| {
-                            let part_name = if let Some(names) = collider_mapping.part_map.get(&index) {
-                                names.iter().map(|s|s.as_str()).collect::<Vec<&str>>().join(", ")
-                            } else {
-                                format!("{}", index)
-                            };
-
-                            let part_color = format!("mh-part-group mh-part-{}", index);
-
-                            let class_str = if part.extractive_type == ExtractiveType::None {
-                                "mh-invalid-part mh-color-diagram-switch"
-                            } else {
-                                "mh-color-diagram-switch"
-                            };
-
-                            let index_u16 = u16::try_from(index);
-
-                            let part_break = enemy_parts_break_data_list.iter()
-                                .filter(|p| Ok(p.parts_group) == index_u16)
-                                .map(|part_break|{
-                                    part_break.parts_break_data_list.iter().map(
-                                        |p| if p.master_vital == -1 {
-                                            format!("(x{}) {}", p.break_level, p.vital)
-                                        } else {
-                                            format!("(x{}) (LR/HR) {}, (MR) {}", p.break_level, p.vital, p.master_vital)
-                                        }
-                                    ).collect::<Vec<_>>().join(" / ")
-                                }).collect::<Vec<_>>().join(" , ");
-
-                            let part_loss = enemy_parts_loss_data_list.iter()
-                                .filter(|p| Ok(p.parts_group) == index_u16)
-                                .map(|part_loss| {
-                                    let attr = match part_loss.parts_loss_data.permit_damage_attr {
-                                        PermitDamageAttrEnum::Slash => "(Slash) ",
-                                        PermitDamageAttrEnum::Strike => "(Impact) ",
-                                        PermitDamageAttrEnum::All => "",
-                                    };
-                                    if part_loss.parts_loss_data.master_vital == -1 {
-                                        format!("{} {}", attr, part_loss.parts_loss_data.vital)
-                                    } else {
-                                        format!("{} (LR/HR) {}, (MR) {}", attr, part_loss.parts_loss_data.vital,
-                                            part_loss.parts_loss_data.master_vital)
-                                    }
-                                }).collect::<Vec<_>>().join(" , ");
-
-                            let id = format!("mh-part-dt-{index}");
-
-                            html!(<tr id = {id.as_str()} class=class_str data-color={ PART_COLORS[index] }
-                                data-diagram="mh-part">
-                                <td>
-                                    <span class=part_color.as_str()/>
-                                    { text!("[{}]", index) }
-                                    { text!("{}", part_name) }
-                                </td>
-                                <td>{ if part.master_vital == -1 {
-                                    text!("{}", part.vital)
-                                } else {
-                                    text!("(LR/HR) {}, (MR) {}", part.vital, part.master_vital)
-                                }}</td>
-                                <td>{ text!("{}", part_break) }</td>
-                                <td>{ text!("{}", part_loss) }</td>
-                                <td>{ gen_extractive_type(part.extractive_type) }</td>
-                            </tr>)
-                        }).collect::<Vec<_>>()
-                    }</tbody>
-                </table></div>
-                </section>
-
-                <section>
-                <h2>"Multi-part vital"</h2>
-                {
-                    let system = monster.data_tune.enemy_multi_parts_vital_system_data
-                        .iter().enumerate().map(|(i, m)|(true, i, &m.base.0));
-                    let additional = monster.data_tune.enemy_multi_parts_vital_data_list
-                        .iter().enumerate().map(|(i, m)|(false, i, m));
-                    gen_multipart(system.chain(additional))
-                }
-                </section>
-
-                <section>
-                <h2 >
-                    "Abnormal status"
-                </h2>
-                <div>
-                    <input type="checkbox" id="mh-ride-cond-check"/>
-                    <label for="mh-ride-cond-check">"Display data for riding"</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="mh-preset-check"/>
-                    <label for="mh-preset-check">"Don't override with preset data"</label>
-                </div>
-                <div class="mh-table"><table>
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>"Threshold"</th>
-                            <th>"Decay"</th>
-                            <th>"Max stock"</th>
-                            <th>"Active time"</th>
-                            <th>"Add tired time"</th>
-                            <th>"Damage"</th>
-                            <th>"Additional information"</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {gen_condition_paralyze(false, &monster.condition_damage_data.paralyze_data, monster.condition_damage_data.use_paralyze)}
-                        {gen_condition_sleep(false, &monster.condition_damage_data.sleep_data, monster.condition_damage_data.use_sleep)}
-                        {gen_condition_stun(false, &monster.condition_damage_data.stun_data, monster.condition_damage_data.use_stun)}
-                        {gen_condition_stamina(false, &monster.condition_damage_data.stamina_data, monster.condition_damage_data.use_stamina)}
-
-                        {gen_condition_paralyze(true, monster.condition_damage_data.paralyze_data.or_preset(condition_preset), monster.condition_damage_data.use_paralyze)}
-                        {gen_condition_sleep(true, monster.condition_damage_data.sleep_data.or_preset(condition_preset), monster.condition_damage_data.use_sleep)}
-                        {gen_condition_stun(true, monster.condition_damage_data.stun_data.or_preset(condition_preset), monster.condition_damage_data.use_stun)}
-                        {gen_condition_stamina(true, monster.condition_damage_data.stamina_data.or_preset(condition_preset), monster.condition_damage_data.use_stamina)}
-
-                        {gen_condition_flash(false, &monster.condition_damage_data.flash_data, monster.condition_damage_data.use_flash)}
-                        {gen_condition_flash(true, monster.condition_damage_data.flash_data.or_preset(condition_preset), monster.condition_damage_data.use_flash)}
-
-                        {gen_condition_poison(false, &monster.condition_damage_data.poison_data, monster.condition_damage_data.use_poison)}
-                        {gen_condition_blast(false, &monster.condition_damage_data.blast_data, monster.condition_damage_data.use_blast)}
-
-                        {gen_condition_poison(true, monster.condition_damage_data.poison_data.or_preset(condition_preset), monster.condition_damage_data.use_poison)}
-                        {gen_condition_blast(true, monster.condition_damage_data.blast_data.or_preset(condition_preset), monster.condition_damage_data.use_blast)}
-
-                        {gen_condition_ride(&monster.condition_damage_data.marionette_data, monster.condition_damage_data.use_ride)}
-
-                        {gen_condition_water(false, &monster.condition_damage_data.water_data, monster.condition_damage_data.use_water)}
-                        {gen_condition_fire(false, &monster.condition_damage_data.fire_data, monster.condition_damage_data.use_fire)}
-                        {gen_condition_ice(false, &monster.condition_damage_data.ice_data, monster.condition_damage_data.use_ice)}
-                        {gen_condition_thunder(false, &monster.condition_damage_data.thunder_data, monster.condition_damage_data.use_thunder)}
-                        {gen_condition_fall_trap(false, &monster.condition_damage_data.fall_trap_data, monster.condition_damage_data.use_fall_trap)}
-                        {gen_condition_fall_quick_sand(false, &monster.condition_damage_data.fall_quick_sand_data, monster.condition_damage_data.use_fall_quick_sand)}
-                        {gen_condition_fall_otomo_trap(false, &monster.condition_damage_data.fall_otomo_trap_data, monster.condition_damage_data.use_fall_otomo_trap)}
-                        {gen_condition_shock_trap(false, &monster.condition_damage_data.shock_trap_data, monster.condition_damage_data.use_shock_trap)}
-                        {gen_condition_shock_otomo_trap(false, &monster.condition_damage_data.shock_otomo_trap_data, monster.condition_damage_data.use_shock_otomo_trap)}
-                        {gen_condition_capture(false, &monster.condition_damage_data.capture_data, monster.condition_damage_data.use_capture)}
-                        {gen_condition_dung(false, &monster.condition_damage_data.koyashi_data, monster.condition_damage_data.use_dung)}
-                        {gen_condition_steel_fang(false, &monster.condition_damage_data.steel_fang_data, monster.condition_damage_data.use_steel_fang)}
-
-                        {gen_condition_water(true, monster.condition_damage_data.water_data.or_preset(condition_preset), monster.condition_damage_data.use_water)}
-                        {gen_condition_fire(true, monster.condition_damage_data.fire_data.or_preset(condition_preset), monster.condition_damage_data.use_fire)}
-                        {gen_condition_ice(true, monster.condition_damage_data.ice_data.or_preset(condition_preset), monster.condition_damage_data.use_ice)}
-                        {gen_condition_thunder(true, monster.condition_damage_data.thunder_data.or_preset(condition_preset), monster.condition_damage_data.use_thunder)}
-                        {gen_condition_fall_trap(true, monster.condition_damage_data.fall_trap_data.or_preset(condition_preset), monster.condition_damage_data.use_fall_trap)}
-                        {gen_condition_fall_quick_sand(true, monster.condition_damage_data.fall_quick_sand_data.or_preset(condition_preset), monster.condition_damage_data.use_fall_quick_sand)}
-                        {gen_condition_fall_otomo_trap(true, monster.condition_damage_data.fall_otomo_trap_data.or_preset(condition_preset), monster.condition_damage_data.use_fall_otomo_trap)}
-                        {gen_condition_shock_trap(true, <ShockTrapDamageData as ConditionDamage<PresetShockTrapData>>::or_preset(&monster.condition_damage_data.shock_trap_data, condition_preset), monster.condition_damage_data.use_shock_trap)}
-                        {gen_condition_shock_otomo_trap(true, <ShockTrapDamageData as ConditionDamage<PresetShockOtomoTrapData>>::or_preset(&monster.condition_damage_data.shock_trap_data, condition_preset), monster.condition_damage_data.use_shock_otomo_trap)}
-                        {gen_condition_capture(true, monster.condition_damage_data.capture_data.or_preset(condition_preset), monster.condition_damage_data.use_capture)}
-                        {gen_condition_dung(true, monster.condition_damage_data.koyashi_data.or_preset(condition_preset), monster.condition_damage_data.use_dung)}
-                        {gen_condition_steel_fang(true, monster.condition_damage_data.steel_fang_data.or_preset(condition_preset), monster.condition_damage_data.use_steel_fang)}
-                    </tbody>
-                </table></div>
-                </section>
-
-                {gen_lot(monster, monster_em_type, QuestRank::Low, pedia_ex)}
-                {gen_lot(monster, monster_em_type, QuestRank::High, pedia_ex)}
-                {gen_lot(monster, monster_em_type, QuestRank::Master, pedia_ex)}
-
-                {monster_ex.mystery_reward.iter().map(|reward| {
-                    html!(<section>
-                        <h2>{
-                            if reward.lv_lower_limit == 0 && reward.lv_upper_limit == 0 {
-                                text!("Anomaly quest reward")
-                            } else {
-                                text!("Anomaly investigation reward (lv{} ~ lv{})",
-                                    reward.lv_lower_limit, reward.lv_upper_limit)
-                            }
-                        }</h2>
-                        <div class="mh-reward-tables">
-                        <div class="mh-reward-box"><div class="mh-table"><table>
-                            <thead><tr>
-                                <th>"Carve & part break"</th>
-                                <th>"Probability"</th>
-                            </tr></thead>
-                            <tbody> {
-                                gen_reward_table(pedia_ex,
-                                    &[reward.reward_item],
-                                    &[reward.item_num],
-                                    &[reward.hagibui_probability])
-                            } </tbody>
-                        </table></div></div>
-                        {reward.quest_reward.map(|r| html!(
-                            <div class="mh-reward-box"><div class="mh-table"><table>
-                                <thead><tr>
-                                    <th>"Quest rewards"<br/>
-                                    {translate_rule(r.lot_rule)}</th>
-                                    <th>"Probability"</th>
-                                </tr></thead>
-                                <tbody> {
-                                    gen_reward_table(pedia_ex,
-                                        &r.item_id_list,
-                                        &r.num_list,
-                                        &r.probability_list)
-                                } </tbody>
-                            </table></div></div>
-                        ))}
-                        {reward.additional_quest_reward.iter().map(|r| html!(
-                            <div class="mh-reward-box"><div class="mh-table"><table>
-                                <thead><tr>
-                                    <th>"Additional quest rewards"<br/>
-                                    {translate_rule(r.lot_rule)}</th>
-                                    <th>"Probability"</th>
-                                </tr></thead>
-                                <tbody> {
-                                    gen_reward_table(pedia_ex,
-                                        &r.item_id_list,
-                                        &r.num_list,
-                                        &r.probability_list)
-                                } </tbody>
-                            </table></div></div>
-                        ))}
-                        {reward.special_quest_reward.map(|r| html!(
-                            <div class="mh-reward-box"><div class="mh-table"><table>
-                                <thead><tr>
-                                    <th>"Special quest rewards"<br/>
-                                    {translate_rule(r.lot_rule)}</th>
-                                    <th>"Probability"</th>
-                                </tr></thead>
-                                <tbody> {
-                                    gen_reward_table(pedia_ex,
-                                        &r.item_id_list,
-                                        &r.num_list,
-                                        &r.probability_list)
-                                } </tbody>
-                            </table></div></div>
-                        ))}
-                        {reward.multiple_target_reward.map(|r| html!(
-                            <div class="mh-reward-box"><div class="mh-table"><table>
-                                <thead><tr>
-                                    <th>"Multi-target quest rewards"<br/>
-                                    {translate_rule(r.lot_rule)}</th>
-                                    <th>"Probability"</th>
-                                </tr></thead>
-                                <tbody> {
-                                    gen_reward_table(pedia_ex,
-                                        &r.item_id_list,
-                                        &r.num_list,
-                                        &r.probability_list)
-                                } </tbody>
-                            </table></div></div>
-                        ))}
-                        {reward.multiple_fix_reward.map(|r| html!(
-                            <div class="mh-reward-box"><div class="mh-table"><table>
-                                <thead><tr>
-                                    <th>"Multi-target fixed rewards"<br/>
-                                    {translate_rule(r.lot_rule)}</th>
-                                    <th>"Probability"</th>
-                                </tr></thead>
-                                <tbody> {
-                                    gen_reward_table(pedia_ex,
-                                        &r.item_id_list,
-                                        &r.num_list,
-                                        &r.probability_list)
-                                } </tbody>
-                            </table></div></div>
-                        ))}
-                        </div>
-                    </section>)
-                })}
                 </main>
             </body>
         </html>

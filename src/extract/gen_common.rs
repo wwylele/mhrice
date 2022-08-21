@@ -1,4 +1,28 @@
-use typed_html::{elements::*, html};
+use typed_html::{elements::*, html, text};
+
+pub struct Section {
+    pub title: String,
+    pub content: Box<section<String>>,
+}
+
+pub fn gen_menu(sections: &[Section]) -> Box<aside<String>> {
+    html!(<aside id="left-aside">
+    <div id="left-aside-button"/>
+    <div id="side-menu">
+    <p class="menu-label">
+        "On this page"
+    </p>
+    <ul class="menu-list">
+        {sections.iter().map(|s| {
+            let href = format!("#{}", s.content.attrs.id.as_ref().unwrap());
+            html!(<li><a href={href.as_str()} class="left-aside-item">
+                {text!("{}", s.title)}
+            </a></li>)
+        })}
+    </ul>
+    </div>
+    </aside>)
+}
 
 pub fn gen_slot(decorations_num_list: &[u32], is_rampage_slot: bool) -> Box<span<String>> {
     let mut slot_list = vec![];

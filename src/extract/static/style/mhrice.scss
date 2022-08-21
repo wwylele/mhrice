@@ -2,11 +2,11 @@
 
 @import "bulma/sass/utilities/_all";
 @import "bulma/sass/base/_all.sass";
+@import "bulma/sass/components/menu.sass";
 @import "bulma/sass/components/message.sass";
 @import "bulma/sass/components/navbar.sass";
 @import "bulma/sass/components/tabs.sass";
 @import "bulma/sass/elements/button.sass";
-@import "bulma/sass/elements/container.sass";
 @import "bulma/sass/elements/content.sass";
 @import "bulma/sass/elements/icon.sass";
 @import "bulma/sass/elements/tag.sass";
@@ -17,6 +17,11 @@
 $select-background-color: $grey-lightest;
 $active-background-color: hsl(40, 84%, 90%);
 
+$sidebar-width: 200px;
+$sidebar-hide-threshold: 1500px;
+$sidebar-button-width: 20px;
+$sidebar-button-height: 60px;
+
 /** Page layout **/
 div.mh-logo-text {
     font-weight: bold;
@@ -24,11 +29,30 @@ div.mh-logo-text {
     margin-right: 1em;
 }
 
+.lr-padded {
+    margin: 0 auto;
+    position: relative;
+    width: 100%;
+
+    @media(min-width: $sidebar-hide-threshold) {
+        padding-left: $sidebar-width;
+        padding-right: $sidebar-width;
+    }
+
+}
+
 nav {
     @extend .navbar, .is-primary;
 
     >div {
-        @extend .container;
+        @extend .lr-padded;
+        display: block;
+
+        @include from($navbar-breakpoint) {
+            display: flex;
+            align-items: stretch;
+            flex-grow: 1;
+        }
     }
 
     .navbar-folded {
@@ -44,8 +68,74 @@ nav {
     }
 }
 
+#left-aside {
+    height: calc(100% - 3.25rem);
+    width: 0;
+    position: fixed;
+    top: 3.25rem;
+    left: 0;
+    z-index: 100;
+    padding-top: 20px;
+    border-radius: 0 5px 5px 0;
+    border: solid grey 1px;
+    border-left-width: 0;
+    box-shadow: 3px 3px 5px darkgray;
+    background-color: white;
+
+    @media(min-width: $sidebar-hide-threshold) {
+        width: Min($sidebar-width, calc(100% - #{$sidebar-button-width}));
+    }
+
+    &.is-active {
+        width: Min($sidebar-width, calc(100% - #{$sidebar-button-width}));
+
+        #left-aside-button:after {
+            content: "<";
+        }
+    }
+
+    #left-aside-button {
+        position: absolute;
+        left: 100%;
+        top: calc(50% - #{$sidebar-button-height} / 2);
+        width: $sidebar-button-width;
+        height: $sidebar-button-height;
+        background-color: white;
+        border-radius: 0 5px 5px 0;
+        border: solid grey 1px;
+        border-left-width: 0;
+        box-shadow: 3px 3px 5px darkgray;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        cursor: pointer;
+
+        &:after {
+            content: ">";
+        }
+
+        &:hover {
+            background-color: #DDDDDD;
+        }
+
+        @media(min-width: $sidebar-hide-threshold) {
+            display: none;
+        }
+    }
+
+    #side-menu {
+        @extend .menu;
+        overflow-x: hidden;
+        overflow-y: auto;
+        height: 100%
+    }
+}
+
 main {
-    @extend .content, .container;
+    @extend .content, .lr-padded;
+    margin-left: 20px;
+    margin-right: 20px;
 
     >header {
         display: flex;
