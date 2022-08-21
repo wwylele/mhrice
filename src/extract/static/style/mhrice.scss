@@ -44,6 +44,10 @@ div.mh-logo-text {
 nav {
     @extend .navbar, .is-primary;
 
+    position: sticky;
+    top: 0;
+    left: 0;
+
     >div {
         @extend .lr-padded;
         display: block;
@@ -126,10 +130,9 @@ aside {
 
 #left-aside {
     left: 0;
-    border-radius: 0 5px 5px 0;
-    border: solid grey 1px;
-    border-left-width: 0;
-    box-shadow: 2px 2px 3px lightgray;
+    border: solid grey 0px;
+    border-right-width: 1px;
+    box-shadow: 2px 0px 3px lightgray;
     background-color: white;
 
     &.is-active {
@@ -152,10 +155,9 @@ aside {
 
 #right-aside {
     right: 0;
-    border-radius: 5px 0 0 5px;
-    border: solid grey 1px;
-    border-right-width: 0;
-    box-shadow: -2px 2px 3px lightgray;
+    border: solid grey 0px;
+    border-left-width: 1px;
+    box-shadow: -2px 0px 3px lightgray;
     background-color: white;
 
     &.is-active {
