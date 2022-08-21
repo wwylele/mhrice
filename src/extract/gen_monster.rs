@@ -1624,6 +1624,7 @@ pub fn gen_monster(
             </head>
             <body>
                 { navbar() }
+                { right_aside() }
                 { gen_menu(&sections) }
                 <main>
                 <header class="mh-monster-header">
@@ -1673,6 +1674,7 @@ pub fn gen_monsters(
             </head>
             <body>
                 { navbar() }
+                { right_aside() }
 
                 <main>
                 <header><h1>"Monsters"</h1></header>

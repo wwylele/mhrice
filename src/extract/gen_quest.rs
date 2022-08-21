@@ -1,3 +1,4 @@
+use super::gen_common::*;
 use super::gen_item::*;
 use super::gen_map::*;
 use super::gen_monster::*;
@@ -103,6 +104,7 @@ pub fn gen_quest_list(quests: &[Quest], output: &impl Sink) -> Result<()> {
             </head>
             <body>
                 { navbar() }
+                { right_aside() }
                 <main>
                 <header><h1>"Quests"</h1></header>
                 {
@@ -483,6 +485,7 @@ fn gen_quest(
             </head>
             <body>
                 { navbar() }
+                { right_aside() }
                 <main>
                 <header>
                     <div class="mh-title-icon">
@@ -961,6 +964,7 @@ pub fn gen_random_mystery_difficulty(
         </head>
         <body>
             { navbar() }
+            { right_aside() }
             <main>
             <header><h1>{
                 let category = match category {

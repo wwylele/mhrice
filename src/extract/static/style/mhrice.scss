@@ -18,9 +18,9 @@ $select-background-color: $grey-lightest;
 $active-background-color: hsl(40, 84%, 90%);
 
 $sidebar-width: 200px;
-$sidebar-hide-threshold: 1500px;
-$sidebar-button-width: 20px;
-$sidebar-button-height: 60px;
+$sidebar-hide-threshold: 1400px;
+$sidebar-button-width: 30px;
+$sidebar-button-height: 50px;
 
 /** Page layout **/
 div.mh-logo-text {
@@ -35,8 +35,8 @@ div.mh-logo-text {
     width: 100%;
 
     @media(min-width: $sidebar-hide-threshold) {
-        padding-left: $sidebar-width;
-        padding-right: $sidebar-width;
+        padding-left: $sidebar-width+10px;
+        padding-right: $sidebar-width+10px;
     }
 
 }
@@ -68,19 +68,13 @@ nav {
     }
 }
 
-#left-aside {
+aside {
     height: calc(100% - 3.25rem);
     width: 0;
-    position: fixed;
     top: 3.25rem;
-    left: 0;
+    position: fixed;
     z-index: 100;
     padding-top: 20px;
-    border-radius: 0 5px 5px 0;
-    border: solid grey 1px;
-    border-left-width: 0;
-    box-shadow: 3px 3px 5px darkgray;
-    background-color: white;
 
     @media(min-width: $sidebar-hide-threshold) {
         width: Min($sidebar-width, calc(100% - #{$sidebar-button-width}));
@@ -88,32 +82,22 @@ nav {
 
     &.is-active {
         width: Min($sidebar-width, calc(100% - #{$sidebar-button-width}));
-
-        #left-aside-button:after {
-            content: "<";
-        }
     }
 
-    #left-aside-button {
+    >.aside-button {
         position: absolute;
-        left: 100%;
-        top: calc(50% - #{$sidebar-button-height} / 2);
+        bottom: 5%;
+        //top: calc(90% - #{$sidebar-button-height});
         width: $sidebar-button-width;
         height: $sidebar-button-height;
         background-color: white;
-        border-radius: 0 5px 5px 0;
         border: solid grey 1px;
-        border-left-width: 0;
-        box-shadow: 3px 3px 5px darkgray;
         display: flex;
         justify-content: center;
         align-items: center;
         font-weight: bold;
+        font-size: larger;
         cursor: pointer;
-
-        &:after {
-            content: ">";
-        }
 
         &:hover {
             background-color: #DDDDDD;
@@ -124,18 +108,76 @@ nav {
         }
     }
 
-    #side-menu {
+    >.side-menu {
         @extend .menu;
         overflow-x: hidden;
         overflow-y: auto;
-        height: 100%
+        height: 100%;
+
+        >.menu-label {
+            padding-left: 0.4rem;
+        }
+    }
+}
+
+#cookie-consent {
+    padding-left: 2rem;
+}
+
+#left-aside {
+    left: 0;
+    border-radius: 0 5px 5px 0;
+    border: solid grey 1px;
+    border-left-width: 0;
+    box-shadow: 2px 2px 3px lightgray;
+    background-color: white;
+
+    &.is-active {
+        #left-aside-button:after {
+            content: "<";
+        }
+    }
+
+    #left-aside-button {
+        left: 100%;
+        border-radius: 0 5px 5px 0;
+        border-left-width: 0;
+        box-shadow: 2px 2px 3px lightgray;
+
+        &:after {
+            content: ">";
+        }
+    }
+}
+
+#right-aside {
+    right: 0;
+    border-radius: 5px 0 0 5px;
+    border: solid grey 1px;
+    border-right-width: 0;
+    box-shadow: -2px 2px 3px lightgray;
+    background-color: white;
+
+    &.is-active {
+        #right-aside-button:after {
+            content: ">";
+        }
+    }
+
+    #right-aside-button {
+        right: 100%;
+        border-radius: 5px 0 0 5px;
+        border-right-width: 0;
+        box-shadow: -2px 2px 3px lightgray;
+
+        &:after {
+            content: "<";
+        }
     }
 }
 
 main {
     @extend .content, .lr-padded;
-    margin-left: 20px;
-    margin-right: 20px;
 
     >header {
         display: flex;

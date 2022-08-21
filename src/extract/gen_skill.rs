@@ -1,4 +1,5 @@
 use super::gen_armor::*;
+use super::gen_common::*;
 use super::gen_item::*;
 use super::gen_website::*;
 use super::pedia::*;
@@ -23,6 +24,7 @@ pub fn gen_skill_list(skills: &BTreeMap<PlEquipSkillId, Skill>, output: &impl Si
             </head>
             <body>
                 { navbar() }
+                { right_aside() }
                 <main>
                 <header><h1>"Armor skills"</h1></header>
 
@@ -171,6 +173,7 @@ pub fn gen_skill(
             </head>
             <body>
                 { navbar() }
+                { right_aside() }
                 <main>
                 <header>
                     <div class="mh-title-icon">

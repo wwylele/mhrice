@@ -40,6 +40,7 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], output: &impl Sink) -> Result<()
             </head>
             <body>
                 { navbar() }
+                { right_aside() }
                 <main>
                 <header><h1>"Armors"</h1></header>
                 <div class="mh-filters"><ul>
@@ -400,6 +401,7 @@ fn gen_armor(
             </head>
             <body>
                 { navbar() }
+                { right_aside() }
                 <main>
                 <header>
                     <div class="mh-title-icon"> {

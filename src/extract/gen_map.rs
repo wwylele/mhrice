@@ -1,3 +1,4 @@
+use super::gen_common::*;
 use super::gen_item::*;
 use super::gen_website::*;
 use super::pedia::*;
@@ -301,6 +302,7 @@ fn gen_map(
             </head>
             <body>
             { navbar() }
+            { right_aside() }
             <main>
 
             <header><h1>{title}</h1></header>
@@ -398,6 +400,7 @@ pub fn gen_map_list(pedia: &Pedia, output: &impl Sink) -> Result<()> {
             </head>
             <body>
                 { navbar() }
+                { right_aside() }
                 <main>
                 <header><h1>"Maps"</h1></header>
                 <ul>

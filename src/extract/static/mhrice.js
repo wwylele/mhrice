@@ -53,6 +53,7 @@ function addEventListensers() {
     addEventListenerToId("navbarBurger", "click", onToggleNavbarMenu);
 
     addEventListenerToId("left-aside-button", "click", onToggleLeftAside);
+    addEventListenerToId("right-aside-button", "click", onToggleRightAside);
     // doesn't work on all platform
     // addEventListenerToClass("left-aside-item", "click", onLeftAsideItem);
 
@@ -101,9 +102,16 @@ function addEventListenerToId(id, event_name, f) {
 }
 
 function onToggleLeftAside() {
-    const left_aside = document.getElementById("left-aside");
-    if (left_aside) {
-        left_aside.classList.toggle("is-active");
+    const aside = document.getElementById("left-aside");
+    if (aside) {
+        aside.classList.toggle("is-active");
+    }
+}
+
+function onToggleRightAside() {
+    const aside = document.getElementById("right-aside");
+    if (aside) {
+        aside.classList.toggle("is-active");
     }
 }
 

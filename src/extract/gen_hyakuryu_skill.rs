@@ -1,3 +1,4 @@
+use super::gen_common::*;
 use super::gen_item::*;
 use super::gen_weapon::*;
 use super::gen_website::*;
@@ -38,6 +39,7 @@ pub fn gen_hyakuryu_skill_list(
             </head>
             <body>
                 { navbar() }
+                { right_aside() }
                 <main>
                 <header><h1>"Rampage skills"</h1></header>
 
@@ -190,6 +192,7 @@ pub fn gen_hyakuryu_skill(
             </head>
             <body>
                 { navbar() }
+                { right_aside() }
                 <main>
                 <header>
                     <div class="mh-title-icon">

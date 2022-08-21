@@ -1,4 +1,5 @@
 use super::gen_armor::*;
+use super::gen_common::*;
 use super::gen_hyakuryu_skill::*;
 use super::gen_map::*;
 use super::gen_monster::*;
@@ -643,6 +644,7 @@ pub fn gen_item(
             </head>
             <body>
                 { navbar() }
+                { right_aside() }
                 <main>
                 <header>
                     <div class="mh-title-icon">
@@ -736,6 +738,7 @@ pub fn gen_item_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
             </head>
             <body>
                 { navbar() }
+                { right_aside() }
                 <main>
                 <header><h1>"Item"</h1></header>
                 <div class="mh-filters"><ul>

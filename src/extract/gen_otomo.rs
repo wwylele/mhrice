@@ -1,3 +1,4 @@
+use super::gen_common::*;
 use super::gen_item::*;
 use super::gen_website::*;
 use super::pedia::*;
@@ -82,6 +83,7 @@ fn gen_otomo_equip(
         </head>
         <body>
             { navbar() }
+            { right_aside() }
             <main>
             <header>
                 <div class="mh-title-icon">
@@ -242,6 +244,7 @@ pub fn gen_otomo_equip_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Resul
                 </head>
                 <body>
                     { navbar() }
+                    { right_aside() }
                     <main>
                     <header><h1>{text!("{}", title)}</h1></header>
                     { interlink }

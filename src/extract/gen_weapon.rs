@@ -391,6 +391,7 @@ where
             </head>
             <body>
                 { navbar() }
+                { right_aside() }
                 <main>
                 <header>
                     <div class="mh-title-icon">
@@ -658,6 +659,7 @@ where
             </head>
             <body>
                 { navbar() }
+                { right_aside() }
                 <main>
                 <header><h1> {text!("{}", name)} </h1></header>
                 <div>
@@ -955,6 +957,7 @@ pub fn gen_weapons(
             </head>
             <body>
                 { navbar() }
+                { right_aside() }
                 <main>
                 <header><h1> "Weapons" </h1></header>
                 <ul class="mh-item-list">
