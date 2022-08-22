@@ -234,23 +234,6 @@ where
         </span></p>)
     });
 
-    let horn = horn.map(|horn| {
-        html!(<section>
-        <h2 >"Melody"</h2>
-        <ul> {
-            horn.horn_melody_type_list.iter().map(|id| {
-                html!(<li> {
-                    if let Some(name) = pedia_ex.horn_melody.get(id) {
-                        gen_multi_lang(name)
-                    } else {
-                        html!(<span>{ text!("[{}]", id) }</span>)
-                    }
-                } </li>)
-            })
-        } </ul>
-        </section>)
-    });
-
     struct BowBottleMap {
         name: &'static str,
         power_up: Option<BottlePowerUpTypes>,
@@ -287,26 +270,6 @@ where
         },
     ];
 
-    let bow = bow.map(|bow| {
-        html!(<section>
-        <h2 >"Bottle"</h2>
-        <ul> {
-            BOW_BOTTLE_MAP.iter().enumerate().filter(|&(i,_)| {
-                bow.bow_bottle_equip_flag_list[i]
-            }).map(|(_, bottle)| {
-                let power_up = if let Some(power_up) = bottle.power_up {
-                    bow.bow_bottle_power_up_type_list.contains(&power_up)
-                } else {
-                    false
-                }.then(|| html!(<span class="tag">"Power up"</span>));
-                html!(<li>{ text!("{}", bottle.name) }
-                {power_up}
-                </li>)
-            })
-        } </ul>
-        </section>)
-    });
-
     let more_bullet: HashSet<BulletType> = main
         .hyakuryu_skill_id_list
         .iter()
@@ -329,59 +292,340 @@ where
 
     let rapid = lbg.map_or(&[][..], |lbg| &lbg.rapid_shot_list[..]);
 
-    let bullet = bullet.map(|bullet| {
-        html!(<section>
-        <h2 >"Ammo list"</h2>
-        <div class="mh-table"><table>
-        <thead><tr>
-            <th>"Ammo Type"</th>
-            <th>"Capacity"</th>
-            <th>"Shot Type"</th>
-        </tr></thead>
-        <tbody> {
-            bullet.bullet_equip_flag_list.iter()
-                .zip(bullet.bullet_num_list.iter())
-                .zip(bullet.bullet_type_list.iter())
-                .enumerate()
-                .map(|(bullet_type, ((flag, num), shoot_type))|
-                    (BulletType::from_raw(bullet_type as u32).unwrap(), *flag, *num, *shoot_type)
-                )
-                .filter(|(bullet_type, flag, _, _)|*flag || more_bullet.contains(bullet_type))
-                .map(|(bullet_type, flag, num, shoot_type)| {
-                    let class = if flag {
-                        ""
-                    } else {
-                        "mh-disabled"
-                    };
-                    let mut shoot_types = vec![];
-                    let shoot_type = shoot_type.to_flags();
-                    if shoot_type.moving_shot {
-                        shoot_types.push("Moving shot")
-                    }
-                    if shoot_type.moving_reload {
-                        shoot_types.push("Moving reload")
-                    }
-                    if shoot_type.single_auto {
-                        shoot_types.push("Single shot auto reload")
-                    }
-                    if rapid.contains(&bullet_type) {
-                        shoot_types.push("Rapid shot")
-                    }
-                    let shoot_types = shoot_types.join(", ");
-                    html!(<tr class={class}>
-                        <td>{ text!("{}", display_bullet_type(bullet_type)) }</td>
-                        <td>{ text!("{}", num) }</td>
-                        <td>{ text!("{}", shoot_types) }</td>
-                    </tr>)
-                })
-        }
-        { lbg.map(|lbg| {
-            html!(<tr><td>{ text!("{}", display_bullet_type(lbg.unique_bullet)) }</td></tr>)
-        }) }
-        </tbody>
-        </table></div>
-        </section>)
+    let mut sections = vec![];
+
+    sections.push(Section {
+        title: "Description".to_owned(),
+        content: html!(
+            <section id="s-description"><pre>
+            {weapon.explain.as_ref().map(|e|gen_multi_lang(e))}
+            </pre></section>
+        ),
     });
+
+    sections.push(Section {
+        title: "Stat".to_owned(),
+        content: html!(<section id="s-stat">
+        <h2 >"Stat"</h2>
+        <div class="mh-kvlist">
+        <p class="mh-kv"><span>"Attack"</span>
+        <span>{text!("{}", main.atk)}</span></p>
+        <p class="mh-kv"><span>"Affinity"</span>
+        <span>{text!("{}%", main.critical_rate)}</span></p>
+        <p class="mh-kv"><span>"Defense"</span>
+        <span>{text!("{}", main.def_bonus)}</span></p>
+        <p class="mh-kv"><span>"Slot"</span>
+        <span>{gen_slot(&main.slot_num_list, false)}</span></p>
+        <p class="mh-kv"><span>"Rampage Slot"</span>
+        <span>{gen_slot(&main.hyakuryu_slot_num_list, true)}</span></p>
+
+        {first_element.map(|first_element| html!(
+            <p class="mh-kv"><span>"Element"</span>
+            <span>
+                <span>{text!("{:?} {}",
+                    first_element.main_element_type,
+                    first_element.main_element_val
+                )}</span>
+                {
+                    second_element.map(|second_element| html!(
+                        <span>{text!(" {:?} {}",
+                            second_element.sub_element_type,
+                            second_element.sub_element_val
+                        )}</span>
+                    ))
+                }
+            </span></p>
+        ))}
+
+        { sharpness }
+
+        { bowgun_param }
+
+        { bow_param }
+
+        { special.map(|special|special(param)).into_iter().flatten() }
+
+        </div>
+        </section>),
+    });
+
+    sections.push(Section {
+        title: "Rampage skills".to_owned(),
+        content: html!(<section id="s-rampage">
+        <h2 >"Rampage skills"</h2>
+        <ul> {
+            let main_list = main.hyakuryu_skill_id_list.iter()
+                .zip(std::iter::repeat(None));
+            let ex_list = weapon.hyakuryu_weapon_buildup.iter()
+                .flat_map(|(&slot_type, param)| {
+                    param.buildup_id_list.iter().zip(std::iter::repeat(Some(slot_type)))
+                });
+
+            main_list.chain(ex_list)
+            .filter(|(&skill, _)|skill != PlHyakuryuSkillId::None)
+            .map(|(skill, slot_type)|{
+                let hyakuryu_tag = slot_type.map(|s|html!(
+                    <span class="tag">{text!("Slot {}", s)}</span>
+                ));
+                if let Some(skill) = pedia_ex.hyakuryu_skills.get(skill) {
+                    html!(<li> {
+                        gen_hyakuryu_skill_label(skill)
+                    } {hyakuryu_tag} </li>)
+                } else {
+                    html!(<li>{ text!("Unknown {:?}", skill) }</li>)
+                }
+            })
+        } </ul>
+        </section>),
+    });
+
+    if let Some(horn) = horn {
+        sections.push(Section {
+            title: "Melody".to_owned(),
+            content: html!(<section id="s-melody">
+            <h2 >"Melody"</h2>
+            <ul> {
+                horn.horn_melody_type_list.iter().map(|id| {
+                    html!(<li> {
+                        if let Some(name) = pedia_ex.horn_melody.get(id) {
+                            gen_multi_lang(name)
+                        } else {
+                            html!(<span>{ text!("[{}]", id) }</span>)
+                        }
+                    } </li>)
+                })
+            } </ul>
+            </section>),
+        })
+    }
+
+    if let Some(bullet) = bullet {
+        sections.push(Section {
+            title: "Ammo list".to_owned(),
+            content: html!(<section id="s-ammo">
+            <h2 >"Ammo list"</h2>
+            <div class="mh-table"><table>
+            <thead><tr>
+                <th>"Ammo Type"</th>
+                <th>"Capacity"</th>
+                <th>"Shot Type"</th>
+            </tr></thead>
+            <tbody> {
+                bullet.bullet_equip_flag_list.iter()
+                    .zip(bullet.bullet_num_list.iter())
+                    .zip(bullet.bullet_type_list.iter())
+                    .enumerate()
+                    .map(|(bullet_type, ((flag, num), shoot_type))|
+                        (BulletType::from_raw(bullet_type as u32).unwrap(), *flag, *num, *shoot_type)
+                    )
+                    .filter(|(bullet_type, flag, _, _)|*flag || more_bullet.contains(bullet_type))
+                    .map(|(bullet_type, flag, num, shoot_type)| {
+                        let class = if flag {
+                            ""
+                        } else {
+                            "mh-disabled"
+                        };
+                        let mut shoot_types = vec![];
+                        let shoot_type = shoot_type.to_flags();
+                        if shoot_type.moving_shot {
+                            shoot_types.push("Moving shot")
+                        }
+                        if shoot_type.moving_reload {
+                            shoot_types.push("Moving reload")
+                        }
+                        if shoot_type.single_auto {
+                            shoot_types.push("Single shot auto reload")
+                        }
+                        if rapid.contains(&bullet_type) {
+                            shoot_types.push("Rapid shot")
+                        }
+                        let shoot_types = shoot_types.join(", ");
+                        html!(<tr class={class}>
+                            <td>{ text!("{}", display_bullet_type(bullet_type)) }</td>
+                            <td>{ text!("{}", num) }</td>
+                            <td>{ text!("{}", shoot_types) }</td>
+                        </tr>)
+                    })
+            }
+            { lbg.map(|lbg| {
+                html!(<tr><td>{ text!("{}", display_bullet_type(lbg.unique_bullet)) }</td></tr>)
+            }) }
+            </tbody>
+            </table></div>
+            </section>),
+        })
+    }
+
+    if let Some(bow) = bow {
+        sections.push(Section {
+            title: "Bottle".to_owned(),
+            content: html!(<section id="s-bottle">
+            <h2 >"Bottle"</h2>
+            <ul> {
+                BOW_BOTTLE_MAP.iter().enumerate().filter(|&(i,_)| {
+                    bow.bow_bottle_equip_flag_list[i]
+                }).map(|(_, bottle)| {
+                    let power_up = if let Some(power_up) = bottle.power_up {
+                        bow.bow_bottle_power_up_type_list.contains(&power_up)
+                    } else {
+                        false
+                    }.then(|| html!(<span class="tag">"Power up"</span>));
+                    html!(<li>{ text!("{}", bottle.name) }
+                    {power_up}
+                    </li>)
+                })
+            } </ul>
+            </section>),
+        })
+    };
+
+    sections.push(Section {
+        title: "Crafting".to_owned(),
+        content: html!(<section id="s-bottle">
+        <h2 >"Crafting"</h2>
+        { weapon.update.map(|update| {
+            html!(<p>{text!("Unlock at: {} {} {}",
+                update.village_progress.display().unwrap_or_default(),
+                update.hall_progress.display().unwrap_or_default(),
+                update.mr_progress.display().unwrap_or_default())}</p>)
+        }) }
+        <div class="mh-table"><table>
+            <thead><tr>
+                <th>""</th>
+                <th>"Cost"</th>
+                <th>"Categorized Material"</th>
+                <th>"Material"</th>
+                <th>"Output"</th>
+            </tr></thead>
+            <tbody>
+                { (main.base.buy_val != 0).then(|| {
+                    html!(<tr>
+                        <td>"Buy"</td>
+                        <td>{text!("{}z", main.base.buy_val)}</td>
+                        <td/><td/><td/>
+                    </tr>)
+                })}
+                {weapon.product.as_ref().map(|product| {
+                    gen_craft_row(pedia_ex, html!(<td>"Forge"</td>), Some(main.base.base_val * 3 / 2),
+                        &product.base, Some((&product.output_item, &product.output_item_num)))
+                })}
+                {weapon.process.as_ref().map(|process| {
+                    let label = if let Some(parent) = weapon.parent {
+                        let parent = weapon_tree.weapons.get(&parent).unwrap();
+                        html!(<td>"Upgrade from " {gen_weapon_label(parent)}</td>)
+                    } else {
+                        html!(<td>"Upgrade from unknown"</td>)
+                    };
+
+                    gen_craft_row(pedia_ex, label, Some(main.base.base_val),
+                        &process.base, Some((&process.output_item, &process.output_item_num)))
+                })}
+                {weapon.change.as_ref().map(|change| {
+                    gen_craft_row(pedia_ex, html!(<td>"As layered"</td>), None,
+                        &change.base, None)
+                })}
+            </tbody>
+        </table></div>
+        </section>
+    )});
+
+    sections.push(Section {
+        title: "Upgrade".to_owned(),
+        content: html!(<section id="s-upgrade">
+            <h2 >"Upgrade"</h2>
+            <ul> {
+                weapon.children.iter().map(|child| {
+                    let weapon = weapon_tree.weapons.get(child).unwrap();
+                    html!(<li>{gen_weapon_label(weapon)}</li>)
+                })
+            } </ul>
+            </section>
+        ),
+    });
+
+    if let (Some(table_no), Some(cost)) = (main.custom_table_no.0, main.custom_cost.0) {
+        if table_no != 0 {
+            let table = pedia_ex.weapon_custom_buildup.get(&table_no);
+            let table = if let Some(table) = table {
+                html!(<div class="mh-table"><table>
+                <thead><tr>
+                <th>"Category"</th>
+                <th>"Level"</th>
+                <th>{text!("Anomaly slots (available: {})", cost)}</th>
+                <th>"Bonus"</th>
+                <th>"Cost"</th>
+                <th>"Categorized Material"</th>
+                <th>"Material"</th>
+                </tr></thead>
+                <tbody>
+                { pedia.custom_buildup_weapon_open.as_ref().and_then(
+                    |m|m.param.iter().find(|m|m.rare == main.base.rare_type).map(|m|html!(<tr>
+                    <td>"Enable"</td>
+                    <td/>
+                    <td/>
+                    <td/>
+                    <td>{text!("{}z", m.price)}</td>
+                    {gen_category(pedia_ex, m.material_category, m.material_category_num)}
+                    {gen_materials(pedia_ex, &m.item, &m.item_num, ItemId::Null)}
+                </tr>))) }
+                {
+                table.categories.iter().flat_map(|(&category_id, category)| {
+                    let rowspan = category.pieces.len();
+                    let category_name = match category_id {
+                        1 => text!("Attack boost"),
+                        2 => text!("Affinity boost"),
+                        3 => text!("Elemental boost"),
+                        4 => text!("Status effect boost"),
+                        5 => text!("Sharpness boost"),
+                        6 => text!("Rampage slot upgrade"),
+                        7 => text!("Add anomaly slot"),
+                        8 => text!("Element/status boost"),
+                        c => text!("{}", c)
+                    };
+                    let mut category_cell = Some(html!(<td rowspan={rowspan}>
+                        { category_name }
+                    </td>));
+                    category.pieces.iter().map(move |(_, piece)| {
+                        html!(<tr>
+                        {category_cell.take()}
+                        <td>{text!("{}", piece.data.lv)}</td>
+                        <td>{text!("{}", piece.data.cost)}</td>
+                        <td>
+                        <ul class="mh-custom-lot"> {
+                            piece.data.value_table.iter().zip(&piece.data.lot_table)
+                            .filter(|(_, lot)| **lot != 0)
+                            .map(|(value, &lot)| html!(<li> {
+                                if lot != 100 {
+                                    text!("{:+}, {}%", value, lot)
+                                } else {
+                                    text!("{:+}", value)
+                                }
+                            } </li>))
+                        } </ul>
+                        </td>
+                        <td>{text!("{}z", piece.material.price)}</td>
+                        {gen_category(pedia_ex, piece.material.material_category, piece.material.material_category_num)}
+                        {gen_materials(pedia_ex, &piece.material.item, &piece.material.item_num, ItemId::Null)}
+
+                        </tr>)
+                    })
+                })
+                } </tbody>
+                </table>
+                </div>)
+            } else {
+                html!(<div>{text!("Unknown table {}", table_no)}</div>)
+            };
+
+            sections.push(Section {
+                title: "Qurious crafting".to_owned(),
+                content: html!(<section id="s-qurio">
+                <h2>"Qurious crafting"</h2>
+                {table}
+                </section>),
+            });
+        }
+    }
 
     let doc: DOMTree<String> = html!(
         <html>
@@ -392,6 +636,7 @@ where
             <body>
                 { navbar() }
                 { right_aside() }
+                { gen_menu(&sections) }
                 <main>
                 <header>
                     <div class="mh-title-icon">
@@ -400,221 +645,7 @@ where
                     <h1> {gen_multi_lang(weapon.name)} </h1>
                 </header>
 
-                <section><pre>
-                    {weapon.explain.as_ref().map(|e|gen_multi_lang(e))}
-                </pre></section>
-
-                <section>
-                <h2 >"Stat"</h2>
-                <div class="mh-kvlist">
-                <p class="mh-kv"><span>"Attack"</span>
-                <span>{text!("{}", main.atk)}</span></p>
-                <p class="mh-kv"><span>"Affinity"</span>
-                <span>{text!("{}%", main.critical_rate)}</span></p>
-                <p class="mh-kv"><span>"Defense"</span>
-                <span>{text!("{}", main.def_bonus)}</span></p>
-                <p class="mh-kv"><span>"Slot"</span>
-                <span>{gen_slot(&main.slot_num_list, false)}</span></p>
-                <p class="mh-kv"><span>"Rampage Slot"</span>
-                <span>{gen_slot(&main.hyakuryu_slot_num_list, true)}</span></p>
-
-                {first_element.map(|first_element| html!(
-                    <p class="mh-kv"><span>"Element"</span>
-                    <span>
-                        <span>{text!("{:?} {}",
-                            first_element.main_element_type,
-                            first_element.main_element_val
-                        )}</span>
-                        {
-                            second_element.map(|second_element| html!(
-                                <span>{text!(" {:?} {}",
-                                    second_element.sub_element_type,
-                                    second_element.sub_element_val
-                                )}</span>
-                            ))
-                        }
-                    </span></p>
-                ))}
-
-                { sharpness }
-
-                { bowgun_param }
-
-                { bow_param }
-
-                { special.map(|special|special(param)).into_iter().flatten() }
-
-                </div>
-                </section>
-
-                <section>
-                <h2 >"Rampage skills"</h2>
-                <ul> {
-                    let main_list = main.hyakuryu_skill_id_list.iter()
-                        .zip(std::iter::repeat(None));
-                    let ex_list = weapon.hyakuryu_weapon_buildup.iter()
-                        .flat_map(|(&slot_type, param)| {
-                            param.buildup_id_list.iter().zip(std::iter::repeat(Some(slot_type)))
-                        });
-
-                    main_list.chain(ex_list)
-                    .filter(|(&skill, _)|skill != PlHyakuryuSkillId::None)
-                    .map(|(skill, slot_type)|{
-                        let hyakuryu_tag = slot_type.map(|s|html!(
-                            <span class="tag">{text!("Slot {}", s)}</span>
-                        ));
-                        if let Some(skill) = pedia_ex.hyakuryu_skills.get(skill) {
-                            html!(<li> {
-                                gen_hyakuryu_skill_label(skill)
-                            } {hyakuryu_tag} </li>)
-                        } else {
-                            html!(<li>{ text!("Unknown {:?}", skill) }</li>)
-                        }
-                    })
-                } </ul>
-                </section>
-
-                { horn }
-
-                { bullet }
-
-                { bow }
-
-                <section>
-                <h2 >"Crafting"</h2>
-                { weapon.update.map(|update| {
-                    html!(<p>{text!("Unlock at: {} {} {}",
-                        update.village_progress.display().unwrap_or_default(),
-                        update.hall_progress.display().unwrap_or_default(),
-                        update.mr_progress.display().unwrap_or_default())}</p>)
-                }) }
-                <div class="mh-table"><table>
-                    <thead><tr>
-                        <th>""</th>
-                        <th>"Cost"</th>
-                        <th>"Categorized Material"</th>
-                        <th>"Material"</th>
-                        <th>"Output"</th>
-                    </tr></thead>
-                    <tbody>
-                        { (main.base.buy_val != 0).then(|| {
-                            html!(<tr>
-                                <td>"Buy"</td>
-                                <td>{text!("{}z", main.base.buy_val)}</td>
-                                <td/><td/><td/>
-                            </tr>)
-                        })}
-                        {weapon.product.as_ref().map(|product| {
-                            gen_craft_row(pedia_ex, html!(<td>"Forge"</td>), Some(main.base.base_val * 3 / 2),
-                                &product.base, Some((&product.output_item, &product.output_item_num)))
-                        })}
-                        {weapon.process.as_ref().map(|process| {
-                            let label = if let Some(parent) = weapon.parent {
-                                let parent = weapon_tree.weapons.get(&parent).unwrap();
-                                html!(<td>"Upgrade from " {gen_weapon_label(parent)}</td>)
-                            } else {
-                                html!(<td>"Upgrade from unknown"</td>)
-                            };
-
-                            gen_craft_row(pedia_ex, label, Some(main.base.base_val),
-                                &process.base, Some((&process.output_item, &process.output_item_num)))
-                        })}
-                        {weapon.change.as_ref().map(|change| {
-                            gen_craft_row(pedia_ex, html!(<td>"As layered"</td>), None,
-                                &change.base, None)
-                        })}
-                    </tbody>
-                </table></div>
-                </section>
-
-                <section>
-                <h2 >"Upgrade"</h2>
-                <ul> {
-                    weapon.children.iter().map(|child| {
-                        let weapon = weapon_tree.weapons.get(child).unwrap();
-                        html!(<li>{gen_weapon_label(weapon)}</li>)
-                    })
-                } </ul>
-                </section>
-
-                {main.custom_table_no.0.and_then(|table|Some((table, main.custom_cost.0?)))
-                .filter(|&(table_no, _)| table_no != 0).map(|(table_no, cost)| {
-                    let table = pedia_ex.weapon_custom_buildup.get(&table_no);
-                    let table = if let Some(table) = table {
-                        html!(<div class="mh-table"><table>
-                        <thead><tr>
-                        <th>"Category"</th>
-                        <th>"Level"</th>
-                        <th>{text!("Anomaly slots (available: {})", cost)}</th>
-                        <th>"Bonus"</th>
-                        <th>"Cost"</th>
-                        <th>"Categorized Material"</th>
-                        <th>"Material"</th>
-                        </tr></thead>
-                        <tbody>
-                        { pedia.custom_buildup_weapon_open.as_ref().and_then(
-                            |m|m.param.iter().find(|m|m.rare == main.base.rare_type).map(|m|html!(<tr>
-                            <td>"Enable"</td>
-                            <td/>
-                            <td/>
-                            <td/>
-                            <td>{text!("{}z", m.price)}</td>
-                            {gen_category(pedia_ex, m.material_category, m.material_category_num)}
-                            {gen_materials(pedia_ex, &m.item, &m.item_num, ItemId::Null)}
-                        </tr>))) }
-                        {
-                        table.categories.iter().flat_map(|(&category_id, category)| {
-                            let rowspan = category.pieces.len();
-                            let category_name = match category_id {
-                                1 => text!("Attack boost"),
-                                2 => text!("Affinity boost"),
-                                3 => text!("Elemental boost"),
-                                4 => text!("Status effect boost"),
-                                5 => text!("Sharpness boost"),
-                                6 => text!("Rampage slot upgrade"),
-                                7 => text!("Add anomaly slot"),
-                                8 => text!("Element/status boost"),
-                                c => text!("{}", c)
-                            };
-                            let mut category_cell = Some(html!(<td rowspan={rowspan}>
-                                { category_name }
-                            </td>));
-                            category.pieces.iter().map(move |(_, piece)| {
-                                html!(<tr>
-                                {category_cell.take()}
-                                <td>{text!("{}", piece.data.lv)}</td>
-                                <td>{text!("{}", piece.data.cost)}</td>
-                                <td>
-                                <ul class="mh-custom-lot"> {
-                                    piece.data.value_table.iter().zip(&piece.data.lot_table)
-                                    .filter(|(_, lot)| **lot != 0)
-                                    .map(|(value, &lot)| html!(<li> {
-                                        if lot != 100 {
-                                            text!("{:+}, {}%", value, lot)
-                                        } else {
-                                            text!("{:+}", value)
-                                        }
-                                    } </li>))
-                                } </ul>
-                                </td>
-                                <td>{text!("{}z", piece.material.price)}</td>
-                                {gen_category(pedia_ex, piece.material.material_category, piece.material.material_category_num)}
-                                {gen_materials(pedia_ex, &piece.material.item, &piece.material.item_num, ItemId::Null)}
-
-                                </tr>)
-                            })
-                        })
-                        } </tbody>
-                        </table>
-                        </div>)
-                    } else {
-                        html!(<div>{text!("Unknown table {}", table_no)}</div>)
-                    };
-                    html!(<section>
-                    <h2>"Qurious crafting"</h2>
-                    {table}
-                    </section>)
-                })}
+                { sections.into_iter().map(|s|s.content) }
 
                 </main>
             </body>
