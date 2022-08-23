@@ -43,10 +43,6 @@ $sidebar-button-height: 50px;
 nav {
     @extend .navbar, .is-primary;
 
-    position: sticky;
-    top: 0;
-    left: 0;
-
     >div {
         @extend .lr-padded;
         display: block;
@@ -104,7 +100,6 @@ aside {
     >.aside-button {
         position: absolute;
         bottom: 5%;
-        //top: calc(90% - #{$sidebar-button-height});
         width: $sidebar-button-width;
         height: $sidebar-button-height;
         background-color: white;
@@ -143,8 +138,6 @@ aside {
 
 #left-aside {
     left: 0;
-    border: solid grey 0px;
-    border-right-width: 1px;
     box-shadow: 2px 0px 3px lightgray;
     background-color: white;
 
@@ -168,8 +161,6 @@ aside {
 
 #right-aside {
     right: 0;
-    border: solid grey 0px;
-    border-left-width: 1px;
     box-shadow: -2px 0px 3px lightgray;
     background-color: white;
 

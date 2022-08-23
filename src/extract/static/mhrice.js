@@ -106,15 +106,23 @@ function addEventListenerToId(id, event_name, f) {
 
 function onToggleLeftAside() {
     const aside = document.getElementById("left-aside");
+    const the_other = document.getElementById("right-aside");
     if (aside) {
         aside.classList.toggle("is-active");
+        if (the_other && aside.classList.contains("is-active")) {
+            the_other.classList.remove("is-active");
+        }
     }
 }
 
 function onToggleRightAside() {
     const aside = document.getElementById("right-aside");
+    const the_other = document.getElementById("left-aside");
     if (aside) {
         aside.classList.toggle("is-active");
+        if (the_other && aside.classList.contains("is-active")) {
+            the_other.classList.remove("is-active");
+        }
     }
 }
 
@@ -318,6 +326,15 @@ function onToggleNavbarMenu() {
     if (g_navbar_menu_active) {
         document.getElementById("navbarBurger").classList.add("is-active");
         document.getElementById("navbarMenu").classList.add("is-active");
+
+        const left = document.getElementById("right-aside");
+        const right = document.getElementById("left-aside");
+        if (left) {
+            left.classList.remove("is-active");
+        }
+        if (right) {
+            right.classList.remove("is-active");
+        }
     } else {
         document.getElementById("navbarBurger").classList.remove("is-active");
         document.getElementById("navbarMenu").classList.remove("is-active");
