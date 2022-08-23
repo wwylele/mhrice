@@ -284,7 +284,7 @@ fn gen_armor(
         if buildup_tables.is_empty() {
             return None;
         }
-        Some(html!(<section>
+        Some(html!(<section id="s-qurio">
             <h2>"Qurious crafting"</h2>
             {buildup_tables.into_iter().map(|(key, armor)| {
                 let table_out = if let Some(table) =
@@ -393,6 +393,159 @@ fn gen_armor(
         .find_map(|p| p.as_ref())
         .map_or(RareTypes(1), |p| p.data.rare);
 
+    let mut sections = vec![];
+
+    sections.push(Section {
+        title: "Description".to_owned(),
+        content: html!(
+            <section id="s-description">
+            <h2 >"Description"</h2>
+            { gen_explain(&series.pieces[0..5])}
+            </section>
+        ),
+    });
+
+    sections.push(Section {
+        title: "Stat".to_owned(),
+        content: html!(
+            <section id="s-stat">
+            <h2 >"Stat"</h2>
+            { gen_stat(&series.pieces[0..5])}
+            </section>
+        ),
+    });
+
+    if series.pieces[5..10].iter().any(|p| p.is_some()) {
+        sections.push(Section {
+            title: "EX Description".to_owned(),
+            content: html!(<section id="s-ex-description">
+                <h2 >"EX Description"</h2>
+                { gen_explain(&series.pieces[5..10])}
+                </section>
+            ),
+        });
+
+        sections.push(Section {
+            title: "EX Stat".to_owned(),
+            content: html!(<section id="s-ex-stat">
+                <h2 >"EX Stat"</h2>
+                { gen_stat(&series.pieces[5..10])}
+                </section>
+            ),
+        });
+    }
+
+    sections.push(Section {
+        title: "Crafting".to_owned(),
+        content: html!(
+            <section id="s-crafting">
+            <h2 >"Crafting"</h2>
+            <div class="mh-table"><table>
+                <thead><tr>
+                    <th>"Name"</th>
+                    <th>"Cost"</th>
+                    <th>"Categorized Material"</th>
+                    <th>"Material"</th>
+                    <th>"Output"</th>
+                </tr></thead>
+                <tbody> {
+                    series.pieces.iter().take(5).map(|piece| {
+                        let product = if let Some(Armor{product: Some(product), ..}) = &piece {
+                            product
+                        } else {
+                            return html!(<tr><td colspan="4">"-"</td></tr>)
+                        };
+                        let armor = piece.as_ref().unwrap();
+
+                        let category = gen_category(pedia_ex, product.material_category,
+                            product.material_category_num);
+
+                        let materials = gen_materials(pedia_ex, &product.item,
+                            &product.item_num, product.item_flag);
+
+                        let output = gen_materials(pedia_ex, &product.output_item,
+                            &product.output_item_num, ItemId::None);
+
+                        html!(<tr>
+                            <td>{gen_armor_label(Some(armor))}</td>
+                            <td>{text!("{}z", armor.data.value)}</td>
+                            {category}
+                            {materials}
+                            {output}
+                        </tr>)
+                    })
+                } </tbody>
+            </table></div>
+
+            </section>
+        ),
+    });
+
+    sections.push(Section {
+        title: "Layered crafting".to_owned(),
+        content: html!(
+        <section id="s-layer">
+        <h2 >"Layered crafting"</h2>
+        <div class="mh-table"><table>
+            <thead><tr>
+                <th>"Name"</th>
+                <th>"Categorized Material"</th>
+                <th>"Material"</th>
+            </tr></thead>
+            <tbody> {
+                series.pieces.iter().take(5).map(|piece| {
+                    let product = if let Some(Armor{overwear_product: Some(product), ..}) = &piece {
+                        product
+                    } else {
+                        return html!(<tr><td colspan="3">"-"</td></tr>)
+                    };
+                    let armor = piece.as_ref().unwrap();
+
+                    let category = gen_category(pedia_ex, product.material_category,
+                        product.material_category_num);
+
+                    let materials = gen_materials(pedia_ex, &product.item,
+                        &product.item_num, product.item_flag);
+
+                    html!(<tr>
+                        <td>{gen_armor_label(Some(armor))}</td>
+                        {category}
+                        {materials}
+                    </tr>)
+                })
+            } </tbody>
+        </table></div>
+
+        </section>
+    )});
+
+    sections.push(Section {
+        title: "Upgrades".to_owned(),
+        content: html!(<section id="s-upgrade">
+            <h2 >"Upgrades"</h2>
+            { gen_buildup(&series.pieces[0..5])}
+            </section>
+        ),
+    });
+
+    if series.pieces[5..10].iter().any(|p| p.is_some()) {
+        sections.push(Section {
+            title: "EX Upgrades".to_owned(),
+            content: html!(<section id="s-ex-upgrade">
+                <h2 >"EX Upgrades"</h2>
+                { gen_buildup(&series.pieces[5..10])}
+                </section>
+            ),
+        });
+    }
+
+    if let Some(custom_buildup) = gen_custom_buildup(&series.pieces) {
+        sections.push(Section {
+            title: "Qurious crafting".to_owned(),
+            content: custom_buildup,
+        });
+    }
+
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -402,6 +555,7 @@ fn gen_armor(
             <body>
                 { navbar() }
                 { right_aside() }
+                { gen_menu(&sections) }
                 <main>
                 <header>
                     <div class="mh-title-icon"> {
@@ -412,123 +566,7 @@ fn gen_armor(
                     } </h1>
                 </header>
 
-                <section>
-                <h2 >"Description"</h2>
-                { gen_explain(&series.pieces[0..5])}
-                </section>
-
-                <section>
-                <h2 >"Stat"</h2>
-                { gen_stat(&series.pieces[0..5])}
-                </section>
-
-
-                {
-                    series.pieces[5..10].iter().any(|p|p.is_some()).then(||{
-                        [
-                            html!(<section>
-                                <h2 >"EX Description"</h2>
-                                { gen_explain(&series.pieces[5..10])}
-                                </section>
-                            ),
-                            html!(<section>
-                                <h2 >"EX Stat"</h2>
-                                { gen_stat(&series.pieces[5..10])}
-                                </section>
-                            ),
-                        ]
-                    }).into_iter().flatten()
-                }
-
-                <section>
-                <h2 >"Crafting"</h2>
-                <div class="mh-table"><table>
-                    <thead><tr>
-                        <th>"Name"</th>
-                        <th>"Cost"</th>
-                        <th>"Categorized Material"</th>
-                        <th>"Material"</th>
-                        <th>"Output"</th>
-                    </tr></thead>
-                    <tbody> {
-                        series.pieces.iter().take(5).map(|piece| {
-                            let product = if let Some(Armor{product: Some(product), ..}) = &piece {
-                                product
-                            } else {
-                                return html!(<tr><td colspan="4">"-"</td></tr>)
-                            };
-                            let armor = piece.as_ref().unwrap();
-
-                            let category = gen_category(pedia_ex, product.material_category,
-                                product.material_category_num);
-
-                            let materials = gen_materials(pedia_ex, &product.item,
-                                &product.item_num, product.item_flag);
-
-                            let output = gen_materials(pedia_ex, &product.output_item,
-                                &product.output_item_num, ItemId::None);
-
-                            html!(<tr>
-                                <td>{gen_armor_label(Some(armor))}</td>
-                                <td>{text!("{}z", armor.data.value)}</td>
-                                {category}
-                                {materials}
-                                {output}
-                            </tr>)
-                        })
-                    } </tbody>
-                </table></div>
-
-                </section>
-
-                <section>
-                <h2 >"Layered crafting"</h2>
-                <div class="mh-table"><table>
-                    <thead><tr>
-                        <th>"Name"</th>
-                        <th>"Categorized Material"</th>
-                        <th>"Material"</th>
-                    </tr></thead>
-                    <tbody> {
-                        series.pieces.iter().take(5).map(|piece| {
-                            let product = if let Some(Armor{overwear_product: Some(product), ..}) = &piece {
-                                product
-                            } else {
-                                return html!(<tr><td colspan="3">"-"</td></tr>)
-                            };
-                            let armor = piece.as_ref().unwrap();
-
-                            let category = gen_category(pedia_ex, product.material_category,
-                                product.material_category_num);
-
-                            let materials = gen_materials(pedia_ex, &product.item,
-                                &product.item_num, product.item_flag);
-
-                            html!(<tr>
-                                <td>{gen_armor_label(Some(armor))}</td>
-                                {category}
-                                {materials}
-                            </tr>)
-                        })
-                    } </tbody>
-                </table></div>
-
-                </section>
-
-                <section>
-                <h2 >"Upgrades"</h2>
-                { gen_buildup(&series.pieces[0..5])}
-                </section>
-
-                {series.pieces[5..10].iter().any(|p|p.is_some()).then(||{
-                    html!(<section>
-                        <h2 >"EX Upgrades"</h2>
-                        { gen_buildup(&series.pieces[5..10])}
-                        </section>
-                    )
-                })}
-
-                {gen_custom_buildup(&series.pieces)}
+                { sections.into_iter().map(|s|s.content) }
 
                 </main>
             </body>
