@@ -888,6 +888,7 @@ pub fn print<F: Read + Seek>(
         attribute_list_index: usize,
         event_count: usize,
         event_start_index: usize,
+        assembly_index: usize,
     }
 
     file.seek_assert_align_up(type_offset, 16)?;
@@ -898,7 +899,7 @@ pub fn print<F: Read + Seek>(
             let len = file.read_u32()?;
             let static_len = file.read_u32()?;
 
-            let (attribute_list_index, a, field_count, b) =
+            let (attribute_list_index, a, field_count, assembly_index) =
                 file.read_u64()?.bit_split((17, 16, 24, 7));
             let method_count = file.read_u16()?;
             let _ = file.read_u16()?;
@@ -920,6 +921,7 @@ pub fn print<F: Read + Seek>(
                 attribute_list_index: attribute_list_index.try_into()?,
                 event_count: types_event_count.try_into()?,
                 event_start_index: event_start_index.try_into()?,
+                assembly_index: assembly_index.try_into()?,
             })
         })
         .collect::<Result<Vec<_>>>()?;
@@ -1259,6 +1261,9 @@ pub fn print<F: Read + Seek>(
                 template_argument_list.read_u32()?.bit_split((19, 13));
 
             let template_type_instance_index: usize = template_type_instance_index.try_into()?;
+            // note: for template_type_instance_index == index
+            // this is followed by an array of 8-byte elements?
+            // second word >> 19 is GenericParameterAttributes?
             if template_type_instance_index != index {
                 let mut targs = vec![];
                 for _ in 0..targ_count {
