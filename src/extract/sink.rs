@@ -175,9 +175,13 @@ impl DiskSink {
         let root = PathBuf::from(root);
         let toc_path = "/".to_string();
         if root.exists() {
-            fs::remove_dir_all(&root)?;
+            eprintln!(
+                "Warning: output folder {} already exists",
+                root.as_os_str().to_string_lossy()
+            )
+        } else {
+            fs::create_dir(&root)?;
         }
-        fs::create_dir(&root)?;
         Ok(DiskSink { root, toc_path })
     }
 }
