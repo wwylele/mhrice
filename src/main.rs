@@ -55,19 +55,31 @@ const TDB_ANCHOR: &[u8] = b"TDB\0\x47\0\0\0";
 
 #[derive(clap::Parser)]
 pub struct TdbOptions {
-    /// Don't output runtime addresses
+    /// Optional output to a file in JSON
+    #[clap(short, long)]
+    pub json: Option<String>,
+
+    /// Optional output to a file in C#
+    #[clap(short, long)]
+    pub cs: Option<String>,
+
+    /// Optional output to a function mapping file
+    #[clap(short, long)]
+    pub map: Option<String>,
+
+    /// C#: Remove runtime addresses
     #[clap(long)]
     pub no_runtime: bool,
 
-    /// Remove classes in System namespace
+    /// C#: Remove classes in System namespace
     #[clap(long)]
     pub no_system: bool,
 
-    /// Remove template instantiation and array
+    /// C#: Remove template instantiation and array
     #[clap(long)]
     pub no_compound: bool,
 
-    /// Remove type flags
+    /// C#: Remove type flags
     #[clap(long)]
     pub no_type_flag: bool,
 }
@@ -330,9 +342,6 @@ enum Mhrice {
         /// Path to the full minidump (DMP file)
         #[clap(short, long)]
         dmp: String,
-        /// Optional output path for function address map
-        #[clap(short, long)]
-        map: Option<String>,
         /// Optional memory address where TDB is allocated
         ///
         /// Specify this to skip search the entire minidump
@@ -580,7 +589,7 @@ fn read_tdb(tdb: String, options: TdbOptions) -> Result<()> {
         }
     };
 
-    tdb::print(OffsetFile::new(file, offset)?, 0, None, options)?;
+    tdb::print(OffsetFile::new(file, offset)?, 0, options)?;
     Ok(())
 }
 
@@ -633,12 +642,7 @@ impl<'a> Seek for MinidumpReader<'a> {
     }
 }
 
-fn read_dmp_tdb(
-    dmp: String,
-    map: Option<String>,
-    address: Option<String>,
-    options: TdbOptions,
-) -> Result<()> {
+fn read_dmp_tdb(dmp: String, address: Option<String>, options: TdbOptions) -> Result<()> {
     let dmp = Minidump::read_path(dmp).map_err(|e| anyhow!(e))?;
     let memory = dmp
         .get_stream::<MinidumpMemory64List>()
@@ -653,7 +657,7 @@ fn read_dmp_tdb(
         };
         let file = OffsetFile::new(MinidumpReader::new(&memory), base)?;
 
-        tdb::print(file, base, map, options)?;
+        tdb::print(file, base, options)?;
 
         return Ok(());
     }
@@ -668,7 +672,7 @@ fn read_dmp_tdb(
             eprintln!("Found at address 0x{base:016X}");
             let file = OffsetFile::new(MinidumpReader::new(&memory), base)?;
 
-            tdb::print(file, base, map, options)?;
+            tdb::print(file, base, options)?;
 
             break;
         }
@@ -1352,10 +1356,9 @@ fn main() -> Result<()> {
         Mhrice::ReadUser { user } => read_user(user),
         Mhrice::ReadDmpTdb {
             dmp,
-            map,
             address,
             options,
-        } => read_dmp_tdb(dmp, map, address, options),
+        } => read_dmp_tdb(dmp, address, options),
         Mhrice::DumpScn { scn } => dump_scn(scn),
         Mhrice::Scene { pak, name } => scene(pak, name),
         Mhrice::TypeInfo { dmp, hash, crc } => type_info(dmp, hash, crc),
