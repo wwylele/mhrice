@@ -201,7 +201,7 @@ impl Sink for DiskSink {
     {
         let path = self.root.join(name);
         let toc_path = self.toc_path.clone() + name + "/";
-        fs::create_dir(&path)?;
+        fs::create_dir_all(&path)?;
         Ok(DiskSink {
             root: path,
             toc_path,
