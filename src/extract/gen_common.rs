@@ -1,7 +1,7 @@
 use super::gen_website::*;
 use typed_html::{elements::*, html, text};
 
-const WEBSITE_VERSIONS: &[&str] = &["10.0.2", "10.0.3", "11.0.1"];
+const WEBSITE_VERSIONS: &[&str] = &["10.0.2", "10.0.3", "11.0.1", "11.0.2"];
 pub struct Section {
     pub title: String,
     pub content: Box<section<String>>,
