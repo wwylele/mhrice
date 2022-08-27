@@ -746,6 +746,9 @@ struct TypeInfo {
 
     // Maybe a similar map as ref_map, but this marks where it can have cycle?
     cycle_map: u64,
+
+    runtime_info: u64,
+    vtable: u64,
 }
 
 #[derive(Serialize)]
@@ -881,6 +884,9 @@ impl Tdb {
             interface_list_offset: usize,
             template_argument_list_offset: usize,
             e2: u64,
+
+            runtime_info: u64,
+            vtable: u64,
         }
         file.seek_assert_align_up(type_instance_offset, 16)?;
         let type_instances = (0..type_instance_count)
@@ -900,7 +906,7 @@ impl Tdb {
                 ) = file.read_u64()?.bit_split((19, 19, 18, 8));
 
                 let flags = file.read_u32()?;
-                let _ = file.read_u32()?;
+                let _runtime_len = file.read_u32()?;
                 let hash = file.read_u32()?;
                 let _crc = file.read_u32()?;
 
@@ -921,8 +927,8 @@ impl Tdb {
                 let (interface_list_offset, template_argument_list_offset, e2) =
                     file.read_u64()?.bit_split((26, 26, 12));
 
-                let _ = file.read_u64()?;
-                let _ = file.read_u64()?;
+                let runtime_info = file.read_u64()?;
+                let vtable = file.read_u64()?;
 
                 Ok(TypeInstance {
                     base_type_instance_index: base_type_instance_index.try_into()?,
@@ -950,6 +956,9 @@ impl Tdb {
                     interface_list_offset: interface_list_offset.try_into()?,
                     template_argument_list_offset: template_argument_list_offset.try_into()?,
                     e2,
+
+                    runtime_info,
+                    vtable,
                 })
             })
             .collect::<Result<Vec<_>>>()?;
@@ -1786,6 +1795,8 @@ impl Tdb {
                     vmobj_type: ti.vmobj_type,
                     ref_map: ty.ref_map,
                     cycle_map: ty.cycle_map,
+                    runtime_info: ti.runtime_info,
+                    vtable: ti.vtable,
                 })
             })
             .collect::<Result<_>>()?;
@@ -2105,6 +2116,12 @@ impl Tdb {
             }
 
             writeln!(output, "{{")?;
+
+            if !options.no_runtime {
+                writeln!(output, "    // runtime @ 0x{:016X}", type_info.runtime_info)?;
+                writeln!(output, "    // vtable @ 0x{:016X}", type_info.vtable)?;
+            }
+
             if type_info.ti_dearray.is_some() || full_name.contains('!') {
                 writeln!(output, "    // Omitted ")?;
                 writeln!(output, "}}")?;
