@@ -2261,6 +2261,11 @@ impl Tdb {
 }
 
 pub fn print<F: Read + Seek>(file: F, base_address: u64, options: crate::TdbOptions) -> Result<()> {
+    if options.json.is_none() && options.map.is_none() && options.cs.is_none() {
+        eprintln!("Please specify at least one of --json, --map, --cs");
+        return Ok(());
+    }
+
     let tdb = Tdb::new(file, base_address)?;
 
     if let Some(json) = &options.json {
