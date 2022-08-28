@@ -4,6 +4,7 @@ use crate::hash::*;
 use anyhow::{bail, Context, Result};
 use bitflags::*;
 use serde::*;
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::convert::{TryFrom, TryInto};
 use std::fs::File;
 use std::io::{Read, Seek, Write};
@@ -696,16 +697,31 @@ struct NamedArg {
 
 #[derive(Serialize)]
 struct AttributeInfo {
-    pub ti_attribute: usize,
-    pub mi_default_ctor: usize,
-    pub positional_args: Vec<Arg>,
-    pub named_args: Vec<NamedArg>,
+    ti_attribute: usize,
+    mi_default_ctor: usize,
+    positional_args: Vec<Arg>,
+    named_args: Vec<NamedArg>,
+}
+
+#[derive(Serialize)]
+enum VtableSlotMethod {
+    #[serde(rename = "mi")]
+    Mi(usize),
+    #[serde(rename = "monomorphized_id")]
+    Monomorphized(usize),
+}
+
+#[derive(Serialize)]
+struct VtableSlot {
+    ti: usize,
+    #[serde(flatten)]
+    method: VtableSlotMethod,
 }
 
 #[derive(Serialize)]
 struct TypeInfo {
     name: String,
-    full_name: Option<String>,
+    full_name: String,
     parent: Option<TypeParent>,
     len: usize,
     static_len: usize,
@@ -713,7 +729,7 @@ struct TypeInfo {
     ti_array: Option<usize>,
     ti_dearray: Option<usize>,
     array_rank: u64,
-    vtable_size: u64,
+    vtable_size: usize,
     native_vtable_size: u16,
 
     #[serde(rename = "via.clr.SystemType")]
@@ -738,6 +754,8 @@ struct TypeInfo {
     methods: Vec<MethodInfo>,
     properties: Vec<PropertyInfo>,
     events: Vec<EventInfo>,
+    vtable: Vec<VtableSlot>,
+    monomorphized_methods: BTreeMap<usize, MethodInfo>,
 
     // A bit map indicating which 8-byte chunks are references
     // used for GC to build reference graph
@@ -748,7 +766,7 @@ struct TypeInfo {
     cycle_map: u64,
 
     runtime_info: u64,
-    vtable: u64,
+    runtime_vtable: u64,
 }
 
 #[derive(Serialize)]
@@ -877,13 +895,13 @@ impl Tdb {
 
             property_count: usize,
             property_membership_start_index: usize,
-            d2_into_heap: usize,
+            vtable_offset: usize,
             vmobj_type: u64,
             array_rank: u64,
 
             interface_list_offset: usize,
             template_argument_list_offset: usize,
-            e2: u64,
+            e2: u64, // seems related to interface types. A sort of ID
 
             runtime_info: u64,
             vtable: u64,
@@ -919,7 +937,7 @@ impl Tdb {
                 let (
                     property_count,
                     property_membership_start_index,
-                    d2_into_heap,
+                    vtable_offset,
                     vmobj_type,
                     array_rank,
                 ) = file.read_u64()?.bit_split((12, 20, 26, 3, 3));
@@ -949,7 +967,7 @@ impl Tdb {
 
                     property_count: property_count.try_into()?,
                     property_membership_start_index: property_membership_start_index.try_into()?,
-                    d2_into_heap: d2_into_heap.try_into()?,
+                    vtable_offset: vtable_offset.try_into()?,
                     vmobj_type,
                     array_rank,
 
@@ -1027,7 +1045,7 @@ impl Tdb {
             native_vtable_size: u16,
             field_count: usize,
             attribute_list_index: usize,
-            vtable_size: u64,
+            vtable_size: usize,
             event_count: usize,
             event_start_index: usize,
             assembly_index: usize,
@@ -1062,7 +1080,7 @@ impl Tdb {
                     native_vtable_size,
                     field_count: field_count.try_into()?,
                     attribute_list_index: attribute_list_index.try_into()?,
-                    vtable_size,
+                    vtable_size: vtable_size.try_into()?,
                     event_count: types_event_count.try_into()?,
                     event_start_index: event_start_index.try_into()?,
                     assembly_index: assembly_index.try_into()?,
@@ -1311,7 +1329,11 @@ impl Tdb {
             if method_membership_index < ti.method_membership_start_index
                 || method_membership_index >= ti.method_membership_start_index + ty.method_count
             {
-                bail!("Method doesn't belong to type")
+                bail!(
+                    "Method {} doesn't belong to type {}",
+                    method_membership_index,
+                    mm.type_instance_index
+                )
             }
             Ok((
                 to_ti(mm.type_instance_index)?,
@@ -1543,29 +1565,100 @@ impl Tdb {
             }
         }
 
+        let get_method = |mm: &MethodMembership| {
+            let m = methods
+                .get(mm.method_index)
+                .context("Method out of bound")?;
+            let mut mp = heap
+                .get(mm.param_list_offset..)
+                .context("Param list out of bound")?;
+            let param_count: usize = mp.read_u16()?.into();
+            let signature = mp.read_u16()?;
+            let attribute_list = *attribute_lists
+                .get(m.attribute_list_index)
+                .context("Attribute list out of bound")?;
+            let ret = get_param(usize::try_from(mp.read_u32()?)?)?;
+            let params: Vec<ParamInfo> = mp
+                .get(0..4 * param_count)
+                .context("Param list out of bound")?
+                .chunks(4)
+                .map(|chunk| {
+                    let index = u32::from_le_bytes(chunk.try_into().unwrap());
+                    get_param(index.try_into()?)
+                })
+                .collect::<Result<_>>()?;
+
+            Ok(MethodInfo {
+                name: read_string(m.name_offset)?,
+                address: mm.address,
+                vtable_slot: m.vtable_slot,
+                flags: m.attributes,
+                impl_flags: m.impl_flag,
+                signature,
+                attributes: read_attributes(attribute_list)?,
+                ret,
+                params,
+            })
+        };
+
+        let mut mono_dic: HashMap</*ti*/ usize, HashSet</*method_membership_index*/ usize>> =
+            HashMap::new();
+
         let mut type_infos: Vec<TypeInfo> = type_instances
             .iter()
             .enumerate()
             .skip(1)
-            .map(|(ti_index, ti)| {
+            .map(|(instance_index, instance)| {
                 let ty = types
-                    .get(ti.type_index)
+                    .get(instance.type_index)
                     .context("type index out of bound")?;
-                let parent = if ty.namespace_offset != 0 && ti.parent_type_instance_index != 0 {
+                let parent = if ty.namespace_offset != 0 && instance.parent_type_instance_index != 0
+                {
                     bail!("Type has both namespace and parent type")
                 } else if ty.namespace_offset != 0 {
                     Some(TypeParent::Namespace(read_string(ty.namespace_offset)?))
-                } else if ti.parent_type_instance_index != 0 {
-                    Some(TypeParent::OuterType(to_ti(ti.parent_type_instance_index)?))
+                } else if instance.parent_type_instance_index != 0 {
+                    Some(TypeParent::OuterType(to_ti(
+                        instance.parent_type_instance_index,
+                    )?))
                 } else {
                     None
                 };
                 let name = read_string(ty.name_offset)?;
 
-                let generics = if ti.template_argument_list_offset != 0 {
-                    let mut template_argument_list =
-                        heap.get(ti.template_argument_list_offset..)
-                            .context("template argument list offset out of bound")?;
+                let vtable = heap
+                    .get(instance.vtable_offset..instance.vtable_offset + ty.vtable_size * 4)
+                    .context("Vtable out of bound")?;
+
+                let vtable: Vec<VtableSlot> = vtable
+                    .chunks(4)
+                    .map(|c| {
+                        let method_membership_index: usize =
+                            u32::from_le_bytes(c.try_into().unwrap()).try_into()?;
+                        if let Ok((ti, mi)) = to_mi(method_membership_index) {
+                            Ok(VtableSlot {
+                                ti,
+                                method: VtableSlotMethod::Mi(mi),
+                            })
+                        } else {
+                            let mm = &method_memberships[method_membership_index];
+                            let ti = to_ti(mm.type_instance_index)?;
+                            mono_dic
+                                .entry(ti)
+                                .or_default()
+                                .insert(method_membership_index);
+                            Ok(VtableSlot {
+                                ti,
+                                method: VtableSlotMethod::Monomorphized(method_membership_index),
+                            })
+                        }
+                    })
+                    .collect::<Result<_>>()?;
+
+                let generics = if instance.template_argument_list_offset != 0 {
+                    let mut template_argument_list = heap
+                        .get(instance.template_argument_list_offset..)
+                        .context("template argument list offset out of bound")?;
 
                     let (template_type_instance_index, arg_count) =
                         template_argument_list.read_u32()?.bit_split((19, 13));
@@ -1574,7 +1667,7 @@ impl Tdb {
                         template_type_instance_index.try_into()?;
                     let arg_count: usize = arg_count.try_into()?;
 
-                    if template_type_instance_index != ti_index {
+                    if template_type_instance_index != instance_index {
                         let ti_template = to_ti(template_type_instance_index)?;
                         let ti_args: Vec<usize> = template_argument_list
                             .get(0..arg_count * 4)
@@ -1616,9 +1709,9 @@ impl Tdb {
                     None
                 };
 
-                let interfaces = if ti.interface_list_offset != 0 {
+                let interfaces = if instance.interface_list_offset != 0 {
                     let mut interface_list = heap
-                        .get(ti.interface_list_offset..)
+                        .get(instance.interface_list_offset..)
                         .context("Interface list out of bound")?;
                     let interface_count: usize = interface_list.read_u32()?.try_into()?;
                     interface_list
@@ -1643,15 +1736,15 @@ impl Tdb {
 
                 let field_memberships = field_memberships
                     .get(
-                        ti.field_membership_start_index
-                            ..ti.field_membership_start_index + ty.field_count,
+                        instance.field_membership_start_index
+                            ..instance.field_membership_start_index + ty.field_count,
                     )
                     .context("Field membership out of bound")?;
 
                 let fields = field_memberships
                     .iter()
                     .map(|fm| {
-                        if fm.parent_type_instance_index != ti_index {
+                        if fm.parent_type_instance_index != instance_index {
                             bail!("Field parent mismatch")
                         }
                         let f = fields.get(fm.field_index).context("Field out of bound")?;
@@ -1674,54 +1767,20 @@ impl Tdb {
 
                 let method_memberships = method_memberships
                     .get(
-                        ti.method_membership_start_index
-                            ..ti.method_membership_start_index + ty.method_count,
+                        instance.method_membership_start_index
+                            ..instance.method_membership_start_index + ty.method_count,
                     )
                     .context("Method membership out of bound")?;
 
                 let methods = method_memberships
                     .iter()
-                    .map(|mm| {
-                        let m = methods
-                            .get(mm.method_index)
-                            .context("Method out of bound")?;
-                        let mut mp = heap
-                            .get(mm.param_list_offset..)
-                            .context("Param list out of bound")?;
-                        let param_count: usize = mp.read_u16()?.into();
-                        let signature = mp.read_u16()?;
-                        let attribute_list = *attribute_lists
-                            .get(m.attribute_list_index)
-                            .context("Attribute list out of bound")?;
-                        let ret = get_param(usize::try_from(mp.read_u32()?)?)?;
-                        let params: Vec<ParamInfo> = mp
-                            .get(0..4 * param_count)
-                            .context("Param list out of bound")?
-                            .chunks(4)
-                            .map(|chunk| {
-                                let index = u32::from_le_bytes(chunk.try_into().unwrap());
-                                get_param(index.try_into()?)
-                            })
-                            .collect::<Result<_>>()?;
-
-                        Ok(MethodInfo {
-                            name: read_string(m.name_offset)?,
-                            address: mm.address,
-                            vtable_slot: m.vtable_slot,
-                            flags: m.attributes,
-                            impl_flags: m.impl_flag,
-                            signature,
-                            attributes: read_attributes(attribute_list)?,
-                            ret,
-                            params,
-                        })
-                    })
+                    .map(&get_method)
                     .collect::<Result<_>>()?;
 
                 let property_memberships = property_memberships
                     .get(
-                        ti.property_membership_start_index
-                            ..ti.property_membership_start_index + ti.property_count,
+                        instance.property_membership_start_index
+                            ..instance.property_membership_start_index + instance.property_count,
                     )
                     .context("Property membership out of bound")?;
                 let properties = property_memberships
@@ -1737,8 +1796,12 @@ impl Tdb {
                             .context("Attribute list out of bound")?;
                         Ok(PropertyInfo {
                             name: read_string(p.name_offset)?,
-                            mi_get: (get != 0).then(|| to_mi_self(get, ti_index)).transpose()?,
-                            mi_set: (set != 0).then(|| to_mi_self(set, ti_index)).transpose()?,
+                            mi_get: (get != 0)
+                                .then(|| to_mi_self(get, instance_index))
+                                .transpose()?,
+                            mi_set: (set != 0)
+                                .then(|| to_mi_self(set, instance_index))
+                                .transpose()?,
                             flags: p.flags,
                             attributes: read_attributes(attribute_list)?,
                         })
@@ -1753,8 +1816,11 @@ impl Tdb {
                     .map(|e| {
                         Ok(EventInfo {
                             name: read_string(e.name_offset)?,
-                            mi_add: to_mi_self(e.add_method_membership_index, ti_index)?,
-                            mi_remove: to_mi_self(e.remove_method_membership_index, ti_index)?,
+                            mi_add: to_mi_self(e.add_method_membership_index, instance_index)?,
+                            mi_remove: to_mi_self(
+                                e.remove_method_membership_index,
+                                instance_index,
+                            )?,
                         })
                     })
                     .collect::<Result<_>>()?;
@@ -1763,27 +1829,27 @@ impl Tdb {
                     .get(ty.attribute_list_index)
                     .context("Attribute list out of bound")?;
 
-                let ctor = ti.ctor_method_membership_index;
+                let ctor = instance.ctor_method_membership_index;
 
                 Ok(TypeInfo {
                     name,
-                    full_name: None,
+                    full_name: String::new(),
                     parent,
                     len: ty.len,
                     static_len: ty.static_len as usize,
-                    ti_base: to_ti_opt(ti.base_type_instance_index)?,
-                    ti_array: to_ti_opt(ti.arrayize_type_instance_index)?,
-                    ti_dearray: to_ti_opt(ti.dearrayize_type_instance_index)?,
-                    array_rank: ti.array_rank,
+                    ti_base: to_ti_opt(instance.base_type_instance_index)?,
+                    ti_array: to_ti_opt(instance.arrayize_type_instance_index)?,
+                    ti_dearray: to_ti_opt(instance.dearrayize_type_instance_index)?,
+                    array_rank: instance.array_rank,
                     vtable_size: ty.vtable_size,
                     native_vtable_size: ty.native_vtable_size,
-                    system_type: ti.system_type,
-                    element_type: ti.element_type,
-                    flags: ti.flags,
-                    hash: ti.hash,
+                    system_type: instance.system_type,
+                    element_type: instance.element_type,
+                    flags: instance.flags,
+                    hash: instance.hash,
                     assembly: ty.assembly_index,
                     mi_default_ctor: (ctor != 0)
-                        .then(|| to_mi_self(ctor, ti_index))
+                        .then(|| to_mi_self(ctor, instance_index))
                         .transpose()?,
                     attributes: read_attributes(attribute_list)?,
                     generics,
@@ -1792,18 +1858,33 @@ impl Tdb {
                     methods,
                     properties,
                     events,
-                    vmobj_type: ti.vmobj_type,
+                    vtable,
+                    monomorphized_methods: BTreeMap::new(),
+                    vmobj_type: instance.vmobj_type,
                     ref_map: ty.ref_map,
                     cycle_map: ty.cycle_map,
-                    runtime_info: ti.runtime_info,
-                    vtable: ti.vtable,
+                    runtime_info: instance.runtime_info,
+                    runtime_vtable: instance.vtable,
                 })
             })
             .collect::<Result<_>>()?;
 
+        for (ti, method_membership_indexs) in mono_dic {
+            type_infos[ti].monomorphized_methods = method_membership_indexs
+                .into_iter()
+                .map(|mmi| {
+                    let mm = method_memberships
+                        .get(mmi)
+                        .context("Monomorphized method out of bound")?;
+                    Ok((mmi, get_method(mm)?))
+                })
+                .collect::<Result<_>>()?;
+        }
+
         fn build_symbol(type_infos: &mut [TypeInfo], index: usize) -> String {
-            if let Some(s) = &type_infos[index].full_name {
-                return s.clone();
+            let name = &type_infos[index].full_name;
+            if !name.is_empty() {
+                return name.clone();
             }
 
             let type_info = &type_infos[index];
@@ -1825,7 +1906,7 @@ impl Tdb {
 
                 let full_name = element_name + &suffix;
 
-                type_infos[index].full_name = Some(full_name.clone());
+                type_infos[index].full_name = full_name.clone();
 
                 return full_name;
             }
@@ -1847,7 +1928,7 @@ impl Tdb {
                 full_name += ">";
             }
 
-            type_infos[index].full_name = Some(full_name.clone());
+            type_infos[index].full_name = full_name.clone();
 
             full_name
         }
@@ -1857,7 +1938,7 @@ impl Tdb {
         }
 
         let mut order: Vec<_> = (0..type_infos.len()).collect();
-        order.sort_by_key(|&i| type_infos[i].full_name.as_ref().unwrap());
+        order.sort_by(|&a, &b| type_infos[a].full_name.cmp(&type_infos[b].full_name));
         let mut remap: Vec<_> = vec![0; type_infos.len()];
         for (i, &o) in order.iter().enumerate() {
             remap[o] = i
@@ -1925,9 +2006,12 @@ impl Tdb {
             for property in &mut type_info.properties {
                 ti_remap_attributes(&mut property.attributes, &remap);
             }
+            for slot in &mut type_info.vtable {
+                ti_remap(&mut slot.ti, &remap);
+            }
         }
 
-        type_infos.sort_by_key(|t| t.full_name.clone());
+        type_infos.sort_by(|a, b| a.full_name.cmp(&b.full_name));
 
         let intern_strings = intern_strings
             .into_iter()
@@ -1963,7 +2047,7 @@ impl Tdb {
             .iter()
             .flat_map(|t| {
                 t.methods.iter().map(|method| {
-                    let symbol = format!("{}.{}", t.full_name.as_ref().unwrap(), method.name);
+                    let symbol = format!("{}.{}", t.full_name, method.name);
                     (method.address, symbol)
                 })
             })
@@ -2019,10 +2103,7 @@ impl Tdb {
         let print_attributes =
             |attributes: &[AttributeInfo], return_pos: bool, output: &mut File| -> Result<()> {
                 for attribute in attributes {
-                    let symbol = type_infos[attribute.ti_attribute]
-                        .full_name
-                        .as_ref()
-                        .unwrap();
+                    let symbol = &type_infos[attribute.ti_attribute].full_name;
                     let return_pos = if return_pos { "return:" } else { "" };
                     write!(output, "[{}{}(", return_pos, symbol)?;
                     for positional in &attribute.positional_args {
@@ -2067,7 +2148,7 @@ impl Tdb {
         }
 
         for type_info in type_infos {
-            let full_name = type_info.full_name.as_ref().unwrap();
+            let full_name = &type_info.full_name;
 
             #[allow(clippy::collapsible_if)]
             if options.no_compound {
@@ -2096,7 +2177,7 @@ impl Tdb {
                 writeln!(output, "{}", display_type_flags(type_info.flags))?;
             }
             let base_name = if let Some(ti_base) = type_info.ti_base {
-                type_infos[ti_base].full_name.as_ref().unwrap().as_str()
+                &type_infos[ti_base].full_name
             } else {
                 ""
             };
@@ -2110,8 +2191,7 @@ impl Tdb {
                 writeln!(
                     output,
                     "    ,{} /* ^{} */",
-                    type_infos[interface.ti].full_name.as_ref().unwrap(),
-                    interface.vtable_slot_start,
+                    type_infos[interface.ti].full_name, interface.vtable_slot_start,
                 )?;
             }
 
@@ -2119,7 +2199,11 @@ impl Tdb {
 
             if !options.no_runtime {
                 writeln!(output, "    // runtime @ 0x{:016X}", type_info.runtime_info)?;
-                writeln!(output, "    // vtable @ 0x{:016X}", type_info.vtable)?;
+                writeln!(
+                    output,
+                    "    // vtable @ 0x{:016X}",
+                    type_info.runtime_vtable
+                )?;
             }
 
             if type_info.ti_dearray.is_some() || full_name.contains('!') {
@@ -2147,7 +2231,7 @@ impl Tdb {
                     writeln!(
                         output,
                         "    // Template = {}",
-                        type_infos[*ti_template].full_name.as_ref().unwrap()
+                        type_infos[*ti_template].full_name
                     )?;
                     writeln!(output, "    // Omitted ")?;
                     writeln!(output, "}}")?;
@@ -2179,7 +2263,7 @@ impl Tdb {
                     display_param_modifier(method.ret.modifier, true),
                     display_method_impl_flag(method.impl_flags),
                     display_method_attributes(method.flags),
-                    type_infos[method.ret.ti].full_name.as_ref().unwrap(),
+                    type_infos[method.ret.ti].full_name,
                     method.name,
                 )?;
 
@@ -2193,7 +2277,7 @@ impl Tdb {
                         "{}{} {} {}",
                         display_param_modifier(param.modifier, false),
                         display_param_attributes(param.flags),
-                        type_infos[param.ti].full_name.as_ref().unwrap(),
+                        type_infos[param.ti].full_name,
                         param.name
                     )?;
 
@@ -2224,7 +2308,7 @@ impl Tdb {
                     output,
                     "    {} {} {}",
                     display_field_attributes(field.flags),
-                    type_infos[field.ti].full_name.as_ref().unwrap(),
+                    type_infos[field.ti].full_name,
                     field.name
                 )?;
 
