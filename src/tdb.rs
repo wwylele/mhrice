@@ -731,6 +731,7 @@ struct TypeInfo {
     array_rank: u64,
     vtable_size: usize,
     native_vtable_size: u16,
+    interface_vtable_index: Option<usize>,
 
     #[serde(rename = "via.clr.SystemType")]
     system_type: u64,
@@ -901,7 +902,7 @@ impl Tdb {
 
             interface_list_offset: usize,
             template_argument_list_offset: usize,
-            e2: u64, // seems related to interface types. A sort of ID
+            interface_vtable_index: usize,
 
             runtime_info: u64,
             vtable: u64,
@@ -942,7 +943,7 @@ impl Tdb {
                     array_rank,
                 ) = file.read_u64()?.bit_split((12, 20, 26, 3, 3));
 
-                let (interface_list_offset, template_argument_list_offset, e2) =
+                let (interface_list_offset, template_argument_list_offset, interface_vtable_index) =
                     file.read_u64()?.bit_split((26, 26, 12));
 
                 let runtime_info = file.read_u64()?;
@@ -973,7 +974,7 @@ impl Tdb {
 
                     interface_list_offset: interface_list_offset.try_into()?,
                     template_argument_list_offset: template_argument_list_offset.try_into()?,
-                    e2,
+                    interface_vtable_index: interface_vtable_index.try_into()?,
 
                     runtime_info,
                     vtable,
@@ -1831,6 +1832,12 @@ impl Tdb {
 
                 let ctor = instance.ctor_method_membership_index;
 
+                let interface_vtable_index = if instance.interface_vtable_index == 0xFFF {
+                    None
+                } else {
+                    Some(instance.interface_vtable_index)
+                };
+
                 Ok(TypeInfo {
                     name,
                     full_name: String::new(),
@@ -1842,6 +1849,7 @@ impl Tdb {
                     ti_dearray: to_ti_opt(instance.dearrayize_type_instance_index)?,
                     array_rank: instance.array_rank,
                     vtable_size: ty.vtable_size,
+                    interface_vtable_index,
                     native_vtable_size: ty.native_vtable_size,
                     system_type: instance.system_type,
                     element_type: instance.element_type,
