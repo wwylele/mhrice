@@ -1,4 +1,7 @@
-#################################################################################################
+##
+# Import TDB info
+
+# ################################################################################################
 # How to import into Ghidra:
 #  1. Run the game and create a minidump (full dump).
 #  2. Run `mhrice read-dmp-tdb --dmp minidump.dmp --json-split OUTPUT_FOLDER`.`
@@ -25,6 +28,7 @@ from ghidra.program.model.listing import *
 builtInTypeManager = state.getTool().getService(DataTypeManagerService).getBuiltInDataTypesManager()
 undefined = builtInTypeManager.getDataType("/undefined1")
 void = builtInTypeManager.getDataType("/void")
+t_int = builtInTypeManager.getDataType("/int")
 
 folder = askDirectory("Give me the folder output from `mhrice read-dmp-tdb --json-split", "Go!")
 
@@ -66,6 +70,7 @@ isTemplate = [False] * typeCount
 base = [None] * typeCount
 rawFields = [None] * typeCount
 fullName = [None] * typeCount
+dearray = [None] * typeCount
 
 print("First scan...")
 
@@ -79,6 +84,7 @@ for (i, t) in types():
     isTemplate[i] = t["generics"] is not None and t["generics"].has_key("Template")
     base[i] = t["ti_base"]
     fullName[i] = t["full_name"]
+    dearray[i] = t["ti_dearray"]
 
     rawFields[i] = []
 
@@ -182,6 +188,23 @@ for i in range(typeCount):
     while currentPos < typeSize[i]:
         handle.add(undefined, 1, "", "")
         currentPos += 1
+
+    if dearray[i] is not None:
+        handle.add(t_int, 4, "$x", "")
+        handle.add(t_int, 4, "$y", "")
+        handle.add(t_int, 4, "$rank", "")
+        handle.add(t_int, 4, "$count", "")
+
+        if isValType[dearray[i]]:
+            eleType = typeHandle[dearray[i]]
+            eleLen = typeSize[dearray[i]]
+        else:
+            eleType = PointerDataType(typeHandle[dearray[i]], 8, typeManager)
+            eleLen = 8
+
+        dummyArrayLen = 42
+        handle.add(ArrayDataType(eleType, dummyArrayLen, eleLen, typeManager), dummyArrayLen * eleLen, "$data", "")
+
 
 print("Add all methods...")
 
