@@ -59,27 +59,30 @@ pub struct TdbOptions {
     #[clap(short, long)]
     pub json: Option<String>,
 
-    /// Optional output to a file in C#
+    /// Optional output to a folder of separate JSON files.
+    /// Each file is a chunk of 1000 types.
+    /// If this is dumped from DMP, you can also used the output
+    /// with misc/ghidra_importTdb.py to import symbols into Ghidra.
+    #[clap(long)]
+    pub json_split: Option<String>,
+
+    /// Optional output to a file in C#.
     #[clap(short, long)]
     pub cs: Option<String>,
 
-    /// Optional output to a function mapping file
-    #[clap(short, long)]
-    pub map: Option<String>,
-
-    /// C#: Remove runtime addresses
+    /// C#: Remove runtime addresses.
     #[clap(long)]
     pub no_runtime: bool,
 
-    /// C#: Remove classes in System namespace
+    /// C#: Remove classes in System namespace.
     #[clap(long)]
     pub no_system: bool,
 
-    /// C#: Remove template instantiation and array
+    /// C#: Remove template instantiation and array.
     #[clap(long)]
     pub no_compound: bool,
 
-    /// C#: Remove type flags
+    /// C#: Remove type flags.
     #[clap(long)]
     pub no_type_flag: bool,
 }
@@ -655,7 +658,7 @@ fn read_dmp_tdb(dmp: String, address: Option<String>, options: TdbOptions) -> Re
         } else {
             address.parse()?
         };
-        let file = OffsetFile::new(MinidumpReader::new(&memory), base)?;
+        let file = MinidumpReader::new(&memory);
 
         tdb::print(file, base, options)?;
 
@@ -670,7 +673,7 @@ fn read_dmp_tdb(dmp: String, address: Option<String>, options: TdbOptions) -> Re
         {
             let base = block.base_address + u64::try_from(pos)?;
             eprintln!("Found at address 0x{base:016X}");
-            let file = OffsetFile::new(MinidumpReader::new(&memory), base)?;
+            let file = MinidumpReader::new(&memory);
 
             tdb::print(file, base, options)?;
 

@@ -7,7 +7,8 @@ use serde::*;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::convert::{TryFrom, TryInto};
 use std::fs::File;
-use std::io::{Read, Seek, Write};
+use std::io::{Read, Seek, SeekFrom, Write};
+use std::path::PathBuf;
 
 bitflags! {
     #[derive(Serialize)]
@@ -641,7 +642,7 @@ struct ParamInfo {
 #[derive(Serialize)]
 struct MethodInfo {
     name: String,
-    address: u32,
+    runtime_address: u64,
     vtable_slot: i16,
     #[serde(rename = "via.clr.MethodFlag")]
     flags: MethodAttribute,
@@ -784,9 +785,16 @@ struct Tdb {
     assemblies: Vec<AssemblyInfo>,
 }
 
+#[derive(Serialize)]
+struct TdbTypeChunk<'a> {
+    types: &'a [TypeInfo],
+    start_index: usize,
+}
+
 #[allow(dead_code)]
 impl Tdb {
     pub fn new<F: Read + Seek>(mut file: F, base_address: u64) -> Result<Tdb> {
+        file.seek(SeekFrom::Start(base_address))?;
         if &file.read_magic()? != b"TDB\0" {
             bail!("Wrong magic for TDB file");
         }
@@ -822,24 +830,24 @@ impl Tdb {
         let string_table_len = file.read_u32()?;
         let heap_len = file.read_u32()?;
 
-        let assembly_offset = file.read_u64()? - base_address;
-        let type_instance_offset = file.read_u64()? - base_address;
-        let type_offset = file.read_u64()? - base_address;
-        let method_membership_offset = file.read_u64()? - base_address;
-        let method_offset = file.read_u64()? - base_address;
-        let field_membership_offset = file.read_u64()? - base_address;
-        let field_offset = file.read_u64()? - base_address;
-        let property_membership_offset = file.read_u64()? - base_address;
-        let property_offset = file.read_u64()? - base_address;
-        let event_offset = file.read_u64()? - base_address;
-        let param_offset = file.read_u64()? - base_address;
-        let attribute_offset = file.read_u64()? - base_address;
-        let constant_offset = file.read_u64()? - base_address;
-        let attribute_list_offset = file.read_u64()? - base_address;
-        let data_attribute_list_offset = file.read_u64()? - base_address;
-        let string_table_offset = file.read_u64()? - base_address;
-        let heap_offset = file.read_u64()? - base_address;
-        let intern_string_offset = file.read_u64()? - base_address;
+        let assembly_offset = file.read_u64()?;
+        let type_instance_offset = file.read_u64()?;
+        let type_offset = file.read_u64()?;
+        let method_membership_offset = file.read_u64()?;
+        let method_offset = file.read_u64()?;
+        let field_membership_offset = file.read_u64()?;
+        let field_offset = file.read_u64()?;
+        let property_membership_offset = file.read_u64()?;
+        let property_offset = file.read_u64()?;
+        let event_offset = file.read_u64()?;
+        let param_offset = file.read_u64()?;
+        let attribute_offset = file.read_u64()?;
+        let constant_offset = file.read_u64()?;
+        let attribute_list_offset = file.read_u64()?;
+        let data_attribute_list_offset = file.read_u64()?;
+        let string_table_offset = file.read_u64()?;
+        let heap_offset = file.read_u64()?;
+        let intern_string_offset = file.read_u64()?;
         let _ = file.read_u64()?;
 
         struct Assembly {
@@ -1591,7 +1599,7 @@ impl Tdb {
 
             Ok(MethodInfo {
                 name: read_string(m.name_offset)?,
-                address: mm.address,
+                runtime_address: u64::from(mm.address),
                 vtable_slot: m.vtable_slot,
                 flags: m.attributes,
                 impl_flags: m.impl_flag,
@@ -1889,6 +1897,62 @@ impl Tdb {
                 .collect::<Result<_>>()?;
         }
 
+        // Guess the method address offset
+        let mut guessed_offsets: HashMap<u64, u32> = HashMap::new();
+        let mut guessed_offset = None;
+        'guess: for type_info in &type_infos {
+            if type_info.generics.is_some() || type_info.flags.contains(TypeFlag::INTERFACE) {
+                continue;
+            }
+            if type_info.runtime_vtable == 0 {
+                continue;
+            }
+            let vtable = (|| -> Result<_> {
+                file.seek(SeekFrom::Start(type_info.runtime_vtable - 16))?;
+                let vtable_addr = file.read_u64()?;
+                file.seek(SeekFrom::Start(vtable_addr))?;
+                let mut vtable = vec![];
+                for _ in 0..type_info.vtable_size {
+                    vtable.push(file.read_u64()?)
+                }
+                Ok(vtable)
+            })();
+            let vtable = if let Ok(vtable) = vtable {
+                vtable
+            } else {
+                continue;
+            };
+            for method in &type_info.methods {
+                if method.runtime_address == 0
+                    || method.vtable_slot < 0
+                    || usize::try_from(method.vtable_slot)? >= type_info.vtable_size
+                {
+                    continue;
+                }
+                let address = vtable[usize::try_from(method.vtable_slot)?];
+                let diff = address - method.runtime_address;
+                let entry = guessed_offsets.entry(diff).or_default();
+                *entry += 1;
+                if *entry >= 100 {
+                    guessed_offset = Some(diff);
+                    eprintln!("Guessed method offset: {diff:X}");
+                    break 'guess;
+                }
+            }
+        }
+
+        if let Some(guessed_offset) = guessed_offset {
+            for type_info in &mut type_infos {
+                for method in &mut type_info.methods {
+                    if method.runtime_address != 0 {
+                        method.runtime_address += guessed_offset;
+                    }
+                }
+            }
+        }
+
+        // Build symbol, and sort & remap
+
         fn build_symbol(type_infos: &mut [TypeInfo], index: usize) -> String {
             let name = &type_infos[index].full_name;
             if !name.is_empty() {
@@ -2049,22 +2113,17 @@ impl Tdb {
         Ok(())
     }
 
-    pub fn write_map(&self, path: &str) -> Result<()> {
-        let mut function_map: Vec<(u32, String)> = self
-            .types
-            .iter()
-            .flat_map(|t| {
-                t.methods.iter().map(|method| {
-                    let symbol = format!("{}.{}", t.full_name, method.name);
-                    (method.address, symbol)
-                })
-            })
-            .collect();
-        function_map.sort_by_key(|f| f.0);
-
-        let mut map = File::create(path)?;
-        for (address, name) in function_map {
-            writeln!(map, "{} {:016X} f", name, address)?
+    pub fn write_json_split(&self, path: &str) -> Result<()> {
+        std::fs::create_dir_all(path)?;
+        let chunk = 1000;
+        for (i, t) in self.types.chunks(chunk).enumerate() {
+            let start_index = i * chunk;
+            let file = PathBuf::from(path).join(format!("{}.json", start_index));
+            let wrapper = TdbTypeChunk {
+                types: t,
+                start_index,
+            };
+            serde_json::to_writer_pretty(std::fs::File::create(file)?, &wrapper)?;
         }
 
         Ok(())
@@ -2293,8 +2352,8 @@ impl Tdb {
                     writeln!(output, ",")?;
                 }
 
-                let address = if !options.no_runtime && method.address != 0 {
-                    format!(" = 0x{:08X}", method.address)
+                let address = if !options.no_runtime && method.runtime_address != 0 {
+                    format!(" = 0x{:08X}", method.runtime_address)
                 } else {
                     "".to_string()
                 };
@@ -2370,8 +2429,11 @@ impl Tdb {
 }
 
 pub fn print<F: Read + Seek>(file: F, base_address: u64, options: crate::TdbOptions) -> Result<()> {
-    if options.json.is_none() && options.map.is_none() && options.cs.is_none() {
-        eprintln!("Please specify at least one of --json, --map, --cs");
+    if options.json.is_none()
+        && options.json_split.is_none()
+        && options.cs.is_none()
+    {
+        eprintln!("Please specify at least one of --json, --json-split, --map, --cs");
         return Ok(());
     }
 
@@ -2380,8 +2442,8 @@ pub fn print<F: Read + Seek>(file: F, base_address: u64, options: crate::TdbOpti
     if let Some(json) = &options.json {
         tdb.write_json(json)?;
     }
-    if let Some(map) = &options.map {
-        tdb.write_map(map)?;
+    if let Some(json_split) = &options.json_split {
+        tdb.write_json_split(json_split)?
     }
     if let Some(cs) = &options.cs {
         tdb.write_cs(cs, &options)?;
