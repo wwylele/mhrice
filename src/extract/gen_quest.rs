@@ -1080,6 +1080,31 @@ pub fn gen_random_mystery_difficulty(
             }
             </tbody>
             </table></div>
+            <section>
+            <h2>"Monsters that use this table"</h2>
+            <ul class="mh-item-list">
+            {
+                pedia_ex.monsters.iter().filter_map(|(&em, monster)| {
+                    let random_quest = if let Some(random_quest) = &monster.random_quest {
+                        random_quest
+                    } else {
+                        return None
+                    };
+                    if category == 0 &&
+                        usize::try_from(random_quest.difficulty_table_type) == Ok(kind) {
+                        return Some(em)
+                    }
+                    if category == 1 &&
+                        usize::try_from(random_quest.difficulty_table_type_extra) == Ok(kind) {
+                        return Some(em)
+                    }
+                    None
+                }).map(|em_type| {
+                    html!(<li>{gen_monster_tag(pedia_ex, em_type, false, false, false)}</li>)
+                })
+            }
+            </ul>
+            </section>
             </main>
         </body>
         </html>
