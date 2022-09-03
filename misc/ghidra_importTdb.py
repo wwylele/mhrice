@@ -164,8 +164,8 @@ for i in range(typeCount):
             break
 
     if not isValType[i]:
-        fields.append((0, PointerDataType(void, 8, typeManager), 8, "$vta"))
-        fields.append((8, PointerDataType(void, 8, typeManager), 8, "$vtb"))
+        fields.append((0, PointerDataType(void, 8, typeManager), 8, "$vtable"))
+        fields.append((8, PointerDataType(void, 8, typeManager), 8, "$lock"))
 
     def fieldPos(f):
         return f[0]
