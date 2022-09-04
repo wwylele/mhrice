@@ -73,6 +73,7 @@ function addEventListensers() {
     addEventListenerToId("button-scale-up", "click", scaleUpMap);
     addEventListenerToId("button-map-layer", "click", switchMapLayer);
     addEventListenerToId("mh-map-container", "mousedown", startDragMap);
+    addEventListenerToClass("undraggable", "dragstart", undraggable);
 
     addEventListenerToId("mh-invalid-part-check", "click",
         e => onCheckDisplay(e.currentTarget, 'mh-invalid-part', null));
@@ -102,6 +103,10 @@ function addEventListenerToId(id, event_name, f) {
     if (element) {
         element.addEventListener(event_name, f);
     }
+}
+
+function undraggable() {
+    return false;
 }
 
 function onToggleLeftAside() {
