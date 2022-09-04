@@ -1,5 +1,6 @@
 use super::gen_common::*;
 use super::gen_item::*;
+use super::gen_monster::*;
 use super::gen_website::*;
 use super::pedia::*;
 use super::prepare_map::*;
@@ -293,6 +294,27 @@ fn gen_map(
         html!(<span>{ text!("Map {:02}", id) }</span>)
     };
 
+    let discovery_map_index = rsz::DISCOVER_MAP_LIST.iter().position(|&i| i == id);
+
+    let discovery = discovery_map_index.map(|discovery_map_index| {
+        html!(
+            <section>
+            <h2>"Monsters in tour"</h2>
+            <ul class="mh-item-list">{
+                pedia_ex.monsters.iter().filter(|(_, monster)|
+                    if let Some(discovery) = &monster.discovery {
+                        discovery.map_flag[discovery_map_index]
+                    } else {
+                        false
+                    }
+                ).map(|(&em, _)|
+                    html!(<li>{gen_monster_tag(pedia_ex, em, false, false, false)}</li>)
+                )
+            }</ul>
+            </section>
+        )
+    });
+
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -366,6 +388,8 @@ fn gen_map(
             </div> // right column
 
             </div> // columns
+
+            {discovery}
 
             </main>
             </body>

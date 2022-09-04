@@ -1059,7 +1059,7 @@ pub fn gen_monster(
                 })
             }
             {
-                if let Some(&discovery) = pedia_ex.discoveries.get(&monster_em_type) {
+                if let Some(discovery) = monster_ex.discovery {
                     vec![
                         html!(<tr><td>{text!("Village tour ({})",
                             discovery.cond_village.display().unwrap_or_default())}</td>{

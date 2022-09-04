@@ -726,6 +726,9 @@ rsz_struct! {
     }
 }
 
+// snow.quest.DiscoverMap
+pub const DISCOVER_MAP_LIST: [i32; 7] = [1, 4, 2, 3, 5, 12, 13];
+
 rsz_struct! {
     #[rsz("snow.quest.DiscoverEmSetData.Param",
         0xa9f8ec2d = 10_00_02,

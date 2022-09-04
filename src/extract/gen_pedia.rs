@@ -1565,21 +1565,6 @@ fn prepare_quests<'a>(
         .collect::<Result<Vec<_>>>()
 }
 
-fn prepare_discoveries(pedia: &Pedia) -> Result<HashMap<EmTypes, &DiscoverEmSetDataParam>> {
-    let mut result = HashMap::new();
-    for discovery in &pedia.discover_em_set_data.param {
-        if discovery.em_type == EmTypes::Em(0) {
-            continue;
-        }
-
-        if result.insert(discovery.em_type, discovery).is_some() {
-            bail!("Duplicated discovery data for {:?}", discovery.em_type)
-        }
-    }
-
-    Ok(result)
-}
-
 fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> {
     let mut result = BTreeMap::new();
 
@@ -2732,6 +2717,16 @@ fn prepare_monsters<'a>(
         false,
     )?;
 
+    let discoveries: HashMap<EmTypes, &DiscoverEmSetDataParam> = hash_map_unique(
+        pedia
+            .discover_em_set_data
+            .param
+            .iter()
+            .filter(|p| p.em_type != EmTypes::Em(0)),
+        |p| (p.em_type, p),
+        false,
+    )?;
+
     let mut mystery_rewards: HashMap<EmTypes, Vec<MysteryReward>> = HashMap::new();
 
     for mystery_reward in &pedia.mystery_reward_item.param {
@@ -2817,6 +2812,7 @@ fn prepare_monsters<'a>(
         let mut mystery_reward = mystery_rewards.remove(&monster.em_type).unwrap_or_default();
         mystery_reward.sort_by_key(|m| m.lv_lower_limit);
         let random_quest = random_quests.get(&monster.em_type).copied();
+        let discovery = discoveries.get(&monster.em_type).copied();
         let entry = if let Some(index) = monster.enemy_type {
             let name = names
                 .get(&format!("EnemyIndex{index:03}"))
@@ -2855,6 +2851,7 @@ fn prepare_monsters<'a>(
                 explain2,
                 mystery_reward,
                 random_quest,
+                discovery,
             }
         } else {
             MonsterEx {
@@ -2865,6 +2862,7 @@ fn prepare_monsters<'a>(
                 explain2: None,
                 mystery_reward,
                 random_quest,
+                discovery,
             }
         };
         result.insert(monster.em_type, entry);
@@ -3087,7 +3085,6 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         sizes: prepare_size_map(&pedia.size_list)?,
         size_dists: prepare_size_dist_map(&pedia.random_scale)?,
         quests: prepare_quests(pedia, &reward_lot)?,
-        discoveries: prepare_discoveries(pedia)?,
         skills: prepare_skills(pedia)?,
         hyakuryu_skills: prepare_hyakuryu_skills(pedia)?,
         armors: prepare_armors(pedia)?,

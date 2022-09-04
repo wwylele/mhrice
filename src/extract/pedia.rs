@@ -395,6 +395,7 @@ pub struct MonsterEx<'a> {
     pub explain2: Option<&'a MsgEntry>,
     pub mystery_reward: Vec<MysteryReward<'a>>,
     pub random_quest: Option<&'a LotEnemyData>,
+    pub discovery: Option<&'a DiscoverEmSetDataParam>,
 }
 
 pub struct Servant<'a> {
@@ -439,7 +440,6 @@ pub struct PediaEx<'a> {
     pub sizes: HashMap<EmTypes, &'a SizeInfo>,
     pub size_dists: HashMap<i32, &'a [ScaleAndRateData]>,
     pub quests: Vec<Quest<'a>>,
-    pub discoveries: HashMap<EmTypes, &'a DiscoverEmSetDataParam>,
     pub skills: BTreeMap<PlEquipSkillId, Skill<'a>>,
     pub hyakuryu_skills: BTreeMap<PlHyakuryuSkillId, HyakuryuSkill<'a>>,
     pub armors: Vec<ArmorSeries<'a>>,
