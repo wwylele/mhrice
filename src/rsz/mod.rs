@@ -939,6 +939,9 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         NGAppearanceData,
         LotEnemyData,
         RandomMysteryLotEnemyData,
+        ReleaseDataParam,
+        ReleaseData,
+        RandomMysteryMonsterRankReleaseData
     );
 
     m

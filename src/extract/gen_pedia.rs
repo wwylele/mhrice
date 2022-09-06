@@ -855,6 +855,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         custom_buildup_wep_table: get_singleton_opt(pak)?,
         random_mystery_difficulty,
         random_mystery_enemy: get_singleton_opt(pak)?,
+        random_mystery_rank_release: get_singleton_opt(pak)?,
     })
 }
 

@@ -1091,7 +1091,9 @@ pub fn gen_monster(
         </section>
     ) });
 
-    if let Some(random_quest) = monster_ex.random_quest {
+    if let (Some(random_quest), Some(rank_release)) =
+        (monster_ex.random_quest, &pedia.random_mystery_rank_release)
+    {
         let diff_table = format!(
             "/quest/anomaly_difficulty_0_{}.html",
             random_quest.difficulty_table_type
@@ -1108,8 +1110,11 @@ pub fn gen_monster(
             <div class="mh-kvlist">
             <p class="mh-kv"><span>"Appear at"</span>
             {
+                let release = rank_release.release_level_data[0].param_data.iter().find(
+                    |p|p.monster_rank == random_quest.mystery_rank
+                ).map(|p|format!("(Lv{})", p.release_level)).unwrap_or_default();
                 let rank = (random_quest.mystery_rank.0 != 12).then(||
-                    text!("A{}", random_quest.mystery_rank.0));
+                    text!("A{} {}", random_quest.mystery_rank.0, release));
                 let level = (random_quest.release_level != -1).then(||
                     text!("Lv{}", random_quest.release_level));
                 let or = (rank.is_some() && level.is_some()).then(||text!(" Or "));
@@ -1119,8 +1124,11 @@ pub fn gen_monster(
             </p>
             <p class="mh-kv"><span>"Appear as sub target at"</span>
             {
+                let release = rank_release.release_level_data[1].param_data.iter().find(
+                    |p|p.monster_rank == random_quest.normal_rank
+                ).map(|p|format!("(Lv{})", p.release_level)).unwrap_or_default();
                 let rank = (random_quest.normal_rank.0 != 12).then(||
-                    text!("A{}", random_quest.normal_rank.0));
+                    text!("\"A{}\" {}", random_quest.normal_rank.0, release));
                 let level = (random_quest.release_level_normal != -1).then(||
                     text!("Lv{}", random_quest.release_level_normal));
                 let or = (rank.is_some() && level.is_some()).then(||text!(" Or "));

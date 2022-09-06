@@ -233,6 +233,7 @@ pub struct Pedia {
 
     pub random_mystery_difficulty: Option<RandomMysteryDifficultyRateListData>,
     pub random_mystery_enemy: Option<RandomMysteryLotEnemyData>,
+    pub random_mystery_rank_release: Option<RandomMysteryMonsterRankReleaseData>,
 }
 
 pub struct QuestReward<'a> {

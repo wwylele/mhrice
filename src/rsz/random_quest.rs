@@ -110,7 +110,7 @@ rsz_struct! {
 // snow.enemy.EnemyDef.MysteryRank
 rsz_newtype! {
     #[rsz_offset(1)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, PartialEq, Eq)]
     #[serde(transparent)]
     pub struct MysteryRank(pub i32);
 }
@@ -187,5 +187,37 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct RandomMysteryLotEnemyData {
         pub lot_enemy_list: Vec<LotEnemyData>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.RandomMysteryRankReleaseData.Param",
+        0x225A508D = 11_00_01,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ReleaseDataParam {
+        pub monster_rank: MysteryRank,
+        pub release_level: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.RandomMysteryRankReleaseData.ReleaseData",
+        0x1C52CB2A = 11_00_01,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ReleaseData {
+        pub param_data: Vec<ReleaseDataParam>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.RandomMysteryRankReleaseData",
+        path = "Quest/RandomMystery/RandomMysteryMonsterRankReleaseData.user",
+        0xD758E497 = 11_00_01,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RandomMysteryMonsterRankReleaseData {
+        pub release_level_data: [ReleaseData; 2],
     }
 }
