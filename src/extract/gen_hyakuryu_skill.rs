@@ -130,10 +130,12 @@ fn gen_hyakuryu_source_weapon(
     check_weapon!(bow);
 
     if !htmls.is_empty() {
-        Some(html!(<section> <div> <h2 >"Available on weapons"</h2>
+        Some(
+            html!(<section id="s-source"> <div> <h2 >"Available on weapons"</h2>
             <ul class="mh-item-list">{
                 htmls
-            }</ul> </div> </section>))
+            }</ul> </div> </section>),
+        )
     } else {
         None
     }
@@ -160,29 +162,74 @@ pub fn gen_hyakuryu_skill(
 ) -> Result<()> {
     toc_sink.add(skill.name);
 
-    let deco = skill.deco.as_ref().map(|deco| {
-        html!(<section>
-        <h2 >"Decoration"</h2>
-        <div class="mh-table"><table>
-            <thead><tr>
-                <th>"Name"</th>
-                <th>"Cost"</th>
-                <th>"Categorized Material"</th>
-                <th>"Material"</th>
-            </tr></thead>
-            <tbody>
-                <tr>
-                    <td>{gen_hyakuryu_deco_label(deco)}</td>
-                    <td>{text!("{}z", deco.data.base_price)}</td>
-                    { gen_category(pedia_ex, deco.product.material_category,
-                        deco.product.point) }
-                    { gen_materials(pedia_ex, &deco.product.item_id_list,
-                        &deco.product.item_num_list, deco.product.item_flag) }
-                </tr>
-            </tbody>
-        </table></div>
-        </section>)
+    let mut sections = vec![];
+
+    sections.push(Section {
+        title: "Description".to_owned(),
+        content: html!(
+            <section id="s-description">
+            <pre>{gen_multi_lang(skill.explain)}</pre>
+            </section>
+        ),
     });
+
+    if let Some(recipe) = skill.recipe {
+        sections.push(Section {
+            title: "Crafting on weapon".to_owned(),
+            content: html!(<section id="s-crafting">
+                <h2 >"Crafting on weapon"</h2>
+                <div class="mh-table"><table>
+                    <thead><tr>
+                        <th>"Cost"</th>
+                        <th>"Material"</th>
+                    </tr></thead>
+                    <tbody>
+                    <tr>
+                        <td>{ text!("{}z", recipe.cost) }</td>
+                        { gen_materials(pedia_ex, &recipe.recipe_item_id_list,
+                            &recipe.recipe_item_num_list, ItemId::None) }
+                    </tr>
+                    </tbody>
+                </table></div>
+                </section>),
+        });
+    }
+
+    if let Some(source) = gen_hyakuryu_source_weapon(skill.id(), pedia_ex) {
+        sections.push(Section {
+            title: "Available on weapons".to_owned(),
+            content: source,
+        });
+    }
+
+    if let Some(deco) = &skill.deco {
+        sections.push(Section {
+            title: "Decoration".to_owned(),
+            content: html!(
+                <section id="s-decoration">
+                <h2 >"Decoration"</h2>
+                <div class="mh-table"><table>
+                    <thead><tr>
+                        <th>"Name"</th>
+                        <th>"Cost"</th>
+                        <th>"Categorized Material"</th>
+                        <th>"Material"</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr>
+                            <td>{gen_hyakuryu_deco_label(deco)}</td>
+                            <td>{text!("{}z", deco.data.base_price)}</td>
+                            { gen_category(pedia_ex, deco.product.material_category,
+                                deco.product.point) }
+                            { gen_materials(pedia_ex, &deco.product.item_id_list,
+                                &deco.product.item_num_list, deco.product.item_flag) }
+                        </tr>
+                    </tbody>
+                </table></div>
+                </section>
+            ),
+        })
+    }
 
     let doc: DOMTree<String> = html!(
         <html>
@@ -193,6 +240,7 @@ pub fn gen_hyakuryu_skill(
             <body>
                 { navbar() }
                 { right_aside() }
+                { gen_menu(&sections) }
                 <main>
                 <header>
                     <div class="mh-title-icon">
@@ -201,32 +249,7 @@ pub fn gen_hyakuryu_skill(
                     <h1>{gen_multi_lang(skill.name)}</h1>
                 </header>
 
-                <section>
-                    <pre>{gen_multi_lang(skill.explain)}</pre>
-                </section>
-
-                {skill.recipe.map(|recipe| html!(
-                    <section>
-                    <h2 >"Crafting"</h2>
-                    <div class="mh-table"><table>
-                        <thead><tr>
-                            <th>"Cost"</th>
-                            <th>"Material"</th>
-                        </tr></thead>
-                        <tbody>
-                        <tr>
-                            <td>{ text!("{}z", recipe.cost) }</td>
-                            { gen_materials(pedia_ex, &recipe.recipe_item_id_list,
-                                &recipe.recipe_item_num_list, ItemId::None) }
-                        </tr>
-                        </tbody>
-                    </table></div>
-                    </section>
-                ))}
-
-                { deco }
-
-                { gen_hyakuryu_source_weapon(skill.id(), pedia_ex) }
+                { sections.into_iter().map(|s|s.content) }
 
                 </main>
             </body>

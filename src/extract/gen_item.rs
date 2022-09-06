@@ -636,6 +636,94 @@ pub fn gen_item(
 
     toc_sink.add(item.name);
 
+    let mut sections = vec![];
+
+    sections.push(Section {
+        title: "Description".to_owned(),
+        content: html!(
+            <section id="s-description"><pre>
+                {gen_multi_lang(item.explain)}
+            </pre></section>
+        ),
+    });
+
+    sections.push(Section {
+        title: "Basic data".to_owned(),
+        content: html!(
+            <section id="s-basic">
+            <h2 >"Basic data"</h2>
+            <div class="mh-kvlist">
+            <p class="mh-kv"><span>"Carriable filter"</span>
+            <span>{text!("{:?}", item.param.cariable_filter)}</span></p>
+            <p class="mh-kv"><span>"Type"</span>
+            <span>{text!("{:?}", item.param.type_)}</span></p>
+            <p class="mh-kv"><span>"Rarity"</span>
+            <span>{text!("{}", item.param.rare.0)}</span></p>
+            <p class="mh-kv"><span>"Maximum carry"</span>
+            <span>{text!("{}", item.param.pl_max_count)}</span></p>
+            <p class="mh-kv"><span>"Maximum carry by buddy"</span>
+            <span>{text!("{}", item.param.ot_max_count)}</span></p>
+            <p class="mh-kv"><span>"In item bar"</span>
+            <span>{text!("{}", item.param.show_item_window)}</span></p>
+            <p class="mh-kv"><span>"In action bar"</span>
+            <span>{text!("{}", item.param.show_action_window)}</span></p>
+            <p class="mh-kv"><span>"Infinite"</span>
+            <span>{text!("{}", item.param.infinite)}</span></p>
+            <p class="mh-kv"><span>"Fixed item"</span>
+            <span>{text!("{}", item.param.default)}</span></p>
+            /*<p class="mh-kv"><span>"SE type"</span>
+            <span>{text!("{:?}", item.param.se_type)}</span></p>*/
+            <p class="mh-kv"><span>"Sell price"</span>
+            <span>{text!("{}z", item.param.sell_price)}</span></p>
+            <p class="mh-kv"><span>"Buy price"</span>
+            <span>{text!("{}z", item.param.buy_price)}</span></p>
+            /*<p class="mh-kv"><span>"Rank type"</span>
+            <span>{text!("{:?}", item.param.rank_type)}</span></p>*/
+            <p class="mh-kv"><span>"Item group"</span>
+            <span>{text!("{:?}", item.param.item_group)}</span></p>
+            <p class="mh-kv"><span>"Material category"</span>
+            <span>
+                {material_categories}
+                {text!("{} pt", item.param.category_worth)}
+            </span></p>
+            <p class="mh-kv"><span>"Evaluation value"</span>
+            <span>{text!("{}",item.param.evaluation_value)}</span></p>
+            <p class="mh-kv"><span>"Dog pouch"</span>
+            <span>{text!("{}",item.param.can_put_in_dog_pouch)}</span></p>
+            </div>
+            </section>
+        ),
+    });
+
+    sections.push(Section {
+        title: "Where to get".to_owned(),
+        content: html!(
+            <section id="s-get">
+            <h2 >"Where to get"</h2>
+            {gen_item_source_monster(item.param.id, pedia_ex)}
+            {gen_item_source_quest(item.param.id, pedia_ex)}
+            {gen_item_source_map(item.param.id, pedia, pedia_ex)}
+            {gen_item_source_weapon(item.param.id, pedia_ex)}
+            {gen_item_source_armor(item.param.id, pedia_ex)}
+            </section>
+        ),
+    });
+
+    sections.push(Section {
+        title: "Where to use".to_owned(),
+        content: html!(
+            <section id="s-use">
+            <h2 >"Where to use"</h2>
+            {gen_item_usage_weapon(item.param.id, pedia_ex)}
+            {gen_item_usage_armor(item.param.id, pedia_ex)}
+            {gen_item_usage_otomo(item.param.id, pedia_ex)}
+            {gen_item_usage_deco(item.param.id, pedia_ex)}
+            {gen_item_usage_hyakuryu(item.param.id, pedia_ex)}
+            {gen_item_usage_hyakuryu_deco(item.param.id, pedia_ex)}
+            </section>
+        ),
+    });
+
     let doc: DOMTree<String> = html!(
         <html>
             <head>
@@ -645,6 +733,7 @@ pub fn gen_item(
             <body>
                 { navbar() }
                 { right_aside() }
+                { gen_menu(&sections) }
                 <main>
                 <header>
                     <div class="mh-title-icon">
@@ -653,71 +742,7 @@ pub fn gen_item(
                     <h1>{gen_multi_lang(item.name)}</h1>
                 </header>
 
-                <section><pre>
-                    {gen_multi_lang(item.explain)}
-                </pre></section>
-
-                <section>
-                <h2 >"Basic data"</h2>
-                <div class="mh-kvlist">
-                <p class="mh-kv"><span>"Carriable filter"</span>
-                <span>{text!("{:?}", item.param.cariable_filter)}</span></p>
-                <p class="mh-kv"><span>"Type"</span>
-                <span>{text!("{:?}", item.param.type_)}</span></p>
-                <p class="mh-kv"><span>"Rarity"</span>
-                <span>{text!("{}", item.param.rare.0)}</span></p>
-                <p class="mh-kv"><span>"Maximum carry"</span>
-                <span>{text!("{}", item.param.pl_max_count)}</span></p>
-                <p class="mh-kv"><span>"Maximum carry by buddy"</span>
-                <span>{text!("{}", item.param.ot_max_count)}</span></p>
-                <p class="mh-kv"><span>"In item bar"</span>
-                <span>{text!("{}", item.param.show_item_window)}</span></p>
-                <p class="mh-kv"><span>"In action bar"</span>
-                <span>{text!("{}", item.param.show_action_window)}</span></p>
-                <p class="mh-kv"><span>"Infinite"</span>
-                <span>{text!("{}", item.param.infinite)}</span></p>
-                <p class="mh-kv"><span>"Fixed item"</span>
-                <span>{text!("{}", item.param.default)}</span></p>
-                /*<p class="mh-kv"><span>"SE type"</span>
-                <span>{text!("{:?}", item.param.se_type)}</span></p>*/
-                <p class="mh-kv"><span>"Sell price"</span>
-                <span>{text!("{}z", item.param.sell_price)}</span></p>
-                <p class="mh-kv"><span>"Buy price"</span>
-                <span>{text!("{}z", item.param.buy_price)}</span></p>
-                /*<p class="mh-kv"><span>"Rank type"</span>
-                <span>{text!("{:?}", item.param.rank_type)}</span></p>*/
-                <p class="mh-kv"><span>"Item group"</span>
-                <span>{text!("{:?}", item.param.item_group)}</span></p>
-                <p class="mh-kv"><span>"Material category"</span>
-                <span>
-                    {material_categories}
-                    {text!("{} pt", item.param.category_worth)}
-                </span></p>
-                <p class="mh-kv"><span>"Evaluation value"</span>
-                <span>{text!("{}",item.param.evaluation_value)}</span></p>
-                <p class="mh-kv"><span>"Dog pouch"</span>
-                <span>{text!("{}",item.param.can_put_in_dog_pouch)}</span></p>
-                </div>
-                </section>
-
-                <section>
-                <h2 >"Where to get"</h2>
-                {gen_item_source_monster(item.param.id, pedia_ex)}
-                {gen_item_source_quest(item.param.id, pedia_ex)}
-                {gen_item_source_map(item.param.id, pedia, pedia_ex)}
-                {gen_item_source_weapon(item.param.id, pedia_ex)}
-                {gen_item_source_armor(item.param.id, pedia_ex)}
-                </section>
-
-                <section>
-                <h2 >"Where to use"</h2>
-                {gen_item_usage_weapon(item.param.id, pedia_ex)}
-                {gen_item_usage_armor(item.param.id, pedia_ex)}
-                {gen_item_usage_otomo(item.param.id, pedia_ex)}
-                {gen_item_usage_deco(item.param.id, pedia_ex)}
-                {gen_item_usage_hyakuryu(item.param.id, pedia_ex)}
-                {gen_item_usage_hyakuryu_deco(item.param.id, pedia_ex)}
-                </section>
+                { sections.into_iter().map(|s|s.content) }
 
                 </main>
             </body>

@@ -76,23 +76,12 @@ fn gen_otomo_equip(
         </tr>))
     };
 
-    let doc: DOMTree<String> = html!(<html>
-        <head>
-            <title>{text!("Buddy equipment")}</title>
-            { head_common() }
-        </head>
-        <body>
-            { navbar() }
-            { right_aside() }
-            <main>
-            <header>
-                <div class="mh-title-icon">
-                { gen_rared_icon(rarity, icon) }
-                </div>
-                <h1> {gen_multi_lang(series.name)} </h1>
-            </header>
+    let mut sections = vec![];
 
-            <section>
+    sections.push(Section {
+        title: "Description".to_owned(),
+        content: html!(
+            <section id="s-description">
             <h2 >"Description"</h2>
             <div class="mh-table"><table>
                 <thead><tr>
@@ -115,8 +104,13 @@ fn gen_otomo_equip(
                 </tbody>
             </table></div>
             </section>
+        ),
+    });
 
-            <section>
+    sections.push(Section {
+        title: "Stat".to_owned(),
+        content: html!(
+            <section id="s-stat">
             <h2 >"Stat"</h2>
             <div class="mh-table"><table>
                 <thead><tr>
@@ -161,8 +155,13 @@ fn gen_otomo_equip(
                 </tbody>
             </table></div>
             </section>
+        ),
+    });
 
-            <section>
+    sections.push(Section {
+        title: "Crafting".to_owned(),
+        content: html!(
+            <section id="s-crafting">
             <h2 >"Crafting"</h2>
             <div class="mh-table"><table>
                 <thead><tr>
@@ -199,11 +198,30 @@ fn gen_otomo_equip(
                             html!(<td>"-"</td>)
                         }}
                     </tr>)})}
-
-
                 </tbody>
             </table></div>
             </section>
+        )
+    });
+
+    let doc: DOMTree<String> = html!(<html>
+        <head>
+            <title>{text!("Buddy equipment")}</title>
+            { head_common() }
+        </head>
+        <body>
+            { navbar() }
+            { right_aside() }
+            { gen_menu(&sections) }
+            <main>
+            <header>
+                <div class="mh-title-icon">
+                { gen_rared_icon(rarity, icon) }
+                </div>
+                <h1> {gen_multi_lang(series.name)} </h1>
+            </header>
+
+            { sections.into_iter().map(|s|s.content) }
 
             // TODO: how to unlock one
 

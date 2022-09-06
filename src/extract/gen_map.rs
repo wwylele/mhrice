@@ -294,41 +294,12 @@ fn gen_map(
         html!(<span>{ text!("Map {:02}", id) }</span>)
     };
 
-    let discovery_map_index = rsz::DISCOVER_MAP_LIST.iter().position(|&i| i == id);
+    let mut sections = vec![];
 
-    let discovery = discovery_map_index.map(|discovery_map_index| {
-        html!(
-            <section>
-            <h2>"Monsters in tour"</h2>
-            <ul class="mh-item-list">{
-                pedia_ex.monsters.iter().filter(|(_, monster)|
-                    if let Some(discovery) = &monster.discovery {
-                        discovery.map_flag[discovery_map_index]
-                    } else {
-                        false
-                    }
-                ).map(|(&em, _)|
-                    html!(<li>{gen_monster_tag(pedia_ex, em, false, false, false)}</li>)
-                )
-            }</ul>
-            </section>
-        )
-    });
-
-    let doc: DOMTree<String> = html!(
-        <html>
-            <head>
-                <title>{text!("Map {:02}", id)}</title>
-                { head_common() }
-                <style id="mh-map-pop-style">""</style>
-            </head>
-            <body>
-            { navbar() }
-            { right_aside() }
-            <main>
-
-            <header><h1>{title}</h1></header>
-
+    sections.push(Section {
+        title: "Map".to_owned(),
+        content: html!(
+            <section id="s-map">
             <div class="mh-filters"><ul>
             <li id="mh-map-filter-all" class="mh-map-filter is-active"><a>"All icons"</a></li>
             <li id="mh-map-filter-item" class="mh-map-filter"><a>"Gathering"</a></li>
@@ -388,8 +359,50 @@ fn gen_map(
             </div> // right column
 
             </div> // columns
+            </section>
+        ),
+    });
 
-            {discovery}
+    let discovery_map_index = rsz::DISCOVER_MAP_LIST.iter().position(|&i| i == id);
+
+    if let Some(discovery_map_index) = discovery_map_index {
+        sections.push(Section {
+            title: "Monsters in tour".to_owned(),
+            content: html!(
+                <section id="s-monster">
+                <h2>"Monsters in tour"</h2>
+                <ul class="mh-item-list">{
+                    pedia_ex.monsters.iter().filter(|(_, monster)|
+                        if let Some(discovery) = &monster.discovery {
+                            discovery.map_flag[discovery_map_index]
+                        } else {
+                            false
+                        }
+                    ).map(|(&em, _)|
+                        html!(<li>{gen_monster_tag(pedia_ex, em, false, false, false)}</li>)
+                    )
+                }</ul>
+                </section>
+            ),
+        });
+    };
+
+    let doc: DOMTree<String> = html!(
+        <html>
+            <head>
+                <title>{text!("Map {:02}", id)}</title>
+                { head_common() }
+                <style id="mh-map-pop-style">""</style>
+            </head>
+            <body>
+            { navbar() }
+            { right_aside() }
+            { gen_menu(&sections) }
+            <main>
+
+            <header><h1>{title}</h1></header>
+
+            { sections.into_iter().map(|s|s.content) }
 
             </main>
             </body>

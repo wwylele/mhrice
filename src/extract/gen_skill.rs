@@ -121,10 +121,12 @@ fn gen_skill_source_gear(id: PlEquipSkillId, pedia_ex: &PediaEx) -> Option<Box<s
     }
 
     if !htmls.is_empty() {
-        Some(html!(<section> <div> <h2 >"Available on armors"</h2>
+        Some(
+            html!(<section id="s-source"> <div> <h2 >"Available on armors"</h2>
             <ul class="mh-item-list">{
                 htmls
-            }</ul> </div> </section>))
+            }</ul> </div> </section>),
+        )
     } else {
         None
     }
@@ -138,32 +140,79 @@ pub fn gen_skill(
     mut toc_sink: TocSink<'_>,
 ) -> Result<()> {
     toc_sink.add(skill.name);
-    let deco = (!skill.decos.is_empty()).then(|| {
-        html!(<section>
-        <h2 >"Decoration"</h2>
-        <div class="mh-table"><table>
-            <thead><tr>
-                <th>"Name"</th>
-                <th>"Skill level"</th>
-                <th>"Cost"</th>
-                <th>"Material"</th>
-            </tr></thead>
-            <tbody>
-            {
-                skill.decos.iter().map(|deco|{html!(
-                    <tr>
-                        <td>{gen_deco_label(deco)}</td>
-                        <td>{text!("{}", deco.data.skill_lv_list[0])}</td>
-                        <td>{text!("{}z", deco.data.base_price)}</td>
-                        { gen_materials(pedia_ex, &deco.product.item_id_list,
-                            &deco.product.item_num_list, deco.product.item_flag) }
-                    </tr>
-                )})
-            }
-            </tbody>
-        </table></div>
-        </section>)
+
+    let mut sections = vec![];
+
+    sections.push(Section {
+        title: "Description".to_owned(),
+        content: html!(
+            <section id="s-description">
+                <pre>{gen_multi_lang(skill.explain)}</pre>
+                <ul>{
+                    skill.levels.iter().enumerate().map(|(level, detail)| {
+                        html!(<li>
+                            <span>{text!("Level {}: ", level + 1)}</span>
+                            <span>{gen_multi_lang(detail)}</span>
+                        </li>)
+                    })
+                }</ul>
+            </section>
+        ),
     });
+
+    if !skill.decos.is_empty() {
+        sections.push(Section {
+            title: "Decoration".to_owned(),
+            content: html!(
+                <section id="s-decoration">
+                <h2 >"Decoration"</h2>
+                <div class="mh-table"><table>
+                    <thead><tr>
+                        <th>"Name"</th>
+                        <th>"Skill level"</th>
+                        <th>"Cost"</th>
+                        <th>"Material"</th>
+                    </tr></thead>
+                    <tbody>
+                    {
+                        skill.decos.iter().map(|deco|{html!(
+                            <tr>
+                                <td>{gen_deco_label(deco)}</td>
+                                <td>{text!("{}", deco.data.skill_lv_list[0])}</td>
+                                <td>{text!("{}z", deco.data.base_price)}</td>
+                                { gen_materials(pedia_ex, &deco.product.item_id_list,
+                                    &deco.product.item_num_list, deco.product.item_flag) }
+                            </tr>
+                        )})
+                    }
+                    </tbody>
+                </table></div>
+                </section>
+            ),
+        });
+    }
+
+    if let Some(cost) = skill.custom_buildup_cost {
+        let class = format!("tag mh-cb-lv{}", cost);
+        sections.push(Section {
+            title: "Qurious crafting".to_owned(),
+            content: html!(
+                <section id="s-qurious">
+                <h2>"Qurious crafting"</h2>
+                <p><span class={class.as_str()}>
+                    {text!("Pt{} skill", cost)}
+                </span></p>
+                </section>
+            ),
+        });
+    }
+
+    if let Some(source) = gen_skill_source_gear(id, pedia_ex) {
+        sections.push(Section {
+            title: "Available on armors".to_owned(),
+            content: source,
+        });
+    }
 
     let doc: DOMTree<String> = html!(
         <html>
@@ -174,6 +223,7 @@ pub fn gen_skill(
             <body>
                 { navbar() }
                 { right_aside() }
+                { gen_menu(&sections) }
                 <main>
                 <header>
                     <div class="mh-title-icon">
@@ -181,33 +231,8 @@ pub fn gen_skill(
                     </div>
                     <h1> {gen_multi_lang(skill.name)} </h1>
                 </header>
-                <section>
-                    <pre>{gen_multi_lang(skill.explain)}</pre>
-                    <ul>{
-                        skill.levels.iter().enumerate().map(|(level, detail)| {
-                            html!(<li>
-                                <span>{text!("Level {}: ", level + 1)}</span>
-                                <span>{gen_multi_lang(detail)}</span>
-                            </li>)
-                        })
-                    }</ul>
-                </section>
 
-                { deco }
-
-                {skill.custom_buildup_cost.map(|cost| {
-                    let class=format!("tag mh-cb-lv{}", cost);
-                    html!(
-                        <section>
-                        <h2>"Qurious crafting"</h2>
-                        <p><span class={class.as_str()}>
-                            {text!("Pt{} skill", cost)}
-                        </span></p>
-                        </section>
-                    )
-                })}
-
-                { gen_skill_source_gear(id, pedia_ex) }
+                { sections.into_iter().map(|s|s.content) }
 
                 </main>
             </body>
