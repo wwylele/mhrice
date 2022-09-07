@@ -105,7 +105,8 @@ function addEventListenerToId(id, event_name, f) {
     }
 }
 
-function undraggable() {
+function undraggable(e) {
+    e.preventDefault();
     return false;
 }
 
