@@ -118,7 +118,9 @@ macro_rules! rsz_sumtype {
                 let child = rsz.get_child_any()?;
                 $(
                     if child.symbol() == <$variant_type>::SYMBOL {
-                        return Ok($enum_name::$variant(child.downcast().unwrap()))
+                        let v = child.downcast().unwrap();
+                        let v = Rc::try_unwrap(v).map_err(|_|anyhow!("Shared node"))?;
+                        return Ok($enum_name::$variant(v))
                     }
                 )*
                 bail!("Unknown type {} for sum type {}", child.symbol(), stringify!($enum_name))

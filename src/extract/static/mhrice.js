@@ -40,6 +40,8 @@ document.addEventListener('DOMContentLoaded', function () {
     hide_class("mh-no-preset");
     hide_class("mh-non-target");
     hide_class("mh-quest-detail");
+    hide_class("mh-part-internal");
+    hide_class("mh-hitzone-internal");
 
     change_sort("monster", 1);
     change_sort("item", 1);
@@ -87,6 +89,10 @@ function addEventListensers() {
         e => onCheckDisplay(e.currentTarget, 'mh-non-target', null));
     addEventListenerToId("mh-quest-detail-check", "click",
         e => onCheckDisplay(e.currentTarget, 'mh-quest-detail', null));
+    addEventListenerToId("mh-part-internal-check", "click",
+        e => onCheckDisplay(e.currentTarget, 'mh-part-internal', null));
+    addEventListenerToId("mh-hitzone-internal-check", "click",
+        e => onCheckDisplay(e.currentTarget, 'mh-hitzone-internal', null));
 
     addEventListenerToClass("mh-color-diagram-switch", "click", onChangeDiagramColor);
     addEventListenerToClass("has-dropdown", "click", onDropdownClick);

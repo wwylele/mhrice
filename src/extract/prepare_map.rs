@@ -5,12 +5,13 @@ use crate::rsz::FromRsz;
 use crate::scn::*;
 use crate::tex::*;
 use crate::user::*;
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use nalgebra::*;
 use nalgebra_glm::*;
 use serde::*;
 use std::collections::BTreeMap;
 use std::io::{Cursor, Read, Seek};
+use std::rc::*;
 
 struct MapFiles {
     tex_files: &'static [&'static str],
@@ -176,9 +177,10 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
 
     let scale: rsz::GuiMapScaleDefineData = if scale.symbol() == rsz::GuiMapScaleDefineData::SYMBOL
     {
-        scale.downcast().unwrap()
+        Rc::try_unwrap(scale.downcast().unwrap()).map_err(|_| anyhow!("Shared node"))?
     } else if scale.symbol() == rsz::GuiMap07DefineData::SYMBOL {
-        let scale: rsz::GuiMap07DefineData = scale.downcast().unwrap();
+        let scale: rsz::GuiMap07DefineData =
+            Rc::try_unwrap(scale.downcast().unwrap()).map_err(|_| anyhow!("Shared node"))?;
         scale.base.0
     } else {
         bail!("Unknown map scale type {}", scale.symbol())

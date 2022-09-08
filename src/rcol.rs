@@ -8,6 +8,7 @@ use nalgebra_glm::*;
 use std::collections::HashSet;
 use std::convert::{TryFrom, TryInto};
 use std::io::{Cursor, Read, Seek, SeekFrom};
+use std::rc::*;
 
 pub enum UserData {
     RszRootIndex(usize),
@@ -30,9 +31,9 @@ impl UserData {
         }
     }
 
-    pub fn downcast<T: 'static>(self) -> Option<Box<T>> {
+    pub fn downcast<T: 'static>(self) -> Option<T> {
         if let UserData::Data(data) = self {
-            data.downcast().ok()
+            Rc::try_unwrap(data.downcast().ok()?).ok()
         } else {
             panic!();
         }

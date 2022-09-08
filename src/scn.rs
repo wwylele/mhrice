@@ -3,7 +3,7 @@ use crate::pak::*;
 use crate::rsz;
 use crate::rsz::Rsz;
 use crate::user::UserChild;
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use std::collections::BTreeSet;
 use std::collections::HashMap;
 use std::io::{Cursor, Read, Seek};
@@ -349,13 +349,15 @@ impl Scene {
         let mut orphan_folders: HashMap<Option<u32>, Vec<Folder>> = HashMap::new();
 
         for go in scn.game_objects.into_iter().rev() {
-            let object: rsz::GameObject = data
+            let object: Rc<rsz::GameObject> = data
                 .get_mut(usize::try_from(go.object_index)?)
                 .context("game object index out of bound")?
                 .take()
                 .context("game object data already taken")?
                 .downcast()
                 .context("GameObject type mismatch")?;
+            let object: rsz::GameObject =
+                Rc::try_unwrap(object).map_err(|_| anyhow!("Shared node"))?;
             let components: Vec<rsz::AnyRsz> = (go.object_index + 1
                 ..=go.object_index + go.component_count)
                 .map(|i| {
@@ -396,13 +398,14 @@ impl Scene {
         }
 
         for f in scn.folders.into_iter().rev() {
-            let folder: rsz::Folder = data
+            let folder: Rc<rsz::Folder> = data
                 .get_mut(usize::try_from(f.folder_object_index)?)
                 .context("folder index out of bound")?
                 .take()
                 .context("folder data already taken")?
                 .downcast()
                 .context("Folder type mismatch")?;
+            let folder: rsz::Folder = Rc::try_unwrap(folder).map_err(|_| anyhow!("Shared node"))?;
             let subscene = folder
                 .path
                 .as_ref()

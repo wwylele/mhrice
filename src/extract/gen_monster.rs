@@ -1194,6 +1194,10 @@ pub fn gen_monster(
                 <input type="checkbox" id="mh-invalid-meat-check"/>
                 <label for="mh-invalid-meat-check">"Display invalid parts"</label>
             </div>
+            <div>
+                <input type="checkbox" id="mh-hitzone-internal-check"/>
+                <label for="mh-hitzone-internal-check">"Display internal name"</label>
+            </div>
             <div class="mh-table"><table>
                 <thead>
                 <tr>
@@ -1218,7 +1222,7 @@ pub fn gen_monster(
                         let part_name = if let Some(names) = collider_mapping.meat_map.get(&part) {
                             names.iter().map(|s|s.as_str()).collect::<Vec<&str>>().join(", ")
                         } else {
-                            format!("{}", part)
+                            "".to_owned()
                         };
 
                         let part_color = format!("mh-part mh-part-{}", part);
@@ -1227,7 +1231,8 @@ pub fn gen_monster(
                         let mut part_common: Option<Vec<Box<td<String>>>> = Some(vec![
                             html!(<td rowspan={span}>
                                 <span class=part_color.as_str()/>
-                                { text!("{}", part_name) }
+                                {text!("[{}]", part)}
+                                <span class="mh-hitzone-internal">{ text!("{}", part_name) }</span>
                             </td>),
                         ]);
 
@@ -1321,6 +1326,10 @@ pub fn gen_monster(
             <input type="checkbox" id="mh-invalid-part-check"/>
             <label for="mh-invalid-part-check">"Display invalid parts"</label>
         </div>
+        <div>
+            <input type="checkbox" id="mh-part-internal-check"/>
+            <label for="mh-part-internal-check">"Display internal name"</label>
+        </div>
         <div class="mh-table"><table>
             <thead>
                 <tr>
@@ -1336,7 +1345,7 @@ pub fn gen_monster(
                     let part_name = if let Some(names) = collider_mapping.part_map.get(&index) {
                         names.iter().map(|s|s.as_str()).collect::<Vec<&str>>().join(", ")
                     } else {
-                        format!("{}", index)
+                        "".to_owned()
                     };
 
                     let part_color = format!("mh-part-group mh-part-{}", index);
@@ -1384,7 +1393,7 @@ pub fn gen_monster(
                         <td>
                             <span class=part_color.as_str()/>
                             { text!("[{}]", index) }
-                            { text!("{}", part_name) }
+                            <span class="mh-part-internal">{ text!("{}", part_name) }</span>
                         </td>
                         <td>{ if part.master_vital == -1 {
                             text!("{}", part.vital)

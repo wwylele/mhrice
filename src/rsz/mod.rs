@@ -68,6 +68,7 @@ Version list:
 10_00_02 = 10.0.2.0
 10_00_03 = 10.0.3.0
 11_00_01 = 11.0.1.0
+11_00_02 = 11.0.2.0
 
 ****/
 
@@ -183,7 +184,6 @@ impl Rsz {
 
     pub fn deserialize(&self) -> Result<Vec<AnyRsz>> {
         let mut node_buf: Vec<Option<AnyRsz>> = vec![None];
-        let mut node_rc_buf: HashMap<u32, Rc<dyn Any>> = HashMap::new();
         let mut cursor = Cursor::new(&self.data);
         for (i, &TypeDescriptor { hash, crc }) in self.type_descriptors.iter().enumerate().skip(1) {
             if let Some(slot_extern) = self.extern_slots.get(&u32::try_from(i)?) {
@@ -213,7 +213,6 @@ impl Rsz {
             })?;
             let mut rsz_deserializer = RszDeserializer {
                 node_buf: &mut node_buf,
-                node_rc_buf: &mut node_rc_buf,
                 cursor: &mut cursor,
                 version,
             };
@@ -239,7 +238,11 @@ impl Rsz {
             })
             .collect::<Result<Vec<_>>>()?;
 
-        if node_buf.into_iter().any(|node| node.is_some()) {
+        if node_buf
+            .into_iter()
+            .flatten()
+            .any(|node| Rc::strong_count(&node.any) == 1)
+        {
             bail!("Left over node");
         }
 
@@ -265,7 +268,8 @@ impl Rsz {
         if result.len() != 1 {
             bail!("Not a single-valued RSZ");
         }
-        result.pop().unwrap().downcast().context("Type mismatch")
+        Rc::try_unwrap(result.pop().unwrap().downcast().context("Type mismatch")?)
+            .map_err(|_| anyhow!("Shared node"))
     }
 
     pub fn root_count(&self) -> usize {
@@ -285,68 +289,59 @@ impl Rsz {
 
 pub struct RszDeserializer<'a, 'b> {
     node_buf: &'a mut [Option<AnyRsz>],
-    node_rc_buf: &'a mut HashMap<u32, Rc<dyn Any>>,
     cursor: &'a mut Cursor<&'b Vec<u8>>,
     version: u32,
 }
 
 impl<'a, 'b> RszDeserializer<'a, 'b> {
-    fn get_child_any_inner(&mut self, index: u32) -> Result<AnyRsz> {
-        let node = self
-            .node_buf
-            .get_mut(usize::try_from(index)?)
-            .context("Child index out of bound")?
-            .take()
-            .context("None child")?;
-        Ok(node)
-    }
-
-    pub fn get_child_any(&mut self) -> Result<AnyRsz> {
-        let index = self.cursor.read_u32()?;
-        self.get_child_any_inner(index)
-    }
-
-    fn get_child_inner<T: 'static>(&mut self, index: u32) -> Result<T> {
-        let node = self
-            .get_child_any_inner(index)?
-            .downcast()
-            .context("Type mismatch")?;
-        Ok(node)
-    }
-
-    pub fn get_child<T: 'static>(&mut self) -> Result<T> {
-        let index = self.cursor.read_u32()?;
-        self.get_child_inner(index)
-    }
-
     pub fn get_child_opt<T: 'static>(&mut self) -> Result<Option<T>> {
         let index = self.cursor.read_u32()?;
         if index == 0 {
             return Ok(None);
         }
-        Ok(Some(self.get_child_inner(index)?))
+        let node = self
+            .node_buf
+            .get_mut(usize::try_from(index)?)
+            .context("Child index out of bound")?
+            .take()
+            .context("Child taken")?;
+        let node: Rc<T> = node.downcast()?;
+        let node = Rc::try_unwrap(node).map_err(|_| anyhow!("Shared node"))?;
+        Ok(Some(node))
     }
 
-    pub fn get_child_rc<T: 'static>(&mut self) -> Result<Rc<T>> {
-        self.get_child_rc_opt()?.context("None child")
+    pub fn get_child<T: 'static>(&mut self) -> Result<T> {
+        self.get_child_opt()?.context("Null child")
     }
 
-    pub fn get_child_rc_opt<T: 'static>(&mut self) -> Result<Option<Rc<T>>> {
+    pub fn get_child_any_opt(&mut self) -> Result<Option<AnyRsz>> {
         let index = self.cursor.read_u32()?;
         if index == 0 {
             return Ok(None);
         }
-        if let Some(child) = self.node_rc_buf.get(&index) {
-            child
-                .clone()
-                .downcast()
-                .map_err(|_| anyhow!("Type mismatch"))
-                .map(Option::Some)
+        let node = self
+            .node_buf
+            .get_mut(usize::try_from(index)?)
+            .context("Child index out of bound")?
+            .clone()
+            .context("Child taken")?;
+        Ok(Some(node))
+    }
+
+    pub fn get_child_any(&mut self) -> Result<AnyRsz> {
+        self.get_child_any_opt()?.context("Null child")
+    }
+
+    pub fn get_child_rc_opt<T: 'static>(&mut self) -> Result<Option<Rc<T>>> {
+        if let Some(child) = self.get_child_any_opt()? {
+            Ok(Some(child.downcast()?))
         } else {
-            let child = Rc::new(self.get_child_inner::<T>(index)?);
-            self.node_rc_buf.insert(index, child.clone());
-            Ok(Some(child))
+            Ok(None)
         }
+    }
+
+    pub fn get_child_rc<T: 'static>(&mut self) -> Result<Rc<T>> {
+        self.get_child_any()?.downcast()
     }
 
     pub fn version(&self) -> u32 {
@@ -360,8 +355,9 @@ impl<'a, 'b> Read for RszDeserializer<'a, 'b> {
     }
 }
 
+#[derive(Clone)]
 pub struct AnyRsz {
-    any: Box<dyn Any>,
+    any: Rc<dyn Any>,
     type_info: &'static RszTypeInfo,
 }
 
@@ -376,7 +372,7 @@ impl Debug for AnyRsz {
 
 impl AnyRsz {
     pub fn new<T: Any + Serialize + Debug>(v: T, type_info: &'static RszTypeInfo) -> AnyRsz {
-        let any = Box::new(v);
+        let any = Rc::new(v);
         AnyRsz { any, type_info }
     }
 
@@ -384,10 +380,10 @@ impl AnyRsz {
         Self::new(ExternPath(path), &*EXTERN_PATH_TYPE_INFO)
     }
 
-    pub fn downcast<T: Any>(self) -> Result<T> {
+    pub fn downcast<T: Any>(self) -> Result<Rc<T>> {
         let symbol = self.type_info.symbol;
         match self.any.downcast() {
-            Ok(b) => Ok(*b),
+            Ok(b) => Ok(b),
             Err(_) => {
                 bail!("Expected {}, found {}", type_name::<T>(), symbol)
             }
