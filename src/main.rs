@@ -1065,11 +1065,14 @@ fn dump_mesh_dae(mesh: String, output: String) -> Result<()> {
 }
 
 fn dump_rcol(rcol: String) -> Result<()> {
-    let rcol = if let Ok(rcol) = Rcol::new(File::open(&rcol)?, true) {
-        rcol
-    } else {
-        Rcol::new(File::open(&rcol)?, false)?
+    let rcol = match Rcol::new(File::open(&rcol)?, true) {
+        Ok(rcol) => rcol,
+        Err(e) => {
+            eprintln!("Deserialize RSZ failed because:\n {}", e);
+            Rcol::new(File::open(&rcol)?, false)?
+        }
     };
+
     rcol.dump()?;
     Ok(())
 }
