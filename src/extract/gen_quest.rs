@@ -543,7 +543,7 @@ fn gen_quest(
             title: "Target material".to_owned(),
             content: html!(<section id="s-target-material">
         <h2 >"Target material"</h2>
-        <ul>{
+        <ul class="mh-item-list">{
         quest.param.tgt_item_id.iter().zip(quest.param.tgt_num.iter())
             .filter(|&(&item, _)| item != ItemId::None)
             .map(|(&item, num)|{
@@ -563,7 +563,6 @@ fn gen_quest(
     }
 
     // TODO: monster spawn/swap behavior
-    // TODO: supply_tbl
     // TODO: fence
     // TODO is_use_pillar
 
@@ -861,6 +860,34 @@ fn gen_quest(
 
             </section>),
         });
+    }
+
+    if quest.param.supply_tbl != 0 {
+        let content = if let Some(supply) = pedia_ex.supply.get(&(quest.param.supply_tbl as i32)) {
+            html!(<div><ul class="mh-item-list"> {
+                supply.item_id.iter().zip(&supply.num).filter(|(&item, _)| item != ItemId::Null && item != ItemId::None )
+                .map(|(item, &num)| {
+                    let item = if let Some(item) = pedia_ex.items.get(item) {
+                        html!(<span>{gen_item_label(item)}</span>)
+                    } else {
+                        html!(<span>{text!("{:?}", item)}</span>)
+                    };
+                    html!(<li>
+                        {text!("{}x ", num)}
+                        {item}
+                    </li>)
+                })
+            } </ul></div>)
+        } else {
+            html!(<div>{text!("Unknown table {}", quest.param.supply_tbl)}</div>)
+        };
+        sections.push(Section {
+            title: "Supply items".to_owned(),
+            content: html!(<section id="s-supply">
+            <h2>"Supply items"</h2>
+            {content}
+            </section>),
+        })
     }
 
     sections.push(Section {

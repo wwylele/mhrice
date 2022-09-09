@@ -1062,3 +1062,33 @@ rsz_struct! {
         pub quest_servant_data_list: Vec<QuestServantData>
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.quest.SupplyData.Param",
+        0xCB4B87E1 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct SupplyDataParam {
+        pub id: i32,
+        pub item_id: Vec<ItemId>,
+        pub num: Vec<u32>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.SupplyData",
+        0xa9c0b003 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct SupplyData {
+        pub param: Vec<SupplyDataParam>
+    }
+}
+
+rsz_with_singleton! {
+    #[path("Quest/SupplyData/SupplyData.user")]
+    pub struct SupplyDataLrHr(SupplyData);
+
+    #[path("Quest/SupplyData/SupplyData_MR.user")]
+    pub struct SupplyDataMr(SupplyData);
+}

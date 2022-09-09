@@ -81,6 +81,8 @@ pub struct Pedia {
     pub fixed_hyakuryu_quest: HyakuryuQuestDataTbl,
     pub mystery_reward_item: MysteryRewardItemUserData,
     pub quest_servant: QuestServantDataList,
+    pub supply_data: SupplyDataLrHr,
+    pub supply_data_mr: SupplyDataMr,
     pub quest_hall_msg: Msg,
     pub quest_hall_msg_mr: Msg,
     pub quest_hall_msg_mr2: Msg,
@@ -476,4 +478,6 @@ pub struct PediaEx<'a> {
 
     pub armor_custom_buildup: HashMap<u32, ArmorCustomBuildup<'a>>,
     pub weapon_custom_buildup: HashMap<u32, WeaponCustomBuildup<'a>>,
+
+    pub supply: HashMap<i32, &'a SupplyDataParam>,
 }

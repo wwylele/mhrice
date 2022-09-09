@@ -715,6 +715,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         fixed_hyakuryu_quest: get_singleton(pak)?,
         mystery_reward_item: get_singleton(pak)?,
         quest_servant: get_singleton(pak)?,
+        supply_data: get_singleton(pak)?,
+        supply_data_mr: get_singleton(pak)?,
         quest_hall_msg,
         quest_hall_msg_mr,
         quest_hall_msg_mr2,
@@ -3030,6 +3032,19 @@ pub fn prepare_weapon_custom_buildup<'a>(
     Ok(result)
 }
 
+pub fn prepare_supply(pedia: &Pedia) -> Result<HashMap<i32, &SupplyDataParam>> {
+    hash_map_unique(
+        pedia
+            .supply_data
+            .param
+            .iter()
+            .chain(&pedia.supply_data_mr.param)
+            .filter(|p| p.id != 0),
+        |p| (p.id, p),
+        false,
+    )
+}
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     let monster_order = pedia
         .monster_list
@@ -3118,5 +3133,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
 
         armor_custom_buildup,
         weapon_custom_buildup,
+
+        supply: prepare_supply(pedia)?,
     })
 }
