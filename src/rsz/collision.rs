@@ -9,7 +9,7 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct RequestSetColliderUserData {
         pub name: String,
-        pub zero: Zero,
+        pub parent_user_data: Option<PhysicsUserData>,
     }
 }
 
@@ -133,5 +133,95 @@ rsz_struct! {
         #[serde(flatten)]
         pub base: Flatten<EmHitDamageShapeData>,
         pub back_leech_id: u16,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.hit.userdata.DummyHitAttackShapeData",
+        0xf5735618 = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct DummyHitAttackShapeData {
+        pub base: Flatten<RequestSetColliderUserData>,
+
+        // snow.hit.userdata.CommonAttachShapeData
+        pub custom_shape_type: CustomShapeType,
+        pub ring_radius: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.hit.userdata.EmHitAttackShapeData",
+        0xb8f622d3 = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EmHitAttackShapeData {
+        pub base: Flatten<RequestSetColliderUserData>,
+
+        // snow.hit.userdata.CommonAttachShapeData
+        pub custom_shape_type: CustomShapeType,
+        pub ring_radius: f32,
+
+        pub shape_attr: i32, // snow.hit.EmShapeAttr
+        pub check_terrain_shape_scale: f32,
+        pub hit_terrain_interrupt_type: i32, // snow.hit.EnemyHitTerrainInterruptType
+        pub enemy_hit_check_vec: i32, // snow.hit.EnemyHitCheckVec
+        pub shake_wall_info_id: i32,
+        pub hit_character_interrupt_type: i32, // snow.hit.EnemyHitCharacterInterruptType
+        pub condition_match_hit_attr: u16, // snow.hit.AttackConditionMatchHitAttr
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.hit.userdata.EmHitAttackRSData",
+        0x54158991 = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EmHitAttackRSData {
+        #[serde(flatten)]
+        pub base: Flatten<RequestSetColliderUserData>,
+
+        // snow.hit.userdata.BaseHitAttackRSData
+        pub priority: u8, // snow.hit.HitPriority
+        pub hit_start_delay: i16,
+        pub hit_end_delay: i16,
+        pub hit_id_update_loop_num: i8,
+        pub hit_id_update_delaies: Vec<i16>,
+        pub damage_type: i32, // snow.hit.DamageType
+        pub hit_attr: u16, // snow.hit.HitAttr
+        pub damage_degree: f32,
+        pub power: u8,
+        pub base_piyo_value: i8,
+        pub base_attack_attr: u32, // snow.hit.AttackAttr,
+        pub object_break_type: u8, // snow.hit.ObjectBreakType
+        pub base_damage: i32,
+        pub base_attack_element: i32, // snow.hit.AttackElement
+        pub base_attack_element_value: u8,
+        pub base_debuff_type: i32, // snow.hit.DebuffType
+        pub base_debuff_value: u8,
+        pub base_debuff_sec: f32,
+        pub base_debuff_type2: i32, // snow.hit.DebuffType
+        pub base_debuff_value2: u8,
+        pub base_debuff_sec2: f32,
+        pub base_debuff_type3: i32, // snow.hit.DebuffType
+        pub base_debuff_value3: u8,
+        pub base_debuff_sec3: f32,
+        pub hit_se: u32,
+
+
+        pub damage_type_value: i16,
+        pub guardable_type: u8, // snow.hit.GuardableType
+        pub base_em2em_damage_type: i32, // snow.hit.Em2EmDamageType
+        pub hit_mark_type: i32, // snow.hit.EnemyHitMarkType
+        pub base_hyakuryu_object_break_damage: i16,
+        pub marionette_enemy_base_damage: i16,
+        pub marionette_enemy_damage_type: u8, // snow.hit.MarionetteEnemyDamageType
+        pub marionette_enemy_base_damage_s: i16,
+        pub marionette_enemy_base_damage_m: i16,
+        pub marionette_enemy_base_damage_l: i16,
+        pub marionette_unique_damage_list: Vec<i16>,
+        pub is_mystery_debuff: bool,
+        pub mystery_debuff_sec: f32,
+
     }
 }
