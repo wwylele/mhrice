@@ -1682,6 +1682,10 @@ pub fn gen_monster(
                     add_debuff(atk.data.base_debuff_type2, atk.data.base_debuff_value2, atk.data.base_debuff_sec2);
                     add_debuff(atk.data.base_debuff_type3, atk.data.base_debuff_value3, atk.data.base_debuff_sec3);
 
+                    if atk.data.is_mystery_debuff {
+                        statuss.push(html!(<li>{text!("Bloodblight {}sec", atk.data.mystery_debuff_sec)}</li>))
+                    }
+
                     let mut flags = vec![];
                     if atk.is_shell {
                         flags.push(html!(<span class="tag">"Shell"</span>));
