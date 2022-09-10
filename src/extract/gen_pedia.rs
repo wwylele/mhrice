@@ -91,6 +91,34 @@ fn gen_ems_collider_path(id: u32, sub_id: u32) -> String {
     )
 }
 
+fn gen_em_atk_collider_path(id: u32, sub_id: u32) -> String {
+    format!(
+        "enemy/em{0:03}/{1:02}/collision/em{0:03}_{1:02}_atk_colliders.rcol",
+        id, sub_id
+    )
+}
+
+fn gen_ems_atk_collider_path(id: u32, sub_id: u32) -> String {
+    format!(
+        "enemy/ems{0:03}/{1:02}/collision/ems{0:03}_{1:02}_atk_colliders.rcol",
+        id, sub_id
+    )
+}
+
+fn gen_em_shell_collider_path(id: u32, sub_id: u32) -> String {
+    format!(
+        "enemy/em{0:03}/{1:02}/shell/collision/em{0:03}_{1:02}_shell_collider.rcol",
+        id, sub_id
+    )
+}
+
+fn gen_ems_shell_collider_path(id: u32, sub_id: u32) -> String {
+    format!(
+        "enemy/ems{0:03}/{1:02}/shell/collision/ems{0:03}_{1:02}_shell_collider.rcol",
+        id, sub_id
+    )
+}
+
 pub fn gen_collider_mapping(rcol: Rcol) -> Result<ColliderMapping> {
     let mut meat_map: BTreeMap<usize, BTreeSet<String>> = BTreeMap::new();
     let mut part_map: BTreeMap<usize, BTreeSet<String>> = BTreeMap::new();
@@ -138,6 +166,8 @@ pub fn gen_monsters(
     boss_init_path_gen: fn(u32, u32) -> Option<String>,
     collider_path_gen: fn(u32, u32) -> String,
     data_tune_path_gen: fn(u32, u32) -> String,
+    atk_collider_path_gen: fn(u32, u32) -> String,
+    shell_collider_path_gen: fn(u32, u32) -> String,
     is_large: bool,
 ) -> Result<Vec<Monster>> {
     let mut monsters = vec![];
@@ -216,6 +246,49 @@ pub fn gen_monsters(
 
             let em_type = if is_large { EmTypes::Em } else { EmTypes::Ems }(id | (sub_id << 8));
 
+            let mut atk_colliders = vec![];
+
+            let mut add_atk_colliders = |rcol: Rcol| {
+                let mut dedup = HashSet::new();
+                for group in &rcol.group_attachments {
+                    let (data, is_shell) =
+                        if let Some(data) = group.user_data.downcast_ref::<EmHitAttackRsData>() {
+                            (&data.base.0, false)
+                        } else if let Some(data) =
+                            group.user_data.downcast_ref::<EmShellHitAttackRsData>()
+                        {
+                            (&data.base.0, true)
+                        } else {
+                            continue;
+                        };
+                    if !dedup.insert(data) {
+                        continue;
+                    }
+                    atk_colliders.push(AttackCollider {
+                        is_shell,
+                        data: data.clone(),
+                    })
+                }
+            };
+
+            let atk_collider_path = atk_collider_path_gen(id, sub_id);
+            let shell_collider_path = shell_collider_path_gen(id, sub_id);
+            if let Ok(index) = pak.find_file(&atk_collider_path_gen(id, sub_id)) {
+                let rcol = Rcol::new(Cursor::new(pak.read_file(index)?), true)
+                    .context(atk_collider_path)?;
+                add_atk_colliders(rcol);
+            } else {
+                eprintln!("Attack collider file not found {atk_collider_path}")
+            }
+
+            if let Ok(index) = pak.find_file(&shell_collider_path_gen(id, sub_id)) {
+                let rcol = Rcol::new(Cursor::new(pak.read_file(index)?), true)
+                    .context(shell_collider_path)?;
+                add_atk_colliders(rcol);
+            } else {
+                eprintln!("Shell collider file not found {shell_collider_path}")
+            }
+
             monsters.push(Monster {
                 id,
                 sub_id,
@@ -231,6 +304,7 @@ pub fn gen_monsters(
                 collider_mapping,
                 drop_item,
                 parts_break_reward,
+                atk_colliders,
             })
         }
     }
@@ -369,6 +443,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
                 id, sub_id
             )
         },
+        gen_em_atk_collider_path,
+        gen_em_shell_collider_path,
         true,
     )
     .context("Generating large monsters")?;
@@ -389,6 +465,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
                 id, sub_id
             )
         },
+        gen_ems_atk_collider_path,
+        gen_ems_shell_collider_path,
         false,
     )
     .context("Generating small monsters")?;
@@ -899,7 +977,7 @@ fn gen_monster_hitzones(
             // pre-check a glitchy thing
             for attachment in &collider.group_attachments {
                 if let Some(data) = attachment.user_data.downcast_ref::<EmHitDamageRsData>() {
-                    if data.base.is_none() {
+                    if data.parent_user_data.is_none() {
                         eprintln!(
                             "Found glitch collider '{}' for em{}_{}",
                             data.name, index, sub_id

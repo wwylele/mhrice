@@ -794,6 +794,13 @@ ul.mh-rampage-em-list {
     }
 }
 
+/** Move set **/
+ul.mh-damages {
+    margin-left: 0;
+    margin-top: 0;
+    list-style: none;
+}
+
 /** Weapon list **/
 .mh-weapon-tree>ul>li {
     display: inline-block;

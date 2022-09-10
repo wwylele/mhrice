@@ -610,7 +610,9 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         Em135_00HitDamageShapeUniqueData,
         DummyHitAttackShapeData,
         EmHitAttackShapeData,
-        EmHitAttackRSData,
+        EmHitAttackRsData,
+        EmShellHitAttackRsData,
+        HitAttackAppendShapeData,
     );
 
     r!(

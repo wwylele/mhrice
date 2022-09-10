@@ -1,12 +1,13 @@
 use super::*;
 use crate::{rsz_bitflags, rsz_enum, rsz_struct};
+use nalgebra_glm::*;
 use serde::*;
 
 rsz_struct! {
     #[rsz("via.physics.RequestSetColliderUserData",
         0x6de94d21 = 0
     )]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct RequestSetColliderUserData {
         pub name: String,
         pub parent_user_data: Option<PhysicsUserData>,
@@ -17,7 +18,7 @@ rsz_struct! {
     #[rsz("via.physics.UserData",
         0x16593069 = 0
     )]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone, PartialEq, Eq, Hash)]
     pub struct PhysicsUserData {
     }
 }
@@ -29,7 +30,7 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct EmHitDamageRsData {
         pub name: String,
-        pub base: Option<PhysicsUserData>,
+        pub parent_user_data: Option<PhysicsUserData>,
         pub parts_group: u16, // snow.enemy.EnemyDef.PartsGroup
     }
 }
@@ -142,7 +143,8 @@ rsz_struct! {
     )]
     #[derive(Debug, Serialize)]
     pub struct DummyHitAttackShapeData {
-        pub base: Flatten<RequestSetColliderUserData>,
+        pub name: String,
+        pub parent_user_data: Option<PhysicsUserData>,
 
         // snow.hit.userdata.CommonAttachShapeData
         pub custom_shape_type: CustomShapeType,
@@ -156,7 +158,8 @@ rsz_struct! {
     )]
     #[derive(Debug, Serialize)]
     pub struct EmHitAttackShapeData {
-        pub base: Flatten<RequestSetColliderUserData>,
+        pub name: String,
+        pub parent_user_data: Option<PhysicsUserData>,
 
         // snow.hit.userdata.CommonAttachShapeData
         pub custom_shape_type: CustomShapeType,
@@ -172,56 +175,284 @@ rsz_struct! {
     }
 }
 
-rsz_struct! {
-    #[rsz("snow.hit.userdata.EmHitAttackRSData",
-        0x54158991 = 10_00_02
-    )]
-    #[derive(Debug, Serialize)]
-    pub struct EmHitAttackRSData {
-        #[serde(flatten)]
-        pub base: Flatten<RequestSetColliderUserData>,
+// snow.hit.AttackElement
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, PartialEq, Eq, Clone, Copy, Hash)]
+    pub enum AttackElement {
+        None = 0x00000000,
+        Fire = 0x00000001,
+        Thunder = 0x00000002,
+        Water = 0x00000003,
+        Ice = 0x00000004,
+        Dragon = 0x00000005,
+        Heal = 0x00000006,
+    }
+}
 
-        // snow.hit.userdata.BaseHitAttackRSData
+// snow.hit.DebuffType
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, PartialEq, Eq, Clone, Copy, Hash)]
+    pub enum DebuffType {
+        None = 0x00000000,
+        Fire = 0x00000001,
+        Thunder = 0x00000002,
+        Water = 0x00000003,
+        Ice = 0x00000004,
+        Dragon = 0x00000005,
+        Sleep = 0x00000006,
+        Paralyze = 0x00000007,
+        Poison = 0x00000008,
+        NoxiousPoison = 0x00000009,
+        Bomb = 0x0000000A,
+        BubbleS = 0x0000000B,
+        BubbleRedS = 0x0000000C,
+        RedS = 0x0000000D,
+        BubbleL = 0x0000000E,
+        DefenceDown = 0x0000000F,
+        ResistanceDown = 0x00000010,
+        Stink = 0x00000011,
+        Capture = 0x00000012,
+        OniBomb = 0x00000013,
+        Kijin = 0x00000014,
+        Kouka = 0x00000015,
+        Bleeding = 0x00000016,
+        ParalyzeShort = 0x00000017,
+        Virus = 0x00000018,
+    }
+}
+
+// snow.hit.GuardableType
+rsz_enum! {
+    #[rsz(u8)]
+    #[derive(Debug, Serialize, PartialEq, Eq, Clone, Copy, Hash)]
+    pub enum GuardableType {
+        Guardable = 0,
+        SkillGuardable = 1,
+        NoGuardable = 2,
+    }
+}
+
+// snow.hit.DamageType
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, PartialEq, Eq, Clone, Copy, Hash)]
+    pub enum DamageType {
+        Invalid = 0x00000000,
+        None = 0x00000001,
+        KnockBack = 0x00000002,
+        FallDown = 0x00000003,
+        Buttobi = 0x00000004,
+        ButtobiNoDown = 0x00000005,
+        ButtobiSp = 0x00000006,
+        ButtobiNoEscape = 0x00000007,
+        Upper = 0x00000008,
+        ButtobiSlamDown = 0x00000009,
+        WindS = 0x0000000A,
+        WindM = 0x0000000B,
+        WindL = 0x0000000C,
+        QuakeS = 0x0000000D,
+        QuakeL = 0x0000000E,
+        EarS = 0x0000000F,
+        EarL = 0x00000010,
+        EarLL = 0x00000011,
+        CatchAttack = 0x00000012,
+        CatchingAttack = 0x00000013,
+        MarionetteAttack = 0x00000014,
+        GrappleAttack = 0x00000015,
+        OtomoConstrain = 0x00000016,
+        BuffAttack = 0x00000017,
+        BuffDefence = 0x00000018,
+        BuffStamina = 0x00000019,
+        HitCheck = 0x0000001A,
+        Deodorant = 0x0000001B,
+        BuffInk = 0x0000001C,
+        Flash = 0x0000001D,
+        Sound = 0x0000001E,
+        Tornado = 0x0000001F,
+        TornadoAttack = 0x00000020,
+        RecoverableUpper = 0x00000021,
+        NoMediationCatchAttack = 0x00000022,
+        PositionRise = 0x00000023,
+        Beto = 0x00000024,
+        QuakeIndirect = 0x00000025,
+        ButtobiHm = 0x00000026,
+        NoMediationCatchAttackWithSmash = 0x00000027,
+    }
+}
+
+// snow.hit.ObjectBreakType
+rsz_enum! {
+    #[rsz(u8)]
+    #[derive(Debug, Serialize, PartialEq, Eq, Clone, Copy, Hash)]
+    pub enum ObjectBreakType {
+        None = 0x00,
+        PowerS = 0x01,
+        PowerM = 0x02,
+        PowerL = 0x03,
+        AbsolutePower = 0x04,
+        Deathblow = 0x05,
+        ForceBreak = 0x06,
+        IntroBindVoice = 0x07,
+    }
+}
+
+// snow.hit.Em2EmDamageType
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, PartialEq, Eq, Clone, Copy, Hash)]
+    pub enum Em2EmDamageType {
+        None = 0,
+        S = 1,
+        M = 2,
+        L = 3,
+    }
+}
+
+// snow.hit.MarionetteEnemyDamageType
+rsz_enum! {
+    #[rsz(u8)]
+    #[derive(Debug, Serialize, PartialEq, Eq, Clone, Copy, Hash)]
+    pub enum MarionetteEnemyDamageType {
+        None = 0,
+        DmanageS = 1,
+        DmanageM = 2,
+        DmanageL = 3,
+    }
+}
+
+// snow.hit.HitAttr
+rsz_bitflags! {
+    pub struct HitAttr: u16 {
+        const CALC_HIT_DIRECTION = 0x0001;
+        const CALC_HIT_DIRECTION_BASED_ROOT_POS = 0x0002;
+        const ALL_DIR_GUARDABLE = 0x0004;
+        const USE_HIT_STOP = 0x0008;
+        const USE_HIT_SLOW = 0x0010;
+        const ABS_HIT_STOP = 0x0020;
+        const USE_CYCLE_HIT = 0x0040;
+        const CHECK_RAY_CAST = 0x0080;
+        const IGNORE_END_DELAY = 0x0100;
+        const USE_DIRECTION_OBJECT = 0x0200;
+        const OVERRIDE_COLLISION_RESULT_BY_RAY = 0x0400;
+        const HIT_POS_CORRECTION = 0x0800;
+    }
+}
+
+// snow.hit.AttackAttr
+rsz_bitflags! {
+    pub struct AttackAttr: u32 {
+        const ELEMENT_S = 0x00000001;
+        const BOMB = 0x00000002;
+        const ENSURE_DEBUFF = 0x00000004;
+        const TRIGGER_MARIONETTE_START = 0x00000008;
+        const FORCE_KILL = 0x00000010;
+        const KOYASHI = 0x00000020;
+        const ALLOW_DISABLED = 0x00000040;
+        const PREVENT_CHEEP_TECH = 0x00000080;
+        const HYAKURYU_BOSS_ANGER_END_SP_STOP = 0x00000100;
+        const FORCE_PARTS_LOSS_PERMIT_DAMAGE_ATTR_SLASH = 0x00000200;
+        const KEEP_RED_DAMAGE = 0x00000400;
+        const CREATURE_NET_SEND_DAMAGE = 0x00000800;
+        const EM_HP_STOP1 = 0x00001000;
+        const RESTRAINT_PL_ONLY = 0x00002000;
+        const RESTRAINT_ALL = 0x00004000;
+        const SUCK_BLOOD = 0x00008000;
+        const FORCE_PARTS_LOSS_PERMIT_DAMAGE_ATTR_STRIKE = 0x00010000;
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.hit.userdata.EmBaseHitAttackRSData")]
+    #[derive(Debug, Serialize, Clone, PartialEq, Eq, Hash)]
+    pub struct EmBaseHitAttackRSData {
+        pub name: String,
+        pub parent_user_data: Option<PhysicsUserData>,
+
         pub priority: u8, // snow.hit.HitPriority
         pub hit_start_delay: i16,
         pub hit_end_delay: i16,
         pub hit_id_update_loop_num: i8,
         pub hit_id_update_delaies: Vec<i16>,
-        pub damage_type: i32, // snow.hit.DamageType
-        pub hit_attr: u16, // snow.hit.HitAttr
-        pub damage_degree: f32,
+        pub damage_type: DamageType,
+        pub hit_attr: HitAttr,
+        pub damage_degree: MeqF32,
         pub power: u8,
         pub base_piyo_value: i8,
-        pub base_attack_attr: u32, // snow.hit.AttackAttr,
-        pub object_break_type: u8, // snow.hit.ObjectBreakType
+        pub base_attack_attr: AttackAttr,
+        pub object_break_type: ObjectBreakType,
         pub base_damage: i32,
-        pub base_attack_element: i32, // snow.hit.AttackElement
+        pub base_attack_element: AttackElement,
         pub base_attack_element_value: u8,
-        pub base_debuff_type: i32, // snow.hit.DebuffType
+        pub base_debuff_type: DebuffType,
         pub base_debuff_value: u8,
-        pub base_debuff_sec: f32,
-        pub base_debuff_type2: i32, // snow.hit.DebuffType
+        pub base_debuff_sec: MeqF32,
+        pub base_debuff_type2: DebuffType,
         pub base_debuff_value2: u8,
-        pub base_debuff_sec2: f32,
-        pub base_debuff_type3: i32, // snow.hit.DebuffType
+        pub base_debuff_sec2: MeqF32,
+        pub base_debuff_type3: DebuffType,
         pub base_debuff_value3: u8,
-        pub base_debuff_sec3: f32,
+        pub base_debuff_sec3: MeqF32,
         pub hit_se: u32,
 
 
         pub damage_type_value: i16,
-        pub guardable_type: u8, // snow.hit.GuardableType
-        pub base_em2em_damage_type: i32, // snow.hit.Em2EmDamageType
+        pub guardable_type: GuardableType,
+        pub base_em2em_damage_type: Em2EmDamageType,
         pub hit_mark_type: i32, // snow.hit.EnemyHitMarkType
         pub base_hyakuryu_object_break_damage: i16,
         pub marionette_enemy_base_damage: i16,
-        pub marionette_enemy_damage_type: u8, // snow.hit.MarionetteEnemyDamageType
+        pub marionette_enemy_damage_type: MarionetteEnemyDamageType,
         pub marionette_enemy_base_damage_s: i16,
         pub marionette_enemy_base_damage_m: i16,
         pub marionette_enemy_base_damage_l: i16,
         pub marionette_unique_damage_list: Vec<i16>,
         pub is_mystery_debuff: bool,
-        pub mystery_debuff_sec: f32,
+        pub mystery_debuff_sec: MeqF32,
+    }
+}
 
+rsz_struct! {
+    #[rsz("snow.hit.userdata.EmHitAttackRSData",
+        0x54158991 = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EmHitAttackRsData {
+        #[serde(flatten)]
+        pub base: Flatten<EmBaseHitAttackRSData>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.hit.userdata.EmShellHitAttackRSData",
+        0x7cfb2121 = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EmShellHitAttackRsData {
+        #[serde(flatten)]
+        pub base: Flatten<EmBaseHitAttackRSData>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.hit.userdata.HitAttackAppendShapeData",
+        0x378de5ea = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct HitAttackAppendShapeData {
+        pub name: String,
+        pub parent_user_data: Option<PhysicsUserData>,
+
+        // snow.hit.userdata.CommonAttachShapeData
+        pub custom_shape_type: CustomShapeType,
+        pub ring_radius: f32,
+
+        pub affect_gesture: bool,
+        pub dir_type: i32, // snow.motion.WindDirectionType
+        pub direction: Vec3,
+        pub wind_preset_type: i32, // snow.motion.WindPresetType
+        pub max_rate_area: f32,
+        pub is_stop_on_separate: bool,
     }
 }

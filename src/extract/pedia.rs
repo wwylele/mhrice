@@ -13,6 +13,12 @@ pub struct ColliderMapping {
 }
 
 #[derive(Debug, Serialize)]
+pub struct AttackCollider {
+    pub is_shell: bool,
+    pub data: EmBaseHitAttackRSData,
+}
+
+#[derive(Debug, Serialize)]
 pub struct Monster {
     pub id: u32,
     pub sub_id: u32,
@@ -28,6 +34,7 @@ pub struct Monster {
     pub collider_mapping: ColliderMapping,
     pub drop_item: EnemyDropItemInfoData,
     pub parts_break_reward: Option<EnemyPartsBreakRewardData>,
+    pub atk_colliders: Vec<AttackCollider>,
 }
 
 #[derive(Debug, Serialize)]

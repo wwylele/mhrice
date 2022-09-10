@@ -627,7 +627,7 @@ impl Rcol {
                             if let Some(data) =
                                 attachment.user_data.downcast_ref::<EmHitDamageRsData>()
                             {
-                                if data.base.is_none() {
+                                if data.parent_user_data.is_none() {
                                     // seen in magmadron, seems incorrect attachment. skipping
                                     continue;
                                 }
