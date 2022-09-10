@@ -1065,7 +1065,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.SupplyData.Param",
-        0xCB4B87E1 = 10_00_02,
+        0xDF132E6C = 10_00_02,
+        0xCB4B87E1 = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct SupplyDataParam {
