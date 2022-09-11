@@ -770,6 +770,7 @@ struct TypeInfo {
 
     runtime_info: u64,
     runtime_vtable: u64,
+    runtime_len: usize,
 }
 
 #[derive(Serialize)]
@@ -898,6 +899,7 @@ impl Tdb {
             system_type: u64,
 
             flags: TypeFlag,
+            runtime_len: usize,
             hash: u32,
 
             ctor_method_membership_index: usize,
@@ -936,7 +938,7 @@ impl Tdb {
                 ) = file.read_u64()?.bit_split((19, 19, 18, 8));
 
                 let flags = file.read_u32()?;
-                let _runtime_len = file.read_u32()?;
+                let runtime_len = file.read_u32()?;
                 let hash = file.read_u32()?;
                 let _crc = file.read_u32()?;
 
@@ -972,6 +974,7 @@ impl Tdb {
                     system_type,
 
                     flags: TypeFlag::from_bits(flags).context("Unknown type flag")?,
+                    runtime_len: runtime_len.try_into()?,
                     hash,
 
                     ctor_method_membership_index: ctor_method_membership_index.try_into()?,
@@ -1886,6 +1889,7 @@ impl Tdb {
                     cycle_map: ty.cycle_map,
                     runtime_info: instance.runtime_info,
                     runtime_vtable: instance.vtable,
+                    runtime_len: instance.runtime_len,
                 })
             })
             .collect::<Result<_>>()?;

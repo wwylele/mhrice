@@ -32,8 +32,6 @@ t_int = builtInTypeManager.getDataType("/int")
 
 folder = askDirectory("Give me the folder output from `mhrice read-dmp-tdb --json-split", "Go!")
 
-objHeaderLen = 0x10
-
 chunk = 1000
 i = 0
 files = []
@@ -56,6 +54,7 @@ def types():
         f.seek(0, 0)
         j = json.load(f)
         start = j["start_index"]
+        print("    " + str(start))
         for i, t in enumerate(j["types"]):
             yield (start + i, t)
 
@@ -71,6 +70,7 @@ base = [None] * typeCount
 rawFields = [None] * typeCount
 fullName = [None] * typeCount
 dearray = [None] * typeCount
+headerLen = [0] * typeCount
 
 print("First scan, add type def label")
 
@@ -84,7 +84,8 @@ for (i, t) in types():
     if isValType[i]:
         typeSize[i] = t["len"]
     else:
-        typeSize[i] = t["len"] + objHeaderLen
+        typeSize[i] = t["runtime_len"]
+        headerLen[i] = typeSize[i] - t["len"]
     isPlaceholder[i] = "!" in t["full_name"]
     isTemplate[i] = t["generics"] is not None and t["generics"].has_key("Template")
     base[i] = t["ti_base"]
@@ -139,6 +140,9 @@ for (i, t) in types():
 print("Add all fields...")
 
 for i in range(typeCount):
+    if i % 1000 == 0:
+        print("    " + str(i))
+
     if isPrimitive[i] or isPlaceholder[i] or isTemplate[i]:
         continue
 
@@ -154,16 +158,13 @@ for i in range(typeCount):
                 fieldType = PointerDataType(typeHandle[ti], 8, typeManager)
                 len = 8
 
-            if isValType[curI]:
-                position = raw_position
-            else:
-                position = raw_position + objHeaderLen
+            position = raw_position + headerLen[i]
             fields.append((position, fieldType, len, name))
         curI = base[curI]
         if curI is None:
             break
 
-    if not isValType[i]:
+    if headerLen[i] >= 16:
         fields.append((0, PointerDataType(void, 8, typeManager), 8, "$vtable"))
         fields.append((8, PointerDataType(void, 8, typeManager), 8, "$lock"))
 
@@ -181,18 +182,19 @@ for i in range(typeCount):
         if currentPos > pos:
             print("WARNING: skipped field " + name + " for type " + fullName[i] + " because of overlap")
             continue
-        while currentPos < pos:
-            handle.add(undefined, 1, "", "")
-            currentPos += 1
+        if currentPos < pos:
+            handle.add(ArrayDataType(undefined, pos - currentPos, 1, typeManager), pos - currentPos, "", "")
+            currentPos = pos
+
         handle.add(type, len, name, "")
         currentPos += len
 
     if currentPos > typeSize[i]:
         print("WARNING: member overflow size for type " + fullName[i])
 
-    while currentPos < typeSize[i]:
-        handle.add(undefined, 1, "", "")
-        currentPos += 1
+    if currentPos < typeSize[i]:
+        handle.add(ArrayDataType(undefined, typeSize[i] - currentPos, 1, typeManager), typeSize[i] - currentPos, "", "")
+        currentPos = typeSize[i]
 
     if dearray[i] is not None:
         handle.add(t_int, 4, "$x", "")
