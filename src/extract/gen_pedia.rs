@@ -105,18 +105,86 @@ fn gen_ems_atk_collider_path(id: u32, sub_id: u32) -> String {
     )
 }
 
-fn gen_em_shell_collider_path(id: u32, sub_id: u32) -> String {
-    format!(
-        "enemy/em{0:03}/{1:02}/shell/collision/em{0:03}_{1:02}_shell_collider.rcol",
-        id, sub_id
-    )
+fn gen_em_shell_collider_path(id: u32, sub_id: u32) -> Vec<String> {
+    let folder = format!("enemy/em{id:03}/{sub_id:02}/shell/collision/");
+    let mut paths = vec![format!("{folder}em{id:03}_{sub_id:02}_shell_collider.rcol",)];
+
+    if id == 27 && sub_id == 0 {
+        paths.push(format!("{folder}em027_00_shell_collider_id_0.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_1.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_10.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_11.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_12.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_13.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_14.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_15.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_16.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_17.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_18.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_19.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_22_30.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_24.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_25.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_26.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_27.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_28.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_2_29.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_4.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_5.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_6.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_7.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_8.rcol"));
+        paths.push(format!("{folder}em027_00_shell_collider_id_9.rcol"));
+    }
+
+    if id == 94 && sub_id == 1 {
+        paths.push(format!("{folder}em094_01_shell_collider_id_0.rcol"));
+        paths.push(format!("{folder}em094_01_shell_collider_id_500.rcol"));
+        paths.push(format!("{folder}em094_01_shell_collider_id_501.rcol"));
+        paths.push(format!("{folder}em094_01_shell_collider_id_502.rcol"));
+        paths.push(format!("{folder}em094_01_shell_collider_id_503.rcol"));
+    }
+
+    if id == 118 && sub_id == 0 {
+        paths.push(format!("{folder}em118_00_shell_collider_id_0.rcol"));
+        paths.push(format!("{folder}em118_00_shell_collider_id_1.rcol"));
+        paths.push(format!("{folder}em118_00_shell_collider_id_10.rcol"));
+        paths.push(format!("{folder}em118_00_shell_collider_id_100.rcol"));
+        paths.push(format!("{folder}em118_00_shell_collider_id_2_10.rcol"));
+        paths.push(format!("{folder}em118_00_shell_collider_id_3_10.rcol"));
+        paths.push(format!("{folder}em118_00_shell_collider_id_5.rcol"));
+        paths.push(format!("{folder}em118_00_shell_collider_id_6.rcol"));
+        paths.push(format!("{folder}em118_00_shell_collider_id_7.rcol"));
+        paths.push(format!("{folder}em118_00_shell_collider_id_8.rcol"));
+        paths.push(format!("{folder}em118_00_shell_collider_id_9.rcol"));
+    }
+
+    if id == 118 && sub_id == 5 {
+        paths.push(format!("{folder}em118_05_shell_collider_id_0.rcol"));
+        paths.push(format!("{folder}em118_05_shell_collider_id_1.rcol"));
+        paths.push(format!("{folder}em118_05_shell_collider_id_10.rcol"));
+        paths.push(format!("{folder}em118_05_shell_collider_id_100.rcol"));
+        paths.push(format!("{folder}em118_05_shell_collider_id_2_10.rcol"));
+        paths.push(format!("{folder}em118_05_shell_collider_id_3_10.rcol"));
+        paths.push(format!("{folder}em118_05_shell_collider_id_5.rcol"));
+        paths.push(format!("{folder}em118_05_shell_collider_id_500.rcol"));
+        paths.push(format!("{folder}em118_05_shell_collider_id_510.rcol"));
+        paths.push(format!("{folder}em118_05_shell_collider_id_520.rcol"));
+        paths.push(format!("{folder}em118_05_shell_collider_id_530.rcol"));
+        paths.push(format!("{folder}em118_05_shell_collider_id_6.rcol"));
+        paths.push(format!("{folder}em118_05_shell_collider_id_7.rcol"));
+        paths.push(format!("{folder}em118_05_shell_collider_id_8.rcol"));
+        paths.push(format!("{folder}em118_05_shell_collider_id_9.rcol"));
+    }
+
+    paths
 }
 
-fn gen_ems_shell_collider_path(id: u32, sub_id: u32) -> String {
-    format!(
+fn gen_ems_shell_collider_path(id: u32, sub_id: u32) -> Vec<String> {
+    vec![format!(
         "enemy/ems{0:03}/{1:02}/shell/collision/ems{0:03}_{1:02}_shell_collider.rcol",
         id, sub_id
-    )
+    )]
 }
 
 pub fn gen_collider_mapping(rcol: Rcol) -> Result<ColliderMapping> {
@@ -167,7 +235,7 @@ pub fn gen_monsters(
     collider_path_gen: fn(u32, u32) -> String,
     data_tune_path_gen: fn(u32, u32) -> String,
     atk_collider_path_gen: fn(u32, u32) -> String,
-    shell_collider_path_gen: fn(u32, u32) -> String,
+    shell_collider_path_gen: fn(u32, u32) -> Vec<String>,
     is_large: bool,
 ) -> Result<Vec<Monster>> {
     let mut monsters = vec![];
@@ -272,8 +340,7 @@ pub fn gen_monsters(
             };
 
             let atk_collider_path = atk_collider_path_gen(id, sub_id);
-            let shell_collider_path = shell_collider_path_gen(id, sub_id);
-            if let Ok(index) = pak.find_file(&atk_collider_path_gen(id, sub_id)) {
+            if let Ok(index) = pak.find_file(&atk_collider_path) {
                 let rcol = Rcol::new(Cursor::new(pak.read_file(index)?), true)
                     .context(atk_collider_path)?;
                 add_atk_colliders(rcol);
@@ -281,12 +348,14 @@ pub fn gen_monsters(
                 eprintln!("Attack collider file not found {atk_collider_path}")
             }
 
-            if let Ok(index) = pak.find_file(&shell_collider_path_gen(id, sub_id)) {
-                let rcol = Rcol::new(Cursor::new(pak.read_file(index)?), true)
-                    .context(shell_collider_path)?;
-                add_atk_colliders(rcol);
-            } else {
-                eprintln!("Shell collider file not found {shell_collider_path}")
+            for shell_collider_path in shell_collider_path_gen(id, sub_id) {
+                if let Ok(index) = pak.find_file(&shell_collider_path) {
+                    let rcol = Rcol::new(Cursor::new(pak.read_file(index)?), true)
+                        .context(shell_collider_path)?;
+                    add_atk_colliders(rcol);
+                } else {
+                    eprintln!("Shell collider file not found {shell_collider_path}")
+                }
             }
 
             monsters.push(Monster {
