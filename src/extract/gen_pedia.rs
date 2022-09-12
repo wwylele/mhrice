@@ -2848,8 +2848,8 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
 fn prepare_monsters<'a>(
     pedia: &'a Pedia,
     reward_lot: &'_ HashMap<u32, &'a RewardIdLotTableUserDataParam>,
-) -> Result<HashMap<EmTypes, MonsterEx<'a>>> {
-    let mut result = HashMap::new();
+) -> Result<BTreeMap<EmTypes, MonsterEx<'a>>> {
+    let mut result = BTreeMap::new();
 
     let names = pedia.monster_names.get_name_map();
     let names_mr = pedia.monster_names_mr.get_name_map();

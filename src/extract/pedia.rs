@@ -446,7 +446,7 @@ pub struct WeaponCustomBuildup<'a> {
 }
 
 pub struct PediaEx<'a> {
-    pub monsters: HashMap<EmTypes, MonsterEx<'a>>,
+    pub monsters: BTreeMap<EmTypes, MonsterEx<'a>>,
     pub sizes: HashMap<EmTypes, &'a SizeInfo>,
     pub size_dists: HashMap<i32, &'a [ScaleAndRateData]>,
     pub quests: Vec<Quest<'a>>,
