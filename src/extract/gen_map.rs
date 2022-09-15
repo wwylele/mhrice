@@ -275,7 +275,7 @@ fn gen_map(
         let map_explain_id = format!("mh-map-explain-{i}");
 
         map_icons.push(
-            html!(<div class="mh-map-pop" id={map_icon_id.as_str()} data-filter={filter}
+            html!(<div class="mh-map-filter-item" id={map_icon_id.as_str()} data-filter={filter}
                 style={format!("left:{x}%;top:{y}%")}> {icon_inner()} </div>),
         );
         map_explains.push(html!(<div class="mh-hidden" id={map_explain_id.as_str()}>
@@ -301,12 +301,12 @@ fn gen_map(
         content: html!(
             <section id="s-map">
             <div class="mh-filters"><ul>
-            <li id="mh-map-filter-all" class="mh-map-filter is-active"><a>"All icons"</a></li>
-            <li id="mh-map-filter-item" class="mh-map-filter"><a>"Gathering"</a></li>
-            <li id="mh-map-filter-relic" class="mh-map-filter"><a>"Relics"</a></li>
-            <li id="mh-map-filter-camp" class="mh-map-filter"><a>"Camps"</a></li>
-            <li id="mh-map-filter-jump" class="mh-map-filter"><a>"Jumping points"</a></li>
-            <li id="mh-map-filter-fish" class="mh-map-filter"><a>"Fishing points"</a></li>
+            <li id="mh-map-filter-button-all" class="mh-map-filter-button is-active"><a>"All icons"</a></li>
+            <li id="mh-map-filter-button-item" class="mh-map-filter-button"><a>"Gathering"</a></li>
+            <li id="mh-map-filter-button-relic" class="mh-map-filter-button"><a>"Relics"</a></li>
+            <li id="mh-map-filter-button-camp" class="mh-map-filter-button"><a>"Camps"</a></li>
+            <li id="mh-map-filter-button-jump" class="mh-map-filter-button"><a>"Jumping points"</a></li>
+            <li id="mh-map-filter-button-fish" class="mh-map-filter-button"><a>"Fishing points"</a></li>
             </ul></div>
 
             <div class="columns">
@@ -392,7 +392,7 @@ fn gen_map(
             <head>
                 <title>{text!("Map {:02}", id)}</title>
                 { head_common() }
-                <style id="mh-map-pop-style">""</style>
+                <style id="mh-map-list-style">""</style>
             </head>
             <body>
             { navbar() }

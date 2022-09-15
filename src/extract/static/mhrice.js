@@ -12,11 +12,8 @@ let g_cur_map_explain = "default";
 
 let g_map_scale = 100;
 let g_map_layer = 0;
-let g_cur_map_filter = "all";
 
-let g_cur_item_filter = "all";
-let g_cur_armor_filter = "all";
-let g_cur_skill_filter = "all";
+let g_filter = "all";
 
 let g_toc = null;
 
@@ -47,6 +44,11 @@ document.addEventListener('DOMContentLoaded', function () {
     change_sort("item", 1);
     change_sort("armor", 1);
 
+    initFilter("map");
+    initFilter("item");
+    initFilter("armor");
+    initFilter("skill");
+
     autoSearch();
 });
 
@@ -69,8 +71,8 @@ function addEventListensers() {
     addEventListenerToClass("mh-skill-filter-button", "click", changeSkillFilter);
     addEventListenerToClass("mh-scombo", "change", onChangeSort);
 
-    addEventListenerToClass("mh-map-pop", "click", onShowMapExplain);
-    addEventListenerToClass("mh-map-filter", "click", changeMapFilter);
+    addEventListenerToClass("mh-map-filter-item", "click", onShowMapExplain);
+    addEventListenerToClass("mh-map-filter-button", "click", changeMapFilter);
     addEventListenerToId("button-scale-down", "click", scaleDownMap);
     addEventListenerToId("button-scale-up", "click", scaleUpMap);
     addEventListenerToId("button-map-layer", "click", switchMapLayer);
@@ -415,70 +417,72 @@ function switchMapLayer() {
 }
 
 function changeMapFilter(e) {
-    const filter = removePrefix(e.currentTarget.id, "mh-map-filter-");
-    const style = document.getElementById("mh-map-pop-style");
-    if (style) {
-        if (filter == "all") {
-            style.innerHTML = "";
-        } else {
-            style.innerHTML =
-                `.mh-map-outer>.mh-map-container>.mh-map>.mh-map-pop:not([data-filter*="${filter}"]) { display:none; }`;
-        }
-    }
-
-    const filter_button_prefix = "mh-map-filter-";
-    const prev = document.getElementById(filter_button_prefix + g_cur_map_filter);
-    if (prev !== null) {
-        prev.classList.remove("is-active")
-    }
-
-    g_cur_map_filter = filter;
-
-    const cur = document.getElementById(filter_button_prefix + g_cur_map_filter);
-    if (cur !== null) {
-        cur.classList.add("is-active")
-    }
+    changeFilter(e, 'map');
 }
 
 function changeItemFilter(e) {
-    const global = { ref: g_cur_item_filter };
-    changeFilter(e, 'item', global);
-    g_cur_item_filter = global.ref;
+    changeFilter(e, 'item');
 }
 
 function changeArmorFilter(e) {
-    const global = { ref: g_cur_armor_filter };
-    changeFilter(e, 'armor', global);
-    g_cur_armor_filter = global.ref;
+    changeFilter(e, 'armor');
 }
 
 function changeSkillFilter(e) {
-    const global = { ref: g_cur_skill_filter };
-    changeFilter(e, 'skill', global);
-    g_cur_skill_filter = global.ref;
+    changeFilter(e, 'skill');
 }
 
-function changeFilter(e, category, global) {
+function filterStyle(category, filter) {
+    return `.mh-${category}-filter-item:not([data-filter*="${filter}"]) { display:none !important; }`;
+}
+
+function initFilter(category) {
+    if (location.hash === null || !location.hash.startsWith("#")) {
+        return;
+    }
+    const style = document.getElementById(`mh-${category}-list-style`);
+    const filter = removePrefix(location.hash, "#");
+    if (style && filter !== "") {
+        style.innerHTML = filterStyle(category, filter);
+        const filter_button_prefix = `mh-${category}-filter-button-`;
+        const prev = document.getElementById(filter_button_prefix + g_filter);
+        if (prev !== null) {
+            prev.classList.remove("is-active")
+        }
+
+        g_filter = filter;
+
+        const cur = document.getElementById(filter_button_prefix + g_filter);
+        if (cur !== null) {
+            cur.classList.add("is-active")
+        }
+    }
+}
+
+function changeFilter(e, category) {
     let filter = removePrefix(e.currentTarget.id, `mh-${category}-filter-button-`);
     const style = document.getElementById(`mh-${category}-list-style`);
+    var hash = "#";
     if (style) {
         if (filter == "all") {
             style.innerHTML = "";
         } else {
-            style.innerHTML =
-                `.mh-${category}-filter-item:not([data-filter*="${filter}"]) { display:none; }`;
+            style.innerHTML = filterStyle(category, filter);
+            hash = `#${filter}`;
         }
     }
 
+    history.replaceState(null, null, hash);
+
     const filter_button_prefix = `mh-${category}-filter-button-`;
-    const prev = document.getElementById(filter_button_prefix + global.ref);
+    const prev = document.getElementById(filter_button_prefix + g_filter);
     if (prev !== null) {
         prev.classList.remove("is-active")
     }
 
-    global.ref = filter;
+    g_filter = filter;
 
-    const cur = document.getElementById(filter_button_prefix + global.ref);
+    const cur = document.getElementById(filter_button_prefix + g_filter);
     if (cur !== null) {
         cur.classList.add("is-active")
     }
