@@ -80,10 +80,10 @@ pub fn gen_quest_tag(
     </div>)
 }
 
-pub fn gen_quest_list(quests: &[Quest], output: &impl Sink) -> Result<()> {
+pub fn gen_quest_list(quests: &BTreeMap<i32, Quest>, output: &impl Sink) -> Result<()> {
     let mut quests_ordered: BTreeMap<_, BTreeMap<_, Vec<&Quest>>> = BTreeMap::new();
     let mut anomaly_ordered: BTreeMap<i32, Vec<&Quest>> = BTreeMap::new();
-    for quest in quests {
+    for quest in quests.values() {
         if let Some(anomaly) = quest.param.anomaly_level() {
             anomaly_ordered.entry(anomaly).or_default().push(quest);
         } else {
@@ -1147,7 +1147,7 @@ pub fn gen_quests(
     toc: &mut Toc,
 ) -> Result<()> {
     let quest_path = output.sub_sink("quest")?;
-    for quest in &pedia_ex.quests {
+    for quest in pedia_ex.quests.values() {
         let (path, toc_sink) =
             quest_path.create_html_with_toc(&format!("{:06}.html", quest.param.quest_no), toc)?;
         gen_quest(quest, pedia, pedia_ex, path, toc_sink)?;

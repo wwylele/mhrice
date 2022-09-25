@@ -1,6 +1,7 @@
 use super::gen_common::*;
 use super::gen_hyakuryu_skill::*;
 use super::gen_item::*;
+use super::gen_monster::*;
 use super::gen_website::*;
 use super::pedia::*;
 use super::sink::*;
@@ -71,6 +72,10 @@ fn gen_craft_row(
 
     html!(<tr>
         {label}
+        <td>{gen_progress(data.progress_flag, pedia_ex)}</td>
+        <td>{(data.enemy_flag != EmTypes::Em(0)).then(
+            ||gen_monster_tag(pedia_ex, data.enemy_flag, false, false, false)
+        )}</td>
         {cost}
         {category}
         {materials}
@@ -492,6 +497,8 @@ where
         <div class="mh-table"><table>
             <thead><tr>
                 <th>""</th>
+                <th>"Unlock at"</th>
+                <th>"Key Monster"</th>
                 <th>"Cost"</th>
                 <th>"Categorized Material"</th>
                 <th>"Material"</th>
@@ -501,6 +508,8 @@ where
                 { (main.base.buy_val != 0).then(|| {
                     html!(<tr>
                         <td>"Buy"</td>
+                        <td/>
+                        <td/>
                         <td>{text!("{}z", main.base.buy_val)}</td>
                         <td/><td/><td/>
                     </tr>)

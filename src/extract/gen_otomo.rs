@@ -1,5 +1,6 @@
 use super::gen_common::*;
 use super::gen_item::*;
+use super::gen_monster::*;
 use super::gen_website::*;
 use super::pedia::*;
 use super::sink::*;
@@ -163,6 +164,16 @@ fn gen_otomo_equip(
         content: html!(
             <section id="s-crafting">
             <h2 >"Crafting"</h2>
+            {(series.series.unlock_progress != 0).then(
+                ||html!(<div><span class="has-text-weight-bold">"Unlock at: "</span> {
+                    gen_progress(series.series.unlock_progress, pedia_ex)
+                }</div>)
+            )}
+            {(series.series.unlock_enemy != EmTypes::Em(0)).then(
+                ||html!(<div><span class="has-text-weight-bold">"Key monster: "</span> {
+                    gen_monster_tag(pedia_ex, series.series.unlock_enemy, false, false, false)
+                }</div>)
+            )}
             <div class="mh-table"><table>
                 <thead><tr>
                     <th>"Name"</th>
@@ -174,7 +185,8 @@ fn gen_otomo_equip(
                         <td>{gen_atomo_armor_label(p)}</td>
                         <td>{text!("{}", p.param.sell_value * 3 / 2)}</td>
                         {if let Some(product) = &p.product {
-                            gen_materials(pedia_ex, &product.item_list, &product.item_num, ItemId::None)
+                            // TODO: key item
+                            gen_materials(pedia_ex, &product.item_list, &product.item_num, ItemId::None/*series.series.unlock_item*/)
                         } else {
                             html!(<td>"-"</td>)
                         }}
@@ -183,7 +195,7 @@ fn gen_otomo_equip(
                         <td>{gen_atomo_armor_label(p)}</td>
                         <td>{text!("{}", p.param.sell_value * 3 / 2)}</td>
                         {if let Some(product) = &p.product {
-                            gen_materials(pedia_ex, &product.item_list, &product.item_num, ItemId::None)
+                            gen_materials(pedia_ex, &product.item_list, &product.item_num, ItemId::None/*series.series.unlock_item*/)
                         } else {
                             html!(<td>"-"</td>)
                         }}
@@ -193,7 +205,7 @@ fn gen_otomo_equip(
                         <td>{gen_atomo_weapon_label(p)}</td>
                         <td>{text!("{}", p.param.sell_value * 3 / 2)}</td>
                         {if let Some(product) = &p.product {
-                            gen_materials(pedia_ex, &product.item_list, &product.item_num, ItemId::None)
+                            gen_materials(pedia_ex, &product.item_list, &product.item_num, ItemId::None/*series.series.unlock_item*/)
                         } else {
                             html!(<td>"-"</td>)
                         }}

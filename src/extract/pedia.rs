@@ -243,6 +243,8 @@ pub struct Pedia {
     pub random_mystery_difficulty: Option<RandomMysteryDifficultyRateListData>,
     pub random_mystery_enemy: Option<RandomMysteryLotEnemyData>,
     pub random_mystery_rank_release: Option<RandomMysteryMonsterRankReleaseData>,
+
+    pub progress: ProgressCheckerUserData,
 }
 
 pub struct QuestReward<'a> {
@@ -449,7 +451,7 @@ pub struct PediaEx<'a> {
     pub monsters: BTreeMap<EmTypes, MonsterEx<'a>>,
     pub sizes: HashMap<EmTypes, &'a SizeInfo>,
     pub size_dists: HashMap<i32, &'a [ScaleAndRateData]>,
-    pub quests: Vec<Quest<'a>>,
+    pub quests: BTreeMap<i32, Quest<'a>>,
     pub skills: BTreeMap<PlEquipSkillId, Skill<'a>>,
     pub hyakuryu_skills: BTreeMap<PlHyakuryuSkillId, HyakuryuSkill<'a>>,
     pub armors: Vec<ArmorSeries<'a>>,
@@ -487,4 +489,5 @@ pub struct PediaEx<'a> {
     pub weapon_custom_buildup: HashMap<u32, WeaponCustomBuildup<'a>>,
 
     pub supply: HashMap<i32, &'a SupplyDataParam>,
+    pub progress: HashMap<i32, &'a ProgressCheckerUserDataParam>,
 }

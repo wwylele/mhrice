@@ -1093,3 +1093,44 @@ rsz_with_singleton! {
     #[path("Quest/SupplyData/SupplyData_MR.user")]
     pub struct SupplyDataMr(SupplyData);
 }
+
+// snow.progress.ProgressHRCategory
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Clone, Copy)]
+    pub enum ProgressHRCategory {
+        Low = 0,
+        High = 1,
+        HRUnlock = 2,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.checker.ProgressCheckerUserData.Param",
+        0x418a9339 = 10_00_02,
+        0xbd01b69b = 11_00_01,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ProgressCheckerUserDataParam {
+        pub progress_flag: i32, // snow.data.DataDef.UnlockProgressTypes
+        pub village: VillageProgress,
+        pub hall: HallProgress,
+        pub mr: MasterRankProgress,
+        pub quest_no: i32, // snow.quest.QuestNo
+        pub talk_flag: i32, // snow.npc.TalkFlag
+        pub talk_flag_hall: HallProgress,
+        pub enable_progress_hr_check: bool,
+        pub progress_hr: ProgressHRCategory,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.checker.ProgressCheckerUserData",
+        path = "data/Manager/FlagDataManager/ProgressChecker.user",
+        0x27f929e2 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ProgressCheckerUserData {
+        pub param_list: Vec<ProgressCheckerUserDataParam>
+    }
+}

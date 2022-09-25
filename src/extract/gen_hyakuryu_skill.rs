@@ -1,5 +1,6 @@
 use super::gen_common::*;
 use super::gen_item::*;
+use super::gen_monster::gen_monster_tag;
 use super::gen_weapon::*;
 use super::gen_website::*;
 use super::pedia::*;
@@ -211,6 +212,8 @@ pub fn gen_hyakuryu_skill(
                 <div class="mh-table"><table>
                     <thead><tr>
                         <th>"Name"</th>
+                        <th>"Unlock at"</th>
+                        <th>"Key Monster"</th>
                         <th>"Cost"</th>
                         <th>"Categorized Material"</th>
                         <th>"Material"</th>
@@ -218,6 +221,10 @@ pub fn gen_hyakuryu_skill(
                     <tbody>
                         <tr>
                             <td>{gen_hyakuryu_deco_label(deco)}</td>
+                            <td>{gen_progress(deco.product.progress_flag, pedia_ex)}</td>
+                            <td>{(deco.product.enemy_flag != EmTypes::Em(0)).then(
+                                ||gen_monster_tag(pedia_ex, deco.product.enemy_flag, false, false, false)
+                            )}</td>
                             <td>{text!("{}z", deco.data.base_price)}</td>
                             { gen_category(pedia_ex, deco.product.material_category,
                                 deco.product.point) }

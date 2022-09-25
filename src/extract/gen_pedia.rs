@@ -1005,6 +1005,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         random_mystery_difficulty,
         random_mystery_enemy: get_singleton_opt(pak)?,
         random_mystery_rank_release: get_singleton_opt(pak)?,
+        progress: get_singleton(pak)?,
     })
 }
 
@@ -1525,7 +1526,7 @@ fn prepare_size_dist_map(
 fn prepare_quests<'a>(
     pedia: &'a Pedia,
     reward_lot: &'_ HashMap<u32, &'a RewardIdLotTableUserDataParam>,
-) -> Result<Vec<Quest<'a>>> {
+) -> Result<BTreeMap<i32, Quest<'a>>> {
     let all_msg = pedia
         .quest_hall_msg
         .entries
@@ -1698,21 +1699,24 @@ fn prepare_quests<'a>(
                 None
             };
 
-            Ok(Quest {
-                param,
-                enemy_param: enemy_params.get(&param.quest_no).cloned(),
-                name: all_msg.get(&name_msg_name).cloned(),
-                requester: all_msg.get(&requester_msg_name).cloned(),
-                detail: all_msg.get(&detail_msg_name).cloned(),
-                target: all_msg.get(&target_msg_name).cloned(),
-                condition: all_msg.get(&condition_msg_name).cloned(),
-                is_dl,
-                reward,
-                hyakuryu: hyakuryus.get(&param.quest_no).cloned(),
-                servant: servant.get(&param.quest_no).cloned(),
-            })
+            Ok((
+                param.quest_no,
+                Quest {
+                    param,
+                    enemy_param: enemy_params.get(&param.quest_no).cloned(),
+                    name: all_msg.get(&name_msg_name).cloned(),
+                    requester: all_msg.get(&requester_msg_name).cloned(),
+                    detail: all_msg.get(&detail_msg_name).cloned(),
+                    target: all_msg.get(&target_msg_name).cloned(),
+                    condition: all_msg.get(&condition_msg_name).cloned(),
+                    is_dl,
+                    reward,
+                    hyakuryu: hyakuryus.get(&param.quest_no).cloned(),
+                    servant: servant.get(&param.quest_no).cloned(),
+                },
+            ))
         })
-        .collect::<Result<Vec<_>>>()
+        .collect::<Result<BTreeMap<_, _>>>()
 }
 
 fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> {
@@ -3192,6 +3196,18 @@ pub fn prepare_supply(pedia: &Pedia) -> Result<HashMap<i32, &SupplyDataParam>> {
     )
 }
 
+pub fn prepare_progress(pedia: &Pedia) -> Result<HashMap<i32, &ProgressCheckerUserDataParam>> {
+    hash_map_unique(
+        pedia
+            .progress
+            .param_list
+            .iter()
+            .filter(|p| p.progress_flag != 0),
+        |p| (p.progress_flag, p),
+        false,
+    )
+}
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     let monster_order = pedia
         .monster_list
@@ -3282,5 +3298,6 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         weapon_custom_buildup,
 
         supply: prepare_supply(pedia)?,
+        progress: prepare_progress(pedia)?,
     })
 }

@@ -1,6 +1,7 @@
 use super::gen_armor::*;
 use super::gen_common::*;
 use super::gen_item::*;
+use super::gen_monster::*;
 use super::gen_website::*;
 use super::pedia::*;
 use super::sink::*;
@@ -170,6 +171,8 @@ pub fn gen_skill(
                     <thead><tr>
                         <th>"Name"</th>
                         <th>"Skill level"</th>
+                        <th>"Unlock at"</th>
+                        <th>"Key Monster"</th>
                         <th>"Cost"</th>
                         <th>"Material"</th>
                     </tr></thead>
@@ -179,6 +182,10 @@ pub fn gen_skill(
                             <tr>
                                 <td>{gen_deco_label(deco)}</td>
                                 <td>{text!("{}", deco.data.skill_lv_list[0])}</td>
+                                <td>{gen_progress(deco.product.progress_flag, pedia_ex)}</td>
+                                <td>{(deco.product.enemy_flag != EmTypes::Em(0)).then(
+                                    ||gen_monster_tag(pedia_ex, deco.product.enemy_flag, false, false, false)
+                                )}</td>
                                 <td>{text!("{}z", deco.data.base_price)}</td>
                                 { gen_materials(pedia_ex, &deco.product.item_id_list,
                                     &deco.product.item_num_list, deco.product.item_flag) }

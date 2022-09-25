@@ -1,4 +1,6 @@
+use super::gen_quest::*;
 use super::gen_website::*;
+use super::pedia::*;
 use typed_html::{elements::*, html, text};
 
 const WEBSITE_VERSIONS: &[&str] = &["10.0.2", "10.0.3", "11.0.1", "11.0.2"];
@@ -129,4 +131,43 @@ pub fn gen_slot(decorations_num_list: &[u32], is_rampage_slot: bool) -> Box<span
             <span class="mh-slot-0"/>
         </span>))}
     </span>)
+}
+
+pub fn gen_progress(progress_flag: i32, pedia_ex: &PediaEx) -> Box<div<String>> {
+    if progress_flag == 0 {
+        return html!(<div>"None"</div>);
+    }
+    let progress = if let Some(&progress) = pedia_ex.progress.get(&progress_flag) {
+        progress
+    } else {
+        return html!(<div>{text!("Unknown progress {}", progress_flag)}</div>);
+    };
+    let mut flags = vec![];
+    if let Some(village) = progress.village.display() {
+        flags.push(html!(<div>{text!("{}", village)}</div>));
+    }
+    if let Some(hall) = progress.hall.display() {
+        flags.push(html!(<div>{text!("{}", hall)}</div>));
+    }
+    if let Some(hall) = progress.talk_flag_hall.display() {
+        flags.push(html!(<div>{text!("NPC:{}", hall)}</div>));
+    }
+    if let Some(mr) = progress.mr.display() {
+        flags.push(html!(<div>{text!("{}", mr)}</div>));
+    }
+    if progress.quest_no != -1 {
+        if let Some(quest) = pedia_ex.quests.get(&progress.quest_no) {
+            flags.push(html!(<div>"Quest:"{gen_quest_tag(quest, false, false, false)}</div>));
+        } else {
+            flags.push(html!(<div>{text!("Quest:{}", progress.quest_no)}</div>));
+        }
+    }
+    if progress.talk_flag != -1 {
+        flags.push(html!(<div>{text!("NPC:{}", progress.talk_flag)}</div>));
+    }
+    if progress.enable_progress_hr_check {
+        flags.push(html!(<div>{text!("Check:{:?}", progress.progress_hr)}</div>));
+    }
+
+    html!(<div>{flags}</div>)
 }

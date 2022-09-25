@@ -1034,7 +1034,7 @@ pub fn gen_monster(
                 <th class="mh-quest-detail">"Stamina"</th>
             </tr></thead>
             <tbody> {
-                pedia_ex.quests.iter().flat_map(|quest| {
+                pedia_ex.quests.values().flat_map(|quest| {
                     quest.param.boss_em_type.iter().copied().enumerate().filter(
                         |&(_, em_type)|em_type == monster_em_type
                     )

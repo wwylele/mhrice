@@ -1,5 +1,6 @@
 use super::gen_common::*;
 use super::gen_item::*;
+use super::gen_monster::*;
 use super::gen_skill::*;
 use super::gen_website::*;
 use super::pedia::*;
@@ -443,6 +444,8 @@ fn gen_armor(
             <div class="mh-table"><table>
                 <thead><tr>
                     <th>"Name"</th>
+                    <th>"Unlock at"</th>
+                    <th>"Key Monster"</th>
                     <th>"Cost"</th>
                     <th>"Categorized Material"</th>
                     <th>"Material"</th>
@@ -468,6 +471,10 @@ fn gen_armor(
 
                         html!(<tr>
                             <td>{gen_armor_label(Some(armor))}</td>
+                            <td>{gen_progress(product.progress_flag, pedia_ex)}</td>
+                            <td>{(product.enemy_flag != EmTypes::Em(0)).then(
+                                ||gen_monster_tag(pedia_ex, product.enemy_flag, false, false, false)
+                            )}</td>
                             <td>{text!("{}z", armor.data.value)}</td>
                             {category}
                             {materials}
@@ -489,6 +496,8 @@ fn gen_armor(
         <div class="mh-table"><table>
             <thead><tr>
                 <th>"Name"</th>
+                <th>"Unlock at"</th>
+                <th>"Key Monster"</th>
                 <th>"Categorized Material"</th>
                 <th>"Material"</th>
             </tr></thead>
@@ -509,6 +518,10 @@ fn gen_armor(
 
                     html!(<tr>
                         <td>{gen_armor_label(Some(armor))}</td>
+                        <td>{gen_progress(product.progress_flag, pedia_ex)}</td>
+                        <td>{(product.enemy_flag != EmTypes::Em(0)).then(
+                            ||gen_monster_tag(pedia_ex, product.enemy_flag, false, false, false)
+                        )}</td>
                         {category}
                         {materials}
                     </tr>)

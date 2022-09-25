@@ -179,7 +179,7 @@ fn gen_item_source_monster(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<di
 fn gen_item_source_quest(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
     let quests: Vec<_> = pedia_ex
         .quests
-        .iter()
+        .values()
         .filter(|quest| {
             let reward = if let Some(reward) = &quest.reward {
                 reward
