@@ -256,7 +256,7 @@ impl<F: Read + Seek> PakReader<F> {
                 }
                 Ok(data)
             }
-            1 => {
+            1 | 0x11 => {
                 let mut decompressed = Vec::new();
                 flate::Decoder::new(&data[..]).read_to_end(&mut decompressed)?;
                 if u64::try_from(decompressed.len()).unwrap() != len {
