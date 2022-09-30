@@ -415,7 +415,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.hit.userdata.EmHitAttackRSData",
-        0x54158991 = 10_00_02
+        0x54158991 = 10_00_02,
+        0xC510FF49 = 12_00_00, // what changed in this?
     )]
     #[derive(Debug, Serialize)]
     pub struct EmHitAttackRsData {
@@ -426,7 +427,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.hit.userdata.EmShellHitAttackRSData",
-        0x7cfb2121 = 10_00_02
+        0x7cfb2121 = 10_00_02,
+        0x6FB5D79D = 12_00_00, // what changed in this?
     )]
     #[derive(Debug, Serialize)]
     pub struct EmShellHitAttackRsData {

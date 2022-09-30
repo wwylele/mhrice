@@ -35,7 +35,8 @@ rsz_struct! {
 rsz_struct! {
     #[rsz("snow.access.ItemPopBehavior",
         0x0c330360 = 10_00_02,
-        0xB05CAFAA = 11_00_01
+        0xB05CAFAA = 11_00_01,
+        0x25726033 = 12_00_00,
     )]
     #[derive(Debug, Serialize, Clone)]
     pub struct ItemPopBehavior {
@@ -219,6 +220,7 @@ rsz_struct! {
     #[rsz("snow.stage.pop.CampFindCheck",
         0x5588A2F2 = 10_00_02,
         0xA0F8501B = 11_00_01,
+        0xE158D6D7 = 12_00_00
     )]
     #[derive(Debug, Serialize)]
     pub struct CampFindCheck {
@@ -389,6 +391,7 @@ rsz_struct! {
     #[rsz("snow.data.ItemPopLotTableUserData.Param",
         0xa1800433 = 10_00_02,
         0xF99CD6BA = 11_00_01,
+        0xF070EF26 = 12_00_00,
     )]
     #[derive(Debug, Serialize)]
     pub struct ItemPopLotTableUserDataParam {
@@ -1052,7 +1055,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.wwise.WwiseContainerApp",
-        0x111dddbb = 10_00_02
+        0x111dddbb = 10_00_02,
+        0xCBA62068 = 12_00_00,
     )]
     #[derive(Debug, Serialize)]
     pub struct WwiseContainerApp {

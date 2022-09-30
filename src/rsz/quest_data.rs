@@ -279,6 +279,7 @@ rsz_struct! {
     #[rsz("snow.quest.NormalQuestData.Param",
         0x708b71d8 = 10_00_02,
         0x6213ED03 = 11_00_01,
+        0x7ADC2497 = 12_00_00,
     )]
     #[derive(Debug, Serialize)]
     pub struct NormalQuestDataParam {
@@ -456,6 +457,10 @@ rsz_enum! {
     pub enum EnemyIndividualType {
         Normal = 0,
         Mystery = 1,
+        OverMysteryStrengthDefault = 2,
+        OverMysteryStrengthLv1 = 3,
+        OverMysteryStrengthLv2 = 4,
+        OverMysteryStrengthLv3 = 5,
     }
 }
 
@@ -513,6 +518,7 @@ rsz_struct! {
     #[rsz("snow.quest.NormalQuestDataForEnemy.Param",
         0x7E1E92C8 = 10_00_02,
         0x3663ECD6 = 11_00_01,
+        0xA718C7EA = 12_00_00,
     )]
     #[derive(Debug, Serialize, Clone)]
     pub struct NormalQuestDataForEnemyParam {
@@ -703,6 +709,7 @@ rsz_struct! {
     #[rsz("snow.enemy.SystemEnemySizeListData.SizeInfo",
         0xB66C1F4D = 10_00_02,
         0x198674C0 = 11_00_01,
+        0xF9EB17D2 = 12_00_00,
     )]
     #[derive(Debug, Serialize)]
     pub struct SizeInfo {
@@ -733,6 +740,7 @@ rsz_struct! {
     #[rsz("snow.quest.DiscoverEmSetData.Param",
         0xa9f8ec2d = 10_00_02,
         0x761D06CD = 11_00_01,
+        0x15B3EE53 = 12_00_00,
     )]
     #[derive(Debug, Serialize)]
     pub struct DiscoverEmSetDataParam {
@@ -845,6 +853,7 @@ rsz_struct! {
     #[rsz("snow.data.RewardIdLotTableUserData.Param",
         0x11de5dc7 = 10_00_02,
         0x0F2FF775 = 11_00_01,
+        0xF895584E = 12_00_00,
     )]
     #[derive(Debug, Serialize)]
     pub struct RewardIdLotTableUserDataParam {
@@ -878,6 +887,7 @@ rsz_struct! {
     #[rsz("snow.quest.HyakuryuQuestData.WaveData",
         0x43C9A46C = 10_00_02,
         0x65A33E4E = 11_00_01,
+        0xED7B2916 = 12_00_00,
     )]
     #[derive(Debug, Serialize)]
     pub struct HyakuryuQuestDataWaveData {
@@ -957,6 +967,7 @@ rsz_struct! {
     #[rsz("snow.data.MysteryRewardItemUserData.Param",
         0xc3438c68 = 10_00_02,
         0x15C40983 = 11_00_01,
+        0x0C5BB4D4 = 12_00_00,
     )]
     #[derive(Debug, Serialize)]
     pub struct MysteryRewardItemUserDataParam {
@@ -1044,6 +1055,7 @@ rsz_struct! {
     #[rsz("snow.ai.QuestServantDataList.QuestServantData",
         0x29c450b1 = 10_00_02,
         0x44843229 = 11_00_01,
+        0xF1AA25A7 = 12_00_00,
     )]
     #[derive(Debug, Serialize)]
     pub struct QuestServantData {
@@ -1067,6 +1079,7 @@ rsz_struct! {
     #[rsz("snow.quest.SupplyData.Param",
         0xDF132E6C = 10_00_02,
         0xCB4B87E1 = 11_00_01,
+        0x536C3809 = 12_00_00,
     )]
     #[derive(Debug, Serialize)]
     pub struct SupplyDataParam {
@@ -1109,6 +1122,7 @@ rsz_struct! {
     #[rsz("snow.data.checker.ProgressCheckerUserData.Param",
         0x418a9339 = 10_00_02,
         0xbd01b69b = 11_00_01,
+        0x6BE6DF3B = 12_00_00,
     )]
     #[derive(Debug, Serialize)]
     pub struct ProgressCheckerUserDataParam {

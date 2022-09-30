@@ -45,7 +45,8 @@ rsz_struct! {
 rsz_struct! {
     #[rsz("snow.data.monsterList.BossMonsterData",
         0xf03fc40b = 10_00_02,
-        0x32FFAC88 = 11_00_01
+        0x32FFAC88 = 11_00_01,
+        0x514FBB1C = 12_00_00,
     )]
     #[derive(Debug, Serialize)]
     pub struct BossMonsterData {

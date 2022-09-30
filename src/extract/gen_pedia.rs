@@ -12,7 +12,7 @@ use crate::rsz::*;
 use crate::tex::*;
 use crate::user::User;
 use crate::uvs::*;
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use std::collections::BTreeMap;
@@ -2015,6 +2015,11 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
 
     for armor_series in &pedia.armor_series.param {
         if series_map.contains_key(&armor_series.armor_series) {
+            if armor_series.armor_series.0 == 0 {
+                // Crapcom please
+                eprintln!("Multiple armor series with ID 0. Ignoring");
+                continue;
+            }
             bail!(
                 "Duplicate armor series for ID {:?}",
                 armor_series.armor_series
@@ -3157,14 +3162,28 @@ pub fn prepare_weapon_custom_buildup<'a>(
             .id
             .iter()
             .filter(|&&id| id != 0)
-            .map(|&id| {
-                let data = custom_buildup_pieces
-                    .remove(&(category.table_no, category.category_id, id))
-                    .with_context(|| format!("Weapon custom buildup data not found for {id}"))?;
-                let material = material.get(&id).with_context(|| {
-                    format!("Weapon custom buildup material not found for {id}")
-                })?;
-                Ok((id, WeaponCustomBuildupPiece { data, material }))
+            .filter_map(|&id| {
+                let data = if let Some(data) =
+                    custom_buildup_pieces.remove(&(category.table_no, category.category_id, id))
+                {
+                    data
+                } else {
+                    // Crapcom: some is missing in v12.0.0, likely copy-paste error
+                    eprintln!(
+                        "Weapon custom buildup data not found for table {} category {} id {}",
+                        category.table_no, category.category_id, id
+                    );
+                    return None;
+                };
+
+                let material = if let Some(material) = material.get(&id) {
+                    *material
+                } else {
+                    return Some(Err(anyhow!(
+                        "Weapon custom buildup material not found for {id}"
+                    )));
+                };
+                Some(Ok((id, WeaponCustomBuildupPiece { data, material })))
             })
             .collect::<Result<BTreeMap<_, _>>>()?;
         let categories = &mut result.entry(category.table_no).or_default().categories;
@@ -3249,7 +3268,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
             .flat_map(|p| &p.param)
             .filter(|p| p.table_no != 0),
         |p| ((p.table_no, p.category_id, p.id), p),
-        false,
+        true, // there seems to be a small bug with (table8, category7, id51)
     )?;
 
     let armor_custom_buildup = prepare_armor_custom_buildup(pedia, &mut custom_buildup_pieces)?;

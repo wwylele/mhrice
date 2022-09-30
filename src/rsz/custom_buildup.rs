@@ -32,7 +32,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.CustomBuildupOpenUserData.Param",
-        0xC0A94CBE = 11_00_01
+        0xC0A94CBE = 11_00_01,
+        0x3EF94613 = 12_00_00
     )]
     #[derive(Debug, Serialize)]
     pub struct CustomBuildupOpenUserDataParam {
@@ -157,7 +158,8 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.CustomBuildupWeaponMaterialUserData.Param",
-        0x2A2ABE7B = 11_00_01
+        0x2A2ABE7B = 11_00_01,
+        0xC0C006CC = 12_00_00
     )]
     #[derive(Debug, Serialize)]
     pub struct CustomBuildupWeaponMaterialUserDataParam {

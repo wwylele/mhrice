@@ -58,7 +58,8 @@ rsz_enum! {
 rsz_struct! {
     #[rsz("snow.data.MonsterLotTableUserData.Param",
         0xbdcef7e9 = 10_00_02,
-        0x8293106B = 11_00_01
+        0x8293106B = 11_00_01,
+        0xD673A082 = 12_00_00,
     )]
     #[derive(Debug, Serialize)]
     pub struct MonsterLotTableUserDataParam {
@@ -190,7 +191,8 @@ rsz_struct! {
 rsz_struct! {
     #[rsz("snow.data.PartsTypeTextUserData.TextInfo",
         0x62EF585F = 10_00_02,
-        0x94AEE5A5 = 11_00_01
+        0x94AEE5A5 = 11_00_01,
+        0xD233F698 = 12_00_00,
     )]
     #[derive(Debug, Serialize)]
     pub struct PartsTypeTextUserDataTextInfo {
