@@ -326,10 +326,11 @@ fn gen_armor(
                                     <td>{ text!("{}", piece.data.cost) }</td>
                                     <td>
                                     { (category_id == 20 && piece.data.cost > 0).then(||{
-                                        let class=format!("tag mh-cb-lv{}", piece.data.cost);
-                                        html!(<span class={class.as_str()}>
+                                        let class = format!("tag mh-cb-lv{}", piece.data.cost);
+                                        let href = format!("/skill.html#cb{}", piece.data.cost);
+                                        html!(<a href={href.as_str()}><span class={class.as_str()}>
                                             {text!("Pt{} skill", piece.data.cost)}
-                                        </span>)}
+                                        </span></a>)}
                                     ) }
                                     <ul class="mh-custom-lot"> {
                                         piece.data.value_table.iter().zip(&piece.data.lot_table)
