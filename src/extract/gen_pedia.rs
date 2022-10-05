@@ -2472,7 +2472,16 @@ where
                 (t, i)
             }
         });
+        let mut prev_child = None;
         for (t, i) in children {
+            if prev_child == Some((t, i)) {
+                eprintln!(
+                    "Duplicate weapon branch at {:?}, {}, for weapon {:?}",
+                    t, i, node.weapon_id
+                );
+                continue;
+            }
+            prev_child = Some((t, i));
             let next = if let Some(next) = tree_map.get(&(t, i)) {
                 next
             } else {
