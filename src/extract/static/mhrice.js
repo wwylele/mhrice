@@ -221,7 +221,9 @@ function adjustVersionMenu() {
         if (href === current) {
             item.classList.add("has-text-weight-bold");
         }
-        item.setAttribute("href", href + window.location.pathname);
+        item.setAttribute("href", href + window.location.pathname
+            + window.location.search
+            + window.location.hash);
     }
 }
 
