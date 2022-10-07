@@ -2,6 +2,7 @@ use super::gen_common::*;
 use super::gen_item::*;
 use super::gen_monster::*;
 use super::gen_website::*;
+use super::hash_store::*;
 use super::pedia::*;
 use super::sink::*;
 use crate::rsz::*;
@@ -34,6 +35,7 @@ pub fn gen_atomo_weapon_label(piece: &OtWeapon) -> Box<div<String>> {
 }
 
 fn gen_otomo_equip(
+    hash_store: &HashStore,
     series: &OtEquipSeries,
     pedia_ex: &PediaEx,
     mut output: impl Write,
@@ -219,7 +221,7 @@ fn gen_otomo_equip(
     let doc: DOMTree<String> = html!(<html>
         <head>
             <title>{text!("Buddy equipment")}</title>
-            { head_common() }
+            { head_common(hash_store) }
         </head>
         <body>
             { navbar() }
@@ -246,18 +248,28 @@ fn gen_otomo_equip(
     Ok(())
 }
 
-pub fn gen_otomo_equips(pedia_ex: &PediaEx<'_>, output: &impl Sink, toc: &mut Toc) -> Result<()> {
+pub fn gen_otomo_equips(
+    hash_store: &HashStore,
+    pedia_ex: &PediaEx<'_>,
+    output: &impl Sink,
+    toc: &mut Toc,
+) -> Result<()> {
     let otomo_path = output.sub_sink("otomo")?;
     for (id, series) in &pedia_ex.ot_equip {
         let (output, toc_sink) =
             otomo_path.create_html_with_toc(&format!("{}.html", id.to_tag()), toc)?;
-        gen_otomo_equip(series, pedia_ex, output, toc_sink)?
+        gen_otomo_equip(hash_store, series, pedia_ex, output, toc_sink)?
     }
     Ok(())
 }
 
-pub fn gen_otomo_equip_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
+pub fn gen_otomo_equip_list(
+    hash_store: &HashStore,
+    pedia_ex: &PediaEx<'_>,
+    output: &impl Sink,
+) -> Result<()> {
     fn gen_list(
+        hash_store: &HashStore,
         pedia_ex: &PediaEx<'_>,
         output: &impl Sink,
         filter: impl Fn(OtEquipSeriesId) -> bool,
@@ -269,7 +281,7 @@ pub fn gen_otomo_equip_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Resul
             <html>
                 <head>
                     <title>{text!("{} - MHRice", title)}</title>
-                    { head_common() }
+                    { head_common(hash_store) }
                     <style id="mh-armor-list-style">""</style>
                 </head>
                 <body>
@@ -357,6 +369,7 @@ pub fn gen_otomo_equip_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Resul
     </div>);
 
     gen_list(
+        hash_store,
         pedia_ex,
         output,
         |id| matches!(id, OtEquipSeriesId::Airou(_)),
@@ -365,6 +378,7 @@ pub fn gen_otomo_equip_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Resul
         dog_link,
     )?;
     gen_list(
+        hash_store,
         pedia_ex,
         output,
         |id| matches!(id, OtEquipSeriesId::Dog(_)),

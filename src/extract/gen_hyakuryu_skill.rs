@@ -3,6 +3,7 @@ use super::gen_item::*;
 use super::gen_monster::gen_monster_tag;
 use super::gen_weapon::*;
 use super::gen_website::*;
+use super::hash_store::*;
 use super::pedia::*;
 use super::sink::*;
 use crate::rsz::*;
@@ -28,6 +29,7 @@ pub fn hyakuryu_skill_page(id: PlHyakuryuSkillId) -> String {
 }
 
 pub fn gen_hyakuryu_skill_list(
+    hash_store: &HashStore,
     skills: &BTreeMap<PlHyakuryuSkillId, HyakuryuSkill>,
     output: &impl Sink,
 ) -> Result<()> {
@@ -35,7 +37,7 @@ pub fn gen_hyakuryu_skill_list(
         <html>
             <head>
                 <title>{text!("Rampage skills - MHRice")}</title>
-                { head_common() }
+                { head_common(hash_store) }
                 <style id="mh-skill-list-style">""</style>
             </head>
             <body>
@@ -156,6 +158,7 @@ pub fn gen_hyakuryu_deco_label(deco: &HyakuryuDeco) -> Box<div<String>> {
 }
 
 pub fn gen_hyakuryu_skill(
+    hash_store: &HashStore,
     skill: &HyakuryuSkill,
     pedia_ex: &PediaEx,
     mut output: impl Write,
@@ -242,7 +245,7 @@ pub fn gen_hyakuryu_skill(
         <html>
             <head>
                 <title>{text!("Rampage skill - MHRice")}</title>
-                { head_common() }
+                { head_common(hash_store) }
             </head>
             <body>
                 { navbar() }
@@ -268,11 +271,16 @@ pub fn gen_hyakuryu_skill(
     Ok(())
 }
 
-pub fn gen_hyakuryu_skills(pedia_ex: &PediaEx, output: &impl Sink, toc: &mut Toc) -> Result<()> {
+pub fn gen_hyakuryu_skills(
+    hash_store: &HashStore,
+    pedia_ex: &PediaEx,
+    output: &impl Sink,
+    toc: &mut Toc,
+) -> Result<()> {
     let skill_path = output.sub_sink("hyakuryu_skill")?;
     for (&id, skill) in &pedia_ex.hyakuryu_skills {
         let (output, toc_sink) = skill_path.create_html_with_toc(&hyakuryu_skill_page(id), toc)?;
-        gen_hyakuryu_skill(skill, pedia_ex, output, toc_sink)?
+        gen_hyakuryu_skill(hash_store, skill, pedia_ex, output, toc_sink)?
     }
     Ok(())
 }

@@ -3,6 +3,7 @@ use super::gen_item::*;
 use super::gen_map::*;
 use super::gen_monster::*;
 use super::gen_website::*;
+use super::hash_store::*;
 use super::pedia::*;
 use super::sink::*;
 use crate::rsz::*;
@@ -80,7 +81,11 @@ pub fn gen_quest_tag(
     </div>)
 }
 
-pub fn gen_quest_list(quests: &BTreeMap<i32, Quest>, output: &impl Sink) -> Result<()> {
+pub fn gen_quest_list(
+    hash_store: &HashStore,
+    quests: &BTreeMap<i32, Quest>,
+    output: &impl Sink,
+) -> Result<()> {
     let mut quests_ordered: BTreeMap<_, BTreeMap<_, Vec<&Quest>>> = BTreeMap::new();
     let mut anomaly_ordered: BTreeMap<i32, Vec<&Quest>> = BTreeMap::new();
     for quest in quests.values() {
@@ -100,7 +105,7 @@ pub fn gen_quest_list(quests: &BTreeMap<i32, Quest>, output: &impl Sink) -> Resu
         <html>
             <head>
                 <title>{text!("Quests - MHRice")}</title>
-                { head_common() }
+                { head_common(hash_store) }
             </head>
             <body>
                 { navbar() }
@@ -401,6 +406,7 @@ impl HyakuryuQuestData {
 }
 
 fn gen_quest(
+    hash_store: &HashStore,
     quest: &Quest,
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
@@ -995,7 +1001,7 @@ fn gen_quest(
         <html>
             <head>
                 <title>{text!("Quest {:06}", quest.param.quest_no)}</title>
-                { head_common() }
+                { head_common(hash_store) }
             </head>
             <body>
                 { navbar() }
@@ -1043,6 +1049,7 @@ fn gen_quest(
 }
 
 pub fn gen_random_mystery_difficulty(
+    hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
     category: usize,
@@ -1060,7 +1067,7 @@ pub fn gen_random_mystery_difficulty(
         <html>
         <head>
             <title>{text!("Anomaly investigation stat table")}</title>
-            { head_common() }
+            { head_common(hash_store) }
         </head>
         <body>
             { navbar() }
@@ -1141,6 +1148,7 @@ pub fn gen_random_mystery_difficulty(
 }
 
 pub fn gen_quests(
+    hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
     output: &impl Sink,
@@ -1150,7 +1158,7 @@ pub fn gen_quests(
     for quest in pedia_ex.quests.values() {
         let (path, toc_sink) =
             quest_path.create_html_with_toc(&format!("{:06}.html", quest.param.quest_no), toc)?;
-        gen_quest(quest, pedia, pedia_ex, path, toc_sink)?;
+        gen_quest(hash_store, quest, pedia, pedia_ex, path, toc_sink)?;
     }
 
     if let Some(table) = &pedia.random_mystery_difficulty {
@@ -1159,6 +1167,7 @@ pub fn gen_quests(
                 let output = quest_path
                     .create_html(&format!("anomaly_difficulty_{}_{}.html", category, kind))?;
                 gen_random_mystery_difficulty(
+                    hash_store,
                     pedia,
                     pedia_ex,
                     category,

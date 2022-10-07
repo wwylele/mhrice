@@ -12,6 +12,7 @@ mod gen_quest;
 mod gen_skill;
 mod gen_weapon;
 mod gen_website;
+pub mod hash_store;
 mod pedia;
 mod prepare_map;
 pub mod sink;

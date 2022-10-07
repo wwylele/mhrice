@@ -1,3 +1,4 @@
+use super::hash_store::*;
 use anyhow::{anyhow, Context, Result};
 use futures::{StreamExt, TryStreamExt};
 use md5::{Digest, Md5};
@@ -106,6 +107,38 @@ impl<'a> Drop for TocSink<'a> {
     }
 }
 
+pub struct FileWithHash<'a, File> {
+    inner: File,
+    file_tag: FileTag,
+    md5: Md5,
+    hash_store: &'a mut HashStore,
+}
+
+impl<'a, File: Write> Write for FileWithHash<'a, File> {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        let len = self.inner.write(buf)?;
+        self.md5.update(&buf[0..len]);
+        Ok(len)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        self.inner.flush()
+    }
+}
+
+impl<'a, File> Drop for FileWithHash<'a, File> {
+    fn drop(&mut self) {
+        let digest = std::mem::replace(&mut self.md5, Md5::new()).finalize();
+        self.hash_store.add(
+            self.file_tag,
+            format!(
+                "{:02x}{:02x}{:02x}{:02x}",
+                digest[0], digest[1], digest[2], digest[3]
+            ),
+        )
+    }
+}
+
 pub trait Sink: Sync {
     type File: Write;
     fn create(&self, name: &str) -> Result<Self::File>;
@@ -134,6 +167,21 @@ pub trait Sink: Sync {
                 title: vec![],
             },
         ))
+    }
+
+    fn create_with_hash<'a>(
+        &self,
+        name: &str,
+        file_tag: FileTag,
+        hash_store: &'a mut HashStore,
+    ) -> Result<FileWithHash<'a, Self::File>> {
+        let file = self.create(name)?;
+        Ok(FileWithHash {
+            inner: file,
+            file_tag,
+            md5: Md5::new(),
+            hash_store,
+        })
     }
 
     fn finalize(self) -> Result<()>;

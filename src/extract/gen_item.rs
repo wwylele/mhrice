@@ -8,6 +8,7 @@ use super::gen_quest::*;
 use super::gen_skill::*;
 use super::gen_weapon::*;
 use super::gen_website::*;
+use super::hash_store::*;
 use super::pedia::*;
 use super::prepare_map::MapPopKind;
 use super::sink::*;
@@ -615,6 +616,7 @@ static ITEM_TYPES: Lazy<BTreeMap<ItemTypes, (&'static str, &'static str)>> = Laz
 });
 
 pub fn gen_item(
+    hash_store: &HashStore,
     item: &Item,
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
@@ -728,7 +730,7 @@ pub fn gen_item(
         <html>
             <head>
                 <title>"Item - MHRice"</title>
-                { head_common() }
+                { head_common(hash_store) }
             </head>
             <body>
                 { navbar() }
@@ -753,12 +755,16 @@ pub fn gen_item(
     Ok(())
 }
 
-pub fn gen_item_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
+pub fn gen_item_list(
+    hash_store: &HashStore,
+    pedia_ex: &PediaEx<'_>,
+    output: &impl Sink,
+) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
             <head>
                 <title>{text!("Items - MHRice")}</title>
-                { head_common() }
+                { head_common(hash_store) }
                 <style id="mh-item-list-style">""</style>
             </head>
             <body>
@@ -810,6 +816,7 @@ pub fn gen_item_list(pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
 }
 
 pub fn gen_items(
+    hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
     output: &impl Sink,
@@ -818,7 +825,7 @@ pub fn gen_items(
     let item_path = output.sub_sink("item")?;
     for (&id, item) in &pedia_ex.items {
         let (path, toc_sink) = item_path.create_html_with_toc(&item_page(id), toc)?;
-        gen_item(item, pedia, pedia_ex, path, toc_sink)?
+        gen_item(hash_store, item, pedia, pedia_ex, path, toc_sink)?
     }
     Ok(())
 }

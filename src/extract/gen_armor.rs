@@ -3,6 +3,7 @@ use super::gen_item::*;
 use super::gen_monster::*;
 use super::gen_skill::*;
 use super::gen_website::*;
+use super::hash_store::*;
 use super::pedia::*;
 use super::sink::*;
 use crate::rsz::*;
@@ -31,12 +32,16 @@ pub fn gen_armor_label(piece: Option<&Armor>) -> Box<div<String>> {
     </div>)
 }
 
-pub fn gen_armor_list(serieses: &[ArmorSeries], output: &impl Sink) -> Result<()> {
+pub fn gen_armor_list(
+    hash_store: &HashStore,
+    serieses: &[ArmorSeries],
+    output: &impl Sink,
+) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
             <head>
                 <title>{text!("Armors - MHRice")}</title>
-                { head_common() }
+                { head_common(hash_store) }
                 <style id="mh-armor-list-style">""</style>
             </head>
             <body>
@@ -105,6 +110,7 @@ pub fn gen_armor_list(serieses: &[ArmorSeries], output: &impl Sink) -> Result<()
 }
 
 fn gen_armor(
+    hash_store: &HashStore,
     series: &ArmorSeries,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
@@ -564,7 +570,7 @@ fn gen_armor(
         <html>
             <head>
                 <title>{text!("Armor {:03}", series.series.armor_series.0)}</title>
-                { head_common() }
+                { head_common(hash_store) }
             </head>
             <body>
                 { navbar() }
@@ -592,6 +598,7 @@ fn gen_armor(
 }
 
 pub fn gen_armors(
+    hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
     output: &impl Sink,
@@ -601,7 +608,7 @@ pub fn gen_armors(
     for series in &pedia_ex.armors {
         let (output, toc_sink) = armor_path
             .create_html_with_toc(&format!("{:03}.html", series.series.armor_series.0), toc)?;
-        gen_armor(series, pedia, pedia_ex, output, toc_sink)?
+        gen_armor(hash_store, series, pedia, pedia_ex, output, toc_sink)?
     }
     Ok(())
 }

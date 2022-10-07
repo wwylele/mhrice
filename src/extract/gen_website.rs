@@ -8,6 +8,7 @@ use super::gen_otomo::*;
 use super::gen_quest::*;
 use super::gen_skill::*;
 use super::gen_weapon::*;
+use super::hash_store::*;
 use super::pedia::*;
 use super::sink::*;
 use crate::msg::*;
@@ -53,19 +54,34 @@ pub const LANGUAGE_MAP: [Option<(&str, &str)>; 32] = [
     None,
 ];
 
-pub fn head_common() -> Vec<Box<dyn MetadataContent<String>>> {
+pub fn head_common(hash_store: &HashStore) -> Vec<Box<dyn MetadataContent<String>>> {
+    let main_css = format!("/mhrice.css?h={}", hash_store.get(FileTag::MainCss));
+    let main_js = format!("/mhrice.js?h={}", hash_store.get(FileTag::MainJs));
+    let fa = format!(
+        "/fontawesome/fontawesome.min.js?h={}",
+        hash_store.get(FileTag::Fa)
+    );
+    let fa_brand = format!(
+        "/fontawesome/brands.js?h={}",
+        hash_store.get(FileTag::FaBrand)
+    );
+    let fa_solid = format!(
+        "/fontawesome/solid.js?h={}",
+        hash_store.get(FileTag::FaSolid)
+    );
+    let part_color = format!("/part_color.css?h={}", hash_store.get(FileTag::PartColor));
     vec![
         html!(<meta charset="UTF-8" />),
         html!(<meta name="viewport" content="width=device-width, initial-scale=1" />),
         html!(<link rel="icon" type="image/png" href="/favicon.png" />),
-        html!(<link rel="stylesheet" href="/mhrice.css" />),
-        html!(<link rel="stylesheet" href="/part_color.css" />),
+        html!(<link rel="stylesheet" href={main_css} />),
+        html!(<link rel="stylesheet" href={part_color} />),
         html!(<link rel="stylesheet" href="/resources/item_color.css" />),
         html!(<link rel="stylesheet" href="/resources/rarity_color.css" />),
-        html!(<script src="/mhrice.js"/>),
-        html!(<script defer=true src="/fontawesome/brands.js"/>),
-        html!(<script defer=true src="/fontawesome/solid.js"/>),
-        html!(<script defer=true src="/fontawesome/fontawesome.min.js"/>),
+        html!(<script src={main_js}/>),
+        html!(<script defer=true src={fa_brand}/>),
+        html!(<script defer=true src={fa_solid}/>),
+        html!(<script defer=true src={fa}/>),
         html!(<style id="mh-lang-style">".mh-lang:not(.lang-default) { display:none; }"</style>),
     ]
 }
@@ -388,12 +404,12 @@ fn gen_colored_icon_inner(color_class: &str, icon: &str, addons: &[&str]) -> Box
     </div>)
 }
 
-pub fn gen_search(output: &impl Sink) -> Result<()> {
+pub fn gen_search(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
             <head>
                 <title>{text!("Monsters - MHRice")}</title>
-                { head_common() }
+                { head_common(hash_store) }
             </head>
             <body>
                 { navbar() }
@@ -420,12 +436,12 @@ pub fn gen_search(output: &impl Sink) -> Result<()> {
     Ok(())
 }
 
-pub fn gen_about(output: &impl Sink) -> Result<()> {
+pub fn gen_about(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
             <head>
                 <title>{text!("Monsters - MHRice")}</title>
-                { head_common() }
+                { head_common(hash_store) }
             </head>
             <body>
                 { navbar() }
@@ -490,13 +506,13 @@ pub fn gen_about(output: &impl Sink) -> Result<()> {
     Ok(())
 }
 
-pub fn gen_static(output: &impl Sink) -> Result<()> {
+pub fn gen_static(hash_store: &mut HashStore, output: &impl Sink) -> Result<()> {
     output
-        .create("mhrice.css")?
+        .create_with_hash("mhrice.css", FileTag::MainCss, hash_store)?
         .write_all(include_bytes!("static/mhrice.css"))?;
 
     output
-        .create("mhrice.js")?
+        .create_with_hash("mhrice.js", FileTag::MainJs, hash_store)?
         .write_all(include_bytes!("static/mhrice.js"))?;
 
     output
@@ -507,19 +523,19 @@ pub fn gen_static(output: &impl Sink) -> Result<()> {
         .write_all(include_bytes!("static/error.html"))?;
     let fontawesome = output.sub_sink("fontawesome")?;
     fontawesome
-        .create("brands.js")?
+        .create_with_hash("brands.js", FileTag::FaBrand, hash_store)?
         .write_all(include_bytes!("static/fontawesome/brands.js"))?;
     fontawesome
-        .create("solid.js")?
+        .create_with_hash("solid.js", FileTag::FaSolid, hash_store)?
         .write_all(include_bytes!("static/fontawesome/solid.js"))?;
     fontawesome
-        .create("fontawesome.min.js")?
+        .create_with_hash("fontawesome.min.js", FileTag::Fa, hash_store)?
         .write_all(include_bytes!("static/fontawesome/fontawesome.min.js"))?;
     Ok(())
 }
 
-pub fn gen_part_color_css(output: &impl Sink) -> Result<()> {
-    let mut file = output.create("part_color.css")?;
+pub fn gen_part_color_css(hash_store: &mut HashStore, output: &impl Sink) -> Result<()> {
+    let mut file = output.create_with_hash("part_color.css", FileTag::PartColor, hash_store)?;
 
     for (i, color) in PART_COLORS.iter().enumerate() {
         writeln!(file, ".mh-part-{} {{background-color: {}}}", i, color)?;
@@ -528,28 +544,33 @@ pub fn gen_part_color_css(output: &impl Sink) -> Result<()> {
     Ok(())
 }
 
-pub fn gen_website(pedia: &Pedia, pedia_ex: &PediaEx<'_>, output: &impl Sink) -> Result<()> {
+pub fn gen_website(
+    hash_store: &mut HashStore,
+    pedia: &Pedia,
+    pedia_ex: &PediaEx<'_>,
+    output: &impl Sink,
+) -> Result<()> {
     let mut toc = Toc::new();
-    gen_quests(pedia, pedia_ex, output, &mut toc)?;
-    gen_quest_list(&pedia_ex.quests, output)?;
-    gen_skills(pedia_ex, output, &mut toc)?;
-    gen_skill_list(&pedia_ex.skills, output)?;
-    gen_hyakuryu_skills(pedia_ex, output, &mut toc)?;
-    gen_hyakuryu_skill_list(&pedia_ex.hyakuryu_skills, output)?;
-    gen_armors(pedia, pedia_ex, output, &mut toc)?;
-    gen_armor_list(&pedia_ex.armors, output)?;
-    gen_monsters(pedia, pedia_ex, output, &mut toc)?;
-    gen_items(pedia, pedia_ex, output, &mut toc)?;
-    gen_item_list(pedia_ex, output)?;
-    gen_weapons(pedia, pedia_ex, output, &mut toc)?;
-    gen_maps(pedia, pedia_ex, output, &mut toc)?;
-    gen_map_list(pedia, output)?;
-    gen_otomo_equips(pedia_ex, output, &mut toc)?;
-    gen_otomo_equip_list(pedia_ex, output)?;
-    gen_about(output)?;
-    gen_search(output)?;
-    gen_static(output)?;
-    gen_part_color_css(output)?;
+    gen_static(hash_store, output)?;
+    gen_part_color_css(hash_store, output)?;
+    gen_quests(hash_store, pedia, pedia_ex, output, &mut toc)?;
+    gen_quest_list(hash_store, &pedia_ex.quests, output)?;
+    gen_skills(hash_store, pedia_ex, output, &mut toc)?;
+    gen_skill_list(hash_store, &pedia_ex.skills, output)?;
+    gen_hyakuryu_skills(hash_store, pedia_ex, output, &mut toc)?;
+    gen_hyakuryu_skill_list(hash_store, &pedia_ex.hyakuryu_skills, output)?;
+    gen_armors(hash_store, pedia, pedia_ex, output, &mut toc)?;
+    gen_armor_list(hash_store, &pedia_ex.armors, output)?;
+    gen_monsters(hash_store, pedia, pedia_ex, output, &mut toc)?;
+    gen_items(hash_store, pedia, pedia_ex, output, &mut toc)?;
+    gen_item_list(hash_store, pedia_ex, output)?;
+    gen_weapons(hash_store, pedia, pedia_ex, output, &mut toc)?;
+    gen_maps(hash_store, pedia, pedia_ex, output, &mut toc)?;
+    gen_map_list(hash_store, pedia, output)?;
+    gen_otomo_equips(hash_store, pedia_ex, output, &mut toc)?;
+    gen_otomo_equip_list(hash_store, pedia_ex, output)?;
+    gen_about(hash_store, output)?;
+    gen_search(hash_store, output)?;
     toc.finalize(&output.sub_sink("toc")?)?;
     Ok(())
 }

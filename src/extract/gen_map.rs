@@ -2,6 +2,7 @@ use super::gen_common::*;
 use super::gen_item::*;
 use super::gen_monster::*;
 use super::gen_website::*;
+use super::hash_store::*;
 use super::pedia::*;
 use super::prepare_map::*;
 use super::sink::*;
@@ -74,6 +75,7 @@ pub fn get_fish_item_id(fish_id: i32) -> Option<rsz::ItemId> {
 }
 
 fn gen_map(
+    hash_store: &HashStore,
     id: i32,
     map: &GameMap,
     pedia: &Pedia,
@@ -391,7 +393,7 @@ fn gen_map(
         <html>
             <head>
                 <title>{text!("Map {:02}", id)}</title>
-                { head_common() }
+                { head_common(hash_store) }
                 <style id="mh-map-list-style">""</style>
             </head>
             <body>
@@ -415,6 +417,7 @@ fn gen_map(
 }
 
 pub fn gen_maps(
+    hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
     output: &impl Sink,
@@ -423,17 +426,17 @@ pub fn gen_maps(
     let map_path = output.sub_sink("map")?;
     for (&id, map) in &pedia.maps {
         let (path, toc_sink) = map_path.create_html_with_toc(&map_page(id), toc)?;
-        gen_map(id, map, pedia, pedia_ex, path, toc_sink)?
+        gen_map(hash_store, id, map, pedia, pedia_ex, path, toc_sink)?
     }
     Ok(())
 }
 
-pub fn gen_map_list(pedia: &Pedia, output: &impl Sink) -> Result<()> {
+pub fn gen_map_list(hash_store: &HashStore, pedia: &Pedia, output: &impl Sink) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
             <head>
                 <title>{text!("Maps - MHRice")}</title>
-                { head_common() }
+                { head_common(hash_store) }
             </head>
             <body>
                 { navbar() }

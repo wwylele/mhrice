@@ -3,6 +3,7 @@ use super::gen_hyakuryu_skill::*;
 use super::gen_item::*;
 use super::gen_monster::*;
 use super::gen_website::*;
+use super::hash_store::*;
 use super::pedia::*;
 use super::sink::*;
 use crate::rsz::*;
@@ -143,6 +144,7 @@ fn display_bullet_type(bullet: BulletType) -> &'static str {
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::type_complexity)]
 fn gen_weapon<Param>(
+    hash_store: &HashStore,
     weapon: &Weapon<Param>,
     weapon_tree: &WeaponTree<'_, Param>,
     pedia: &Pedia,
@@ -640,7 +642,7 @@ where
         <html>
             <head>
                 <title>"Weapon - MHRice"</title>
-                { head_common() }
+                { head_common(hash_store) }
             </head>
             <body>
                 { navbar() }
@@ -681,6 +683,7 @@ where
 }
 
 fn gen_tree<Param>(
+    hash_store: &HashStore,
     weapon_tree: &WeaponTree<Param>,
     weapon_path: &impl Sink,
     tag: &str,
@@ -695,7 +698,7 @@ where
         <html>
             <head>
                 <title>{text!("{} - MHRice", name)}</title>
-                { head_common() }
+                { head_common(hash_store) }
             </head>
             <body>
                 { navbar() }
@@ -766,6 +769,7 @@ fn heavy_bowgun(param: &HeavyBowgunBaseUserDataParam) -> Vec<Box<p<String>>> {
 }
 
 pub fn gen_weapons(
+    hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
     output: &impl Sink,
@@ -796,11 +800,12 @@ pub fn gen_weapons(
                     <span>{text!("{}", $name)}</span>
                 </a>
             </li>));
-            gen_tree(&pedia_ex.$label, &path, stringify!($label), $name)?;
+            gen_tree(hash_store, &pedia_ex.$label, &path, stringify!($label), $name)?;
             for (weapon_id, weapon) in &pedia_ex.$label.weapons {
                 let (file_path, toc_sink) =
                     path.create_html_with_toc(&format!("{}.html", weapon_id.to_tag()), toc)?;
                 gen_weapon(
+                    hash_store,
                     weapon,
                     &pedia_ex.$label,
                     pedia,
@@ -993,7 +998,7 @@ pub fn gen_weapons(
         <html>
             <head>
                 <title>{text!("Weapons - MHRice")}</title>
-                { head_common() }
+                { head_common(hash_store) }
             </head>
             <body>
                 { navbar() }

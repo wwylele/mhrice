@@ -3,6 +3,7 @@ use super::gen_item::*;
 use super::gen_map::*;
 use super::gen_quest::*;
 use super::gen_website::{gen_multi_lang, head_common, navbar};
+use super::hash_store::*;
 use super::pedia::*;
 use super::sink::*;
 use crate::part_color::PART_COLORS;
@@ -845,6 +846,7 @@ pub fn gen_multipart<'a>(
 }
 
 pub fn gen_monster(
+    hash_store: &HashStore,
     is_large: bool,
     monster: &Monster,
     pedia: &Pedia,
@@ -1816,7 +1818,7 @@ pub fn gen_monster(
         <html>
             <head>
                 <title>{text!("Monster {:03}_{:02} - MHRice", monster.id, monster.sub_id)}</title>
-                { head_common() }
+                { head_common(hash_store) }
             </head>
             <body>
                 { navbar() }
@@ -1855,6 +1857,7 @@ pub fn gen_monster(
 }
 
 pub fn gen_monsters(
+    hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
     output: &impl Sink,
@@ -1866,7 +1869,7 @@ pub fn gen_monsters(
         <html>
             <head>
                 <title>{text!("Monsters - MHRice")}</title>
-                { head_common() }
+                { head_common(hash_store) }
             </head>
             <body>
                 { navbar() }
@@ -1935,12 +1938,28 @@ pub fn gen_monsters(
 
     let monster_path = output.sub_sink("monster")?;
     for monster in &pedia.monsters {
-        gen_monster(true, monster, pedia, pedia_ex, &monster_path, toc)?;
+        gen_monster(
+            hash_store,
+            true,
+            monster,
+            pedia,
+            pedia_ex,
+            &monster_path,
+            toc,
+        )?;
     }
 
     let monster_path = output.sub_sink("small-monster")?;
     for monster in &pedia.small_monsters {
-        gen_monster(false, monster, pedia, pedia_ex, &monster_path, toc)?;
+        gen_monster(
+            hash_store,
+            false,
+            monster,
+            pedia,
+            pedia_ex,
+            &monster_path,
+            toc,
+        )?;
     }
     Ok(())
 }
