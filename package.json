@@ -2,7 +2,7 @@
   "devDependencies": {
     "bulma": "^0.9.4",
     "eslint": "^8.17.0",
-    "node-sass": "^7.0.1"
+    "node-sass": "^7.0.3"
   },
   "scripts": {
     "css-build": "node-sass --output-style compressed --include-path node_modules --omit-source-map-url src/extract/static/style/mhrice.scss src/extract/static/mhrice.css",
