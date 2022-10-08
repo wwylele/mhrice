@@ -24,14 +24,14 @@ impl ArrayElement {
                     .create_element("Name_array")
                     .with_attribute(("id", id.as_str()))
                     .with_attribute(("count", array.len().to_string().as_str()))
-                    .write_text_content(BytesText::from_plain_str(&seq_string(array)))?;
+                    .write_text_content(BytesText::new(&seq_string(array)))?;
             }
             ArrayElement::FloatArray { id, array } => {
                 writer
                     .create_element("float_array")
                     .with_attribute(("id", id.as_str()))
                     .with_attribute(("count", array.len().to_string().as_str()))
-                    .write_text_content(BytesText::from_plain_str(&seq_string(array)))?;
+                    .write_text_content(BytesText::new(&seq_string(array)))?;
             }
         }
         Ok(())
@@ -191,7 +191,7 @@ impl PrimitiveElements {
                     .write_inner_content(|w| {
                         write_seq(inputs, SharedInput::write)(w)?;
                         w.create_element("p")
-                            .write_text_content(BytesText::from_plain_str(&seq_string(p)))?;
+                            .write_text_content(BytesText::new(&seq_string(p)))?;
 
                         Ok(())
                     })?;
@@ -275,7 +275,7 @@ impl InstanceController {
             .write_inner_content(|w| {
                 for skeleton in &self.skeletons {
                     w.create_element("skeleton")
-                        .write_text_content(BytesText::from_plain_str(skeleton))?;
+                        .write_text_content(BytesText::new(skeleton))?;
                 }
                 Ok(())
             })?;
@@ -306,7 +306,7 @@ fn write_matrix(matrix: &Mat4x4, writer: &mut Writer<File>) -> quick_xml::Result
     let string = strings.join(" ");
     writer
         .create_element("matrix")
-        .write_text_content(BytesText::from_plain_str(&string))?;
+        .write_text_content(BytesText::new(&string))?;
     Ok(())
 }
 
@@ -378,9 +378,9 @@ impl VertexWeights {
             .write_inner_content(|w| {
                 write_seq(&self.inputs, SharedInput::write)(w)?;
                 w.create_element("vcount")
-                    .write_text_content(BytesText::from_plain_str(&seq_string(&self.vcount)))?;
+                    .write_text_content(BytesText::new(&seq_string(&self.vcount)))?;
                 w.create_element("v")
-                    .write_text_content(BytesText::from_plain_str(&seq_string(&self.v)))?;
+                    .write_text_content(BytesText::new(&seq_string(&self.v)))?;
                 Ok(())
             })?;
         Ok(())
@@ -462,9 +462,9 @@ impl Asset {
     fn write(&self, writer: &mut Writer<File>) -> quick_xml::Result<()> {
         writer.create_element("asset").write_inner_content(|w| {
             w.create_element("created")
-                .write_text_content(BytesText::from_plain_str(&self.created))?;
+                .write_text_content(BytesText::new(&self.created))?;
             w.create_element("modified")
-                .write_text_content(BytesText::from_plain_str(&self.modified))?;
+                .write_text_content(BytesText::new(&self.modified))?;
             Ok(())
         })?;
 

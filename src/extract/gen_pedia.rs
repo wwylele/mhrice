@@ -228,6 +228,7 @@ pub fn gen_collider_mapping(rcol: Rcol) -> Result<ColliderMapping> {
     Ok(ColliderMapping { meat_map, part_map })
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn gen_monsters(
     pak: &mut PakReader<impl Read + Seek>,
     pfb_path_gen: fn(u32, u32) -> String,
