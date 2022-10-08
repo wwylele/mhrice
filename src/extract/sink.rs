@@ -1,6 +1,7 @@
 use super::hash_store::*;
 use anyhow::{anyhow, Context, Result};
-use futures::{StreamExt, TryStreamExt};
+use bytes::Bytes;
+use futures::{stream, StreamExt, TryStreamExt};
 use md5::{Digest, Md5};
 use rusoto_core::{ByteStream, Region};
 use rusoto_s3::*;
@@ -350,19 +351,39 @@ impl S3SinkInner {
                             _ => panic!("Unknown extension"),
                         };
                         let content_length = Some(i64::try_from(data.len()).unwrap());
+                        let bucket = &bucket;
+                        let client = &client;
+                        async move {
+                            let byte = Bytes::from(data);
+                            let mut result = Ok(());
+                            for retry in 0..3 {
+                                let byte_clone = byte.clone();
+                                let request = PutObjectRequest {
+                                    bucket: bucket.clone(),
+                                    key: name.clone(),
+                                    body: Some(ByteStream::new_with_size(
+                                        stream::once(async move { Ok(byte_clone) }),
+                                        byte.len(),
+                                    )),
+                                    content_length,
+                                    content_type: Some(mime.to_owned()),
+                                    ..PutObjectRequest::default()
+                                };
 
-                        let request = PutObjectRequest {
-                            bucket: bucket.clone(),
-                            key: name,
-                            body: Some(ByteStream::from(data)),
-                            content_length,
-                            content_type: Some(mime.to_owned()),
-                            ..PutObjectRequest::default()
-                        };
+                                let future = client.put_object(request);
+                                if let Err(e) = future.await {
+                                    eprintln!(
+                                        "Failed to upload object {name} on attempt {retry}: {e}"
+                                    );
+                                    result = Err(e);
+                                } else {
+                                    result = Ok(());
+                                    break;
+                                }
+                            }
 
-                        let future = client.put_object(request);
-
-                        async { future.await.map(|_| ()).context("Failed to upload object") }
+                            result.with_context(|| format!("Failed to upload object {name}"))
+                        }
                     })
                     .buffer_unordered(10)
                     .try_collect::<()>()

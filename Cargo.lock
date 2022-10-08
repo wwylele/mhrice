@@ -1519,6 +1519,7 @@ dependencies = [
  "base64",
  "bitflags",
  "built",
+ "bytes",
  "chrono",
  "clap",
  "compress",
