@@ -938,3 +938,56 @@ rsz_struct! {
         pub param: Vec<HyakuryuWeaponHyakuryuBuildupUserDataParam>
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.equip.OverwearWeaponBaseUserData.Param",
+        0x80309999 = 12_00_00
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct OverwearWeaponBaseUserDataParam {
+        pub id: u32, // snow.data.ContentsIdSystem.OverwearWeaponId
+        pub relative_id: WeaponId,
+        pub sort_id: u32,
+        pub model_id: u32, // snow.data.ParamEnum.WeaponModelId
+        pub rare_type: RareTypes,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.equip.OverwearWeaponBaseUserData",
+        0xD01E7A0E = 12_00_00
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct OverwearWeaponBaseUserData {
+        pub param: Vec<OverwearWeaponBaseUserDataParam>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.equip.OverwearWeaponProductUserData.Param",
+        0x9075D1D6 = 12_00_00
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct OverwearWeaponProductUserDataParam {
+        pub id: u32, // snow.data.ContentsIdSystem.OverwearWeaponId
+        pub item_flag: ItemId,
+        pub enemy_flag: EmTypes,
+        pub progress_flag: i32, // snow.data.DataDef.UnlockProgressTypes
+        pub mr_limit_flag: bool,
+        pub item: Vec<ItemId>,
+        pub item_num: Vec<u32>,
+        pub material_category: MaterialCategory,
+        pub material_category_num: u32,
+        pub price: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.equip.OverwearWeaponProductUserData",
+        0x9777F49C = 12_00_00
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct OverwearWeaponProductUserData {
+        pub param: Vec<OverwearWeaponProductUserDataParam>
+    }
+}

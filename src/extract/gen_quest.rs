@@ -512,7 +512,7 @@ fn gen_quest(
             <p class="mh-kv"><span>"Target"</span>
                 <span>{ text!("{}", target) }</span></p>
             <p class="mh-kv"><span>"Reward money"</span>
-                <span>{ text!("{}", quest.param.rem_money) }</span></p>
+                <span>{ text!("{}z", quest.param.rem_money) }</span></p>
             <p class="mh-kv"><span>"Reward village point"</span>
                 <span>{ text!("{}", quest.param.rem_village_point) }</span></p>
             <p class="mh-kv"><span>"Reward rank point"</span>

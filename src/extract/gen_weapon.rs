@@ -532,8 +532,23 @@ where
                         &process.base, Some((&process.output_item, &process.output_item_num)))
                 })}
                 {weapon.change.as_ref().map(|change| {
-                    gen_craft_row(pedia_ex, html!(<td>"As layered"</td>), None,
+                    gen_craft_row(pedia_ex, html!(<td>"As layered (rampage weapon)"</td>), None,
                         &change.base, None)
+                })}
+                {weapon.overwear.as_ref().map(|data| {
+                    let category = gen_category(pedia_ex, data.material_category, data.material_category_num);
+                    let materials = gen_materials(pedia_ex, &data.item, &data.item_num, data.item_flag);
+                    html!(<tr>
+                        <td>"As layered"</td>
+                        <td>{gen_progress(data.progress_flag, pedia_ex)}</td>
+                        <td>{(data.enemy_flag != EmTypes::Em(0)).then(
+                            ||gen_monster_tag(pedia_ex, data.enemy_flag, false, false, false)
+                        )}</td>
+                        <td>{text!("{}z", data.price)}</td>
+                        {category}
+                        {materials}
+                        <td></td>
+                    </tr>)
                 })}
             </tbody>
         </table></div>

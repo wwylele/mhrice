@@ -395,6 +395,23 @@ fn get_user<T: 'static>(pak: &mut PakReader<impl Read + Seek>, path: &str) -> Re
         .with_context(|| path.to_string())
 }
 
+fn get_user_opt<T: 'static>(
+    pak: &mut PakReader<impl Read + Seek>,
+    path: &str,
+) -> Result<Option<T>> {
+    let index = if let Ok(index) = pak.find_file(path) {
+        index
+    } else {
+        return Ok(None);
+    };
+
+    let user = User::new(Cursor::new(pak.read_file(index)?))?
+        .rsz
+        .deserialize_single()
+        .with_context(|| path.to_string())?;
+    Ok(Some(user))
+}
+
 fn get_singleton<T: 'static + SingletonUser>(pak: &mut PakReader<impl Read + Seek>) -> Result<T> {
     Ok(T::from_rsz(get_user(pak, T::PATH)?))
 }
@@ -402,16 +419,11 @@ fn get_singleton<T: 'static + SingletonUser>(pak: &mut PakReader<impl Read + See
 fn get_singleton_opt<T: 'static + SingletonUser>(
     pak: &mut PakReader<impl Read + Seek>,
 ) -> Result<Option<T>> {
-    let index = if let Ok(index) = pak.find_file(T::PATH) {
-        index
+    if let Some(user) = get_user_opt(pak, T::PATH)? {
+        Ok(Some(T::from_rsz(user)))
     } else {
-        return Ok(None);
-    };
-    let user = User::new(Cursor::new(pak.read_file(index)?))?
-        .rsz
-        .deserialize_single()
-        .with_context(|| T::PATH.to_string())?;
-    Ok(Some(T::from_rsz(user)))
+        Ok(None)
+    }
 }
 
 fn get_weapon_list<BaseData: 'static>(
@@ -451,6 +463,20 @@ fn get_weapon_list<BaseData: 'static>(
             pak,
             &format!(
                 "data/Define/Player/Weapon/{0}/{0}UpdateTreeData.user",
+                weapon_class
+            ),
+        )?,
+        overwear: get_user_opt(
+            pak,
+            &format!(
+                "data/Define/Player/Weapon/{0}/{0}OverwearBaseData.user",
+                weapon_class
+            ),
+        )?,
+        overwear_product: get_user_opt(
+            pak,
+            &format!(
+                "data/Define/Player/Weapon/{0}/{0}OverwearProductData.user",
                 weapon_class
             ),
         )?,
@@ -2354,6 +2380,25 @@ where
     let mut name_map_mr = weapon_list.name_mr.get_name_map();
     let mut explain_map_mr = weapon_list.explain_mr.get_name_map();
 
+    let (overwear_map, overwear_product_map) = if let (Some(overwear), Some(product)) =
+        (&weapon_list.overwear, &weapon_list.overwear_product)
+    {
+        (
+            hash_map_unique(
+                overwear.param.iter().filter(|p| p.id != 0),
+                |p| (p.relative_id, p),
+                true, // Crapcom made some duplicate entries
+            )?,
+            hash_map_unique(
+                product.param.iter().filter(|p| p.id != 0),
+                |p| (p.id, p),
+                false,
+            )?,
+        )
+    } else {
+        (HashMap::new(), HashMap::new())
+    };
+
     let mut weapons = BTreeMap::new();
     for param in &*weapon_list.base_data {
         let id = param.to_base().id;
@@ -2375,11 +2420,27 @@ where
             .remove(&explain_tag)
             .or_else(|| explain_map_mr.remove(&explain_tag));
 
+        let overwear = if let Some(overwear) = overwear_map.get(&id) {
+            if let Some(product) = overwear_product_map.get(&overwear.id) {
+                Some(*product)
+            } else {
+                // This happens for DLC layered
+                eprintln!(
+                    "Overwear product not found for weapon {:?}, overwear{}",
+                    id, overwear.id
+                );
+                None
+            }
+        } else {
+            None
+        };
+
         let weapon = Weapon {
             param,
             product: product_map.remove(&id),
             change: change_map.remove(&id),
             process: process_map.remove(&id),
+            overwear,
             name,
             explain,
             children: vec![],
