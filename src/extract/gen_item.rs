@@ -688,7 +688,7 @@ pub fn gen_item(
                 {material_categories}
                 {text!("{} pt", item.param.category_worth)}
             </span></p>
-            <p class="mh-kv"><span>"Evaluation value"</span>
+            <p class="mh-kv"><span>"Melding value"</span>
             <span>{text!("{}",item.param.evaluation_value)}</span></p>
             <p class="mh-kv"><span>"Dog pouch"</span>
             <span>{text!("{}",item.param.can_put_in_dog_pouch)}</span></p>
