@@ -30,7 +30,7 @@ undefined = builtInTypeManager.getDataType("/undefined1")
 void = builtInTypeManager.getDataType("/void")
 t_int = builtInTypeManager.getDataType("/int")
 
-folder = askDirectory("Give me the folder output from `mhrice read-dmp-tdb --json-split", "Go!")
+folder = askDirectory("Give me the folder output from `mhrice read-dmp-tdb --json-split`", "Go!")
 
 chunk = 1000
 i = 0
@@ -230,6 +230,9 @@ for (i, t) in types():
                 print("WARNING: could not create function " + name + " at " + address.toString())
                 continue
         else:
+            # Multiple function using the same address
+            # Make the previous name a label
+            createLabel(address, "ALIAS__" + func.getName(), False, USER_DEFINED)
             func.setName(name, USER_DEFINED)
 
         params = []
