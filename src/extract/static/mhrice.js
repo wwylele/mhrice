@@ -193,9 +193,10 @@ function updateCookieButtons() {
 }
 
 function enableCookie() {
-    document.cookie = "consent=yes; path=/";
+    document.cookie = "consent=yes;path=/;samesite=strict;max-age=31536000";
     g_cookie_consent = true;
     updateCookieButtons();
+    saveLanguageToCookie();
 }
 
 function disableCookie() {
@@ -208,7 +209,7 @@ function delete_all_cookie() {
     const cookies = document.cookie.split(";");
     for (const cookie of cookies) {
         const name = cookie.trim().split("=")[0];
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
     }
 }
 
@@ -297,13 +298,17 @@ function show_class(c) {
     refresh_visibility(c);
 }
 
+function saveLanguageToCookie() {
+    document.cookie = `mh-language=${g_language_code};path=/;samesite=strict;max-age=31536000`;
+}
+
 function selectLanguage(e) {
     const language = removePrefix(e.currentTarget.id, "mh-lang-menu-");
     g_toc = null;
     g_language_code = language;
     switchLanguage();
     if (g_cookie_consent) {
-        document.cookie = `mh-language=${g_language_code}; path=/`;
+        saveLanguageToCookie()
     }
 }
 
