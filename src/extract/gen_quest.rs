@@ -717,9 +717,9 @@ fn gen_quest(
                 ) {
                     match (condition, param) {
                         (BossSetCondition::Default, 0) => text!("Initial"),
-                        (BossSetCondition::Free1, 0) => text!("After one hunted"),
-                        (BossSetCondition::Free2, 0) => text!("After two hunted"),
-                        (BossSetCondition::Free3, 0) => text!("After three hunted"),
+                        (BossSetCondition::Free1, 0) => text!("After one hunted (type1)"),
+                        (BossSetCondition::Free2, 0) => text!("After one hunted (type2)"),
+                        (BossSetCondition::Free3, 0) => text!("After one hunted (type3)"),
                         (BossSetCondition::Timer1, param) => text!("After {} minutes", param),
                         (BossSetCondition::Em1Hp, param) => text!("1st monster {}% hp left", param),
                         (BossSetCondition::Em2Hp, param) => text!("2nd monster {}% hp left", param),
