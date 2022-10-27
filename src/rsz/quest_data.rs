@@ -445,8 +445,8 @@ rsz_enum! {
     #[derive(Debug, Serialize, Clone, Copy)]
     pub enum NandoYuragi {
         False = 0,
-        True1 = 1,
-        True2 = 2,
+        True1 = 1, // small fluctuation
+        True2 = 2, // large fluctuation
     }
 }
 

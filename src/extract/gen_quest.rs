@@ -222,10 +222,16 @@ pub fn gen_quest_monster_data(
     let hp = enemy_param.vital_tbl(index).map_or_else(
         || "-".to_owned(),
         |v| {
-            difficulty_rate
+            let mut s = difficulty_rate
                 .vital_rate_table_list
                 .get(usize::from(v))
-                .map_or_else(|| format!("~ {}", v), |r| format!("x{}", r.vital_rate))
+                .map_or_else(|| format!("~ {}", v), |r| format!("x{}", r.vital_rate));
+            match enemy_param.difficulty(index) {
+                Some(NandoYuragi::True1) => s += "(±)",
+                Some(NandoYuragi::True2) => s += "(±±)",
+                _ => (),
+            }
+            s
         },
     );
     let attack = enemy_param.attack_tbl(index).map_or_else(
