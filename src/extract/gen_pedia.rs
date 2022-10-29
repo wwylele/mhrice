@@ -3082,7 +3082,7 @@ fn prepare_monsters<'a>(
                     .get(&format!("HN_Hunternote_ML_Tab_01_Spec_M{i:02}"))
                     .copied(),
                 FamilyType::MrSpecies(0) => hn_msgs_mr
-                    .get(&format!("HN_Hunternote_ML_Tab_01_Spec_M1_MR"))
+                    .get(&"HN_Hunternote_ML_Tab_01_Spec_M1_MR".to_owned())
                     .copied(),
                 _ => None,
             });

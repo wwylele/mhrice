@@ -943,7 +943,7 @@ pub fn gen_monster(
                 </span>))}
             </span>
         </p>))}
-        <p class="mh-kv"><span>"Rank"</span>
+        <p class="mh-kv"><span>"Threat level"</span>
         <span> {
             if let Some(rank) = monster_ex.rank {
                 text!("{}", rank)
