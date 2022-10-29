@@ -247,6 +247,9 @@ pub struct Pedia {
     pub random_mystery_rank_release: Option<RandomMysteryMonsterRankReleaseData>,
 
     pub progress: ProgressCheckerUserData,
+
+    pub enemy_rank: EnemyRankData,
+    pub species: SystemEnemyDragonSpeciesData,
 }
 
 pub struct QuestReward<'a> {
@@ -411,6 +414,9 @@ pub struct MonsterEx<'a> {
     pub mystery_reward: Vec<MysteryReward<'a>>,
     pub random_quest: Option<&'a LotEnemyData>,
     pub discovery: Option<&'a DiscoverEmSetDataParam>,
+    pub rank: Option<u8>,
+    pub species: Option<&'a EmSpeciesData>,
+    pub family: Option<&'a MsgEntry>,
 }
 
 pub struct Servant<'a> {

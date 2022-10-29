@@ -1,6 +1,6 @@
 use super::common::*;
 use super::*;
-use crate::rsz_struct;
+use crate::{rsz_enum, rsz_struct};
 use nalgebra_glm::*;
 use serde::*;
 
@@ -42,6 +42,16 @@ rsz_struct! {
     }
 }
 
+// snow.data.monsterList.FamilyType
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq)]
+    pub enum FamilyType {
+        Species(i32) = -1..=15,
+        MrSpecies(i32) = 16..=100,
+    }
+}
+
 rsz_struct! {
     #[rsz("snow.data.monsterList.BossMonsterData",
         0xf03fc40b = 10_00_02,
@@ -51,7 +61,7 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct BossMonsterData {
         pub em_type: EmTypes,
-        pub family_type: i32, // snow.data.monsterList.FamilyType
+        pub family_type: FamilyType,
         pub habitat_area: BitSetFlagHabitatType,
         pub is_limit_open_lv: bool,
         pub part_table_data: Vec<PartData>,
@@ -67,5 +77,83 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct MonsterListBossData {
         pub data_list: Vec<BossMonsterData>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.EnemyRankData.RankInfo",
+        0x1A624800 = 10_00_02,
+        0x70EF6657 = 11_00_01,
+        0x53149CEF = 12_00_00,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RankInfo {
+        pub em_type: EmTypes,
+        pub rank: u8,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.EnemyRankData",
+        path = "enemy/user_data/system_em_rank_data.user",
+        0xCEB28157 = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EnemyRankData {
+        pub rank_info_list: Vec<RankInfo>
+    }
+}
+
+// snow.enemy.EnemyDef.EmDragonSpecies
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq)]
+    pub enum EmDragonSpecies {
+        BirdDragon = 0,
+        FlyingDragon = 1,
+        BeastDragon = 2,
+        SeaDragon = 3,
+        FishDragon = 4,
+        FangDragon = 5,
+        Max = 6,
+        Invalid = 7,
+    }
+}
+
+// snow.enemy.EnemyDef.EmHabitatSpecies
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq)]
+    pub enum EmHabitatSpecies {
+        Arial = 0,
+        Aquatic = 1,
+        Max = 2,
+        Invalid = 3,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemEnemyDragonSpeciesData.EmSpeciesData",
+        0x657FF9F2 = 10_00_02,
+        0xE444CBFD = 11_00_01,
+        0x3815775C = 12_00_00,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EmSpeciesData {
+        pub em_type: EmTypes,
+        pub em_dragon_species: EmDragonSpecies,
+        pub em_habitat_species: EmHabitatSpecies,
+        pub is_fang_beast_species: bool
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemEnemyDragonSpeciesData",
+        path = "enemy/user_data/system_dragon_species_data.user",
+        0xD7F46563 = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct SystemEnemyDragonSpeciesData {
+        pub em_species_list: Vec<EmSpeciesData>
     }
 }

@@ -943,6 +943,50 @@ pub fn gen_monster(
                 </span>))}
             </span>
         </p>))}
+        <p class="mh-kv"><span>"Rank"</span>
+        <span> {
+            if let Some(rank) = monster_ex.rank {
+                text!("{}", rank)
+            } else {
+                text!("-")
+            }
+        } </span>
+        </p>
+        <p class="mh-kv"><span>"Type"</span>
+        <span>
+        {if let Some(family) = monster_ex.family {
+            gen_multi_lang(family)
+        } else {
+            html!(<span>"-"</span>)
+        }}
+        {
+            if let Some(species) = monster_ex.species {
+                let base = if species.is_fang_beast_species {
+                    "Fanged beast"
+                } else {
+                    match species.em_dragon_species {
+                        EmDragonSpecies::BirdDragon => "Bird wyvern",
+                        EmDragonSpecies::FlyingDragon => "Flying wyvern",
+                        EmDragonSpecies::BeastDragon => "Brute wyvern",
+                        EmDragonSpecies::SeaDragon => "Leviathan",
+                        EmDragonSpecies::FishDragon => "Piscine wyvern",
+                        EmDragonSpecies::FangDragon => "Fanged wyvern",
+                        EmDragonSpecies::Max => "Max",
+                        EmDragonSpecies::Invalid => "Other",
+                    }
+                };
+                let habitat = match species.em_habitat_species {
+                    EmHabitatSpecies::Arial => ", Arial",
+                    EmHabitatSpecies::Aquatic => ", Aquatic",
+                    EmHabitatSpecies::Max => "Max",
+                    EmHabitatSpecies::Invalid => ""
+                };
+                text!(", (internal){}{}", base, habitat)
+            } else {
+                text!(", (internal)-", )
+            }
+        } </span>
+        </p>
         <p class="mh-kv"><span>"GimmickVital"</span>
             <span>{text!("(S) {} / (M) {} / (L) {} / (KB) {}",
                 monster.data_tune.gimmick_vital_data.vital_s,

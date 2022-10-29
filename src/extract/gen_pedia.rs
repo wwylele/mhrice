@@ -1033,6 +1033,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         random_mystery_enemy: get_singleton_opt(pak)?,
         random_mystery_rank_release: get_singleton_opt(pak)?,
         progress: get_singleton(pak)?,
+        enemy_rank: get_singleton(pak)?,
+        species: get_singleton(pak)?,
     })
 }
 
@@ -2957,6 +2959,26 @@ fn prepare_monsters<'a>(
         false,
     )?;
 
+    let ranks: HashMap<EmTypes, u8> = hash_map_unique(
+        pedia
+            .enemy_rank
+            .rank_info_list
+            .iter()
+            .filter(|p| p.em_type != EmTypes::Em(0)),
+        |p| (p.em_type, p.rank),
+        false,
+    )?;
+
+    let speciess: HashMap<EmTypes, &EmSpeciesData> = hash_map_unique(
+        pedia
+            .species
+            .em_species_list
+            .iter()
+            .filter(|p| p.em_type != EmTypes::Em(0)),
+        |p| (p.em_type, p),
+        false,
+    )?;
+
     let mut mystery_rewards: HashMap<EmTypes, Vec<MysteryReward>> = HashMap::new();
 
     for mystery_reward in &pedia.mystery_reward_item.param {
@@ -3037,12 +3059,33 @@ fn prepare_monsters<'a>(
             })
     }
 
+    let hn_msgs: HashMap<_, _> = pedia.hunter_note_msg.get_name_map();
+    let hn_msgs_mr: HashMap<_, _> = pedia.hunter_note_msg_mr.get_name_map();
+    let monster_list = hash_map_unique(
+        pedia.monster_list.data_list.iter(),
+        |p| (p.em_type, p),
+        false,
+    )?;
+
     let monsters = pedia.monsters.iter().chain(&pedia.small_monsters);
     for monster in monsters {
         let mut mystery_reward = mystery_rewards.remove(&monster.em_type).unwrap_or_default();
         mystery_reward.sort_by_key(|m| m.lv_lower_limit);
         let random_quest = random_quests.get(&monster.em_type).copied();
         let discovery = discoveries.get(&monster.em_type).copied();
+        let rank = ranks.get(&monster.em_type).copied();
+        let species = speciess.get(&monster.em_type).copied();
+        let family = monster_list
+            .get(&monster.em_type)
+            .and_then(|p| match p.family_type {
+                FamilyType::Species(i) => hn_msgs
+                    .get(&format!("HN_Hunternote_ML_Tab_01_Spec_M{i:02}"))
+                    .copied(),
+                FamilyType::MrSpecies(0) => hn_msgs_mr
+                    .get(&format!("HN_Hunternote_ML_Tab_01_Spec_M1_MR"))
+                    .copied(),
+                _ => None,
+            });
         let entry = if let Some(index) = monster.enemy_type {
             let name = names
                 .get(&format!("EnemyIndex{index:03}"))
@@ -3082,6 +3125,9 @@ fn prepare_monsters<'a>(
                 mystery_reward,
                 random_quest,
                 discovery,
+                rank,
+                species,
+                family,
             }
         } else {
             MonsterEx {
@@ -3093,6 +3139,9 @@ fn prepare_monsters<'a>(
                 mystery_reward,
                 random_quest,
                 discovery,
+                rank,
+                species,
+                family,
             }
         };
         result.insert(monster.em_type, entry);

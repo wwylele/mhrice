@@ -69,6 +69,8 @@ Version list:
 10_00_03 = 10.0.3.0
 11_00_01 = 11.0.1.0
 11_00_02 = 11.0.2.0
+12_00_00 = 12.0.0.0
+12_00_01 = 12.0.1.1
 
 ****/
 
@@ -714,7 +716,11 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         MarionetteData,
         BitSetFlagHabitatType,
         BossMonsterData,
-        MonsterListBossData
+        MonsterListBossData,
+        RankInfo,
+        EnemyRankData,
+        EmSpeciesData,
+        SystemEnemyDragonSpeciesData,
     );
 
     r!(
