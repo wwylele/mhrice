@@ -222,6 +222,7 @@ fn gen_otomo_equip(
         <head>
             <title>{text!("Buddy equipment")}</title>
             { head_common(hash_store) }
+            { title_multi_lang(series.name) }
         </head>
         <body>
             { navbar() }

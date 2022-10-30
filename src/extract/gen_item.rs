@@ -731,6 +731,7 @@ pub fn gen_item(
             <head>
                 <title>"Item - MHRice"</title>
                 { head_common(hash_store) }
+                { title_multi_lang(item.name) }
             </head>
             <body>
                 { navbar() }

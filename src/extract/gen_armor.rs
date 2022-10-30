@@ -571,6 +571,7 @@ fn gen_armor(
             <head>
                 <title>{text!("Armor {:03}", series.series.armor_series.0)}</title>
                 { head_common(hash_store) }
+                { title_multi_lang(series.name) }
             </head>
             <body>
                 { navbar() }

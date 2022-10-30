@@ -246,6 +246,7 @@ pub fn gen_hyakuryu_skill(
             <head>
                 <title>{text!("Rampage skill - MHRice")}</title>
                 { head_common(hash_store) }
+                { title_multi_lang(skill.name) }
             </head>
             <body>
                 { navbar() }

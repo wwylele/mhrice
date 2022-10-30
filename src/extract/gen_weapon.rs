@@ -658,6 +658,7 @@ where
             <head>
                 <title>"Weapon - MHRice"</title>
                 { head_common(hash_store) }
+                { title_multi_lang(weapon.name) }
             </head>
             <body>
                 { navbar() }

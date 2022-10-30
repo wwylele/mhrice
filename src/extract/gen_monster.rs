@@ -2,7 +2,7 @@ use super::gen_common::*;
 use super::gen_item::*;
 use super::gen_map::*;
 use super::gen_quest::*;
-use super::gen_website::{gen_multi_lang, head_common, navbar};
+use super::gen_website::*;
 use super::hash_store::*;
 use super::pedia::*;
 use super::sink::*;
@@ -1863,6 +1863,7 @@ pub fn gen_monster(
             <head>
                 <title>{text!("Monster {:03}_{:02} - MHRice", monster.id, monster.sub_id)}</title>
                 { head_common(hash_store) }
+                { monster_alias.iter().flat_map(|alias|title_multi_lang(*alias)) }
             </head>
             <body>
                 { navbar() }

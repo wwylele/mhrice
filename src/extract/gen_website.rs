@@ -190,22 +190,23 @@ pub fn navbar() -> Box<nav<String>> {
     </div></nav>)
 }
 
-pub fn translate_msg(content: &str) -> (Box<span<String>>, bool) {
+struct Tag<'a> {
+    tag: &'a str,
+    arg: &'a str,
+    seq: Seq<'a>,
+}
+enum Node<'a> {
+    Raw(&'a str),
+    Tagged(Tag<'a>),
+}
+
+struct Seq<'a> {
+    nodes: Vec<Node<'a>>,
+}
+
+fn parse_msg(content: &str) -> (Seq, bool) {
     let mut msg = content;
     let mut has_warning = false;
-    struct Tag<'a> {
-        tag: &'a str,
-        arg: &'a str,
-        seq: Seq<'a>,
-    }
-    enum Node<'a> {
-        Raw(&'a str),
-        Tagged(Tag<'a>),
-    }
-
-    struct Seq<'a> {
-        nodes: Vec<Node<'a>>,
-    }
 
     let mut root = Seq { nodes: vec![] };
     let mut stack: Vec<Tag> = vec![];
@@ -305,6 +306,12 @@ pub fn translate_msg(content: &str) -> (Box<span<String>>, bool) {
         }
     }
 
+    (root, has_warning)
+}
+
+pub fn translate_msg(content: &str) -> (Box<span<String>>, bool) {
+    let (root, has_warning) = parse_msg(content);
+
     fn translate_rec(node: &Node<'_>) -> Box<dyn PhrasingContent<String>> {
         match node {
             Node::Raw(s) => Box::new(TextNode::<String>::new(*s)),
@@ -359,6 +366,25 @@ pub fn translate_msg(content: &str) -> (Box<span<String>>, bool) {
     (result, has_warning)
 }
 
+pub fn translate_msg_plain(content: &str) -> String {
+    let (root, _) = parse_msg(content);
+    fn translate_rec(result: &mut String, node: &Node<'_>) {
+        match node {
+            Node::Raw(s) => *result += *s,
+            Node::Tagged(t) => {
+                for inner in &t.seq.nodes {
+                    translate_rec(result, inner)
+                }
+            }
+        }
+    }
+    let mut result = String::new();
+    for node in &root.nodes {
+        translate_rec(&mut result, node)
+    }
+    result
+}
+
 pub fn gen_multi_lang(msg: &MsgEntry) -> Box<span<String>> {
     html!(<span> {
         (0..32).filter_map(|i|{
@@ -378,6 +404,23 @@ pub fn gen_multi_lang(msg: &MsgEntry) -> Box<span<String>> {
             </span>))
         })
     } </span>)
+}
+
+#[allow(clippy::vec_box)]
+pub fn title_multi_lang(msg: &MsgEntry) -> Vec<Box<meta<String>>> {
+    LANGUAGE_MAP
+        .iter()
+        .zip(&msg.content)
+        .filter_map(|(language, entry)| {
+            let &(_, language_code) = if let Some(language) = language {
+                language
+            } else {
+                return None;
+            };
+            let title = translate_msg_plain(entry);
+            Some(html!(<meta data-titlelang={language_code} content={title.as_str()}/>))
+        })
+        .collect()
 }
 
 pub fn gen_colored_icon(color: i32, icon: &str, addons: &[&str]) -> Box<div<String>> {

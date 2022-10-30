@@ -316,6 +316,11 @@ function switchLanguage() {
     document.getElementById("mh-lang-style").innerHTML =
         `.mh-lang:not([lang="${g_language_code}"]) { display:none; }`;
 
+    const title_meta = document.head.querySelector(`meta[data-titlelang="${g_language_code}"]`);
+    if (title_meta) {
+        document.title = title_meta.content + " - MHRice";
+    }
+
     for (const l of g_supported_mh_lang) {
         const menu_option = document.getElementById(`mh-lang-menu-${l}`);
         if (menu_option) {

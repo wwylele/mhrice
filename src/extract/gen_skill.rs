@@ -232,6 +232,7 @@ pub fn gen_skill(
             <head>
                 <title>{text!("Skill - MHRice")}</title>
                 { head_common(hash_store) }
+                { title_multi_lang(skill.name) }
             </head>
             <body>
                 { navbar() }
