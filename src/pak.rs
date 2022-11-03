@@ -319,7 +319,7 @@ fn guess_key(bytes: &[u8]) -> Result<[u8; 0x20]> {
     // find the most likely ones
     let xorpads = xorpads.map(|list| -> Option<(u8, u32)> {
         let (xorpad, freq) = list.into_iter().max_by_key(|(_, freq)| *freq)?;
-        (freq > 100).then(|| (xorpad, freq))
+        (freq > 100).then_some((xorpad, freq))
     });
 
     // on the diagonal, find the two odd xorpads with the top confidence as pivots
@@ -329,7 +329,7 @@ fn guess_key(bytes: &[u8]) -> Result<[u8; 0x20]> {
     let odd_diagonal_xorpads = || {
         (0..P0).filter_map(|i| {
             let (xorpad, freq) = xorpads[index(i, i)]?;
-            (xorpad % 2 != 0).then(|| (i, freq))
+            (xorpad % 2 != 0).then_some((i, freq))
         })
     };
 

@@ -1863,7 +1863,7 @@ pub fn gen_monster(
             <head>
                 <title>{text!("Monster {:03}_{:02} - MHRice", monster.id, monster.sub_id)}</title>
                 { head_common(hash_store) }
-                { monster_alias.iter().flat_map(|alias|title_multi_lang(*alias)) }
+                { monster_alias.iter().flat_map(|&alias|title_multi_lang(alias)) }
             </head>
             <body>
                 { navbar() }

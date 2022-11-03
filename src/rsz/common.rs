@@ -531,7 +531,7 @@ pub fn ser_arr<S, T: Serialize, const N: usize>(arr: &[T; N], s: S) -> Result<S:
 where
     S: Serializer,
 {
-    (&arr[..]).serialize(s)
+    arr[..].serialize(s)
 }
 
 #[derive(Debug, Serialize, Clone, Copy, Hash, PartialEq, Eq)]

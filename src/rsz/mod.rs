@@ -379,7 +379,7 @@ impl AnyRsz {
     }
 
     pub fn new_extern(path: String) -> AnyRsz {
-        Self::new(ExternPath(path), &*EXTERN_PATH_TYPE_INFO)
+        Self::new(ExternPath(path), &EXTERN_PATH_TYPE_INFO)
     }
 
     pub fn downcast<T: Any>(self) -> Result<Rc<T>> {

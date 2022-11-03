@@ -1008,7 +1008,7 @@ fn gen_quest(
             <head>
                 <title>{text!("Quest {:06}", quest.param.quest_no)}</title>
                 { head_common(hash_store) }
-                { quest.name.iter().flat_map(|name|title_multi_lang(*name)) }
+                { quest.name.iter().flat_map(|&name|title_multi_lang(name)) }
             </head>
             <body>
                 { navbar() }

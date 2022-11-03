@@ -394,7 +394,7 @@ fn gen_map(
             <head>
                 <title>{text!("Map {:02}", id)}</title>
                 { head_common(hash_store) }
-                { name.iter().flat_map(|name|title_multi_lang(*name)) }
+                { name.iter().flat_map(|&name|title_multi_lang(name)) }
                 <style id="mh-map-list-style">""</style>
             </head>
             <body>

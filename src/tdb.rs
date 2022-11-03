@@ -1396,7 +1396,6 @@ impl Tdb {
 
         fn read_positional_arg(
             type_instances: &[TypeInstance],
-            field_memberships: &[FieldMembership],
             pti_index: usize,
             args_data: &mut &[u8],
         ) -> Result<Arg> {
@@ -1406,14 +1405,7 @@ impl Tdb {
                 let len = args_data.read_u32()?;
                 Ok(Arg::Array(
                     (0..len)
-                        .map(|_| {
-                            read_positional_arg(
-                                type_instances,
-                                field_memberships,
-                                element,
-                                args_data,
-                            )
-                        })
+                        .map(|_| read_positional_arg(type_instances, element, args_data))
                         .collect::<Result<_>>()?,
                 ))
             } else if pti.system_type == 12 || pti.system_type == 2 {
@@ -1483,12 +1475,7 @@ impl Tdb {
                                 .context("Attribute param out of bound")?;
                             let pti_index = param.type_instance_index;
 
-                            read_positional_arg(
-                                &type_instances,
-                                &field_memberships,
-                                pti_index,
-                                &mut args_data,
-                            )
+                            read_positional_arg(&type_instances, pti_index, &mut args_data)
                         })
                         .collect::<Result<_>>()?;
 

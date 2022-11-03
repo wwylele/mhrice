@@ -280,12 +280,12 @@ fn unpack_bc7_mode4_5<F: FnMut(usize, usize, [u8; 4])>(mode: u32, block: u128, m
     };
 
     for (i, w) in first.iter_mut().enumerate() {
-        let bit_decrease = if i == 0 { 1 } else { 0 };
+        let bit_decrease = u32::from(i == 0);
         *w = stream.read_bits32(weight_bits - bit_decrease);
     }
 
     for (i, w) in second.iter_mut().enumerate() {
-        let bit_decrease = if i == 0 { 1 } else { 0 };
+        let bit_decrease = u32::from(i == 0);
         *w = stream.read_bits32(a_weight_bits - bit_decrease);
     }
 

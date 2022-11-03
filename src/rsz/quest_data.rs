@@ -333,8 +333,8 @@ rsz_struct! {
 impl NormalQuestDataParam {
     // Some of the logic is from snow.quest.QuestData.getTargetEmTypeLis
     pub fn has_target(&self, em_type: EmTypes) -> bool {
-        if self.target_type.get(0) == Some(&QuestTargetType::AllMainEnemy) {
-            let count = if let Some(&count) = self.tgt_num.get(0) {
+        if self.target_type.first() == Some(&QuestTargetType::AllMainEnemy) {
+            let count = if let Some(&count) = self.tgt_num.first() {
                 count as usize
             } else {
                 eprintln!("tgt_num empty for quest {}", self.quest_no);
