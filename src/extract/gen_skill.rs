@@ -45,7 +45,7 @@ pub fn gen_skill_list(
 
                 <div class="mh-filters"><ul>
                     <li id="mh-skill-filter-button-all" class="is-active mh-skill-filter-button">
-                        <a>"All skills"</a></li>
+                        <a>"All"</a></li>
                     <li id="mh-skill-filter-button-deco1" class="mh-skill-filter-button">
                         <a>"Lv1 deco"</a></li>
                     <li id="mh-skill-filter-button-deco2" class="mh-skill-filter-button">
@@ -54,16 +54,24 @@ pub fn gen_skill_list(
                         <a>"Lv3 deco"</a></li>
                     <li id="mh-skill-filter-button-deco4" class="mh-skill-filter-button">
                         <a>"Lv4 deco"</a></li>
+                    <li id="mh-skill-filter-button-alc" class="mh-skill-filter-button">
+                        <a><span class="tag mh-al-c">"C"</span>"meld"</a></li>
+                    <li id="mh-skill-filter-button-alb" class="mh-skill-filter-button">
+                        <a><span class="tag mh-al-b">"B"</span>"meld"</a></li>
+                    <li id="mh-skill-filter-button-ala" class="mh-skill-filter-button">
+                        <a><span class="tag mh-al-a">"A"</span>"meld"</a></li>
+                    <li id="mh-skill-filter-button-als" class="mh-skill-filter-button">
+                        <a><span class="tag mh-al-s">"S"</span>"meld"</a></li>
                     <li id="mh-skill-filter-button-cb3" class="mh-skill-filter-button">
-                        <a><span class="tag mh-cb-lv3">"Pt3"</span>"qurious"</a></li>
+                        <a><span class="tag mh-cb-lv3">"Pt3"</span>"qurio"</a></li>
                     <li id="mh-skill-filter-button-cb6" class="mh-skill-filter-button">
-                        <a><span class="tag mh-cb-lv6">"Pt6"</span>"qurious"</a></li>
+                        <a><span class="tag mh-cb-lv6">"Pt6"</span>"qurio"</a></li>
                     <li id="mh-skill-filter-button-cb9" class="mh-skill-filter-button">
-                        <a><span class="tag mh-cb-lv9">"Pt9"</span>"qurious"</a></li>
+                        <a><span class="tag mh-cb-lv9">"Pt9"</span>"qurio"</a></li>
                     <li id="mh-skill-filter-button-cb12" class="mh-skill-filter-button">
-                        <a><span class="tag mh-cb-lv12">"Pt12"</span>"qurious"</a></li>
+                        <a><span class="tag mh-cb-lv12">"Pt12"</span>"qurio"</a></li>
                     <li id="mh-skill-filter-button-cb15" class="mh-skill-filter-button">
-                        <a><span class="tag mh-cb-lv15">"Pt15"</span>"qurious"</a></li>
+                        <a><span class="tag mh-cb-lv15">"Pt15"</span>"qurio"</a></li>
                 </ul></div>
 
                 <ul class="mh-item-list">
@@ -75,6 +83,14 @@ pub fn gen_skill_list(
                         }
                         if let Some(cost) = skill.custom_buildup_cost {
                             filter_tags.push(format!("cb{cost}"));
+                        }
+                        if let Some(grade) = skill.alchemy_grade {
+                            match grade {
+                                GradeTypes::C => filter_tags.push("alc".to_owned()),
+                                GradeTypes::B => filter_tags.push("alb".to_owned()),
+                                GradeTypes::A => filter_tags.push("ala".to_owned()),
+                                GradeTypes::S => filter_tags.push("als".to_owned()),
+                            };
                         }
                         let filter = filter_tags.join(" ");
                         html!(<li data-filter={filter} class="mh-skill-filter-item">
@@ -215,6 +231,62 @@ pub fn gen_skill(
                 <p><span class={class.as_str()}>
                     {text!("Pt{} skill", cost)}
                 </span></p>
+                </section>
+            ),
+        });
+    }
+
+    if let Some(grade) = skill.alchemy_grade {
+        let tag = match grade {
+            GradeTypes::C => html!(<span class="tag mh-al-c">"C-tier skill"</span>),
+            GradeTypes::B => html!(<span class="tag mh-al-b">"B-tier skill"</span>),
+            GradeTypes::A => html!(<span class="tag mh-al-a">"A-tier skill"</span>),
+            GradeTypes::S => html!(<span class="tag mh-al-s">"S-tier skill"</span>),
+        };
+
+        fn display_rate(rate: &[u32]) -> Box<ul<String>> {
+            html!(<ul class="mh-custom-lot">{
+                rate.iter().enumerate().filter(|&(_, &r)| r != 0).map(|(i, r)|
+                    html!(<li>{text!("Level{}: {}%", i + 1, r)}</li>)
+                )
+            }</ul>)
+        }
+
+        sections.push(Section {
+            title: "Melding".to_owned(),
+            content: html!(
+                <section id="s-melding">
+                <h2>"Melding"</h2>
+                <p>{tag}</p>
+                <div class="mh-table"><table>
+                <thead><tr>
+                    <th>"Melding type"</th>
+                    <th>"Pick rate"</th>
+                    <th>"First skill level"</th>
+                    <th>"Second skill level"</th>
+                    <th>"Skill level if missed target"</th>
+                </tr></thead>
+                <tbody>{
+                    skill.alchemy.iter().map(|(pattern, data)| {
+                        let pattern = match pattern {
+                            AlchemyPatturnTypes::Alchemy1 => "Reflecting Pool",
+                            AlchemyPatturnTypes::Alchemy2 => "Haze",
+                            AlchemyPatturnTypes::Alchemy3 => "Moonbow",
+                            AlchemyPatturnTypes::Alchemy4 => "Wisp of Mystery",
+                            AlchemyPatturnTypes::Alchemy5 => "Rebirth",
+                            AlchemyPatturnTypes::AlchemyShinki => "Anima",
+                            AlchemyPatturnTypes::AlchemyTensei => "Reincarnation",
+                        };
+                        html!(<tr>
+                            <td>{text!("{}", pattern)}</td>
+                            <td>{text!("{}%", data.pick_rate)}</td>
+                            <td>{display_rate(&data.skill1_rate_list)}</td>
+                            <td>{display_rate(&data.skill2_rate_list)}</td>
+                            <td>{display_rate(&data.miss_rate_list)}</td>
+                        </tr>)
+                    })
+                }</tbody>
+                </table></div>
                 </section>
             ),
         });

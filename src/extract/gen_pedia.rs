@@ -947,9 +947,9 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         hyakuryu_decos: get_singleton(pak)?,
         hyakuryu_decos_product: get_singleton(pak)?,
         hyakuryu_decos_name_msg,
-        /*alchemy_pattern: get_singleton(pak)?,
+        //alchemy_pattern: get_singleton(pak)?,
         alchemy_pl_skill: get_singleton(pak)?,
-        alchemy_grade_worth: get_singleton(pak)?,
+        /*alchemy_grade_worth: get_singleton(pak)?,
         alchemy_rare_type: get_singleton(pak)?,
         alchemy_second_skill_lot: get_singleton(pak)?,
         alchemy_skill_grade_lot: get_singleton(pak)?,
@@ -1825,6 +1825,8 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> 
                 icon_color: skill.icon_color,
                 decos: vec![],
                 custom_buildup_cost: custom_buildup_costs.get(&skill.id).copied(),
+                alchemy: BTreeMap::new(),
+                alchemy_grade: None,
             },
         );
     }
@@ -1881,6 +1883,45 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> 
 
     if !deco_products.is_empty() {
         bail!("Leftover deco product")
+    }
+
+    for al_skill in &pedia.alchemy_pl_skill.param {
+        if al_skill.skill_id == PlEquipSkillId::None {
+            continue;
+        }
+        if al_skill.pick_rate == 0
+            && al_skill.skill1_rate_list.iter().all(|&x| x == 0)
+            && al_skill.skill2_rate_list.iter().all(|&x| x == 0)
+            && al_skill.miss_rate_list.iter().all(|&x| x == 0)
+        {
+            // Crapcom: dummy data?
+            continue;
+        }
+
+        let skill = result
+            .get_mut(&al_skill.skill_id)
+            .with_context(|| format!("Alchemy skill {:?} not found", al_skill.skill_id))?;
+        if skill.alchemy.insert(al_skill.patturn, al_skill).is_some() {
+            bail!(
+                "Multiple alchemy data defined for skill {:?} pattern {:?}",
+                al_skill.skill_id,
+                al_skill.patturn
+            )
+        }
+    }
+
+    for skill in result.values_mut() {
+        if skill.alchemy.is_empty() {
+            continue;
+        }
+        skill.alchemy_grade = Some(skill.alchemy.values().next().unwrap().grade);
+        if skill
+            .alchemy
+            .values()
+            .any(|a| a.grade != skill.alchemy_grade.unwrap())
+        {
+            bail!("Inconsistent skill grade {:?}", skill.alchemy)
+        }
     }
 
     Ok(result)

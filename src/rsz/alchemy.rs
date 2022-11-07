@@ -1,6 +1,5 @@
 use super::*;
 use crate::rsz_enum;
-use crate::rsz_newtype;
 use crate::rsz_struct;
 use serde::*;
 
@@ -20,11 +19,18 @@ rsz_enum! {
 }
 
 // snow.data.AlchemyPatturnData.PatturnTypes
-rsz_newtype! {
-    #[rsz_offset(1)]
-    #[derive(Debug, Serialize)]
-    #[serde(transparent)]
-    pub struct AlchemyPatturnTypes(pub i32);
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+    pub enum AlchemyPatturnTypes {
+        Alchemy1 = 0,
+        Alchemy2 = 1,
+        Alchemy3 = 2,
+        Alchemy4 = 3,
+        Alchemy5 = 4,
+        AlchemyShinki = 7,
+        AlchemyTensei = 8,
+    }
 }
 
 rsz_struct! {
@@ -58,7 +64,7 @@ rsz_struct! {
 // snow.data.AlchemyPlSkillTableData.GradeTypes
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq)]
     pub enum GradeTypes {
         C = 0,
         B = 1,
@@ -69,7 +75,8 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.AlchemyPlSkillTableUserData.Param",
-        0x9cd28096 = 0
+        0x6C87D64B = 10_00_02,
+        0xEE208F08 = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
     pub struct AlchemyPlSkillTableUserDataParam {
@@ -87,7 +94,7 @@ rsz_struct! {
 rsz_struct! {
     #[rsz("snow.data.AlchemyPlSkillTableUserData",
         path = "data/Define/Lobby/Facility/Alchemy/AlchemyPlSkillTable.user",
-        0x251e564f = 0
+        0x251E564F = 10_00_02,
     )]
     #[derive(Debug, Serialize)]
     pub struct AlchemyPlSkillTableUserData {
