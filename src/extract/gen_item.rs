@@ -74,9 +74,9 @@ pub fn gen_materials(
                 None
             };
             let item = if let Some(item) = pedia_ex.items.get(&item) {
-                html!(<span>{gen_item_label(item)}</span>)
+                html!(<div class="il">{gen_item_label(item)}</div>)
             } else {
-                html!(<span>{text!("{:?}", item)}</span>)
+                html!(<div class="il">{text!("{:?}", item)}</div>)
             };
             html!(<li>
                 {text!("{}x ", num)}
@@ -843,9 +843,9 @@ pub fn gen_reward_table<'a>(
         .filter(|&((&item, _), _)| item != ItemId::None)
         .map(move |((&item, &num), probability)| {
             let item = if let Some(item) = pedia_ex.items.get(&item) {
-                html!(<span>{gen_item_label(item)}</span>)
+                html!(<div class="il">{gen_item_label(item)}</div>)
             } else {
-                html!(<span>{text!("{:?}", item)}</span>)
+                html!(<div class="il">{text!("{:?}", item)}</div>)
             };
 
             html!(<tr>

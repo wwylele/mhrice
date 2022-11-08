@@ -176,13 +176,13 @@ fn gen_armor(
                             .filter(|&(&skill, _)| skill != PlEquipSkillId::None)
                             .map(|(&skill, lv)| {
                             let name = if let Some(skill_data) = pedia_ex.skills.get(&skill) {
-                                html!(<span><a href={format!("/skill/{}", skill_page(skill))}
+                                html!(<div class="il"><a href={format!("/skill/{}", skill_page(skill))}
                                     class="mh-icon-text">
                                     {gen_colored_icon(skill_data.icon_color, "/resources/skill", &[])}
                                     {gen_multi_lang(skill_data.name)}
-                                </a></span>)
+                                </a></div>)
                             } else {
-                                html!(<span>"<UNKNOWN>"</span>)
+                                html!(<div class="il">"<UNKNOWN>"</div>)
                             };
                             html!(<li>
                                 {name}
@@ -513,7 +513,7 @@ fn gen_armor(
                     let product = if let Some(Armor{overwear_product: Some(product), ..}) = &piece {
                         product
                     } else {
-                        return html!(<tr><td colspan="3">"-"</td></tr>)
+                        return html!(<tr><td colspan="5">"-"</td></tr>)
                     };
                     let armor = piece.as_ref().unwrap();
 

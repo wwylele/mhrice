@@ -536,9 +536,9 @@ fn gen_grouped_reward_table<'a>(
                 .enumerate()
                 .map(move |(i, ((&item, &num), &probability))| {
                     let item = if let Some(item) = pedia_ex.items.get(&item) {
-                        html!(<span>{gen_item_label(item)}</span>)
+                        html!(<div class="il">{gen_item_label(item)}</div>)
                     } else {
-                        html!(<span>{text!("{:?}", item)}</span>)
+                        html!(<div class="il">{text!("{:?}", item)}</div>)
                     };
 
                     let reward_type: Vec<_> = drop_dictionary
@@ -680,9 +680,9 @@ pub fn gen_lot(
                             .enumerate()
                             .map(move |(i, ((&item, &num), &probability))|{
                                 let item = if let Some(item) = pedia_ex.items.get(&item) {
-                                    html!(<span>{gen_item_label(item)}</span>)
+                                    html!(<div class="il">{gen_item_label(item)}</div>)
                                 } else {
-                                    html!(<span>{text!("{:?}", item)}</span>)
+                                    html!(<div class="il">{text!("{:?}", item)}</div>)
                                 };
 
                                 let part_name = if let Some(name) =

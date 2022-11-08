@@ -123,7 +123,7 @@ pub fn gen_slot(decorations_num_list: &[u32], is_rampage_slot: bool) -> Box<span
                 <span class="mh-slot-outer">
                     <img alt={alt.as_str()}
                         src={format!("/resources/slot_{}.png", s).as_str()} class={class} />
-                    { is_rampage_slot.then(||html!(<img class="mh-slot-rampage"
+                    { is_rampage_slot.then(||html!(<img alt="Rampage slot" class="mh-slot-rampage"
                         src="/resources/slot_rampage.png" />)) }
                 </span>
             )

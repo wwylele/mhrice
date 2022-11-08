@@ -560,9 +560,9 @@ fn gen_quest(
             .filter(|&(&item, _)| item != ItemId::None)
             .map(|(&item, num)|{
             let item = if let Some(item) = pedia_ex.items.get(&item) {
-                html!(<span>{gen_item_label(item)}</span>)
+                html!(<div class="il">{gen_item_label(item)}</div>)
             } else {
-                html!(<span>{text!("{:?}", item)}</span>)
+                html!(<div class="il">{text!("{:?}", item)}</div>)
             };
             html!(<li>
                 {text!("{}x ", num)}
@@ -880,9 +880,9 @@ fn gen_quest(
                 supply.item_id.iter().zip(&supply.num).filter(|(&item, _)| item != ItemId::Null && item != ItemId::None )
                 .map(|(item, &num)| {
                     let item = if let Some(item) = pedia_ex.items.get(item) {
-                        html!(<span>{gen_item_label(item)}</span>)
+                        html!(<div class="il">{gen_item_label(item)}</div>)
                     } else {
-                        html!(<span>{text!("{:?}", item)}</span>)
+                        html!(<div class="il">{text!("{:?}", item)}</div>)
                     };
                     html!(<li>
                         {text!("{}x ", num)}
