@@ -1867,7 +1867,6 @@ pub fn gen_monster(
             </head>
             <body>
                 { navbar() }
-                { right_aside() }
                 { gen_menu(&sections) }
                 <main>
                 <header class="mh-monster-header">
@@ -1884,6 +1883,7 @@ pub fn gen_monster(
                 { sections.into_iter().map(|s|s.content) }
 
                 </main>
+                { right_aside() }
             </body>
         </html>
     );
@@ -1918,7 +1918,6 @@ pub fn gen_monsters(
             </head>
             <body>
                 { navbar() }
-                { right_aside() }
 
                 <main>
                 <header><h1>"Monsters"</h1></header>
@@ -1975,6 +1974,7 @@ pub fn gen_monsters(
                 }</ul>
                 </section>
                 </main>
+                { right_aside() }
             </body>
         </html>
     );

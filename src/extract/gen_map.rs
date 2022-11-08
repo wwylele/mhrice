@@ -399,7 +399,6 @@ fn gen_map(
             </head>
             <body>
             { navbar() }
-            { right_aside() }
             { gen_menu(&sections) }
             <main>
 
@@ -408,6 +407,7 @@ fn gen_map(
             { sections.into_iter().map(|s|s.content) }
 
             </main>
+            { right_aside() }
             </body>
         </html>
     );
@@ -441,7 +441,6 @@ pub fn gen_map_list(hash_store: &HashStore, pedia: &Pedia, output: &impl Sink) -
             </head>
             <body>
                 { navbar() }
-                { right_aside() }
                 <main>
                 <header><h1>"Maps"</h1></header>
                 <ul>
@@ -454,6 +453,7 @@ pub fn gen_map_list(hash_store: &HashStore, pedia: &Pedia, output: &impl Sink) -
                 }
                 </ul>
                 </main>
+                { right_aside() }
             </body>
         </html>
     );

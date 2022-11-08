@@ -226,7 +226,6 @@ fn gen_otomo_equip(
         </head>
         <body>
             { navbar() }
-            { right_aside() }
             { gen_menu(&sections) }
             <main>
             <header>
@@ -241,6 +240,7 @@ fn gen_otomo_equip(
             // TODO: how to unlock one
 
             </main>
+            { right_aside() }
         </body>
 
     </html>);
@@ -287,7 +287,6 @@ pub fn gen_otomo_equip_list(
                 </head>
                 <body>
                     { navbar() }
-                    { right_aside() }
                     <main>
                     <header><h1>{text!("{}", title)}</h1></header>
                     { interlink }
@@ -341,6 +340,7 @@ pub fn gen_otomo_equip_list(
                         })
                     }</ul>
                     </main>
+                    { right_aside() }
                 </body>
             </html>
         );

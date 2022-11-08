@@ -123,7 +123,7 @@ pub fn navbar() -> Box<nav<String>> {
                     "Skills"
                 </a>
                 <div class="navbar-item has-dropdown is-hoverable navbar-expanded">
-                <a class="navbar-link">
+                <a class="navbar-link" href="/skill.html">
                     "Skills"
                 </a>
                 <div class="navbar-dropdown">
@@ -144,7 +144,7 @@ pub fn navbar() -> Box<nav<String>> {
                     "Weapons"
                 </a>
                 <div class="navbar-item has-dropdown is-hoverable navbar-expanded">
-                <a class="navbar-link">
+                <a class="navbar-link" href="/weapon.html">
                     "Weapons"
                 </a>
                 <div class="navbar-dropdown">
@@ -169,7 +169,7 @@ pub fn navbar() -> Box<nav<String>> {
                     "Buddy"
                 </a>
                 <div class="navbar-item has-dropdown is-hoverable navbar-expanded">
-                <a class="navbar-link">
+                <a class="navbar-link" href="/airou.html">
                     "Buddy"
                 </a>
                 <div class="navbar-dropdown">
@@ -456,7 +456,6 @@ pub fn gen_search(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
             </head>
             <body>
                 { navbar() }
-                { right_aside() }
                 <main>
                 <header><h1>"Search"</h1></header>
                 <div class="control has-icons-left">
@@ -468,6 +467,7 @@ pub fn gen_search(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
                 <ul id="mh-search-result">
                 </ul>
                 </main>
+                { right_aside() }
             </body>
         </html>
     );
@@ -488,7 +488,6 @@ pub fn gen_about(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
             </head>
             <body>
                 { navbar() }
-                { right_aside() }
                 <main>
                 <header><h1>"About MHRice"</h1></header>
                 <section>
@@ -538,6 +537,7 @@ pub fn gen_about(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
                 </ul>
                 </section>
                 </main>
+                { right_aside() }
             </body>
         </html>
     );

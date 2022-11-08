@@ -662,7 +662,6 @@ where
             </head>
             <body>
                 { navbar() }
-                { right_aside() }
                 { gen_menu(&sections) }
                 <main>
                 <header>
@@ -675,6 +674,7 @@ where
                 { sections.into_iter().map(|s|s.content) }
 
                 </main>
+                { right_aside() }
             </body>
         </html>
     );
@@ -732,7 +732,6 @@ where
             </head>
             <body>
                 { navbar() }
-                { right_aside() }
                 <main>
                 <header><h1> {text!("{}", name)} </h1></header>
                 <div>
@@ -757,6 +756,7 @@ where
                 { gen_tree_rec(weapon_tree, &weapon_tree.roots) }
                 </div>
                 </main>
+                { right_aside() }
             </body>
         </html>
     );
@@ -1042,13 +1042,13 @@ pub fn gen_weapons(
             </head>
             <body>
                 { navbar() }
-                { right_aside() }
                 <main>
                 <header><h1> "Weapons" </h1></header>
                 <ul class="mh-item-list">
                 {entry_label}
                 </ul>
                 </main>
+                { right_aside() }
             </body>
         </html>
     );

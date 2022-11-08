@@ -109,7 +109,6 @@ pub fn gen_quest_list(
             </head>
             <body>
                 { navbar() }
-                { right_aside() }
                 <main>
                 <header><h1>"Quests"</h1></header>
                 {
@@ -152,6 +151,7 @@ pub fn gen_quest_list(
                 }
                 </section>
                 </main>
+                { right_aside() }
             </body>
         </html>
     );
@@ -1012,7 +1012,6 @@ fn gen_quest(
             </head>
             <body>
                 { navbar() }
-                { right_aside() }
                 { gen_menu(&sections) }
                 <main>
                 <header>
@@ -1047,6 +1046,7 @@ fn gen_quest(
                 { sections.into_iter().map(|s|s.content) }
 
                 </main>
+                { right_aside() }
             </body>
         </html>
     );
@@ -1078,7 +1078,6 @@ pub fn gen_random_mystery_difficulty(
         </head>
         <body>
             { navbar() }
-            { right_aside() }
             <main>
             <header><h1>{
                 let category = match category {
@@ -1147,6 +1146,7 @@ pub fn gen_random_mystery_difficulty(
             </ul>
             </section>
             </main>
+            { right_aside() }
         </body>
         </html>
     );

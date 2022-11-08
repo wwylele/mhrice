@@ -46,7 +46,6 @@ pub fn gen_armor_list(
             </head>
             <body>
                 { navbar() }
-                { right_aside() }
                 <main>
                 <header><h1>"Armors"</h1></header>
                 <div class="mh-filters"><ul>
@@ -98,6 +97,7 @@ pub fn gen_armor_list(
                     })
                 }</ul>
                 </main>
+                { right_aside() }
             </body>
         </html>
     );
@@ -575,7 +575,6 @@ fn gen_armor(
             </head>
             <body>
                 { navbar() }
-                { right_aside() }
                 { gen_menu(&sections) }
                 <main>
                 <header>
@@ -590,6 +589,7 @@ fn gen_armor(
                 { sections.into_iter().map(|s|s.content) }
 
                 </main>
+                { right_aside() }
             </body>
         </html>
     );

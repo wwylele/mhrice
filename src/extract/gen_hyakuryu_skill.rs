@@ -42,7 +42,6 @@ pub fn gen_hyakuryu_skill_list(
             </head>
             <body>
                 { navbar() }
-                { right_aside() }
                 <main>
                 <header><h1>"Rampage skills"</h1></header>
 
@@ -86,6 +85,7 @@ pub fn gen_hyakuryu_skill_list(
                 }
                 </ul>
                 </main>
+                { right_aside() }
             </body>
         </html>
     );
@@ -250,7 +250,6 @@ pub fn gen_hyakuryu_skill(
             </head>
             <body>
                 { navbar() }
-                { right_aside() }
                 { gen_menu(&sections) }
                 <main>
                 <header>
@@ -263,6 +262,7 @@ pub fn gen_hyakuryu_skill(
                 { sections.into_iter().map(|s|s.content) }
 
                 </main>
+                { right_aside() }
             </body>
         </html>
     );

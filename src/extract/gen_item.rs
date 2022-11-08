@@ -735,7 +735,6 @@ pub fn gen_item(
             </head>
             <body>
                 { navbar() }
-                { right_aside() }
                 { gen_menu(&sections) }
                 <main>
                 <header>
@@ -748,6 +747,7 @@ pub fn gen_item(
                 { sections.into_iter().map(|s|s.content) }
 
                 </main>
+                { right_aside() }
             </body>
         </html>
     );
@@ -770,7 +770,6 @@ pub fn gen_item_list(
             </head>
             <body>
                 { navbar() }
-                { right_aside() }
                 <main>
                 <header><h1>"Item"</h1></header>
                 <div class="mh-filters"><ul>
@@ -806,6 +805,7 @@ pub fn gen_item_list(
                 }
                 </ul>
                 </main>
+                { right_aside() }
             </body>
         </html>
     );
