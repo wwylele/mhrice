@@ -391,7 +391,7 @@ fn gen_map(
 
     let doc: DOMTree<String> = html!(
         <html>
-            <head>
+            <head itemscope=true>
                 <title>{text!("Map {:02}", id)}</title>
                 { head_common(hash_store) }
                 { name.iter().flat_map(|&name|title_multi_lang(name)) }
@@ -435,7 +435,7 @@ pub fn gen_maps(
 pub fn gen_map_list(hash_store: &HashStore, pedia: &Pedia, output: &impl Sink) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
-            <head>
+            <head itemscope=true>
                 <title>{text!("Maps - MHRice")}</title>
                 { head_common(hash_store) }
             </head>

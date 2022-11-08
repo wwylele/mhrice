@@ -3018,7 +3018,7 @@ checksum = "59547bce71d9c38b83d9c0e92b6066c4253371f15005def0c30d9657f50c7642"
 [[package]]
 name = "typed-html"
 version = "0.2.2"
-source = "git+https://github.com/wwylele/typed-html.git#1cfc1011d4a24d55cd17325d93789cbb281f4d6e"
+source = "git+https://github.com/wwylele/typed-html.git#9a3b184b0d3ee4b32ec4d2787459d7f9c5871381"
 dependencies = [
  "htmlescape",
  "language-tags",
@@ -3032,7 +3032,7 @@ dependencies = [
 [[package]]
 name = "typed-html-macros"
 version = "0.2.2"
-source = "git+https://github.com/wwylele/typed-html.git#1cfc1011d4a24d55cd17325d93789cbb281f4d6e"
+source = "git+https://github.com/wwylele/typed-html.git#9a3b184b0d3ee4b32ec4d2787459d7f9c5871381"
 dependencies = [
  "ansi_term",
  "lalrpop",

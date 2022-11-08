@@ -304,7 +304,9 @@ where
     sections.push(Section {
         title: "Description".to_owned(),
         content: html!(
-            <section id="s-description"><pre>
+            <section id="s-description">
+            <h2 >"Description"</h2>
+            <pre>
             {weapon.explain.as_ref().map(|e|gen_multi_lang(e))}
             </pre></section>
         ),
@@ -488,7 +490,7 @@ where
 
     sections.push(Section {
         title: "Crafting".to_owned(),
-        content: html!(<section id="s-bottle">
+        content: html!(<section id="s-crafting">
         <h2 >"Crafting"</h2>
         { weapon.update.map(|update| {
             html!(<p>{text!("Unlock at: {} {} {}",
@@ -655,7 +657,7 @@ where
 
     let doc: DOMTree<String> = html!(
         <html>
-            <head>
+            <head itemscope=true>
                 <title>"Weapon - MHRice"</title>
                 { head_common(hash_store) }
                 { title_multi_lang(weapon.name) }
@@ -725,7 +727,7 @@ where
 
     let doc: DOMTree<String> = html!(
         <html>
-            <head>
+            <head itemscope=true>
                 <title>{text!("{} - MHRice", name)}</title>
                 { head_common(hash_store) }
                 <style id="mh-main-list-style">""</style>
@@ -1036,7 +1038,7 @@ pub fn gen_weapons(
 
     let doc: DOMTree<String> = html!(
         <html>
-            <head>
+            <head itemscope=true>
                 <title>{text!("Weapons - MHRice")}</title>
                 { head_common(hash_store) }
             </head>

@@ -1860,7 +1860,7 @@ pub fn gen_monster(
 
     let doc: DOMTree<String> = html!(
         <html>
-            <head>
+            <head itemscope=true>
                 <title>{text!("Monster {:03}_{:02} - MHRice", monster.id, monster.sub_id)}</title>
                 { head_common(hash_store) }
                 { monster_alias.iter().flat_map(|&alias|title_multi_lang(alias)) }
@@ -1912,7 +1912,7 @@ pub fn gen_monsters(
 
     let doc: DOMTree<String> = html!(
         <html>
-            <head>
+            <head itemscope=true>
                 <title>{text!("Monsters - MHRice")}</title>
                 { head_common(hash_store) }
             </head>

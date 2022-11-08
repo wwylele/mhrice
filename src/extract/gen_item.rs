@@ -643,7 +643,9 @@ pub fn gen_item(
     sections.push(Section {
         title: "Description".to_owned(),
         content: html!(
-            <section id="s-description"><pre>
+            <section id="s-description">
+            <h2 >"Description"</h2>
+            <pre>
                 {gen_multi_lang(item.explain)}
             </pre></section>
         ),
@@ -728,7 +730,7 @@ pub fn gen_item(
 
     let doc: DOMTree<String> = html!(
         <html>
-            <head>
+            <head itemscope=true>
                 <title>"Item - MHRice"</title>
                 { head_common(hash_store) }
                 { title_multi_lang(item.name) }
@@ -763,7 +765,7 @@ pub fn gen_item_list(
 ) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
-            <head>
+            <head itemscope=true>
                 <title>{text!("Items - MHRice")}</title>
                 { head_common(hash_store) }
                 <style id="mh-item-list-style">""</style>

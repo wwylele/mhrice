@@ -418,7 +418,8 @@ pub fn title_multi_lang(msg: &MsgEntry) -> Vec<Box<meta<String>>> {
                 return None;
             };
             let title = translate_msg_plain(entry);
-            Some(html!(<meta data-titlelang={language_code} content={title.as_str()}/>))
+            let itemprop = format!("title-{language_code}");
+            Some(html!(<meta itemprop={itemprop} content={title}/>))
         })
         .collect()
 }
@@ -450,7 +451,7 @@ fn gen_colored_icon_inner(color_class: &str, icon: &str, addons: &[&str]) -> Box
 pub fn gen_search(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
-            <head>
+            <head itemscope=true>
                 <title>{text!("Monsters - MHRice")}</title>
                 { head_common(hash_store) }
             </head>
@@ -482,7 +483,7 @@ pub fn gen_search(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
 pub fn gen_about(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
-            <head>
+            <head itemscope=true>
                 <title>{text!("Monsters - MHRice")}</title>
                 { head_common(hash_store) }
             </head>

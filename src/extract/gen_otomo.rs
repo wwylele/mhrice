@@ -219,7 +219,7 @@ fn gen_otomo_equip(
     });
 
     let doc: DOMTree<String> = html!(<html>
-        <head>
+        <head itemscope=true>
             <title>{text!("Buddy equipment")}</title>
             { head_common(hash_store) }
             { title_multi_lang(series.name) }
@@ -280,7 +280,7 @@ pub fn gen_otomo_equip_list(
     ) -> Result<()> {
         let doc: DOMTree<String> = html!(
             <html>
-                <head>
+                <head itemscope=true>
                     <title>{text!("{} - MHRice", title)}</title>
                     { head_common(hash_store) }
                     <style id="mh-armor-list-style">""</style>

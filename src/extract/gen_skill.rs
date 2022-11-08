@@ -23,7 +23,7 @@ pub fn gen_skill_list(
 ) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
-            <head>
+            <head itemscope=true>
                 <title>{text!("Armor skills - MHRice")}</title>
                 { head_common(hash_store) }
                 <style id="mh-skill-list-style">""</style>
@@ -170,6 +170,7 @@ pub fn gen_skill(
         title: "Description".to_owned(),
         content: html!(
             <section id="s-description">
+            <h2 >"Description"</h2>
                 <pre>{gen_multi_lang(skill.explain)}</pre>
                 <ul>{
                     skill.levels.iter().enumerate().map(|(level, detail)| {
@@ -301,7 +302,7 @@ pub fn gen_skill(
 
     let doc: DOMTree<String> = html!(
         <html>
-            <head>
+            <head itemscope=true>
                 <title>{text!("Skill - MHRice")}</title>
                 { head_common(hash_store) }
                 { title_multi_lang(skill.name) }

@@ -103,7 +103,7 @@ pub fn gen_quest_list(
 
     let doc: DOMTree<String> = html!(
         <html>
-            <head>
+            <head itemscope=true>
                 <title>{text!("Quests - MHRice")}</title>
                 { head_common(hash_store) }
             </head>
@@ -475,6 +475,7 @@ fn gen_quest(
         title: "Description".to_owned(),
         content: html!(
             <section id="s-description">
+            <h2 >"Description"</h2>
             <p><span>"Objective: "</span><span> {
                 quest.target.map_or(
                     html!(<span>"-"</span>),
@@ -1005,7 +1006,7 @@ fn gen_quest(
 
     let doc: DOMTree<String> = html!(
         <html>
-            <head>
+            <head itemscope=true>
                 <title>{text!("Quest {:06}", quest.param.quest_no)}</title>
                 { head_common(hash_store) }
                 { quest.name.iter().flat_map(|&name|title_multi_lang(name)) }
@@ -1072,7 +1073,7 @@ pub fn gen_random_mystery_difficulty(
         };
     let doc: DOMTree<String> = html!(
         <html>
-        <head>
+        <head itemscope=true>
             <title>{text!("Anomaly investigation stat table")}</title>
             { head_common(hash_store) }
         </head>

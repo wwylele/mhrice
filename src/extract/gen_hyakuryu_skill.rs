@@ -35,7 +35,7 @@ pub fn gen_hyakuryu_skill_list(
 ) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html>
-            <head>
+            <head itemscope=true>
                 <title>{text!("Rampage skills - MHRice")}</title>
                 { head_common(hash_store) }
                 <style id="mh-skill-list-style">""</style>
@@ -172,6 +172,7 @@ pub fn gen_hyakuryu_skill(
         title: "Description".to_owned(),
         content: html!(
             <section id="s-description">
+            <h2 >"Description"</h2>
             <pre>{gen_multi_lang(skill.explain)}</pre>
             </section>
         ),
@@ -243,7 +244,7 @@ pub fn gen_hyakuryu_skill(
 
     let doc: DOMTree<String> = html!(
         <html>
-            <head>
+            <head itemscope=true>
                 <title>{text!("Rampage skill - MHRice")}</title>
                 { head_common(hash_store) }
                 { title_multi_lang(skill.name) }
