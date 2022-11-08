@@ -690,8 +690,21 @@ where
     html!(<ul> {
         list.iter().map(|id| {
             let weapon = weapon_tree.weapons.get(id).unwrap();
+            let mut filter_tags = vec![];
+            if weapon.children.is_empty() {
+                filter_tags.push("final");
+            }
+            if weapon.overwear.is_some() {
+                filter_tags.push("layer");
+            }
+            if weapon.change.is_some() {
+                filter_tags.push("rampage");
+            }
+            let filter = filter_tags.join(" ");
             html!(<li>
-                { gen_weapon_label(weapon) }
+                <div class="mh-main-filter-item" data-filter={filter}>{
+                    gen_weapon_label(weapon)
+                }</div>
                 { gen_tree_rec(weapon_tree, &weapon.children) }
             </li>)
         })
@@ -715,6 +728,7 @@ where
             <head>
                 <title>{text!("{} - MHRice", name)}</title>
                 { head_common(hash_store) }
+                <style id="mh-main-list-style">""</style>
             </head>
             <body>
                 { navbar() }
@@ -729,6 +743,16 @@ where
                     <span>"go to other weapon classes"</span>
                     </span></a>
                 </div>
+                <div class="mh-filters"><ul>
+                    <li id="mh-main-filter-button-all" class="is-active mh-main-filter-button">
+                        <a>"All"</a></li>
+                    <li id="mh-main-filter-button-final" class="mh-main-filter-button">
+                        <a>"Final upgrade"</a></li>
+                    <li id="mh-main-filter-button-layer" class="mh-main-filter-button">
+                        <a>"Layered"</a></li>
+                    <li id="mh-main-filter-button-rampage" class="mh-main-filter-button">
+                        <a>"Layered for rampage"</a></li>
+                </ul></div>
                 <div class="mh-weapon-tree">
                 { gen_tree_rec(weapon_tree, &weapon_tree.roots) }
                 </div>

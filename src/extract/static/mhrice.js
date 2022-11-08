@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initFilter("item");
     initFilter("armor");
     initFilter("skill");
+    initFilter("main")
 
     autoSearch();
 });
@@ -69,6 +70,7 @@ function addEventListensers() {
     addEventListenerToClass("mh-item-filter-button", "click", changeItemFilter);
     addEventListenerToClass("mh-armor-filter-button", "click", changeArmorFilter);
     addEventListenerToClass("mh-skill-filter-button", "click", changeSkillFilter);
+    addEventListenerToClass("mh-main-filter-button", "click", changeMainFilter);
     addEventListenerToClass("mh-scombo", "change", onChangeSort);
 
     addEventListenerToClass("mh-map-filter-item", "click", onShowMapExplain);
@@ -442,6 +444,10 @@ function changeArmorFilter(e) {
 
 function changeSkillFilter(e) {
     changeFilter(e, 'skill');
+}
+
+function changeMainFilter(e) {
+    changeFilter(e, 'main');
 }
 
 function filterStyle(category, filter) {
