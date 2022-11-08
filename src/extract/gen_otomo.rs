@@ -218,7 +218,7 @@ fn gen_otomo_equip(
         )
     });
 
-    let doc: DOMTree<String> = html!(<html>
+    let doc: DOMTree<String> = html!(<html lang="en">
         <head itemscope=true>
             <title>{text!("Buddy equipment")}</title>
             { head_common(hash_store) }
@@ -279,7 +279,7 @@ pub fn gen_otomo_equip_list(
         interlink: Box<div<String>>,
     ) -> Result<()> {
         let doc: DOMTree<String> = html!(
-            <html>
+            <html lang="en">
                 <head itemscope=true>
                     <title>{text!("{} - MHRice", title)}</title>
                     { head_common(hash_store) }

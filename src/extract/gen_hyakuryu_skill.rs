@@ -34,7 +34,7 @@ pub fn gen_hyakuryu_skill_list(
     output: &impl Sink,
 ) -> Result<()> {
     let doc: DOMTree<String> = html!(
-        <html>
+        <html lang="en">
             <head itemscope=true>
                 <title>{text!("Rampage skills - MHRice")}</title>
                 { head_common(hash_store) }
@@ -243,7 +243,7 @@ pub fn gen_hyakuryu_skill(
     }
 
     let doc: DOMTree<String> = html!(
-        <html>
+        <html lang="en">
             <head itemscope=true>
                 <title>{text!("Rampage skill - MHRice")}</title>
                 { head_common(hash_store) }

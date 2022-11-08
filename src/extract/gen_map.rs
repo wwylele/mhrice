@@ -390,7 +390,7 @@ fn gen_map(
     };
 
     let doc: DOMTree<String> = html!(
-        <html>
+        <html lang="en">
             <head itemscope=true>
                 <title>{text!("Map {:02}", id)}</title>
                 { head_common(hash_store) }
@@ -434,7 +434,7 @@ pub fn gen_maps(
 
 pub fn gen_map_list(hash_store: &HashStore, pedia: &Pedia, output: &impl Sink) -> Result<()> {
     let doc: DOMTree<String> = html!(
-        <html>
+        <html lang="en">
             <head itemscope=true>
                 <title>{text!("Maps - MHRice")}</title>
                 { head_common(hash_store) }

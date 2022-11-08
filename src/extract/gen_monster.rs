@@ -1859,7 +1859,7 @@ pub fn gen_monster(
     });
 
     let doc: DOMTree<String> = html!(
-        <html>
+        <html lang="en">
             <head itemscope=true>
                 <title>{text!("Monster {:03}_{:02} - MHRice", monster.id, monster.sub_id)}</title>
                 { head_common(hash_store) }
@@ -1911,7 +1911,7 @@ pub fn gen_monsters(
     let mut monsters_path = output.create_html("monster.html")?;
 
     let doc: DOMTree<String> = html!(
-        <html>
+        <html lang="en">
             <head itemscope=true>
                 <title>{text!("Monsters - MHRice")}</title>
                 { head_common(hash_store) }

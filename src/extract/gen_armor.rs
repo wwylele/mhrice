@@ -38,7 +38,7 @@ pub fn gen_armor_list(
     output: &impl Sink,
 ) -> Result<()> {
     let doc: DOMTree<String> = html!(
-        <html>
+        <html lang="en">
             <head itemscope=true>
                 <title>{text!("Armors - MHRice")}</title>
                 { head_common(hash_store) }
@@ -567,7 +567,7 @@ fn gen_armor(
     }
 
     let doc: DOMTree<String> = html!(
-        <html>
+        <html lang="en">
             <head itemscope=true>
                 <title>{text!("Armor {:03}", series.series.armor_series.0)}</title>
                 { head_common(hash_store) }

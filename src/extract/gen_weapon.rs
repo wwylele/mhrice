@@ -656,7 +656,7 @@ where
     }
 
     let doc: DOMTree<String> = html!(
-        <html>
+        <html lang="en">
             <head itemscope=true>
                 <title>"Weapon - MHRice"</title>
                 { head_common(hash_store) }
@@ -726,7 +726,7 @@ where
     let mut list_path = weapon_path.create_html(&format!("{}.html", tag))?;
 
     let doc: DOMTree<String> = html!(
-        <html>
+        <html lang="en">
             <head itemscope=true>
                 <title>{text!("{} - MHRice", name)}</title>
                 { head_common(hash_store) }
@@ -1037,7 +1037,7 @@ pub fn gen_weapons(
     );
 
     let doc: DOMTree<String> = html!(
-        <html>
+        <html lang="en">
             <head itemscope=true>
                 <title>{text!("Weapons - MHRice")}</title>
                 { head_common(hash_store) }

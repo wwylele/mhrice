@@ -450,7 +450,7 @@ fn gen_colored_icon_inner(color_class: &str, icon: &str, addons: &[&str]) -> Box
 
 pub fn gen_search(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
     let doc: DOMTree<String> = html!(
-        <html>
+        <html lang="en">
             <head itemscope=true>
                 <title>{text!("Monsters - MHRice")}</title>
                 { head_common(hash_store) }
@@ -482,7 +482,7 @@ pub fn gen_search(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
 
 pub fn gen_about(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
     let doc: DOMTree<String> = html!(
-        <html>
+        <html lang="en">
             <head itemscope=true>
                 <title>{text!("Monsters - MHRice")}</title>
                 { head_common(hash_store) }

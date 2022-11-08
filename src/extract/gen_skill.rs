@@ -22,7 +22,7 @@ pub fn gen_skill_list(
     output: &impl Sink,
 ) -> Result<()> {
     let doc: DOMTree<String> = html!(
-        <html>
+        <html lang="en">
             <head itemscope=true>
                 <title>{text!("Armor skills - MHRice")}</title>
                 { head_common(hash_store) }
@@ -301,7 +301,7 @@ pub fn gen_skill(
     }
 
     let doc: DOMTree<String> = html!(
-        <html>
+        <html lang="en">
             <head itemscope=true>
                 <title>{text!("Skill - MHRice")}</title>
                 { head_common(hash_store) }
