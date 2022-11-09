@@ -1873,7 +1873,8 @@ pub fn gen_monster(
                 <title>{text!("{}", plain_title)}</title>
                 { head_common(hash_store) }
                 { monster_alias.iter().flat_map(|&alias|title_multi_lang(alias)) }
-                { open_graph(monster_alias, &plain_title, &icon, toc_sink.path(), config) }
+                { open_graph(monster_alias, &plain_title,
+                    monster_ex.explain1, "", Some(&icon), toc_sink.path(), config) }
             </head>
             <body>
                 { navbar() }

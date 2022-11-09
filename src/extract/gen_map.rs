@@ -80,6 +80,7 @@ fn gen_map(
     map: &GameMap,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
+    config: &WebsiteConfig,
     mut output: impl Write,
     mut toc_sink: TocSink<'_>,
 ) -> Result<()> {
@@ -394,6 +395,8 @@ fn gen_map(
             <head itemscope=true>
                 <title>{text!("Map {:02}", id)}</title>
                 { head_common(hash_store) }
+                { open_graph(name, "",
+                    None, "", None, toc_sink.path(), config) }
                 { name.iter().flat_map(|&name|title_multi_lang(name)) }
                 <style id="mh-map-list-style">""</style>
             </head>
@@ -421,13 +424,14 @@ pub fn gen_maps(
     hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
+    config: &WebsiteConfig,
     output: &impl Sink,
     toc: &mut Toc,
 ) -> Result<()> {
     let map_path = output.sub_sink("map")?;
     for (&id, map) in &pedia.maps {
         let (path, toc_sink) = map_path.create_html_with_toc(&map_page(id), toc)?;
-        gen_map(hash_store, id, map, pedia, pedia_ex, path, toc_sink)?
+        gen_map(hash_store, id, map, pedia, pedia_ex, config, path, toc_sink)?
     }
     Ok(())
 }

@@ -9,21 +9,36 @@ const WEBSITE_VERSIONS: &[&str] = &["10.0.2", "10.0.3", "11.0.1", "11.0.2", "12.
 pub fn open_graph(
     title: Option<&MsgEntry>,
     title_plan: &str,
-    image: &str,
+    description: Option<&MsgEntry>,
+    description_plan: &str,
+    image: Option<&str>,
     path: &str,
     config: &WebsiteConfig,
 ) -> Vec<Box<dyn MetadataContent<String>>> {
     let Some(origin) = &config.origin else {return vec![]};
-    let title = if let Some(title) = title {
+    let mut title = if let Some(title) = title {
         format!("{} - MHRice", translate_msg_plain(&title.content[1]))
     } else {
         title_plan.to_owned()
     };
+    if title.is_empty() {
+        title = "MHRice".to_owned()
+    }
+    let mut description = if let Some(description) = description {
+        translate_msg_plain(&description.content[1]).replace("\r\n", " ")
+    } else {
+        description_plan.to_owned()
+    };
+    if description.is_empty() {
+        description = " ".to_owned(); // avoid empty meta attribute
+    }
+    let image = image.unwrap_or("/favicon.png");
     let image = origin.clone() + image;
     let url = origin.clone() + path;
     vec![
         html!(<meta property="og:type" content="website" />),
         html!(<meta property="og:title" content={title} />),
+        html!(<meta property="og:description" content={description} />),
         html!(<meta property="og:image" content={image} />),
         html!(<meta property="og:url" content={url} />),
     ]

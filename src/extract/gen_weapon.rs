@@ -149,6 +149,7 @@ fn gen_weapon<Param>(
     weapon_tree: &WeaponTree<'_, Param>,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
+    config: &WebsiteConfig,
     mut output: impl Write,
     mut toc_sink: TocSink<'_>,
     has_element: fn(&Param) -> Option<&ElementWeaponBaseData>,
@@ -661,6 +662,8 @@ where
                 <title>"Weapon - MHRice"</title>
                 { head_common(hash_store) }
                 { title_multi_lang(weapon.name) }
+                { open_graph(Some(weapon.name), "",
+                    weapon.explain, "", None, toc_sink.path(), config) }
             </head>
             <body>
                 { navbar() }
@@ -814,6 +817,7 @@ pub fn gen_weapons(
     hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
+    config: &WebsiteConfig,
     output: &impl Sink,
     toc: &mut Toc,
 ) -> Result<()> {
@@ -852,6 +856,7 @@ pub fn gen_weapons(
                     &pedia_ex.$label,
                     pedia,
                     pedia_ex,
+                    config,
                     file_path,
                     toc_sink,
                     $element,

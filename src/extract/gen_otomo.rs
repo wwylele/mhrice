@@ -38,6 +38,7 @@ fn gen_otomo_equip(
     hash_store: &HashStore,
     series: &OtEquipSeries,
     pedia_ex: &PediaEx,
+    config: &WebsiteConfig,
     mut output: impl Write,
     mut toc_sink: TocSink<'_>,
 ) -> Result<()> {
@@ -223,6 +224,8 @@ fn gen_otomo_equip(
             <title>{text!("Buddy equipment")}</title>
             { head_common(hash_store) }
             { title_multi_lang(series.name) }
+            { open_graph(Some(series.name), "",
+                None, "", None, toc_sink.path(), config) }
         </head>
         <body>
             { navbar() }
@@ -252,6 +255,7 @@ fn gen_otomo_equip(
 pub fn gen_otomo_equips(
     hash_store: &HashStore,
     pedia_ex: &PediaEx<'_>,
+    config: &WebsiteConfig,
     output: &impl Sink,
     toc: &mut Toc,
 ) -> Result<()> {
@@ -259,7 +263,7 @@ pub fn gen_otomo_equips(
     for (id, series) in &pedia_ex.ot_equip {
         let (output, toc_sink) =
             otomo_path.create_html_with_toc(&format!("{}.html", id.to_tag()), toc)?;
-        gen_otomo_equip(hash_store, series, pedia_ex, output, toc_sink)?
+        gen_otomo_equip(hash_store, series, pedia_ex, config, output, toc_sink)?
     }
     Ok(())
 }

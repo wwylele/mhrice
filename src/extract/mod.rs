@@ -1,4 +1,5 @@
 #![allow(unused_braces)]
+#![allow(clippy::too_many_arguments)]
 
 mod gen_armor;
 mod gen_common;

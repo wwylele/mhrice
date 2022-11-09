@@ -114,6 +114,7 @@ fn gen_armor(
     series: &ArmorSeries,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
+    config: &WebsiteConfig,
     mut output: impl Write,
     mut toc_sink: TocSink<'_>,
 ) -> Result<()> {
@@ -572,6 +573,8 @@ fn gen_armor(
                 <title>{text!("Armor {:03}", series.series.armor_series.0)}</title>
                 { head_common(hash_store) }
                 { title_multi_lang(series.name) }
+                { open_graph(Some(series.name), "",
+                    None, "", None, toc_sink.path(), config) }
             </head>
             <body>
                 { navbar() }
@@ -602,6 +605,7 @@ pub fn gen_armors(
     hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
+    config: &WebsiteConfig,
     output: &impl Sink,
     toc: &mut Toc,
 ) -> Result<()> {
@@ -609,7 +613,9 @@ pub fn gen_armors(
     for series in &pedia_ex.armors {
         let (output, toc_sink) = armor_path
             .create_html_with_toc(&format!("{:03}.html", series.series.armor_series.0), toc)?;
-        gen_armor(hash_store, series, pedia, pedia_ex, output, toc_sink)?
+        gen_armor(
+            hash_store, series, pedia, pedia_ex, config, output, toc_sink,
+        )?
     }
     Ok(())
 }

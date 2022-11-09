@@ -159,6 +159,7 @@ pub fn gen_skill(
     id: PlEquipSkillId,
     skill: &Skill,
     pedia_ex: &PediaEx,
+    config: &WebsiteConfig,
     mut output: impl Write,
     mut toc_sink: TocSink<'_>,
 ) -> Result<()> {
@@ -306,6 +307,8 @@ pub fn gen_skill(
                 <title>{text!("Skill - MHRice")}</title>
                 { head_common(hash_store) }
                 { title_multi_lang(skill.name) }
+                { open_graph(Some(skill.name), "",
+                    Some(skill.explain), "", None, toc_sink.path(), config) }
             </head>
             <body>
                 { navbar() }
@@ -334,13 +337,14 @@ pub fn gen_skill(
 pub fn gen_skills(
     hash_store: &HashStore,
     pedia_ex: &PediaEx,
+    config: &WebsiteConfig,
     output: &impl Sink,
     toc: &mut Toc,
 ) -> Result<()> {
     let skill_path = output.sub_sink("skill")?;
     for (&id, skill) in &pedia_ex.skills {
         let (output, toc_sink) = skill_path.create_html_with_toc(&skill_page(id), toc)?;
-        gen_skill(hash_store, id, skill, pedia_ex, output, toc_sink)?
+        gen_skill(hash_store, id, skill, pedia_ex, config, output, toc_sink)?
     }
     Ok(())
 }

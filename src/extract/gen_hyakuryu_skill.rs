@@ -161,6 +161,7 @@ pub fn gen_hyakuryu_skill(
     hash_store: &HashStore,
     skill: &HyakuryuSkill,
     pedia_ex: &PediaEx,
+    config: &WebsiteConfig,
     mut output: impl Write,
     mut toc_sink: TocSink<'_>,
 ) -> Result<()> {
@@ -248,6 +249,8 @@ pub fn gen_hyakuryu_skill(
                 <title>{text!("Rampage skill - MHRice")}</title>
                 { head_common(hash_store) }
                 { title_multi_lang(skill.name) }
+                { open_graph(Some(skill.name), "",
+                    Some(skill.explain), "", None, toc_sink.path(), config) }
             </head>
             <body>
                 { navbar() }
@@ -276,13 +279,14 @@ pub fn gen_hyakuryu_skill(
 pub fn gen_hyakuryu_skills(
     hash_store: &HashStore,
     pedia_ex: &PediaEx,
+    config: &WebsiteConfig,
     output: &impl Sink,
     toc: &mut Toc,
 ) -> Result<()> {
     let skill_path = output.sub_sink("hyakuryu_skill")?;
     for (&id, skill) in &pedia_ex.hyakuryu_skills {
         let (output, toc_sink) = skill_path.create_html_with_toc(&hyakuryu_skill_page(id), toc)?;
-        gen_hyakuryu_skill(hash_store, skill, pedia_ex, output, toc_sink)?
+        gen_hyakuryu_skill(hash_store, skill, pedia_ex, config, output, toc_sink)?
     }
     Ok(())
 }

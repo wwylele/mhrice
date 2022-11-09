@@ -416,6 +416,7 @@ fn gen_quest(
     quest: &Quest,
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
+    config: &WebsiteConfig,
     mut output: impl Write,
     mut toc_sink: TocSink<'_>,
 ) -> Result<()> {
@@ -1004,12 +1005,15 @@ fn gen_quest(
         ),
     });
 
+    let plain_title = format!("Quest {:06}", quest.param.quest_no);
     let doc: DOMTree<String> = html!(
         <html lang="en">
             <head itemscope=true>
-                <title>{text!("Quest {:06}", quest.param.quest_no)}</title>
+                <title>{text!("{}", plain_title)}</title>
                 { head_common(hash_store) }
                 { quest.name.iter().flat_map(|&name|title_multi_lang(name)) }
+                { open_graph(quest.name, &plain_title,
+                    quest.target, "", Some(&img), toc_sink.path(), config) }
             </head>
             <body>
                 { navbar() }
@@ -1159,6 +1163,7 @@ pub fn gen_quests(
     hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
+    config: &WebsiteConfig,
     output: &impl Sink,
     toc: &mut Toc,
 ) -> Result<()> {
@@ -1166,7 +1171,7 @@ pub fn gen_quests(
     for quest in pedia_ex.quests.values() {
         let (path, toc_sink) =
             quest_path.create_html_with_toc(&format!("{:06}.html", quest.param.quest_no), toc)?;
-        gen_quest(hash_store, quest, pedia, pedia_ex, path, toc_sink)?;
+        gen_quest(hash_store, quest, pedia, pedia_ex, config, path, toc_sink)?;
     }
 
     if let Some(table) = &pedia.random_mystery_difficulty {

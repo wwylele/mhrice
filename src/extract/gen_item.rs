@@ -620,6 +620,7 @@ pub fn gen_item(
     item: &Item,
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
+    config: &WebsiteConfig,
     mut output: impl Write,
     mut toc_sink: TocSink<'_>,
 ) -> Result<()> {
@@ -734,6 +735,8 @@ pub fn gen_item(
                 <title>"Item - MHRice"</title>
                 { head_common(hash_store) }
                 { title_multi_lang(item.name) }
+                { open_graph(Some(item.name), "",
+                    Some(item.explain), "", None, toc_sink.path(), config) }
             </head>
             <body>
                 { navbar() }
@@ -822,13 +825,14 @@ pub fn gen_items(
     hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
+    config: &WebsiteConfig,
     output: &impl Sink,
     toc: &mut Toc,
 ) -> Result<()> {
     let item_path = output.sub_sink("item")?;
     for (&id, item) in &pedia_ex.items {
         let (path, toc_sink) = item_path.create_html_with_toc(&item_page(id), toc)?;
-        gen_item(hash_store, item, pedia, pedia_ex, path, toc_sink)?
+        gen_item(hash_store, item, pedia, pedia_ex, config, path, toc_sink)?
     }
     Ok(())
 }
