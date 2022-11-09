@@ -19,6 +19,10 @@ use chrono::prelude::*;
 use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text, types::*};
 
+pub struct WebsiteConfig {
+    pub origin: Option<String>, // e.g. https://mhrice.info
+}
+
 pub const LANGUAGE_MAP: [Option<(&str, &str)>; 32] = [
     Some(("Japanese", "ja")),
     Some(("English", "en")),
@@ -592,6 +596,7 @@ pub fn gen_website(
     hash_store: &mut HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
+    config: &WebsiteConfig,
     output: &impl Sink,
 ) -> Result<()> {
     let mut toc = Toc::new();
@@ -605,7 +610,7 @@ pub fn gen_website(
     gen_hyakuryu_skill_list(hash_store, &pedia_ex.hyakuryu_skills, output)?;
     gen_armors(hash_store, pedia, pedia_ex, output, &mut toc)?;
     gen_armor_list(hash_store, &pedia_ex.armors, output)?;
-    gen_monsters(hash_store, pedia, pedia_ex, output, &mut toc)?;
+    gen_monsters(hash_store, pedia, pedia_ex, config, output, &mut toc)?;
     gen_items(hash_store, pedia, pedia_ex, output, &mut toc)?;
     gen_item_list(hash_store, pedia_ex, output)?;
     gen_weapons(hash_store, pedia, pedia_ex, output, &mut toc)?;

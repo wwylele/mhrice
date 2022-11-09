@@ -1,9 +1,33 @@
 use super::gen_quest::*;
 use super::gen_website::*;
 use super::pedia::*;
+use crate::msg::MsgEntry;
 use typed_html::{elements::*, html, text};
 
 const WEBSITE_VERSIONS: &[&str] = &["10.0.2", "10.0.3", "11.0.1", "11.0.2", "12.0.0", "12.0.1"];
+
+pub fn open_graph(
+    title: Option<&MsgEntry>,
+    title_plan: &str,
+    image: &str,
+    path: &str,
+    config: &WebsiteConfig,
+) -> Vec<Box<dyn MetadataContent<String>>> {
+    let Some(origin) = &config.origin else {return vec![]};
+    let title = if let Some(title) = title {
+        format!("{} - MHRice", translate_msg_plain(&title.content[1]))
+    } else {
+        title_plan.to_owned()
+    };
+    let image = origin.clone() + image;
+    let url = origin.clone() + path;
+    vec![
+        html!(<meta property="og:type" content="website" />),
+        html!(<meta property="og:title" content={title} />),
+        html!(<meta property="og:image" content={image} />),
+        html!(<meta property="og:url" content={url} />),
+    ]
+}
 
 pub struct Section {
     pub title: String,

@@ -845,12 +845,14 @@ pub fn gen_multipart<'a>(
     </table></div>)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn gen_monster(
     hash_store: &HashStore,
     is_large: bool,
     monster: &Monster,
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
+    config: &WebsiteConfig,
     output: &impl Sink,
     toc: &mut Toc,
 ) -> Result<()> {
@@ -1858,12 +1860,20 @@ pub fn gen_monster(
         </section>),
     });
 
+    let plain_title = format!("Monster {:03}_{:02} - MHRice", monster.id, monster.sub_id);
+
+    let (mut output, mut toc_sink) = output.create_html_with_toc(
+        &format!("{:03}_{:02}.html", monster.id, monster.sub_id),
+        toc,
+    )?;
+
     let doc: DOMTree<String> = html!(
         <html lang="en">
             <head itemscope=true>
-                <title>{text!("Monster {:03}_{:02} - MHRice", monster.id, monster.sub_id)}</title>
+                <title>{text!("{}", plain_title)}</title>
                 { head_common(hash_store) }
                 { monster_alias.iter().flat_map(|&alias|title_multi_lang(alias)) }
+                { open_graph(monster_alias, &plain_title, &icon, toc_sink.path(), config) }
             </head>
             <body>
                 { navbar() }
@@ -1888,10 +1898,6 @@ pub fn gen_monster(
         </html>
     );
 
-    let (mut output, mut toc_sink) = output.create_html_with_toc(
-        &format!("{:03}_{:02}.html", monster.id, monster.sub_id),
-        toc,
-    )?;
     output.write_all(doc.to_string().as_bytes())?;
 
     if let Some(monster_alias) = monster_alias {
@@ -1905,6 +1911,7 @@ pub fn gen_monsters(
     hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
+    config: &WebsiteConfig,
     output: &impl Sink,
     toc: &mut Toc,
 ) -> Result<()> {
@@ -1989,6 +1996,7 @@ pub fn gen_monsters(
             monster,
             pedia,
             pedia_ex,
+            config,
             &monster_path,
             toc,
         )?;
@@ -2002,6 +2010,7 @@ pub fn gen_monsters(
             monster,
             pedia,
             pedia_ex,
+            config,
             &monster_path,
             toc,
         )?;

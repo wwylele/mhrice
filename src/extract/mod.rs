@@ -19,5 +19,5 @@ pub mod sink;
 
 pub use gen_pedia::gen_resources;
 pub use gen_pedia::{gen_pedia, gen_pedia_ex};
-pub use gen_website::{gen_multi_lang, gen_website};
+pub use gen_website::{gen_multi_lang, gen_website, WebsiteConfig};
 pub use pedia::*;

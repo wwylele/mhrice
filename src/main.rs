@@ -143,6 +143,10 @@ enum Mhrice {
         /// Output directory
         #[clap(short, long)]
         output: String,
+        /// Target website origin. e.g. "https://mhrice.info"
+        /// Output directory
+        #[clap(long)]
+        origin: Option<String>,
     },
 
     /// Find TDB in the given binary and print the converted TDB file
@@ -524,29 +528,34 @@ fn gen_json(pak: Vec<String>) -> Result<()> {
     Ok(())
 }
 
-fn gen_website_to_sink(pak: Vec<String>, sink: impl Sink) -> Result<()> {
+fn gen_website_to_sink(
+    pak: Vec<String>,
+    sink: impl Sink,
+    config: extract::WebsiteConfig,
+) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
     let pedia = extract::gen_pedia(&mut pak)?;
     let pedia_ex = extract::gen_pedia_ex(&pedia)?;
     sink.create("mhrice.json")?
         .write_all(serde_json::to_string_pretty(&pedia)?.as_bytes())?;
     let mut hash_store = HashStore::new();
-    extract::gen_website(&mut hash_store, &pedia, &pedia_ex, &sink)?;
+    extract::gen_website(&mut hash_store, &pedia, &pedia_ex, &config, &sink)?;
     extract::gen_resources(&mut pak, &sink.sub_sink("resources")?)?;
     sink.finalize()?;
     Ok(())
 }
 
-fn gen_website(pak: Vec<String>, output: String) -> Result<()> {
+fn gen_website(pak: Vec<String>, output: String, origin: Option<String>) -> Result<()> {
+    let config = extract::WebsiteConfig { origin };
     if let Some(bucket) = output.strip_prefix("S3://") {
         let sink = S3Sink::init(bucket.to_string())?;
-        gen_website_to_sink(pak, sink)?;
+        gen_website_to_sink(pak, sink, config)?;
     } else if output == "null://" {
         let sink = NullSink;
-        gen_website_to_sink(pak, sink)?;
+        gen_website_to_sink(pak, sink, config)?;
     } else {
         let sink = DiskSink::init(Path::new(&output))?;
-        gen_website_to_sink(pak, sink)?;
+        gen_website_to_sink(pak, sink, config)?;
     }
 
     Ok(())
@@ -1327,7 +1336,11 @@ fn main() -> Result<()> {
         } => dump_index(pak, version, index, output),
         Mhrice::ScanRsz { pak } => scan_rsz(pak),
         Mhrice::GenJson { pak } => gen_json(pak),
-        Mhrice::GenWebsite { pak, output } => gen_website(pak, output),
+        Mhrice::GenWebsite {
+            pak,
+            output,
+            origin,
+        } => gen_website(pak, output, origin),
         Mhrice::ReadTdb { tdb, options } => read_tdb(tdb, options),
         Mhrice::ReadMsg { msg } => read_msg(msg),
         Mhrice::ScanMsg { pak, output } => scan_msg(pak, output),

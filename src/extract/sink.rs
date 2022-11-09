@@ -97,6 +97,10 @@ impl<'a> TocSink<'a> {
             }
         }
     }
+
+    pub fn path(&self) -> &str {
+        &self.path
+    }
 }
 
 impl<'a> Drop for TocSink<'a> {
