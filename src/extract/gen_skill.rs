@@ -212,7 +212,7 @@ pub fn gen_skill(
                                 )}</td>
                                 <td>{text!("{}z", deco.data.base_price)}</td>
                                 { gen_materials(pedia_ex, &deco.product.item_id_list,
-                                    &deco.product.item_num_list, deco.product.item_flag) }
+                                    &deco.product.item_num_list, &[deco.product.item_flag]) }
                             </tr>
                         )})
                     }

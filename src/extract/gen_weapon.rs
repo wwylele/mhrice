@@ -63,10 +63,10 @@ fn gen_craft_row(
     };
     let category = gen_category(pedia_ex, data.material_category, data.material_category_num);
 
-    let materials = gen_materials(pedia_ex, &data.item, &data.item_num, data.item_flag);
+    let materials = gen_materials(pedia_ex, &data.item, &data.item_num, &[data.item_flag]);
 
     let output = if let Some((output_item, output_item_num)) = output {
-        gen_materials(pedia_ex, output_item, output_item_num, ItemId::None)
+        gen_materials(pedia_ex, output_item, output_item_num, &[])
     } else {
         html!(<td>"-"</td>)
     };
@@ -540,7 +540,7 @@ where
                 })}
                 {weapon.overwear.as_ref().map(|data| {
                     let category = gen_category(pedia_ex, data.material_category, data.material_category_num);
-                    let materials = gen_materials(pedia_ex, &data.item, &data.item_num, data.item_flag);
+                    let materials = gen_materials(pedia_ex, &data.item, &data.item_num, &[data.item_flag]);
                     html!(<tr>
                         <td>"As layered"</td>
                         <td>{gen_progress(data.progress_flag, pedia_ex)}</td>
@@ -595,7 +595,7 @@ where
                     <td/>
                     <td>{text!("{}z", m.price)}</td>
                     {gen_category(pedia_ex, m.material_category, m.material_category_num)}
-                    {gen_materials(pedia_ex, &m.item, &m.item_num, ItemId::Null)}
+                    {gen_materials(pedia_ex, &m.item, &m.item_num, &[])}
                 </tr>))) }
                 {
                 table.categories.iter().flat_map(|(&category_id, category)| {
@@ -634,7 +634,7 @@ where
                         </td>
                         <td>{text!("{}z", piece.material.price)}</td>
                         {gen_category(pedia_ex, piece.material.material_category, piece.material.material_category_num)}
-                        {gen_materials(pedia_ex, &piece.material.item, &piece.material.item_num, ItemId::Null)}
+                        {gen_materials(pedia_ex, &piece.material.item, &piece.material.item_num, &[])}
 
                         </tr>)
                     })

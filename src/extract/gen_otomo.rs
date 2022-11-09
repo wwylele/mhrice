@@ -188,8 +188,7 @@ fn gen_otomo_equip(
                         <td>{gen_atomo_armor_label(p)}</td>
                         <td>{text!("{}", p.param.sell_value * 3 / 2)}</td>
                         {if let Some(product) = &p.product {
-                            // TODO: key item
-                            gen_materials(pedia_ex, &product.item_list, &product.item_num, ItemId::None/*series.series.unlock_item*/)
+                            gen_materials(pedia_ex, &product.item_list, &product.item_num, &series.series.unlock_item)
                         } else {
                             html!(<td>"-"</td>)
                         }}
@@ -198,7 +197,7 @@ fn gen_otomo_equip(
                         <td>{gen_atomo_armor_label(p)}</td>
                         <td>{text!("{}", p.param.sell_value * 3 / 2)}</td>
                         {if let Some(product) = &p.product {
-                            gen_materials(pedia_ex, &product.item_list, &product.item_num, ItemId::None/*series.series.unlock_item*/)
+                            gen_materials(pedia_ex, &product.item_list, &product.item_num, &series.series.unlock_item)
                         } else {
                             html!(<td>"-"</td>)
                         }}
@@ -208,7 +207,7 @@ fn gen_otomo_equip(
                         <td>{gen_atomo_weapon_label(p)}</td>
                         <td>{text!("{}", p.param.sell_value * 3 / 2)}</td>
                         {if let Some(product) = &p.product {
-                            gen_materials(pedia_ex, &product.item_list, &product.item_num, ItemId::None/*series.series.unlock_item*/)
+                            gen_materials(pedia_ex, &product.item_list, &product.item_num, &series.series.unlock_item)
                         } else {
                             html!(<td>"-"</td>)
                         }}

@@ -378,7 +378,7 @@ fn gen_armor(
                         <td>"Enable"</td>
                         <td>{text!("{}z", m.price)}</td>
                         {gen_category(pedia_ex, m.material_category, m.material_category_num)}
-                        {gen_materials(pedia_ex, &m.item, &m.item_num, ItemId::Null)}
+                        {gen_materials(pedia_ex, &m.item, &m.item_num, &[])}
                     </tr>))) }
                     { pedia.custom_buildup_armor_material.as_ref().and_then(
                         |m|m.param.iter().find(|m|m.rare == key.rare).map(|m|html!(<tr>
@@ -472,10 +472,10 @@ fn gen_armor(
                             product.material_category_num);
 
                         let materials = gen_materials(pedia_ex, &product.item,
-                            &product.item_num, product.item_flag);
+                            &product.item_num, &[product.item_flag]);
 
                         let output = gen_materials(pedia_ex, &product.output_item,
-                            &product.output_item_num, ItemId::None);
+                            &product.output_item_num, &[]);
 
                         html!(<tr>
                             <td>{gen_armor_label(Some(armor))}</td>
@@ -522,7 +522,7 @@ fn gen_armor(
                         product.material_category_num);
 
                     let materials = gen_materials(pedia_ex, &product.item,
-                        &product.item_num, product.item_flag);
+                        &product.item_num, &[product.item_flag]);
 
                     html!(<tr>
                         <td>{gen_armor_label(Some(armor))}</td>

@@ -62,18 +62,18 @@ pub fn gen_materials(
     pedia_ex: &PediaEx,
     item: &[ItemId],
     item_num: &[u32],
-    item_flag: ItemId,
+    item_flag: &[ItemId],
 ) -> Box<td<String>> {
     html!(<td><ul class="mh-armor-skill-list"> {
         item.iter().zip(item_num)
-            .filter(|&(&item, _)| item != ItemId::None)
-            .map(|(&item, num)|{
-            let key = if item == item_flag {
+            .filter(|&(&item, _)| item != ItemId::None && item != ItemId::Null)
+            .map(|(item, num)|{
+            let key = if item_flag.contains(item) {
                 Some(html!(<span class="tag is-primary">"Key"</span>))
             } else {
                 None
             };
-            let item = if let Some(item) = pedia_ex.items.get(&item) {
+            let item = if let Some(item) = pedia_ex.items.get(item) {
                 html!(<div class="il">{gen_item_label(item)}</div>)
             } else {
                 html!(<div class="il">{text!("{:?}", item)}</div>)
@@ -84,7 +84,26 @@ pub fn gen_materials(
                 {key}
             </li>)
         })
-    } </ul></td>)
+    } {
+        item_flag.iter()
+        .filter(|&&item_f|
+            item_f != ItemId::None && item_f != ItemId::Null && !item.contains(&item_f)
+        )
+        .map(|item| {
+            let item = if let Some(item) = pedia_ex.items.get(item) {
+                html!(<div class="il">{gen_item_label(item)}</div>)
+            } else {
+                html!(<div class="il">{text!("{:?}", item)}</div>)
+            };
+            html!(<li>
+                "("
+                {item}
+                <span class="tag is-primary">"Key"</span>
+                ")"
+            </li>)
+        })
+    }
+    </ul></td>)
 }
 
 pub fn gen_category(
