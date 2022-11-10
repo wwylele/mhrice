@@ -36,7 +36,7 @@ astc-decode = "0.3"
 num-bigint = "0.4"
 base64 = "0.13"
 minidump = "0.14"
-quick-xml = "0.25"
+quick-xml = "0.26"
 md-5 = "0.10"
 
 [build-dependencies]
