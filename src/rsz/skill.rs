@@ -34,6 +34,7 @@ impl PlEquipSkillId {
 
 rsz_struct! {
     #[rsz("snow.data.PlEquipSkillBaseUserData.Param",
+        0x19FEE250 = 13_00_00,
         0xac747724 = 10_00_02,
         0xCCCC00F1 = 11_00_01
     )]
@@ -351,6 +352,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.PlHyakuryuSkillRecipeUserData.Param",
+        0x8FEFA1E4 = 13_00_00,
         0xa10bbbc4 = 10_00_02,
         0xFBAE98EE = 11_00_01,
         0x5DF74986 = 12_00_00
@@ -399,6 +401,7 @@ impl DecorationsId {
 
 rsz_struct! {
     #[rsz("snow.data.DecorationsBaseUserData.Param",
+        0xE302DF49 = 13_00_00,
         0x041e623d = 10_00_02,
         0x5A02A160 = 11_00_01
     )]
@@ -428,6 +431,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.DecorationsProductUserData.Param",
+        0x8B4D41E5 = 13_00_00,
         0x1B205AA6 = 10_00_02,
         0x63B17027 = 11_00_01,
         0xA6F02F12 = 12_00_00,
@@ -497,6 +501,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.HyakuryuDecoProductUserData.Param",
+        0x7FED1C2D = 13_00_00,
         0x4788eebf = 10_00_02,
         0xB62082FD = 11_00_01,
         0xA18827A0 = 12_00_00,

@@ -22,7 +22,7 @@ for line in mismatchlist.readlines():
         changed = False
         for line in source.readlines():
             content += line
-            if f"#[rsz(\"{name}" in line:
+            if f"#[rsz(\"{name}\"" in line:
                 content += f"        0x{crc} = {newversion},\n"
                 changed = True
         source.close()

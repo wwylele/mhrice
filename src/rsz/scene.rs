@@ -219,6 +219,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("via.gui.Control",
+        0xD4FB5933 = 13_00_00,
         0x2cf3efdb = 0
     )]
     #[derive(Debug, Serialize)]
@@ -257,6 +258,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("via.gui.Panel",
+        0xAF5F0789 = 13_00_00,
         0xfcc2b758 = 0
     )]
     #[derive(Debug, Serialize)]
@@ -304,6 +306,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("via.navigation.NavigationSurface",
+        0x7EEFD7FF = 13_00_00,
         0x2edbaa75 = 0
     )]
     #[derive(Debug, Serialize)]

@@ -146,6 +146,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.RandomMysteryLotEnemyData.NGAppearanceData",
+        0xCE7A98B5 = 13_00_00,
         0xe609a59a = 11_00_01,
         0x36F97D99 = 12_00_00,
     )]
@@ -159,6 +160,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.RandomMysteryLotEnemyData.LotEnemyData",
+        0x9D4D71DE = 13_00_00,
         0xBA8468A5 = 11_00_01,
         0xFDCAC2BE = 12_00_00,
     )]

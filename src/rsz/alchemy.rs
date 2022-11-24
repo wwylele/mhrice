@@ -1,3 +1,4 @@
+use super::common::*;
 use super::*;
 use crate::rsz_enum;
 use crate::rsz_struct;
@@ -30,11 +31,13 @@ rsz_enum! {
         Alchemy5 = 4,
         AlchemyShinki = 7,
         AlchemyTensei = 8,
+        AlchemyKyokkou = 9,
     }
 }
 
 rsz_struct! {
     #[rsz("snow.data.AlchemyPatturnUserData.Param",
+        0xF023B4E2 = 13_00_00,
         0x41f213e8 = 0
     )]
     #[derive(Debug, Serialize)]
@@ -47,6 +50,7 @@ rsz_struct! {
         pub require_talisman_num: u32,
         pub output_min_num: u32,
         pub output_max_num: u32,
+        pub cheat_check_priority: Versioned<u32, 13_00_00, 0xFFFFFFFF>,
     }
 }
 
@@ -75,6 +79,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.AlchemyPlSkillTableUserData.Param",
+        0x7CB91C71 = 13_00_00,
         0x6C87D64B = 10_00_02,
         0xEE208F08 = 11_00_01,
     )]

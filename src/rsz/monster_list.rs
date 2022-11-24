@@ -6,6 +6,7 @@ use serde::*;
 
 rsz_struct! {
     #[rsz("snow.data.monsterList.BossMonsterData.PartData",
+        0xBA639AE8 = 13_00_00,
         0xD80AF230 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
@@ -30,6 +31,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.monsterList.BossMonsterData.MarionetteData",
+        0xF54B0204 = 13_00_00,
         0xcae6b96a = 10_00_02
     )]
     #[derive(Debug, Serialize)]
@@ -54,6 +56,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.monsterList.BossMonsterData",
+        0x4BC19206 = 13_00_00,
         0xf03fc40b = 10_00_02,
         0x32FFAC88 = 11_00_01,
         0x514FBB1C = 12_00_00,
@@ -82,6 +85,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyRankData.RankInfo",
+        0x4D959590 = 13_00_00,
         0x1A624800 = 10_00_02,
         0x70EF6657 = 11_00_01,
         0x53149CEF = 12_00_00,
@@ -134,6 +138,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.enemy.SystemEnemyDragonSpeciesData.EmSpeciesData",
+        0x65A4BA42 = 13_00_00,
         0x657FF9F2 = 10_00_02,
         0xE444CBFD = 11_00_01,
         0x3815775C = 12_00_00,

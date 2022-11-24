@@ -1,9 +1,11 @@
+use super::common::*;
 use super::*;
 use crate::{rsz_struct, rsz_with_singleton};
 use serde::*;
 
 rsz_struct! {
     #[rsz("snow.data.CustomBuildupBaseUserData.Param",
+        0x5FAED2AE = 13_00_00,
         0x73E5D74D = 11_00_01
     )]
     #[derive(Debug, Serialize)]
@@ -32,6 +34,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.CustomBuildupOpenUserData.Param",
+        0x0D31BF18 = 13_00_00,
         0xC0A94CBE = 11_00_01,
         0x3EF94613 = 12_00_00
     )]
@@ -66,6 +69,7 @@ rsz_with_singleton! {
 
 rsz_struct! {
     #[rsz("snow.data.CustomBuildupArmorMaterialUserData.Param",
+        0x0BCFEB73 = 13_00_00,
         0x124AD7CC = 11_00_01
     )]
     #[derive(Debug, Serialize)]
@@ -73,6 +77,9 @@ rsz_struct! {
         pub rare: RareTypes,
         pub material_category: MaterialCategory,
         pub material_category_num: u32,
+        pub material_category_num_def: Versioned<u32, 13_00_00, 0xFFFFFFFF>,
+        pub material_category_num_skill: Versioned<u32, 13_00_00, 0xFFFFFFFF>,
+        pub material_category_num_slot: Versioned<u32, 13_00_00, 0xFFFFFFFF>,
         pub price: u32,
     }
 }
@@ -90,6 +97,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.CustomBuildupArmorLotUserData.Param",
+        0x76BB5D08 = 13_00_00,
         0xE3B85657 = 11_00_01
     )]
     #[derive(Debug, Serialize)]
@@ -136,6 +144,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.CustomBuildupEquipSkillDetailUserData.Param",
+        0xC4A94C25 = 13_00_00,
         0x1A65FAFD = 11_00_01
     )]
     #[derive(Debug, Serialize)]
@@ -158,6 +167,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.CustomBuildupWeaponMaterialUserData.Param",
+        0x17BE58F6 = 13_00_00,
         0x2A2ABE7B = 11_00_01,
         0xC0C006CC = 12_00_00
     )]
@@ -185,6 +195,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.CustomBuildupWepTableUserData.Param",
+        0x1F556109 = 13_00_00,
         0x248E1617 = 11_00_01
     )]
     #[derive(Debug, Serialize)]

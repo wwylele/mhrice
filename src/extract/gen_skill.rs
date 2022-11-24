@@ -278,6 +278,7 @@ pub fn gen_skill(
                             AlchemyPatturnTypes::Alchemy5 => "Rebirth",
                             AlchemyPatturnTypes::AlchemyShinki => "Anima",
                             AlchemyPatturnTypes::AlchemyTensei => "Reincarnation",
+                            AlchemyPatturnTypes::AlchemyKyokkou => "Aurora",
                         };
                         html!(<tr>
                             <td>{text!("{}", pattern)}</td>

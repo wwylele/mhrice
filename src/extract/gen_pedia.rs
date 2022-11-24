@@ -3043,11 +3043,15 @@ fn prepare_monsters<'a>(
             .additional_quest_reward_table_index
             .iter()
             .filter(|&&i| i != 0)
-            .map(|i| -> Result<&RewardIdLotTableUserDataParam> {
-                reward_lot.get(i).copied().with_context(|| {
-                    format!("additional quest reward not found for {mystery_reward:?}")
-                })
+            .map(|i| -> Result<Option<&RewardIdLotTableUserDataParam>> {
+                let Some(reward) = reward_lot.get(i) else {
+                    // crapcom: v13 chaotic gore
+                    eprintln!("Additional quest reward {i} not found for {mystery_reward:?}");
+                    return Ok(None)
+                };
+                Ok(Some(reward))
             })
+            .filter_map(|r| r.transpose())
             .collect::<Result<Vec<&RewardIdLotTableUserDataParam>>>()?;
 
         let special_quest_reward = mystery_reward
@@ -3273,6 +3277,13 @@ pub fn prepare_armor_custom_buildup<'a>(
         if piece_lot.table_no == 0 {
             continue;
         }
+        let data = custom_buildup_pieces
+            .remove(&(piece_lot.table_no, piece_lot.category_id, piece_lot.id))
+            .with_context(|| format!("No data found for custom buildup {:?}", piece_lot))?;
+        if piece_lot.category_id == 15 {
+            // TODO: v13 new category
+            continue;
+        }
         let category = result
             .get_mut(&piece_lot.table_no)
             .with_context(|| format!("Armor customer buildup table not found for {:?}", piece_lot))?
@@ -3287,9 +3298,6 @@ pub fn prepare_armor_custom_buildup<'a>(
         if category.pieces.contains_key(&piece_lot.id) {
             bail!("Duplicate armor custom buildup piece entry {:?}", piece_lot)
         }
-        let data = custom_buildup_pieces
-            .remove(&(piece_lot.table_no, piece_lot.category_id, piece_lot.id))
-            .with_context(|| format!("No data found for custom buildup {:?}", piece_lot))?;
         category.pieces.insert(
             piece_lot.id,
             ArmorCustomBuildupPiece {

@@ -367,6 +367,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("via.effect.script.ObjectEffectManager",
+        0x52ACBF9A = 13_00_00,
         0xCC942F81 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
@@ -389,6 +390,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.ItemPopLotTableUserData.Param",
+        0x47242315 = 13_00_00,
         0xa1800433 = 10_00_02,
         0xF99CD6BA = 11_00_01,
         0xF070EF26 = 12_00_00,
@@ -514,6 +516,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("via.effect.script.EPVStandardData.Element",
+        0x92AB9523 = 13_00_00,
         0x6C9FC765 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
@@ -641,6 +644,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.stage.props.TentVisualController",
+        0x5D60733F = 13_00_00,
         0xa33f23fe = 10_00_02
     )]
     #[derive(Debug, Serialize)]
@@ -737,11 +741,13 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.stage.StageSceneLoader",
+        0x776045C9 = 13_00_00,
         0x64ef47ac = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct StageSceneLoader {
         pub enabled: bool,
+        pub stop_on_ready: Versioned<bool, 13_00_00, 0xFFFFFFFF>,
         pub target_scene_names: Vec<String>,
     }
 }
@@ -897,6 +903,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.access.QuestAreaMovePopMarker.QuestPhaseCondition",
+        0x1BE4C28F = 13_00_00,
         0xa5848ab1 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
@@ -907,6 +914,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.access.QuestAreaMovePopMarker.CountCondition",
+        0x1BE4C28F = 13_00_00,
         0x743729a7 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
@@ -925,6 +933,7 @@ rsz_sumtype! {
 
 rsz_struct! {
     #[rsz("snow.access.QuestAreaMovePopMarker.AreaMoveInfo",
+        0x1BE4C28F = 13_00_00,
         0xc5f315ce = 10_00_02
     )]
     #[derive(Debug, Serialize)]
@@ -936,12 +945,14 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.access.QuestAreaMovePopMarker",
+        0x1BE4C28F = 13_00_00,
         0x554c80d7 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct QuestAreaMovePopMarker {
         pub base: ObjectPopMarker,
         pub area_move_infos: Vec<AreaMoveInfo>,
+        pub reset_delay_time: Versioned<f32, 13_00_00, 0xFFFFFFFF>,
         pub mr_area_move_set_pos: Vec3,
         pub mr_area_move_set_angle: Quat,
         pub mr_area_move_offset_pos: Vec<Vec3>,
@@ -950,6 +961,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.stage.StageObjectStateController.TargetObject",
+        0xD18507FA = 13_00_00,
         0x502b2c47 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
@@ -962,6 +974,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.stage.StageObjectStateController",
+        0x919F4F5E = 13_00_00,
         0x7736aadc = 10_00_02
     )]
     #[derive(Debug, Serialize)]
@@ -990,6 +1003,7 @@ rsz_struct! {
 // Untested
 rsz_struct! {
     #[rsz("snow.stage.StageObjectMotionController.MotionTarget",
+        0xD5218D29 = 13_00_00,
         0x21ab60fc = 10_00_02
     )]
     #[derive(Debug, Serialize)]
@@ -1016,12 +1030,14 @@ rsz_struct! {
 // Untested
 rsz_struct! {
     #[rsz("snow.stage.StageObjectEffectController.EffectFollowTarget",
+        0xAEB948D2 = 13_00_00,
         0x4b47ef79 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
     pub struct EffectFollowTarget {
         pub key: String,
         pub key_hash: u32,
+        pub target_type: Versioned<i32, 13_00_00, 0xFFFFFFFF>, // snow.stage.StageObjectEffectController.TargetType
         pub game_object: Guid,
     }
 }
@@ -1029,6 +1045,7 @@ rsz_struct! {
 // Untested
 rsz_struct! {
     #[rsz("snow.stage.StageObjectEffectController.EffectKeyHash",
+        0xD03A05BE = 13_00_00,
         0x4610af1e = 10_00_02
     )]
     #[derive(Debug, Serialize)]
@@ -1040,6 +1057,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.stage.StageObjectEffectController",
+        0xD03A05BE = 13_00_00,
         0x0501d21d = 10_00_02
     )]
     #[derive(Debug, Serialize)]

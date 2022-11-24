@@ -1,3 +1,4 @@
+use super::common::*;
 use super::*;
 use crate::{rsz_enum, rsz_newtype, rsz_struct};
 use serde::*;
@@ -52,6 +53,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.ArmorBaseUserData.Param",
+        0x724AEAA9 = 13_00_00,
         0x68d0776c = 10_00_02,
         0x66F1403B = 11_00_01,
         0x0AA30869 = 12_00_00,
@@ -110,6 +112,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.ArmorSeriesUserData.Param",
+        0x2E0B99AA = 13_00_00,
         0xbf2780d1 = 10_00_02,
         0xD5F71201 = 11_00_01,
         0x1B75DCEA = 12_00_00,
@@ -138,6 +141,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.ArmorProductUserData.Param",
+        0x30B17847 = 13_00_00,
         0x112ceb90 = 10_00_02,
         0x65A6C25B = 11_00_01,
         0x4C13187E = 12_00_00,
@@ -183,6 +187,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.equip.PlOverwearBaseUserData.Param",
+        0x990FCBC9 = 13_00_00,
         0x8be3d1fc = 10_00_02,
         0x0C9D7C44 = 11_00_01,
         0xFC8C4E39 = 12_00_00,
@@ -216,6 +221,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.equip.PlOverwearProductUserData.Param",
+        0xBBF5D1A0 = 13_00_00,
         0x2b8f5c1e = 10_00_02,
         0xBBF493FF = 11_00_01,
         0xA672DB41 = 12_00_00,
@@ -290,6 +296,7 @@ impl_armor_product!(PlOverwearProductUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.data.ArmorBuildupTableUserData.Param",
+        0x88ABDC38 = 13_00_00,
         0xaaffea67 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
@@ -302,6 +309,7 @@ rsz_struct! {
         pub lv_up_rate: i32,
         pub up_val: i32,
         pub cost: i32,
+        pub max_cost: Versioned<i32, 13_00_00, 0xFFFFFFFF>,
     }
 }
 

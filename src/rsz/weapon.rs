@@ -744,6 +744,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.WeaponProcessUserData.Param",
+        0xE89FAC6B = 13_00_00,
         0xfc3932c0 = 10_00_02,
         0xE80653C6 = 11_00_01,
         0xC50AC8AC = 12_00_00,
@@ -770,6 +771,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.WeaponProductUserData.Param",
+        0x015A23F5 = 13_00_00,
         0xcd1faa31 = 10_00_02,
         0x5FB3B9BC = 11_00_01,
         0x01B50493 = 12_00_00,
@@ -794,6 +796,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.WeaponChangeUserData.Param",
+        0x398E7E9C = 13_00_00,
         0x342cb994 = 10_00_02,
         0x38ED5D56 = 11_00_01,
         0xE3209936 = 12_00_00,
@@ -885,6 +888,7 @@ impl MasterRankProgress {
 
 rsz_struct! {
     #[rsz("snow.data.WeaponUpdateTreeUserData.Param",
+        0xDF1758D2 = 13_00_00,
         0x1b7a9494 = 10_00_02,
         0x9E07F166 = 11_00_01,
         0xE5CDA333 = 12_00_00,
@@ -965,6 +969,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.equip.OverwearWeaponProductUserData.Param",
+        0xDB849A6F = 13_00_00,
         0x9075D1D6 = 12_00_00
     )]
     #[derive(Debug, Serialize)]
