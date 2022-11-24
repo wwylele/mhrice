@@ -72,7 +72,7 @@ impl Msg {
             }
         }
 
-        file.seek_noop(attribute_js_offset)?;
+        file.seek_assert_align_up(attribute_js_offset, 8)?;
         let attribute_js = (0..attribute_count)
             .map(|_| file.read_i32())
             .collect::<Result<Vec<_>>>()?;
