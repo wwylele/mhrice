@@ -1087,3 +1087,13 @@ rsz_struct! {
         pub is_master: bool,
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.stage.MysteryItemPopIgnore",
+        0x87A76C7B = 13_00_00,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct MysteryItemPopIgnore {
+        pub enabled: bool,
+    }
+}
