@@ -609,6 +609,7 @@ where
                         6 => text!("Rampage slot upgrade"),
                         7 => text!("Add anomaly slot"),
                         8 => text!("Element/status boost"),
+                        9 => text!("Shelling level boost"),
                         c => text!("{}", c)
                     };
                     let mut category_cell = Some(html!(<td rowspan={rowspan}>

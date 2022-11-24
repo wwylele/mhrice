@@ -3256,20 +3256,28 @@ pub fn prepare_armor_custom_buildup<'a>(
                 category_lot.table_no
             )
         }
-        let categories = ARMOR_CUSTOM_BUILDUP_CATEGORIES
-            .into_iter()
-            .zip(category_lot.lot_num.iter().copied())
-            .filter(|(_, l)| *l != 0)
-            .map(|(c, lot)| {
-                (
-                    c,
-                    ArmorCustomBuildupCategory {
-                        lot,
-                        pieces: BTreeMap::new(),
-                    },
-                )
-            })
-            .collect();
+        let mut categories: BTreeMap<u16, ArmorCustomBuildupCategory<'a>> =
+            ARMOR_CUSTOM_BUILDUP_CATEGORIES
+                .into_iter()
+                .zip(category_lot.lot_num.iter().copied())
+                .filter(|(_, l)| *l != 0)
+                .map(|(c, lot)| {
+                    (
+                        c,
+                        ArmorCustomBuildupCategory {
+                            lot,
+                            pieces: BTreeMap::new(),
+                        },
+                    )
+                })
+                .collect();
+        categories.insert(
+            15, // TODO: what is this? Added in v13
+            ArmorCustomBuildupCategory {
+                lot: 100, // fake lot
+                pieces: BTreeMap::new(),
+            },
+        );
         result.insert(category_lot.table_no, ArmorCustomBuildup { categories });
     }
 
@@ -3280,10 +3288,6 @@ pub fn prepare_armor_custom_buildup<'a>(
         let data = custom_buildup_pieces
             .remove(&(piece_lot.table_no, piece_lot.category_id, piece_lot.id))
             .with_context(|| format!("No data found for custom buildup {:?}", piece_lot))?;
-        if piece_lot.category_id == 15 {
-            // TODO: v13 new category
-            continue;
-        }
         let category = result
             .get_mut(&piece_lot.table_no)
             .with_context(|| format!("Armor customer buildup table not found for {:?}", piece_lot))?

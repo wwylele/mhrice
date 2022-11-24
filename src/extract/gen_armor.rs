@@ -232,6 +232,7 @@ fn gen_armor(
                         <th>"+Def / level"</th>
                         <th>"Armor sphere"</th>
                         <th>"Cost increase / level"</th>
+                        <th>"Cost cap"</th>
                     </tr></thead>
                     <tbody> {table.iter().map(|upgrade|{
                         let progress = [upgrade.village_progress.display(),
@@ -246,6 +247,11 @@ fn gen_armor(
                             <td>{text!("{}", upgrade.up_val)}</td>
                             <td>{text!("{}", upgrade.lv_up_rate)}</td>
                             <td>{text!("{}z", upgrade.cost)}</td>
+                            <td>{ if let Some(max_cost) = upgrade.max_cost.0 {
+                                text!("{}z", max_cost)
+                            } else {
+                                text!("-")
+                            } }</td>
                         </tr>)
                     })}
                     </tbody>
@@ -313,6 +319,7 @@ fn gen_armor(
                             let category_name = match category_id {
                                 13 => text!("Defense"),
                                 14 => text!("Element resistance"),
+                                15 => text!("?"),
                                 19 => text!("Slot"),
                                 20 => text!("Skill"),
                                 c => text!("{}", c)
@@ -321,7 +328,7 @@ fn gen_armor(
                                 { category_name }
                             </td>));
                             let mut probability_cell = Some(html!(<td rowspan={rowspan}>
-                                { text!("{}%", category.lot)}
+                                { if category_id != 15 {text!("{}%", category.lot)} else {text!("")} }
                             </td>));
                             category.pieces.iter().map(move |(_, piece)| {
                                 html!(<tr>
@@ -381,12 +388,42 @@ fn gen_armor(
                         {gen_materials(pedia_ex, &m.item, &m.item_num, &[])}
                     </tr>))) }
                     { pedia.custom_buildup_armor_material.as_ref().and_then(
-                        |m|m.param.iter().find(|m|m.rare == key.rare).map(|m|html!(<tr>
-                        <td>"Augment"</td>
-                        <td>{text!("{}z", m.price)}</td>
-                        {gen_category(pedia_ex, m.material_category, m.material_category_num)}
-                        <td></td>
-                    </tr>))) }
+                        |m|m.param.iter().find(|m|m.rare == key.rare)).into_iter().flat_map(
+                        |m| {
+                            let mut entries = vec![html!(<tr>
+                                <td>"Augment"</td>
+                                <td>{text!("{}z", m.price)}</td>
+                                {gen_category(pedia_ex, m.material_category, m.material_category_num)}
+                                <td></td>
+                                </tr>)];
+                            if let Some(num) = m.material_category_num_def.0 {
+                                entries.push(html!(<tr>
+                                    <td>"Augment (Stability)"</td>
+                                    <td>{text!("{}z", m.price)}</td>
+                                    {gen_category(pedia_ex, m.material_category, num)}
+                                    <td></td>
+                                    </tr>))
+                            }
+                            if let Some(num) = m.material_category_num_skill.0 {
+                                entries.push(html!(<tr>
+                                    <td>"Augment (Skills+)"</td>
+                                    <td>{text!("{}z", m.price)}</td>
+                                    {gen_category(pedia_ex, m.material_category, num)}
+                                    <td></td>
+                                    </tr>))
+                            }
+                            if let Some(num) = m.material_category_num_slot.0 {
+                                entries.push(html!(<tr>
+                                    <td>"Augment (Slot?)"</td>
+                                    <td>{text!("{}z", m.price)}</td>
+                                    {gen_category(pedia_ex, m.material_category, num)}
+                                    <td></td>
+                                    </tr>))
+                            }
+                            entries
+                        }
+                     ) }
+
                     </tbody>
                     </table>
                     </div>
