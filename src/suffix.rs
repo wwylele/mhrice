@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 // The suffix list for a particular file format is ordered that the first version comes first
 pub static SUFFIX_MAP: Lazy<HashMap<&'static str, &'static [u32]>> = Lazy::new(|| {
-    // Dumped from PC 10.0.2.0, 11.0.1.0, 12.0.0.0
+    // Dumped from PC 10.0.2.0, 11.0.1.0, 12.0.0.0, 13.0.0.0
     HashMap::from_iter([
         ("aimap", &[0x29][..]),
         ("aimapattr", &[0x2a][..]),
@@ -46,7 +46,7 @@ pub static SUFFIX_MAP: Lazy<HashMap<&'static str, &'static [u32]>> = Lazy::new(|
         ("fsm", &[0x11][..]),
         ("fsmv2", &[0x29][..]),
         ("fxct", &[4][..]),
-        ("gcf", &[0x19][..]),
+        ("gcf", &[0x19, 0x1a][..]),
         ("gcp", &[1][..]),
         ("gpbf", &[2][..]),
         ("gpumotlist", &[0x1f0][..]),
@@ -95,7 +95,7 @@ pub static SUFFIX_MAP: Lazy<HashMap<&'static str, &'static [u32]>> = Lazy::new(|
         ("msg", &[0x11, 0x20220626][..]),
         ("nar", &[1][..]),
         ("ncf", &[10][..]),
-        ("nmr", &[0x11][..]),
+        ("nmr", &[0x11, 0x12][..]),
         ("nnfp", &[1][..]),
         ("oft", &[1][..]),
         ("pci", &[3][..]),
