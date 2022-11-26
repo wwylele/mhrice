@@ -137,6 +137,37 @@ fn gen_em_shell_collider_path(id: u32, sub_id: u32) -> Vec<String> {
         paths.push(format!("{folder}em027_00_shell_collider_id_9.rcol"));
     }
 
+    if id == 27 && sub_id == 8 {
+        paths.push(format!("{folder}em027_08_shell_colider_nova.rcol"));
+        paths.push(format!("{folder}em027_08_shell_colider_plus.rcol"));
+        paths.push(format!("{folder}em027_08_shell_colider_setfire.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_0.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_1.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_10.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_11.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_12.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_13.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_14.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_15.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_16.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_17.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_18.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_19.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_22_30.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_24.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_25.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_26.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_27.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_28.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_2_29.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_4.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_5.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_6.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_7.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_8.rcol"));
+        paths.push(format!("{folder}em027_08_shell_collider_id_9.rcol"));
+    }
+
     if id == 94 && sub_id == 1 {
         paths.push(format!("{folder}em094_01_shell_collider_id_0.rcol"));
         paths.push(format!("{folder}em094_01_shell_collider_id_500.rcol"));
