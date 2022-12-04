@@ -936,6 +936,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         overwear: get_singleton(pak)?,
         overwear_product: get_singleton(pak)?,
         armor_buildup: get_singleton(pak)?,
+        armor_pair: get_singleton(pak)?,
         armor_head_name_msg,
         armor_chest_name_msg,
         armor_arm_name_msg,
@@ -2097,7 +2098,7 @@ fn prepare_hyakuryu_skills(
     Ok(result)
 }
 
-fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
+fn prepare_armors(pedia: &Pedia) -> Result<BTreeMap<PlArmorSeriesTypes, ArmorSeries<'_>>> {
     let mut product_map = hash_map_unique(
         &pedia.armor_product.param,
         |product| (product.id, product),
@@ -2291,7 +2292,7 @@ fn prepare_armors(pedia: &Pedia) -> Result<Vec<ArmorSeries<'_>>> {
         armor.overwear_product = overwear_product_map.remove(&overwear.id);
     }
 
-    Ok(series_map.into_iter().map(|(_, v)| v).collect())
+    Ok(series_map)
 }
 
 fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, Vec<&MsgEntry>>> {

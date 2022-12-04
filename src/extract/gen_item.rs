@@ -304,7 +304,7 @@ fn gen_item_source_weapon(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div
 fn gen_item_source_armor(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
     let mut htmls = vec![];
 
-    for series in &pedia_ex.armors {
+    for series in pedia_ex.armors.values() {
         for piece in series.pieces.iter().flatten() {
             if let Some(product) = piece.product {
                 if product.output_item.contains(&item_id) {
@@ -394,7 +394,7 @@ fn gen_item_usage_weapon(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<
 fn gen_item_usage_armor(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<String>>> {
     let mut htmls = vec![];
 
-    for series in &pedia_ex.armors {
+    for series in pedia_ex.armors.values() {
         for piece in series.pieces.iter().flatten() {
             let mut found = false;
             if let Some(product) = piece.product {

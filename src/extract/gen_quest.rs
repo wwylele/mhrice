@@ -1019,7 +1019,7 @@ fn gen_quest(
                 { navbar() }
                 { gen_menu(&sections) }
                 <main>
-                <header>
+                <header class="mh-quest-header">
                     <div class="mh-title-icon">
                         <img alt="Quest icon" src={img} class="mh-quest-icon"/>
                     </div>

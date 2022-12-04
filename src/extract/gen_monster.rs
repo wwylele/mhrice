@@ -81,11 +81,11 @@ pub fn gen_monster_tag(
         id >> 8
     );
 
-    html!(<div>
+    html!(<div class="mh-quest-monster">
         <a href={format!("/{}/{:03}_{:02}.html",
             if is_large { "monster" } else { "small-monster" }, id & 0xFF, id >> 8)}>
             <img alt="Monster icon" class="mh-quest-list-monster-icon" src=icon_path />
-            <span class="mh-quest-list-monster-name">
+            <span>
                 {monster_name}
             </span>
         </a>

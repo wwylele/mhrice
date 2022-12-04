@@ -8,8 +8,21 @@ use super::pedia::*;
 use super::sink::*;
 use crate::rsz::*;
 use anyhow::Result;
+use std::collections::BTreeMap;
 use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
+
+pub fn gen_sex_tag(sex: SexualEquipableFlag) -> Option<Box<span<String>>> {
+    match sex {
+        SexualEquipableFlag::MaleOnly => Some(html!(<span class="tag mh-male">"A"</span>)),
+        SexualEquipableFlag::FemaleOnly => Some(html!(<span class="tag mh-female">"B"</span>)),
+        SexualEquipableFlag::Both => None,
+    }
+}
+
+pub fn gen_collab_tag(is_collabo: bool) -> Option<Box<span<String>>> {
+    is_collabo.then(|| html!(<span class="tag">"Event"</span>))
+}
 
 pub fn gen_armor_label(piece: Option<&Armor>) -> Box<div<String>> {
     let piece_name = if let Some(piece) = piece {
@@ -20,6 +33,7 @@ pub fn gen_armor_label(piece: Option<&Armor>) -> Box<div<String>> {
         html!(<div class="mh-icon-text">
             { gen_rared_icon(piece.data.rare, &icon) }
             <span>{ gen_multi_lang(piece.name) }</span>
+            { gen_sex_tag(piece.data.sexual_equipable) }
         </div>)
     } else {
         html!(<div class="mh-icon-text">
@@ -34,7 +48,7 @@ pub fn gen_armor_label(piece: Option<&Armor>) -> Box<div<String>> {
 
 pub fn gen_armor_list(
     hash_store: &HashStore,
-    serieses: &[ArmorSeries],
+    serieses: &BTreeMap<PlArmorSeriesTypes, ArmorSeries>,
     output: &impl Sink,
 ) -> Result<()> {
     let doc: DOMTree<String> = html!(
@@ -63,7 +77,7 @@ pub fn gen_armor_list(
                     <option value="1">"Sort by in-game order"</option>
                 </select></div>
                 <ul class="mh-armor-series-list" id="slist-armor">{
-                    serieses.iter().map(|series|{
+                    serieses.values().map(|series|{
                         let sort = if series.series.index == 0 {
                             // index 0 looks like invalid. Put to the end
                             u32::MAX
@@ -84,7 +98,10 @@ pub fn gen_armor_list(
                             <a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
                             <h2>{
                                 series_name
-                            }</h2>
+                            }
+                            { gen_sex_tag(series.series.sexual_enable) }
+                            { gen_collab_tag(series.series.is_collabo) }
+                            </h2>
                             <ul> {
                                 series.pieces.iter().take(5).map(|piece| {
                                     html!(<li>
@@ -451,6 +468,40 @@ fn gen_armor(
         ),
     });
 
+    let mut pairs: Vec<Box<div<String>>> = vec![];
+    for pair in &pedia.armor_pair.param {
+        let (desc, other) = if pair.series_for_male == series.series.armor_series {
+            ("B", pair.series_for_female)
+        } else if pair.series_for_female == series.series.armor_series {
+            ("A", pair.series_for_female)
+        } else {
+            continue;
+        };
+        pairs.push(html!(<div>
+            {text!("Type {} counterpart: ", desc)}
+            {
+                if let Some(other) = pedia_ex.armors.get(&other) {
+                    html!(<a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
+                        {gen_multi_lang(other.name)}
+                    </a>)
+                } else {
+                    html!(<a>{text!("Unknown {:?}", other)}</a>)
+                }
+            }
+        </div>))
+    }
+    if !pairs.is_empty() {
+        sections.push(Section {
+            title: "Pair".to_owned(),
+            content: html!(
+                <section id="s-pair">
+                <h2 >"Pair"</h2>
+                { pairs }
+                </section>
+            ),
+        });
+    }
+
     sections.push(Section {
         title: "Stat".to_owned(),
         content: html!(
@@ -617,13 +668,15 @@ fn gen_armor(
                 { navbar() }
                 { gen_menu(&sections) }
                 <main>
-                <header>
+                <header class="mh-armor-header">
                     <div class="mh-title-icon"> {
                         gen_rared_icon(rarity, "/resources/equip/006")
                     } </div>
-                    <h1> {
-                        gen_multi_lang(series.name)
-                    } </h1>
+                    <h1>
+                    { gen_multi_lang(series.name) }
+                    { gen_sex_tag(series.series.sexual_enable) }
+                    { gen_collab_tag(series.series.is_collabo) }
+                    </h1>
                 </header>
 
                 { sections.into_iter().map(|s|s.content) }
@@ -647,7 +700,7 @@ pub fn gen_armors(
     toc: &mut Toc,
 ) -> Result<()> {
     let armor_path = output.sub_sink("armor")?;
-    for series in &pedia_ex.armors {
+    for series in pedia_ex.armors.values() {
         let (output, toc_sink) = armor_path
             .create_html_with_toc(&format!("{:03}.html", series.series.armor_series.0), toc)?;
         gen_armor(

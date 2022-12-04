@@ -43,7 +43,7 @@ rsz_newtype! {
 // snow.data.GameItemEnum.SexualEquipableFlag
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize, Clone)]
+    #[derive(Debug, Serialize, Clone, Copy)]
     pub enum SexualEquipableFlag {
         MaleOnly = 0,
         FemaleOnly = 1,
@@ -321,5 +321,30 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct ArmorBuildupTableUserData {
         pub param: Vec<ArmorBuildupTableUserDataParam>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.ArmorSeriesPairUserData.Param",
+        0x725E8A86 = 10_00_02,
+        0xD5808B86 = 11_00_01,
+        0x1CF513DE = 12_00_00,
+        0xC11F9E0B = 13_00_00,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ArmorSeriesPairUserDataParam {
+        pub series_for_male: PlArmorSeriesTypes,
+        pub series_for_female: PlArmorSeriesTypes,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.ArmorSeriesPairUserData",
+        path = "data/Define/Player/Armor/ArmorSeriesPairData.user",
+        0x16292C70 = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ArmorSeriesPairUserData {
+        pub param: Vec<ArmorSeriesPairUserDataParam>
     }
 }

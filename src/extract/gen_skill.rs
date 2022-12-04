@@ -130,7 +130,7 @@ pub fn gen_deco_label(deco: &Deco) -> Box<div<String>> {
 fn gen_skill_source_gear(id: PlEquipSkillId, pedia_ex: &PediaEx) -> Option<Box<section<String>>> {
     let mut htmls = vec![];
 
-    for series in &pedia_ex.armors {
+    for series in pedia_ex.armors.values() {
         for piece in series.pieces.iter().flatten() {
             if piece.data.skill_list.contains(&id) {
                 htmls.push(html!(<li>

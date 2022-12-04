@@ -335,8 +335,14 @@ main {
     }
 }
 
-.mh-icon-text>* {
-    vertical-align: middle;
+.mh-icon-text {
+    >* {
+        vertical-align: middle;
+    }
+
+    >:nth-child(n+2) {
+        margin-left: 0.25rem;
+    }
 }
 
 /** Armor series list **/
@@ -344,7 +350,7 @@ main {
 ul.mh-armor-series-list {
     list-style: none;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
 
     >li {
         display: inline-block;
@@ -359,6 +365,11 @@ ul.mh-armor-series-list {
 
         h2 {
             margin-bottom: 0.5rem;
+
+            >* {
+                margin-right: 0.25rem;
+                vertical-align: middle;
+            }
         }
 
         ul {
@@ -366,6 +377,24 @@ ul.mh-armor-series-list {
             margin-left: 0;
         }
     }
+}
+
+/** Sex tag **/
+
+.tag.mh-male {
+    color: #FFFFFF;
+    background-color: rgb(22, 61, 109);
+}
+
+.tag.mh-female {
+    color: #FFFFFF;
+    background-color: rgb(109, 22, 74);
+}
+
+/** Armor title **/
+.mh-armor-header>h1>* {
+    vertical-align: middle;
+    margin-right: 0.25rem;
 }
 
 /** Generic grid list **/
@@ -688,6 +717,11 @@ img.mh-quest-icon {
     background-color: rgb(90, 100, 44);
 }
 
+.mh-quest-header>h1>* {
+    vertical-align: middle;
+    margin-right: 0.25rem;
+}
+
 /** Crown tag **/
 .mh-crown {
     display: inline-block;
@@ -775,6 +809,10 @@ span.mh-extract-unknown {
 .mh-quest-list-monster-icon {
     width: 4em;
     vertical-align: middle;
+}
+
+.mh-quest-monster>* {
+    margin-right: 0.25rem;
 }
 
 ul.mh-multi-factor {
