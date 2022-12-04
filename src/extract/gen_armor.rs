@@ -473,7 +473,7 @@ fn gen_armor(
         let (desc, other) = if pair.series_for_male == series.series.armor_series {
             ("B", pair.series_for_female)
         } else if pair.series_for_female == series.series.armor_series {
-            ("A", pair.series_for_female)
+            ("A", pair.series_for_male)
         } else {
             continue;
         };
@@ -481,7 +481,7 @@ fn gen_armor(
             {text!("Type {} counterpart: ", desc)}
             {
                 if let Some(other) = pedia_ex.armors.get(&other) {
-                    html!(<a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
+                    html!(<a href={format!("/armor/{:03}.html", other.series.armor_series.0)}>
                         {gen_multi_lang(other.name)}
                     </a>)
                 } else {
