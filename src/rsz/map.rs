@@ -981,7 +981,9 @@ rsz_struct! {
     pub struct StageObjectStateController {
         pub enabled: bool,
         pub data: ExternUser<()>, // snow.stage.StageObjectStateUserData
+        pub is_apply_all_targets: Versioned<bool, 13_00_00, 0xFFFFFFFF>,
         pub targets: Vec<StageObjectStateControllerTargetObject>,
+        pub target_object_names: Versioned<Vec<String>, 13_00_00, 0xFFFFFFFF>,
     }
 }
 

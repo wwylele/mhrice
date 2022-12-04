@@ -100,36 +100,6 @@ macro_rules! rsz_enum_arm_rev_right {
 }
 
 #[macro_export]
-macro_rules! rsz_sumtype {
-    (
-        $(#[$outer_meta:meta])*
-        $outer_vis:vis enum $enum_name:ident {
-            $( $variant:ident($variant_type:ty) ),*$(,)?
-        }
-    ) => {
-        $(#[$outer_meta])* #[allow(clippy::enum_variant_names)]
-        $outer_vis enum $enum_name {
-            $( $variant($variant_type), )*
-        }
-
-        impl $crate::rsz::FieldFromRsz for $enum_name {
-            fn field_from_rsz(rsz: &mut $crate::rsz::RszDeserializer) -> Result<Self> {
-                rsz.cursor.seek_align_up(4)?;
-                let child = rsz.get_child_any()?;
-                $(
-                    if child.symbol() == <$variant_type>::SYMBOL {
-                        let v = child.downcast().unwrap();
-                        let v = Rc::try_unwrap(v).map_err(|_|anyhow!("Shared node"))?;
-                        return Ok($enum_name::$variant(v))
-                    }
-                )*
-                bail!("Unknown type {} for sum type {}", child.symbol(), stringify!($enum_name))
-            }
-        }
-    }
-}
-
-#[macro_export]
 macro_rules! rsz_enum {
     (
         #[rsz($base:ty)]
@@ -172,6 +142,34 @@ macro_rules! rsz_enum {
             }
         }
     };
+}
+
+#[macro_export]
+macro_rules! rsz_sumtype {
+    (
+        $(#[$outer_meta:meta])*
+        $outer_vis:vis enum $enum_name:ident {
+            $( $variant:ident($variant_type:ty) ),*$(,)?
+        }
+    ) => {
+        $(#[$outer_meta])* #[allow(clippy::enum_variant_names)]
+        $outer_vis enum $enum_name {
+            $( $variant($variant_type), )*
+        }
+
+        impl $crate::rsz::FieldFromRsz for $enum_name {
+            fn field_from_rsz(rsz: &mut $crate::rsz::RszDeserializer) -> Result<Self> {
+                let current = rsz.cursor.stream_position()?;
+                $(
+                    if let Ok(v) = <$variant_type>::field_from_rsz(rsz) {
+                        return Ok($enum_name::$variant(v))
+                    }
+                    rsz.cursor.seek(SeekFrom::Start(current))?;
+                )*
+                bail!("No matching type for sum type {}", stringify!($enum_name))
+            }
+        }
+    }
 }
 
 #[macro_export]

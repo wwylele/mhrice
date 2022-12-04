@@ -240,12 +240,12 @@ impl Rsz {
             })
             .collect::<Result<Vec<_>>>()?;
 
-        if node_buf
-            .into_iter()
-            .flatten()
-            .any(|node| Rc::strong_count(&node.any) == 1)
-        {
-            bail!("Left over node");
+        for (i, node) in node_buf.into_iter().enumerate() {
+            if let Some(node) = node {
+                if Rc::strong_count(&node.any) == 1 {
+                    bail!("Left over node {} ({})", i, node.symbol())
+                }
+            }
         }
 
         let mut leftover = vec![];
@@ -301,15 +301,18 @@ impl<'a, 'b> RszDeserializer<'a, 'b> {
         if index == 0 {
             return Ok(None);
         }
-        let node = self
+        let slot = self
             .node_buf
             .get_mut(usize::try_from(index)?)
-            .context("Child index out of bound")?
-            .take()
-            .context("Child taken")?;
-        let node: Rc<T> = node.downcast()?;
-        let node = Rc::try_unwrap(node).map_err(|_| anyhow!("Shared node"))?;
-        Ok(Some(node))
+            .context("Child index out of bound")?;
+
+        let slot_inner = slot.as_mut().context("Child taken")?;
+        if Rc::strong_count(&slot_inner.any) != 1 {
+            bail!("Shared node")
+        }
+        let node: Rc<T> = slot_inner.clone().downcast()?;
+        slot.take();
+        Ok(Some(Rc::try_unwrap(node).map_err(|_| ()).unwrap()))
     }
 
     pub fn get_child<T: 'static>(&mut self) -> Result<T> {
