@@ -996,3 +996,25 @@ rsz_struct! {
         pub param: Vec<OverwearWeaponProductUserDataParam>
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.data.WeaponChaosCriticalUserData.Param",
+        0x38D0C829 = 13_00_00
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct WeaponChaosCriticalUserDataParam {
+        pub weapon: WeaponId,
+        pub chaos_critical_num: i32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.WeaponChaosCriticalUserData",
+        path = "data/Define/Player/Equip/WeaponChaosCriticalUserData.user",
+        0x0F2AE8B7 = 13_00_00
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct WeaponChaosCriticalUserData {
+        pub param: Vec<WeaponChaosCriticalUserDataParam>
+    }
+}

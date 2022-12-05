@@ -321,7 +321,9 @@ where
         <p class="mh-kv"><span>"Attack"</span>
         <span>{text!("{}", main.atk)}</span></p>
         <p class="mh-kv"><span>"Affinity"</span>
-        <span>{text!("{}%", main.critical_rate)}</span></p>
+        <span>{text!("{}%", main.critical_rate)}
+        {weapon.chaos.map(|chaos|text!(" / {}%", chaos.chaos_critical_num))}
+        </span></p>
         <p class="mh-kv"><span>"Defense"</span>
         <span>{text!("{}", main.def_bonus)}</span></p>
         <p class="mh-kv"><span>"Slot"</span>

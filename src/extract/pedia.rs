@@ -189,6 +189,8 @@ pub struct Pedia {
     pub horn_melody: Msg,
     pub horn_melody_mr: Msg,
     pub hyakuryu_weapon_buildup: HyakuryuWeaponHyakuryuBuildupUserData,
+    pub weapon_chaos_critical: Option<WeaponChaosCriticalUserData>,
+
     pub maps: BTreeMap<i32, GameMap>,
     pub map_name: Msg,
     pub map_name_mr: Msg,
@@ -365,6 +367,7 @@ pub struct Weapon<'a, Param> {
     pub parent: Option<WeaponId>,
     pub hyakuryu_weapon_buildup: BTreeMap<i32, &'a HyakuryuWeaponHyakuryuBuildupUserDataParam>,
     pub update: Option<&'a WeaponUpdateTreeUserDataParam>,
+    pub chaos: Option<&'a WeaponChaosCriticalUserDataParam>,
 }
 
 pub struct WeaponTree<'a, Param> {

@@ -1010,6 +1010,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         horn_melody,
         horn_melody_mr,
         hyakuryu_weapon_buildup: get_singleton(pak)?,
+        weapon_chaos_critical: get_singleton_opt(pak)?,
         maps,
         map_name,
         map_name_mr,
@@ -2415,6 +2416,7 @@ fn prepare_weapon<'a, 'b, T, Param>(
         WeaponId,
         BTreeMap<i32, &'a HyakuryuWeaponHyakuryuBuildupUserDataParam>,
     >,
+    chaos: &'b mut HashMap<WeaponId, &'a WeaponChaosCriticalUserDataParam>,
 ) -> Result<WeaponTree<'a, Param>>
 where
     T: Deref<Target = [Param]>,
@@ -2522,6 +2524,7 @@ where
             parent: None,
             hyakuryu_weapon_buildup: hyakuryu_weapon_map.remove(&id).unwrap_or_default(),
             update: None,
+            chaos: chaos.remove(&id),
         };
         weapons.insert(param.to_base().id, weapon);
     }
@@ -3483,6 +3486,12 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         bail!("Leftover custom buildup pieces {custom_buildup_pieces:?}");
     }
 
+    let mut chaos = if let Some(chaos) = &pedia.weapon_chaos_critical {
+        hash_map_unique(&chaos.param, |p| (p.weapon, p), false)?
+    } else {
+        HashMap::new()
+    };
+
     Ok(PediaEx {
         monsters: prepare_monsters(pedia, &reward_lot)?,
         sizes: prepare_size_map(&pedia.size_list)?,
@@ -3498,20 +3507,20 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         monster_lot: prepare_monster_lot(pedia)?,
         parts_dictionary: prepare_parts_dictionary(pedia)?,
 
-        great_sword: prepare_weapon(&pedia.great_sword, &mut hyakuryu_weapon_map)?,
-        short_sword: prepare_weapon(&pedia.short_sword, &mut hyakuryu_weapon_map)?,
-        hammer: prepare_weapon(&pedia.hammer, &mut hyakuryu_weapon_map)?,
-        lance: prepare_weapon(&pedia.lance, &mut hyakuryu_weapon_map)?,
-        long_sword: prepare_weapon(&pedia.long_sword, &mut hyakuryu_weapon_map)?,
-        slash_axe: prepare_weapon(&pedia.slash_axe, &mut hyakuryu_weapon_map)?,
-        gun_lance: prepare_weapon(&pedia.gun_lance, &mut hyakuryu_weapon_map)?,
-        dual_blades: prepare_weapon(&pedia.dual_blades, &mut hyakuryu_weapon_map)?,
-        horn: prepare_weapon(&pedia.horn, &mut hyakuryu_weapon_map)?,
-        insect_glaive: prepare_weapon(&pedia.insect_glaive, &mut hyakuryu_weapon_map)?,
-        charge_axe: prepare_weapon(&pedia.charge_axe, &mut hyakuryu_weapon_map)?,
-        light_bowgun: prepare_weapon(&pedia.light_bowgun, &mut hyakuryu_weapon_map)?,
-        heavy_bowgun: prepare_weapon(&pedia.heavy_bowgun, &mut hyakuryu_weapon_map)?,
-        bow: prepare_weapon(&pedia.bow, &mut hyakuryu_weapon_map)?,
+        great_sword: prepare_weapon(&pedia.great_sword, &mut hyakuryu_weapon_map, &mut chaos)?,
+        short_sword: prepare_weapon(&pedia.short_sword, &mut hyakuryu_weapon_map, &mut chaos)?,
+        hammer: prepare_weapon(&pedia.hammer, &mut hyakuryu_weapon_map, &mut chaos)?,
+        lance: prepare_weapon(&pedia.lance, &mut hyakuryu_weapon_map, &mut chaos)?,
+        long_sword: prepare_weapon(&pedia.long_sword, &mut hyakuryu_weapon_map, &mut chaos)?,
+        slash_axe: prepare_weapon(&pedia.slash_axe, &mut hyakuryu_weapon_map, &mut chaos)?,
+        gun_lance: prepare_weapon(&pedia.gun_lance, &mut hyakuryu_weapon_map, &mut chaos)?,
+        dual_blades: prepare_weapon(&pedia.dual_blades, &mut hyakuryu_weapon_map, &mut chaos)?,
+        horn: prepare_weapon(&pedia.horn, &mut hyakuryu_weapon_map, &mut chaos)?,
+        insect_glaive: prepare_weapon(&pedia.insect_glaive, &mut hyakuryu_weapon_map, &mut chaos)?,
+        charge_axe: prepare_weapon(&pedia.charge_axe, &mut hyakuryu_weapon_map, &mut chaos)?,
+        light_bowgun: prepare_weapon(&pedia.light_bowgun, &mut hyakuryu_weapon_map, &mut chaos)?,
+        heavy_bowgun: prepare_weapon(&pedia.heavy_bowgun, &mut hyakuryu_weapon_map, &mut chaos)?,
+        bow: prepare_weapon(&pedia.bow, &mut hyakuryu_weapon_map, &mut chaos)?,
         horn_melody: prepare_horn_melody(pedia),
         monster_order,
         item_pop: prepare_item_pop(pedia)?,
