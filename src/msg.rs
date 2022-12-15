@@ -173,9 +173,9 @@ impl Msg {
         let attribute_headers = attribute_types
             .into_iter()
             .zip(attribute_names)
-            .map(|(j, name)| {
+            .map(|(ty, name)| {
                 let name = (&data[usize::try_from(name - data_offset)?..]).read_u16str()?;
-                Ok(MsgAttributeHeader { ty: j, name })
+                Ok(MsgAttributeHeader { ty, name })
             })
             .collect::<Result<Vec<_>>>()?;
 
