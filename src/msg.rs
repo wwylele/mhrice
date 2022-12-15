@@ -9,8 +9,16 @@ use std::io::{Read, Seek};
 
 #[derive(Debug, Serialize)]
 pub struct MsgAttributeHeader {
-    pub j: i32,
+    pub ty: i32,
     pub name: String,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub enum MsgAttribute {
+    Int(i64),
+    Float(f64),
+    String(String),
+    Unknown(u64),
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -18,7 +26,7 @@ pub struct MsgEntry {
     pub name: String,
     pub guid: Guid,
     pub hash: u32,
-    pub attributes: Vec<String>,
+    pub attributes: Vec<MsgAttribute>,
     pub content: Vec<String>,
 }
 
@@ -40,18 +48,18 @@ impl Msg {
         if file.read_u64()? != 0x10 {
             bail!("Expected 0x10")
         }
-        let count_a = file.read_u32()?;
+        let entry_count = file.read_u32()?;
         let attribute_count = file.read_u32()?;
         let language_count = file.read_u32()?;
         file.seek_align_up(8)?;
 
         let data_offset = file.read_u64()?;
         let p_offset = file.read_u64()?;
-        let q_offset = file.read_u64()?;
-        let attribute_js_offset = file.read_u64()?;
+        let languages_offset = file.read_u64()?;
+        let attribute_types_offset = file.read_u64()?;
         let attribute_names_offset = file.read_u64()?;
 
-        let entries = (0..count_a)
+        let entries = (0..entry_count)
             .map(|_| file.read_u64())
             .collect::<Result<Vec<_>>>()?;
 
@@ -61,7 +69,7 @@ impl Msg {
             bail!("Expected 0")
         }
 
-        file.seek_noop(q_offset)?;
+        file.seek_noop(languages_offset)?;
         let languages = (0..language_count)
             .map(|_| file.read_u32())
             .collect::<Result<Vec<_>>>()?;
@@ -72,8 +80,8 @@ impl Msg {
             }
         }
 
-        file.seek_assert_align_up(attribute_js_offset, 8)?;
-        let attribute_js = (0..attribute_count)
+        file.seek_assert_align_up(attribute_types_offset, 8)?;
+        let attribute_types = (0..attribute_count)
             .map(|_| file.read_i32())
             .collect::<Result<Vec<_>>>()?;
 
@@ -135,7 +143,18 @@ impl Msg {
                 }
                 let attributes = attributes
                     .into_iter()
-                    .map(|n| Ok(format!("? {n}"))) // TODO: new version has some non-string stuff here
+                    .zip(&attribute_types)
+                    .map(|(attr, &ty)| {
+                        Ok(match ty {
+                            0 => MsgAttribute::Int(attr as i64),
+                            1 => MsgAttribute::Float(f64::from_bits(attr)),
+                            2 => MsgAttribute::String(
+                                (&data[usize::try_from(attr - data_offset)?..]).read_u16str()?,
+                            ),
+                            -1 => MsgAttribute::Unknown(attr),
+                            _ => bail!("Unknown attribute {ty}"),
+                        })
+                    })
                     .collect::<Result<Vec<_>>>()?;
                 let content = content
                     .into_iter()
@@ -151,12 +170,12 @@ impl Msg {
             })
             .collect::<Result<Vec<_>>>()?;
 
-        let attribute_headers = attribute_js
+        let attribute_headers = attribute_types
             .into_iter()
             .zip(attribute_names)
             .map(|(j, name)| {
                 let name = (&data[usize::try_from(name - data_offset)?..]).read_u16str()?;
-                Ok(MsgAttributeHeader { j, name })
+                Ok(MsgAttributeHeader { ty: j, name })
             })
             .collect::<Result<Vec<_>>>()?;
 
