@@ -129,6 +129,30 @@ aside {
         >.menu-label {
             padding-left: 0.4rem;
         }
+
+        .mh-lang-menu {
+            border-radius: $menu-item-radius;
+            color: $menu-item-color;
+            display: block;
+            padding: $menu-list-link-padding;
+            cursor: pointer;
+            border: 0;
+            font-size: 1rem;
+            background: none;
+            appearance: none;
+            width: 100%;
+            text-align: left;
+
+            &:hover {
+                background-color: $menu-item-hover-background-color;
+                color: $menu-item-hover-color;
+            }
+
+            &.is-active {
+                background-color: $menu-item-active-background-color;
+                color: $menu-item-active-color;
+            }
+        }
     }
 }
 
