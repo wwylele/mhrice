@@ -228,7 +228,7 @@ pub fn gen_hyakuryu_skill(
                             <td>{gen_hyakuryu_deco_label(deco)}</td>
                             <td>{gen_progress(deco.product.progress_flag, pedia_ex)}</td>
                             <td>{(deco.product.enemy_flag != EmTypes::Em(0)).then(
-                                ||gen_monster_tag(pedia_ex, deco.product.enemy_flag, false, false, None)
+                                ||gen_monster_tag(pedia_ex, deco.product.enemy_flag, false, false, None, None)
                             )}</td>
                             <td>{text!("{}z", deco.data.base_price)}</td>
                             { gen_category(pedia_ex, deco.product.material_category,

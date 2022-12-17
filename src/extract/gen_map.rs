@@ -382,7 +382,7 @@ fn gen_map(
                             false
                         }
                     ).map(|(&em, _)|
-                        html!(<li>{gen_monster_tag(pedia_ex, em, false, false, None)}</li>)
+                        html!(<li>{gen_monster_tag(pedia_ex, em, false, false, None, None)}</li>)
                     )
                 }</ul>
                 </section>

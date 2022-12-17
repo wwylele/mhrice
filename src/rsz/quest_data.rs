@@ -466,7 +466,6 @@ rsz_enum! {
 }
 
 pub trait EnemyParam {
-    // fn sub_type(&self, i: usize) -> Option<u8>;
     fn vital_tbl(&self, i: usize) -> Option<u16>;
     fn attack_tbl(&self, i: usize) -> Option<u16>;
     fn parts_tbl(&self, i: usize) -> Option<u16>;
@@ -481,9 +480,6 @@ pub trait EnemyParam {
 macro_rules! impl_enemy_param {
     ($t:ty) => {
         impl EnemyParam for $t {
-            /*fn sub_type(&self, i: usize) -> Option<u8> {
-                unimplemented!()
-            }*/
             fn vital_tbl(&self, i: usize) -> Option<u16> {
                 self.vital_tbl.get(i).copied().map(Into::into)
             }
@@ -548,6 +544,18 @@ rsz_struct! {
 }
 
 impl_enemy_param!(NormalQuestDataForEnemyParam);
+
+impl NormalQuestDataForEnemyParam {
+    pub fn sub_type(&self, i: usize) -> Option<u8> {
+        if let Some(s) = &self.sub_type.0 {
+            s.get(i).cloned()
+        } else if let Some(s) = &self.sub_type_v11.0 {
+            s.get(i).cloned()
+        } else {
+            None
+        }
+    }
+}
 
 rsz_struct! {
     #[rsz("snow.quest.NormalQuestDataForEnemy",

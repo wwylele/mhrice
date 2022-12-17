@@ -43,6 +43,7 @@ pub fn gen_quest_tag(
     tag_level: bool,
     is_target: bool,
     mystery_type: Option<EnemyIndividualType>,
+    sub_type_tag: Option<Box<span<String>>>,
 ) -> Box<div<String>> {
     let img = format!(
         "/resources/questtype_{}.png",
@@ -77,6 +78,7 @@ pub fn gen_quest_tag(
         )}
         {is_target.then(||html!(<span class="tag is-primary">"Target"</span>))}
         {gen_mystery_tag(mystery_type)}
+        {sub_type_tag}
         </a>
     </div>)
 }
@@ -122,7 +124,7 @@ pub fn gen_quest_list(
                                     <ul class="mh-quest-list">{
                                         quests.into_iter().map(|quest|{
                                             html!{<li>
-                                                { gen_quest_tag(quest, false, false, None) }
+                                                { gen_quest_tag(quest, false, false, None, None) }
                                             </li>}
                                         })
                                     }</ul>
@@ -141,7 +143,7 @@ pub fn gen_quest_list(
                                 <ul class="mh-quest-list">{
                                     quests.into_iter().map(|quest|{
                                         html!{<li>
-                                            { gen_quest_tag(quest, false, false, None) }
+                                            { gen_quest_tag(quest, false, false, None, None) }
                                         </li>}
                                     })
                                 }</ul>
@@ -614,6 +616,7 @@ fn gen_quest(
                     .map(|(i, em_type)|{
                         let is_target = quest.param.has_target(em_type);
                         let mystery = quest.enemy_param.and_then(|p|p.individual_type.get(i).cloned());
+                        let sub_type = quest.enemy_param.and_then(|p|p.sub_type(i));
                         let class = if !is_target {
                             "mh-non-target"
                         } else {
@@ -621,7 +624,7 @@ fn gen_quest(
                         };
                         html!(<tr class={class}>
                             <td>{
-                                gen_monster_tag(pedia_ex, em_type, is_target, false, mystery)
+                                gen_monster_tag(pedia_ex, em_type, is_target, false, mystery, sub_type)
                             }</td>
                             { gen_quest_monster_data(quest.enemy_param, Some(em_type), i, &pedia.difficulty_rate, pedia_ex) }
                         </tr>)
@@ -658,13 +661,14 @@ fn gen_quest(
                     .map(|(i, em_type)|{
                         let is_target = quest.param.has_target(em_type);
                         let mystery = quest.enemy_param.and_then(|p|p.individual_type.get(i).cloned());
+                        let sub_type = quest.enemy_param.and_then(|p|p.sub_type(i));
                         let class = if !is_target {
                             "mh-non-target"
                         } else {
                             ""
                         };
                         html!(<tr class={class}>
-                            <td>{ gen_monster_tag(pedia_ex, em_type, is_target, false, mystery)}</td>
+                            <td>{ gen_monster_tag(pedia_ex, em_type, is_target, false, mystery, sub_type)}</td>
                             { gen_quest_monster_multi_player_data(
                                 quest.enemy_param, i, pedia) }
                         </tr>)
@@ -688,6 +692,7 @@ fn gen_quest(
                 let mystery = quest
                     .enemy_param
                     .and_then(|p| p.individual_type.get(i).cloned());
+                let sub_type = quest.enemy_param.and_then(|p|p.sub_type(i));
                 let init_set_name = quest
                     .enemy_param
                     .as_ref()
@@ -741,7 +746,7 @@ fn gen_quest(
                 };
 
                 html!(<tr class={class}>
-                    <td>{ gen_monster_tag(pedia_ex, em_type, is_target, false, mystery)}</td>
+                    <td>{ gen_monster_tag(pedia_ex, em_type, is_target, false, mystery, sub_type)}</td>
                     <td>{ condition }</td>
                     {init_set.into_iter().flat_map(|init_set|
                         init_set.info.iter().filter(|i|i.lot != 0).map(|i|html!(<td> {
@@ -847,14 +852,15 @@ fn gen_quest(
                 h.wave_data.iter()
                 .filter(|wave|wave.boss_em != EmTypes::Em(0))
                 .map(|wave| {
+                    let sub_type = wave.boss_sub_type as u8;
                     html!(<tr>
-                        <td>{ gen_monster_tag(pedia_ex, wave.boss_em, false, false, None) }</td>
+                        <td>{ gen_monster_tag(pedia_ex, wave.boss_em, false, false, None, Some(sub_type)) }</td>
                         <td>{text!("{}", wave.boss_sub_type)}</td>
                         <td>{text!("{}", wave.boss_em_nando_tbl_no)}</td>
                         <td><ul class="mh-rampage-em-list"> {
                             wave.em_table.iter().filter(|&&em|em != EmTypes::Em(0))
                             .map(|&em|html!(<li>
-                                { gen_monster_tag(pedia_ex, em, false, true, None) }
+                                { gen_monster_tag(pedia_ex, em, false, true, None, None) }
                             </li>))
                         } </ul></td>
                         <td>{text!("{}", wave.wave_em_nando_tbl_no)}</td>
@@ -1137,7 +1143,7 @@ pub fn gen_random_mystery_difficulty(
                     }
                     None
                 }).map(|em_type| {
-                    html!(<li>{gen_monster_tag(pedia_ex, em_type, false, false, None)}</li>)
+                    html!(<li>{gen_monster_tag(pedia_ex, em_type, false, false, None, None)}</li>)
                 })
             }
             </ul>

@@ -74,12 +74,46 @@ pub fn gen_mystery_tag(mystery_type: Option<EnemyIndividualType>) -> Option<Box<
     }
 }
 
+pub fn gen_sub_type_tag(_em_type: EmTypes, sub_type: Option<u8>) -> Option<Box<span<String>>> {
+    let text = match (_em_type, sub_type) {
+        (_, None | Some(0)) => None,
+
+        (EmTypes::Em(23), Some(1)) => Some("Sleeping".to_owned()), // observed in game but tdb says always enraged...
+        (EmTypes::Em(23), Some(2)) => Some("Special wave boss".to_owned()),
+        (EmTypes::Em(23), Some(3)) => Some("Enraged".to_owned()),
+
+        (EmTypes::Em(24), Some(1)) => Some("vs allmother".to_owned()),
+        (EmTypes::Em(27), Some(1)) => Some("vs allmother".to_owned()),
+
+        (EmTypes::Em(57), Some(1)) => Some("Charged".to_owned()),
+
+        (EmTypes::Em(89), Some(1)) => Some("vs allmother".to_owned()),
+
+        (EmTypes::Em(96), Some(1)) => Some("ExMultiPartsType".to_owned()),
+
+        (EmTypes::Em(99), Some(1)) => Some("ExStart".to_owned()),
+        (EmTypes::Em(99), Some(2)) => Some("Debug".to_owned()),
+
+        (EmTypes::Em(132), Some(1)) => Some("vs allmother".to_owned()),
+
+        (EmTypes::Em(133), Some(1)) => Some("Half afflicted".to_owned()),
+
+        (EmTypes::Em(134), Some(1)) => Some("QuickGoApe".to_owned()), // what
+
+        (EmTypes::Em(136 | 392), Some(1)) => Some("Sleeping".to_owned()),
+
+        (_, Some(x)) => Some(format!("type{}", x)),
+    };
+    text.map(|t| html!(<span class="tag">{text!("{}", t)}</span>))
+}
+
 pub fn gen_monster_tag(
     pedia_ex: &PediaEx,
     em_type: EmTypes,
     is_target: bool,
     short: bool,
     mystery_type: Option<EnemyIndividualType>,
+    sub_type: Option<u8>,
 ) -> Box<div<String>> {
     let (id, is_large) = match em_type {
         EmTypes::Em(id) => (id, true),
@@ -113,6 +147,7 @@ pub fn gen_monster_tag(
 
         {is_target.then(||html!(<span class="tag is-primary">"Target"</span>))}
         {gen_mystery_tag(mystery_type)}
+        {gen_sub_type_tag(em_type, sub_type)}
     </div>)
 }
 
@@ -1116,9 +1151,11 @@ pub fn gen_monster(
                         } else {
                             ""
                         };
+                        let sub_type = quest.enemy_param.and_then(|p|p.sub_type(i));
+                        let sub_type = gen_sub_type_tag(em_type, sub_type);
                         html!(<tr class={class}>
                             <td> {
-                                gen_quest_tag(quest, true, is_target, mystery)
+                                gen_quest_tag(quest, true, is_target, mystery, sub_type)
                             } </td>
                             { gen_quest_monster_data(quest.enemy_param, Some(em_type), i, &pedia.difficulty_rate, pedia_ex) }
                         </tr>)
@@ -1129,22 +1166,30 @@ pub fn gen_monster(
                 if let Some(discovery) = monster_ex.discovery {
                     vec![
                         html!(<tr><td>{text!("Village tour ({})",
-                            discovery.cond_village.display().unwrap_or_default())}</td>{
+                            discovery.cond_village.display().unwrap_or_default())}
+                            {gen_sub_type_tag(monster_em_type, Some(discovery.sub_type[0]))}
+                            </td>{
                             gen_quest_monster_data(Some(discovery),
                                 Some(monster_em_type), 0, &pedia.difficulty_rate, pedia_ex)
                         }</tr>),
                         html!(<tr><td>{text!("Low rank tour ({})",
-                            discovery.cond_low.display().unwrap_or_default())}</td>{
+                            discovery.cond_low.display().unwrap_or_default())}
+                            {gen_sub_type_tag(monster_em_type, Some(discovery.sub_type[1]))}
+                            </td>{
                             gen_quest_monster_data(Some(discovery),
                                 Some(monster_em_type), 1, &pedia.difficulty_rate, pedia_ex)
                         }</tr>),
                         html!(<tr><td>{text!("High rank tour ({})",
-                            discovery.cond_high.display().unwrap_or_default())}</td>{
+                            discovery.cond_high.display().unwrap_or_default())}
+                            {gen_sub_type_tag(monster_em_type, Some(discovery.sub_type[2]))}
+                            </td>{
                             gen_quest_monster_data(Some(discovery),
                                 Some(monster_em_type), 2, &pedia.difficulty_rate, pedia_ex)
                         }</tr>),
                         html!(<tr><td>{text!("Master rank tour ({})",
-                            discovery.cond_master.display().unwrap_or_default())}</td>{
+                            discovery.cond_master.display().unwrap_or_default())}
+                            {gen_sub_type_tag(monster_em_type, Some(discovery.sub_type[3]))}
+                            </td>{
                             gen_quest_monster_data(Some(discovery),
                                 Some(monster_em_type), 3, &pedia.difficulty_rate, pedia_ex)
                         }</tr>)
