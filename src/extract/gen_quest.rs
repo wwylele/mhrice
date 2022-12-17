@@ -501,6 +501,20 @@ fn gen_quest(
         ),
     });
 
+    let swap = quest
+        .param
+        .swap_em_rate
+        .iter()
+        .zip(&quest.param.swap_set_condition)
+        .zip(&quest.param.swap_set_param)
+        .filter(|((_, &condition), _)| condition != SwapSetCondition::None)
+        .map(|((&rate, &condition), &param)| match condition {
+            SwapSetCondition::None => unreachable!(),
+            SwapSetCondition::QuestTimer => format!("{rate}% {param}min"),
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+
     sections.push(Section {
         title: "Basic data".to_owned(),
         content: html!(
@@ -531,6 +545,10 @@ fn gen_quest(
                 <span>{ text!("{}", quest.param.is_tutorial) }</span></p>
             <p class="mh-kv"><span>"Auto match HR"</span>
                 <span>{ text!("{}", quest.param.auto_match_hr) }</span></p>
+            <p class="mh-kv"><span>"Monster swap"</span>
+                <span>{ text!("{:?} {}", quest.param.swap_exec_type, swap) }</span></p>
+            <p class="mh-kv"><span>"Monster swap prevention"</span>
+                <span>{ text!("{:?} {}", quest.param.swap_stop_type, quest.param.swap_stop_param) }</span></p>
             </div>
             </section>
         ),
@@ -578,7 +596,6 @@ fn gen_quest(
         });
     }
 
-    // TODO: monster spawn/swap behavior
     // TODO: fence
     // TODO is_use_pillar
 
