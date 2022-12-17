@@ -366,8 +366,8 @@ fn guess_key(bytes: &[u8]) -> Result<[u8; 0x20]> {
             continue;
         }
         for c in 0..=255u8 {
-            if a.wrapping_mul(c) == xorpads[index(pivot_a as usize, i as usize)].unwrap().0
-                && b.wrapping_mul(c) == xorpads[index(pivot_b as usize, i as usize)].unwrap().0
+            if a.wrapping_mul(c) == xorpads[index(pivot_a, i)].unwrap().0
+                && b.wrapping_mul(c) == xorpads[index(pivot_b, i)].unwrap().0
             {
                 *key_slot = Some(c);
                 break;

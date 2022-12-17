@@ -347,7 +347,7 @@ fn gen_armor(
                             let mut probability_cell = Some(html!(<td rowspan={rowspan}>
                                 { if category_id != 15 {text!("{}%", category.lot)} else {text!("")} }
                             </td>));
-                            category.pieces.iter().map(move |(_, piece)| {
+                            category.pieces.values().map(move |piece| {
                                 html!(<tr>
                                     {category_cell.take()}
                                     {probability_cell.take()}

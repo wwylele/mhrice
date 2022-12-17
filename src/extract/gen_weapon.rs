@@ -617,7 +617,7 @@ where
                     let mut category_cell = Some(html!(<td rowspan={rowspan}>
                         { category_name }
                     </td>));
-                    category.pieces.iter().map(move |(_, piece)| {
+                    category.pieces.values().map(move |piece| {
                         html!(<tr>
                         {category_cell.take()}
                         <td>{text!("{}", piece.data.lv)}</td>

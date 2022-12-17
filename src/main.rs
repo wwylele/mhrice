@@ -1029,7 +1029,7 @@ fn dump_tree(pak: Vec<String>, list: String, output: String) -> Result<()> {
                 }
 
                 std::fs::create_dir_all(path.parent().context("no parent")?)?;
-                std::fs::write(path, &pak.read_file(index)?)?;
+                std::fs::write(path, pak.read_file(index)?)?;
                 unvisited.remove(&index);
             }
         }
@@ -1090,7 +1090,7 @@ fn dump_rcol(rcol: String) -> Result<()> {
 
 fn dump_tex(tex: String, output: String, swizzle: String) -> Result<()> {
     let tex = Tex::new(File::open(tex)?)?;
-    tex.save_png_swizzle(0, 0, std::fs::File::create(&output)?, &swizzle)?;
+    tex.save_png_swizzle(0, 0, std::fs::File::create(output)?, &swizzle)?;
     Ok(())
 }
 
