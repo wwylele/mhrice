@@ -239,8 +239,6 @@ fn gen_otomo_equip(
 
             { sections.into_iter().map(|s|s.content) }
 
-            // TODO: how to unlock one
-
             </main>
             { right_aside() }
         </body>
