@@ -208,7 +208,7 @@ pub fn gen_skill(
                                 <td>{text!("{}", deco.data.skill_lv_list[0])}</td>
                                 <td>{gen_progress(deco.product.progress_flag, pedia_ex)}</td>
                                 <td>{(deco.product.enemy_flag != EmTypes::Em(0)).then(
-                                    ||gen_monster_tag(pedia_ex, deco.product.enemy_flag, false, false, false)
+                                    ||gen_monster_tag(pedia_ex, deco.product.enemy_flag, false, false, None)
                                 )}</td>
                                 <td>{text!("{}z", deco.data.base_price)}</td>
                                 { gen_materials(pedia_ex, &deco.product.item_id_list,

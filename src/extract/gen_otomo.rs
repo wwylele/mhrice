@@ -174,7 +174,7 @@ fn gen_otomo_equip(
             )}
             {(series.series.unlock_enemy != EmTypes::Em(0)).then(
                 ||html!(<div><span class="has-text-weight-bold">"Key monster: "</span> {
-                    gen_monster_tag(pedia_ex, series.series.unlock_enemy, false, false, false)
+                    gen_monster_tag(pedia_ex, series.series.unlock_enemy, false, false, None)
                 }</div>)
             )}
             <div class="mh-table"><table>

@@ -200,7 +200,7 @@ pub fn gen_progress(progress_flag: i32, pedia_ex: &PediaEx) -> Box<div<String>> 
     }
     if progress.quest_no != -1 {
         if let Some(quest) = pedia_ex.quests.get(&progress.quest_no) {
-            flags.push(html!(<div>"Quest:"{gen_quest_tag(quest, false, false, false)}</div>));
+            flags.push(html!(<div>"Quest:"{gen_quest_tag(quest, false, false, None)}</div>));
         } else {
             flags.push(html!(<div>{text!("Quest:{}", progress.quest_no)}</div>));
         }

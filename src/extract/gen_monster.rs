@@ -53,12 +53,33 @@ static MEAT_TYPE_MAP: Lazy<HashMap<u32, &[&str]>> =
 static SPECIFIC_MEAT_TYPE_MAP: Lazy<HashMap<(u32, usize), &[&str]>> =
     Lazy::new(|| HashMap::from_iter(SPECIFIC_MEAT_TYPES.iter().cloned()));
 
+pub fn gen_mystery_tag(mystery_type: Option<EnemyIndividualType>) -> Option<Box<span<String>>> {
+    match mystery_type {
+        None | Some(EnemyIndividualType::Normal) => None,
+        Some(EnemyIndividualType::Mystery) => {
+            Some(html!(<span class="tag is-danger">"Afflicted"</span>))
+        }
+        Some(EnemyIndividualType::OverMysteryStrengthDefault) => {
+            Some(html!(<span class="tag is-danger">"Risen"</span>))
+        }
+        Some(EnemyIndividualType::OverMysteryStrengthLv1) => {
+            Some(html!(<span class="tag is-danger">"Risen 1"</span>))
+        }
+        Some(EnemyIndividualType::OverMysteryStrengthLv2) => {
+            Some(html!(<span class="tag is-danger">"Risen"</span>))
+        }
+        Some(EnemyIndividualType::OverMysteryStrengthLv3) => {
+            Some(html!(<span class="tag is-danger">"Risen"</span>))
+        }
+    }
+}
+
 pub fn gen_monster_tag(
     pedia_ex: &PediaEx,
     em_type: EmTypes,
     is_target: bool,
     short: bool,
-    is_mystery: bool,
+    mystery_type: Option<EnemyIndividualType>,
 ) -> Box<div<String>> {
     let (id, is_large) = match em_type {
         EmTypes::Em(id) => (id, true),
@@ -91,7 +112,7 @@ pub fn gen_monster_tag(
         </a>
 
         {is_target.then(||html!(<span class="tag is-primary">"Target"</span>))}
-        {is_mystery.then(||html!(<span class="tag is-danger">"Afflicted"</span>))}
+        {gen_mystery_tag(mystery_type)}
     </div>)
 }
 
@@ -1088,10 +1109,8 @@ pub fn gen_monster(
                     )
                     .map(move |(i, em_type)|{
                         let is_target = quest.param.has_target(em_type);
-                        let is_mystery = quest.enemy_param
-                            .and_then(|p|p.individual_type.get(i))
-                            .map(|&t|t == EnemyIndividualType::Mystery)
-                            .unwrap_or(false);
+                        let mystery = quest.enemy_param
+                            .and_then(|p|p.individual_type.get(i).cloned());
                         let class = if !is_target {
                             "mh-non-target"
                         } else {
@@ -1099,7 +1118,7 @@ pub fn gen_monster(
                         };
                         html!(<tr class={class}>
                             <td> {
-                                gen_quest_tag(quest, true, is_target, is_mystery)
+                                gen_quest_tag(quest, true, is_target, mystery)
                             } </td>
                             { gen_quest_monster_data(quest.enemy_param, Some(em_type), i, &pedia.difficulty_rate, pedia_ex) }
                         </tr>)

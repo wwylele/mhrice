@@ -180,13 +180,13 @@ fn gen_item_source_monster(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<di
             <ul class="mh-item-list">
                 {
                     em_types.into_iter().map(|em_type|html!(<li>{
-                        gen_monster_tag(pedia_ex, em_type, false, false, false)
+                        gen_monster_tag(pedia_ex, em_type, false, false, None)
                     }</li>))
                 }
 
                 {
                     afflicted_em_types.into_iter().map(|em_type|html!(<li>{
-                        gen_monster_tag(pedia_ex, em_type, false, false, true)
+                        gen_monster_tag(pedia_ex, em_type, false, false, None)
                     }</li>))
                 }
             </ul></div>),
@@ -238,7 +238,7 @@ fn gen_item_source_quest(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<
         Some(html!(<div class="mh-item-in-out"> <h3>"From quests: "</h3>
         <ul class="mh-item-list">{
             quests.into_iter().map(|quest| {
-                html!(<li>{gen_quest_tag(quest, true, false, false)}</li>)
+                html!(<li>{gen_quest_tag(quest, true, false, None)}</li>)
             })
         }</ul> </div>))
     } else {

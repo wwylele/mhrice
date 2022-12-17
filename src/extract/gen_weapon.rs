@@ -75,7 +75,7 @@ fn gen_craft_row(
         {label}
         <td>{gen_progress(data.progress_flag, pedia_ex)}</td>
         <td>{(data.enemy_flag != EmTypes::Em(0)).then(
-            ||gen_monster_tag(pedia_ex, data.enemy_flag, false, false, false)
+            ||gen_monster_tag(pedia_ex, data.enemy_flag, false, false, None)
         )}</td>
         {cost}
         {category}
@@ -547,7 +547,7 @@ where
                         <td>"As layered"</td>
                         <td>{gen_progress(data.progress_flag, pedia_ex)}</td>
                         <td>{(data.enemy_flag != EmTypes::Em(0)).then(
-                            ||gen_monster_tag(pedia_ex, data.enemy_flag, false, false, false)
+                            ||gen_monster_tag(pedia_ex, data.enemy_flag, false, false, None)
                         )}</td>
                         <td>{text!("{}z", data.price)}</td>
                         {category}
