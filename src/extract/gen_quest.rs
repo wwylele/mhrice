@@ -440,22 +440,58 @@ fn gen_quest(
         .param
         .target_type
         .iter()
-        .filter(|&&t| t != QuestTargetType::None)
-        .map(|t| match t {
-            QuestTargetType::ItemGet => "Collect".to_owned(),
-            QuestTargetType::Hunting => "Hunt".to_owned(),
-            QuestTargetType::Kill => "Slay".to_owned(),
-            QuestTargetType::Capture => "Capture".to_owned(),
-            QuestTargetType::AllMainEnemy => "Hunt all".to_owned(),
-            QuestTargetType::EmTotal => "Hunt small monsters".to_owned(),
-            QuestTargetType::FinalBarrierDefense => "Defend final barrier".to_owned(),
-            QuestTargetType::FortLevelUp => "Level up fort".to_owned(),
-            QuestTargetType::PlayerDown => "PlayerDown".to_owned(),
-            QuestTargetType::FinalBoss => "Final boss".to_owned(),
-            x => format!("{:?}", x),
-        })
-        .collect::<Vec<String>>()
-        .join(", ");
+        .zip(&quest.param.tgt_em_type)
+        .zip(&quest.param.tgt_item_id)
+        .zip(&quest.param.tgt_num)
+        .filter(|(((&ty, _), _), _)| ty != QuestTargetType::None)
+        .enumerate()
+        .flat_map(|(i, (((ty, em), item), num))| {
+            let em = if let Some(MonsterEx {
+                name: Some(name), ..
+            }) = pedia_ex.monsters.get(em)
+            {
+                gen_multi_lang(name)
+            } else {
+                html!(<span>{text!("{:?}", em)}</span>)
+            };
+            let result = match ty {
+                QuestTargetType::ItemGet => {
+                    let item = if let Some(item_entry) = pedia_ex.items.get(item) {
+                        gen_multi_lang(item_entry.name)
+                    } else {
+                        html!(<span>{text!("{:?}", item)}</span>)
+                    };
+                    html!(<span>{text!("Gather {}x ", num)} {item}</span>)
+                }
+
+                QuestTargetType::Hunting => {
+                    html!(<span>{text!("Hunt {}x ", num)} {em}</span>)
+                }
+                QuestTargetType::Kill => html!(<span>{text!("Slay {}x ", num)} {em}</span>),
+                QuestTargetType::Capture => html!(<span>{text!("Capture {}x ", num)} {em}</span>),
+                QuestTargetType::EmTotal => {
+                    if i == 0 {
+                        html!(<span>{text!("Slay {}x ", num)} {em}</span>)
+                    } else {
+                        html!(<span>{em}</span>)
+                    }
+                }
+                QuestTargetType::AllMainEnemy => {
+                    html!(<span>{text!("Hunt all {}", num)}</span>)
+                }
+                QuestTargetType::FinalBarrierDefense => html!(<span>"Defend final barrier"</span>),
+                QuestTargetType::FortLevelUp => html!(<span>"Level up fort"</span>),
+                QuestTargetType::PlayerDown => html!(<span>"PlayerDown"</span>),
+                QuestTargetType::FinalBoss => html!(<span>"Final boss"</span>),
+
+                x => html!(<span>{text!("{:?}", x)}</span>),
+            };
+            if i == 0 {
+                vec![result]
+            } else {
+                vec![html!(<span>", "</span>), result]
+            }
+        });
 
     let requirement = quest
         .param
@@ -534,7 +570,7 @@ fn gen_quest(
             <p class="mh-kv"><span>"Requirement"</span>
                 <span>{ text!("{}", requirement) }</span></p>
             <p class="mh-kv"><span>"Target"</span>
-                <span>{ text!("{}", target) }</span></p>
+                <span>{ target }</span></p>
             <p class="mh-kv"><span>"Reward money"</span>
                 <span>{ text!("{}z", quest.param.rem_money) }</span></p>
             <p class="mh-kv"><span>"Reward village point"</span>
