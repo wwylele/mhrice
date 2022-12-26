@@ -680,6 +680,12 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         SupplyData,
         ProgressCheckerUserDataParam,
         ProgressCheckerUserData,
+
+        ArenaTalismanSkillData,
+        ItemWork,
+        ArenaPlayer,
+        ArenaQuestDataParam,
+        ArenaQuestData,
     );
 
     r!(

@@ -16,6 +16,22 @@ pub fn skill_page(id: PlEquipSkillId) -> String {
     format!("{}.html", id.to_msg_tag())
 }
 
+pub fn gen_skill_lv_label(pedia_ex: &PediaEx, skill: PlEquipSkillId, lv: i32) -> Box<li<String>> {
+    let name = if let Some(skill_data) = pedia_ex.skills.get(&skill) {
+        html!(<div class="il"><a href={format!("/skill/{}", skill_page(skill))}
+            class="mh-icon-text">
+            {gen_colored_icon(skill_data.icon_color, "/resources/skill", &[])}
+            {gen_multi_lang(skill_data.name)}
+        </a></div>)
+    } else {
+        html!(<div class="il">"<UNKNOWN>"</div>)
+    };
+    html!(<li>
+        {name}
+        {text!(" + {}", lv)}
+    </li>)
+}
+
 pub fn gen_skill_list(
     hash_store: &HashStore,
     skills: &BTreeMap<PlEquipSkillId, Skill>,

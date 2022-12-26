@@ -1,7 +1,11 @@
+use super::gen_armor::*;
 use super::gen_common::*;
+use super::gen_hyakuryu_skill::*;
 use super::gen_item::*;
 use super::gen_map::*;
 use super::gen_monster::*;
+use super::gen_skill::*;
+use super::gen_weapon::*;
 use super::gen_website::*;
 use super::hash_store::*;
 use super::pedia::*;
@@ -953,6 +957,189 @@ fn gen_quest(
             {content}
             </section>),
         })
+    }
+
+    if let Some(arena) = quest.arena {
+        sections.push(Section {
+            title: "Arena".to_owned(),
+            content: html!(
+                <section id="s-arena">
+                <h2 >"Arena"</h2>
+                <div class="mh-kvlist">
+                <p class="mh-kv"><span>"Rank time (S/A/B)"</span>
+                    <span>{ text!("{}s / {}s / {}s", arena.rank_time_s, arena.rank_time_a, arena.rank_time_b) }</span></p>
+                <p class="mh-kv"><span>"Point modifier for rank (S/A)"</span>
+                    <span>{ text!("x{} / x{}", arena.rank_point_rate_s, arena.rank_point_rate_a) }</span></p>
+                <p class="mh-kv"><span>"Enemy-to-enemy attack"</span>
+                    <span>{ text!("{}", arena.em2em_adjust_data) }</span></p>
+                //<p class="mh-kv"><span>"dodge_blocking_damage_rate (s/m)"</span>
+                //    <span>{ text!("{}/{}", arena.dodge_blocking_damage_rate_s, arena.dodge_blocking_damage_rate_m) }</span></p>
+                <p class="mh-kv"><span>"Wall slam damage"</span> // TODO: ?
+                    <span>{ text!("{:?}", arena.shoot_wall_hit_damage_rate_list) }</span></p>
+                // TODO: what's these?
+                //<p class="mh-kv"><span>"fapabtedmhr"</span>
+                //    <span>{ text!("{}", arena.final_attack_point_add_by_target_enemy_damage_max_hp_rate) }</span></p>
+                //<p class="mh-kv"><span>"start_wait_loop_sub_time_max_hp_rate"</span>
+                //    <span>{ text!("{}", arena.start_wait_loop_sub_time_max_hp_rate) }</span></p>
+                <p class="mh-kv"><span>"Base gimmick damage"</span>
+                    <span>{ text!("{}", arena.base_gimmik_damage) }</span></p>
+                </div>
+
+                { arena.arena_pl.iter().enumerate().map(|(i, pl)|{
+                    let weapon_action = |actions: &[i32]| {
+                        html!(<span>{text!("{:?}", actions)}</span>) // TODO
+                    };
+
+                    let deco_label_li = |id: DecorationsId| {
+                        // TODO: fast lookup table
+                        for (&skill_id, skill) in &pedia_ex.skills {
+                            for deco in &skill.decos {
+                                if deco.data.id == id {
+                                    return html!(<li>
+                                        <a href={format!("/skill/{}", skill_page(skill_id))}>
+                                        { gen_deco_label(deco) }
+                                        </a>
+                                    </li>)
+                                }
+                            }
+                        }
+                        html!(<li>{text!("Unknown deco {:?}", id)}</li>)
+                    };
+
+                    let armor_label_td = |id: PlArmorId| {
+                        // TODO: fast lookup table
+                        for series in pedia_ex.armors.values() {
+                            for piece in series.pieces.iter().flatten() {
+                                if piece.data.pl_armor_id == id {
+                                    return html!(<td><a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
+                                        {gen_armor_label(Some(piece))}
+                                    </a></td>)
+                                }
+                            }
+                        }
+                        html!(<td>{text!("Unknown armor {:?}", id)}</td>)
+                    };
+
+                    let items_list = |items: &[ItemWork]| {
+                        html!(<ul class="mh-item-list"> {
+                            items.iter().filter(|item_work| item_work.item != ItemId::Null && item_work.item != ItemId::None )
+                            .map(|item_work| {
+                                let item = if let Some(item) = pedia_ex.items.get(&item_work.item) {
+                                    html!(<div class="il">{gen_item_label(item)}</div>)
+                                } else {
+                                    html!(<div class="il">{text!("{:?}", item_work.item)}</div>)
+                                };
+                                html!(<li>
+                                    {text!("{}x ", item_work.num)}
+                                    {item}
+                                </li>)
+                            })
+                        } </ul>)
+                    };
+
+                    html!(<section class="mh-arena-set">
+                    <h3>{text!("Set {}", i + 1)}</h3>
+                    <div class="mh-table"><table>
+                    <thead><tr>
+                        <th/>
+                        <th>"Equipment"</th>
+                        <th>"Detail"</th>
+                        <th>"Decortion"</th>
+                    </tr></thead>
+                    <tbody>
+
+                    <tr>
+                        <td>"Weapon"</td>
+                        <td>{ gen_weapon_label_from_id(pedia_ex, pl.wep_id) }</td>
+                        <td><ul class="mh-armor-skill-list">{ pl.hyakuryu_skill.iter()
+                            .filter(|&&s|s != PlHyakuryuSkillId::None).map(|s|
+                            if let Some(skill) = pedia_ex.hyakuryu_skills.get(s) {
+                                html!(<li>{gen_hyakuryu_skill_label(skill)}</li>)
+                            } else {
+                                html!(<li>{text!("Unknown skill {:?}", s)}</li>)
+                            }
+                        ) }
+                        <li>"Switch skill A: "{weapon_action(&pl.wep_action)}</li>
+                        <li>"Switch skill B: "{weapon_action(&pl.wep_action2)}</li>
+                        </ul></td>
+                        <td><ul class="mh-armor-skill-list">{
+                            pl.deco_wep.iter().filter(|&&d|d != DecorationsId::None).map(|&d|deco_label_li(d))
+                        }</ul></td>
+                    </tr>
+                    <tr>
+                        <td>"Helm"</td>
+                        { armor_label_td(pl.armor_helm) }
+                        <td>{ text!("Lv{}", pl.armor_lv_helm) }</td>
+                        <td><ul class="mh-armor-skill-list">{
+                            pl.deco_helm.iter().filter(|&&d|d != DecorationsId::None).map(|&d|deco_label_li(d))
+                        }</ul></td>
+                    </tr>
+                    <tr>
+                        <td>"Chest"</td>
+                        { armor_label_td(pl.armor_body) }
+                        <td>{ text!("Lv{}", pl.armor_lv_body) }</td>
+                        <td><ul class="mh-armor-skill-list">{
+                            pl.deco_body.iter().filter(|&&d|d != DecorationsId::None).map(|&d|deco_label_li(d))
+                        }</ul></td>
+                    </tr>
+                    <tr>
+                        <td>"Arm"</td>
+                        { armor_label_td(pl.armor_arm) }
+                        <td>{ text!("Lv{}", pl.armor_lv_arm) }</td>
+                        <td><ul class="mh-armor-skill-list">{
+                            pl.deco_arm.iter().filter(|&&d|d != DecorationsId::None).map(|&d|deco_label_li(d))
+                        }</ul></td>
+                    </tr>
+                    <tr>
+                        <td>"Waist"</td>
+                        { armor_label_td(pl.armor_waist) }
+                        <td>{ text!("Lv{}", pl.armor_lv_waist) }</td>
+                        <td><ul class="mh-armor-skill-list">{
+                            pl.deco_waist.iter().filter(|&&d|d != DecorationsId::None).map(|&d|deco_label_li(d))
+                        }</ul></td>
+                    </tr>
+                    <tr>
+                        <td>"Leg"</td>
+                        { armor_label_td(pl.armor_leg) }
+                        <td>{ text!("Lv{}", pl.armor_lv_leg) }</td>
+                        <td><ul class="mh-armor-skill-list">{
+                            pl.deco_leg.iter().filter(|&&d|d != DecorationsId::None).map(|&d|deco_label_li(d))
+                        }</ul></td>
+                    </tr>
+                    <tr>
+                        <td>"Petalace"</td>
+                        <td>{text!("{}", pl.lv_buff_cage_id)}</td> // TODO
+                        <td/>
+                        <td/>
+                    </tr>
+                    <tr>
+                        <td>"Talisman"</td>
+                        <td/>
+                        <td><ul class="mh-armor-skill-list">{
+                            pl.talisman_skill.iter().filter(|s|s.id != PlEquipSkillId::None).map(|s|
+                            gen_skill_lv_label(pedia_ex, s.id, s.lv)
+                        ) }</ul></td>
+                        <td><ul class="mh-armor-skill-list">{
+                            pl.deco_talisman.iter().filter(|&&d|d != DecorationsId::None).map(|&d|deco_label_li(d))
+                        }</ul></td>
+                    </tr>
+                    <tr>
+                        <td>"Pouch"</td>
+                        <td colspan=3>{items_list(&pl.pouch)}</td>
+                    </tr>
+                    <tr>
+                        <td>"Gunner pouch"</td>
+                        <td colspan=3>{items_list(&pl.ganner_pouch)}</td>
+                    </tr>
+                    </tbody>
+                    </table></div>
+
+                    </section>)
+                }) }
+
+                </section>
+            ),
+        });
     }
 
     sections.push(Section {

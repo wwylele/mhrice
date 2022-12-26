@@ -192,21 +192,7 @@ fn gen_armor(
                     let skills = html!(<ul class="mh-armor-skill-list"> {
                         piece.data.skill_list.iter().zip(piece.data.skill_lv_list.iter())
                             .filter(|&(&skill, _)| skill != PlEquipSkillId::None)
-                            .map(|(&skill, lv)| {
-                            let name = if let Some(skill_data) = pedia_ex.skills.get(&skill) {
-                                html!(<div class="il"><a href={format!("/skill/{}", skill_page(skill))}
-                                    class="mh-icon-text">
-                                    {gen_colored_icon(skill_data.icon_color, "/resources/skill", &[])}
-                                    {gen_multi_lang(skill_data.name)}
-                                </a></div>)
-                            } else {
-                                html!(<div class="il">"<UNKNOWN>"</div>)
-                            };
-                            html!(<li>
-                                {name}
-                                {text!(" + {}", lv)}
-                            </li>)
-                        })
+                            .map(|(&skill, &lv)| gen_skill_lv_label(pedia_ex, skill, lv))
                     } </ul>);
 
                     html!(<tr>

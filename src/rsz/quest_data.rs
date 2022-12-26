@@ -1165,3 +1165,117 @@ rsz_struct! {
         pub param_list: Vec<ProgressCheckerUserDataParam>
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.quest.ArenaQuestData.ArenaTalismanSkillData",
+        0x873C6753 = 13_00_00,
+        0x2F06A351 = 11_00_01,
+        0x6E4837CF = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ArenaTalismanSkillData {
+        pub id: PlEquipSkillId,
+        pub lv: i32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.ItemWork",
+        0x56D8E30A = 13_00_00,
+        0x33517B1D = 12_00_00,
+        0x6E3FD481 = 11_00_01,
+        0xFDAB4A8B = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ItemWork {
+        pub item: ItemId,
+        pub num: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.ArenaQuestData.ArenaPlayer",
+        0x11445F02 = 13_00_00,
+        0x8FDD5FC1 = 12_00_00,
+        0x01A94B6D = 11_00_01,
+        0x954AFD0F = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ArenaPlayer {
+        pub wep_id: WeaponId,
+        pub wep_action: Vec<i32>, // snow.data.DataDef.PlWeaponActionId
+        pub wep_action2: Vec<i32>,
+        pub deco_wep: Vec<DecorationsId>,
+        pub hyakuryu_skill: Vec<PlHyakuryuSkillId>,
+        pub bowgun_custom: i32, // snow.data.BowgunCustomize.BowgunCustomizeTypes
+        pub insect_id: WeaponId,
+
+        pub armor_helm: PlArmorId,
+        pub armor_lv_helm: u32,
+        pub deco_helm: Vec<DecorationsId>,
+
+        pub armor_body: PlArmorId,
+        pub armor_lv_body: u32,
+        pub deco_body: Vec<DecorationsId>,
+
+        pub armor_arm: PlArmorId,
+        pub armor_lv_arm: u32,
+        pub deco_arm: Vec<DecorationsId>,
+
+        pub armor_waist: PlArmorId,
+        pub armor_lv_waist: u32,
+        pub deco_waist: Vec<DecorationsId>,
+
+        pub armor_leg: PlArmorId,
+        pub armor_lv_leg: u32,
+        pub deco_leg: Vec<DecorationsId>,
+
+        pub lv_buff_cage_id: u32, // snow.data.ContentsIdSystem.LvBuffCageId
+        pub talisman_id: u32, // snow.data.DataDef.PlTalismanId
+        pub talisman_skill: Vec<ArenaTalismanSkillData>,
+        pub deco_talisman: Vec<DecorationsId>,
+        pub pouch: Vec<ItemWork>,
+        pub ganner_pouch: Vec<ItemWork>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.ArenaQuestData.Param",
+        0xB1AC8454 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ArenaQuestDataParam {
+        pub quest_no: i32,
+        pub em2em_adjust_data: f32,
+        pub dodge_blocking_damage_rate_m: f32,
+        pub dodge_blocking_damage_rate_s: f32,
+        pub shoot_wall_hit_damage_rate_list: Vec<f32>,
+        pub final_attack_point_add_by_target_enemy_damage_max_hp_rate: f32,
+        pub start_wait_loop_sub_time_max_hp_rate: f32,
+        pub base_gimmik_damage: i16,
+        pub rank_time_s: i32,
+        pub rank_time_a: i32,
+        pub rank_time_b: i32,
+        pub rank_point_rate_a: f32,
+        pub rank_point_rate_s: f32,
+        pub arena_pl: Vec<ArenaPlayer>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.quest.ArenaQuestData",
+        path = "Quest/Arena/ArenaQuestData.user",
+        0x371AAF74 = 10_00_02,
+
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ArenaQuestData {
+        pub param: Vec<ArenaQuestDataParam>,
+        pub param1: Vec<ArenaQuestDataParam>,
+        pub param2: Vec<ArenaQuestDataParam>,
+        pub param3: Vec<ArenaQuestDataParam>,
+        pub param_mr: Vec<ArenaQuestDataParam>,
+        pub param_mr1: Vec<ArenaQuestDataParam>,
+
+    }
+}

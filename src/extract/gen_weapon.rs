@@ -36,6 +36,33 @@ where
     )
 }
 
+pub fn gen_weapon_label_from_id(pedia_ex: &PediaEx, id: WeaponId) -> Box<span<String>> {
+    macro_rules! check_weapon {
+        ($weapon:ident) => {
+            if let Some(w) = pedia_ex.$weapon.weapons.get(&id) {
+                return html!(<span>{gen_weapon_label(w)}</span>)
+            }
+        };
+    }
+
+    check_weapon!(great_sword);
+    check_weapon!(short_sword);
+    check_weapon!(hammer);
+    check_weapon!(lance);
+    check_weapon!(long_sword);
+    check_weapon!(slash_axe);
+    check_weapon!(gun_lance);
+    check_weapon!(dual_blades);
+    check_weapon!(horn);
+    check_weapon!(insect_glaive);
+    check_weapon!(charge_axe);
+    check_weapon!(light_bowgun);
+    check_weapon!(heavy_bowgun);
+    check_weapon!(bow);
+
+    html!(<span>{text!("Unknown weapon {:?}", id)}</span>)
+}
+
 #[allow(unused_variables)]
 fn no<T, Base>(t: &T) -> Option<&Base> {
     None

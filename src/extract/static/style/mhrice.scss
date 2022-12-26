@@ -243,6 +243,11 @@ main {
         padding-bottom: 1rem;
         padding-left: 1rem;
         border-bottom: solid 2px $border;
+
+        >section.mh-arena-set {
+            padding-top: 1rem;
+            padding-left: 2rem;
+        }
     }
 
 }

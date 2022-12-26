@@ -922,6 +922,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         quest_servant: get_singleton(pak)?,
         supply_data: get_singleton(pak)?,
         supply_data_mr: get_singleton(pak)?,
+        arena_quest: get_singleton(pak)?,
         quest_hall_msg,
         quest_hall_msg_mr,
         quest_hall_msg_mr2,
@@ -1653,6 +1654,20 @@ fn prepare_quests<'a>(
         true,
     )?;
 
+    let arena = hash_map_unique(
+        pedia
+            .arena_quest
+            .param
+            .iter()
+            .chain(&pedia.arena_quest.param1)
+            .chain(&pedia.arena_quest.param2)
+            .chain(&pedia.arena_quest.param3)
+            .chain(&pedia.arena_quest.param_mr)
+            .chain(&pedia.arena_quest.param_mr1),
+        |p| (p.quest_no, p),
+        true,
+    )?;
+
     pedia
         .normal_quest_data
         .param
@@ -1775,6 +1790,7 @@ fn prepare_quests<'a>(
                     reward,
                     hyakuryu: hyakuryus.get(&param.quest_no).cloned(),
                     servant: servant.get(&param.quest_no).cloned(),
+                    arena: arena.get(&param.quest_no).cloned(),
                 },
             ))
         })
