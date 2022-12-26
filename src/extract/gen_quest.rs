@@ -1021,7 +1021,7 @@ fn gen_quest(
                     };
 
                     let items_list = |items: &[ItemWork]| {
-                        html!(<ul class="mh-item-list"> {
+                        html!(<ul class="mh-item-list-arena-set"> {
                             items.iter().filter(|item_work| item_work.item != ItemId::Null && item_work.item != ItemId::None )
                             .map(|item_work| {
                                 let item = if let Some(item) = pedia_ex.items.get(&item_work.item) {
@@ -1059,8 +1059,13 @@ fn gen_quest(
                                 html!(<li>{text!("Unknown skill {:?}", s)}</li>)
                             }
                         ) }
-                        <li>"Switch skill A: "{weapon_action(&pl.wep_action)}</li>
-                        <li>"Switch skill B: "{weapon_action(&pl.wep_action2)}</li>
+                        { (pl.wep_action2.is_empty()).then(|| {
+                            html!(<li>"Switch skills: "{weapon_action(&pl.wep_action)}</li>)
+                        }) }
+                        { (!pl.wep_action2.is_empty()).then(|| {
+                            [html!(<li>"Switch skills A: "{weapon_action(&pl.wep_action)}</li>),
+                            html!(<li>"Switch skills B: "{weapon_action(&pl.wep_action2)}</li>)]
+                        }).into_iter().flatten() }
                         </ul></td>
                         <td><ul class="mh-armor-skill-list">{
                             pl.deco_wep.iter().filter(|&&d|d != DecorationsId::None).map(|&d|deco_label_li(d))

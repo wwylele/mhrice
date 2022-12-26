@@ -438,6 +438,15 @@ ul.mh-item-list {
     }
 }
 
+/** Item pouch for arena set **/
+ul.mh-item-list-arena-set {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    margin-left: 0;
+    margin-top: 0;
+}
+
 /** Table horizontal scroll **/
 .mh-table {
     display: block;
