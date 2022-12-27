@@ -594,6 +594,104 @@ fn gen_quest(
         ),
     });
 
+    if !quest.unlock.is_empty() {
+        sections.push(Section {
+            title: "Unlock".to_owned(),
+            content: html!(<section id="s-unlock"><h2>"Unlock"</h2>
+            {
+                quest.unlock.iter().map(|unlock|
+                match unlock {
+                    QuestUnlock::Group(relation) => {
+                        html!(<div class="mh-unlock-section">
+                            {(!relation.request_group_idx.is_empty()).then(||html!(<div>
+                                {text!("Unlock quest group by completing {} of following quests", relation.request_count)}
+                                <ul>
+                                {relation.request_group_idx.iter().flat_map(|&group_idx| {
+                                    if let Some(group) = pedia.quest_unlock.quest_group.get(group_idx as usize) {
+                                        group.quest_no_array.iter().map(|q|
+                                            if let Some(quest) = pedia_ex.quests.get(q) {
+                                                html!(<li>{gen_quest_tag(quest, false, false, None, None)}</li>)
+                                            } else {
+                                                html!(<li>{text!("Unknown quest {}", q)}</li>)
+                                            }
+                                        ).collect::<Vec<_>>()
+                                    } else {
+                                        vec![html!(<li>{text!("Unknown group {}", group_idx)}</li>)]
+                                    }
+                                })}
+                                </ul>
+                            </div>))}
+                            {text!("Unlock quest group by NPC dialog {:?}", relation.request_talk_flag)}
+                        </div>)
+                    }
+                    QuestUnlock::Talk(talk) => {
+                        html!(<div>{text!("Unlock by NPC dialog {}. Auto-clear: {}", talk.talk_flag, talk.is_clear)}</div>)
+                    },
+                    QuestUnlock::Clear(clear) => {
+                        let quest = clear.unlock_quest_no_list.iter().find(|q|q.unlock_quest == quest.param.quest_no).unwrap();
+                        html!(<div>{text!("Unlock by clearing following quests. Auto-clear: {}", quest.is_clear)}
+                        <ul>{ clear.clear_quest_no_list.iter().map(|q| {
+                            if let Some(quest) = pedia_ex.quests.get(q) {
+                                html!(<li>{gen_quest_tag(quest, false, false, None, None)}</li>)
+                            } else {
+                                html!(<li>{text!("Unknown quest {}", q)}</li>)
+                            }
+                        }) }</ul>
+                        </div>)
+                    },
+                    QuestUnlock::Enemy(enemy) => {
+                        // TODO: faster monster lookup
+                        let em = pedia.monsters.iter().find(|m|m.enemy_type == Some(enemy.hunt_em_type));
+                        let em_tag = if let Some(em) = em {
+                            gen_monster_tag(pedia_ex, em.em_type, false, false, None, None)
+                        } else {
+                            html!(<div>{text!("Unknown monster {}", enemy.hunt_em_type)}</div>)
+                        };
+                        let rank = match enemy.enemy_rank {
+                            EnemyRank::None => "any rank",
+                            EnemyRank::Village => "village",
+                            EnemyRank::Low => "low rank",
+                            EnemyRank::High => "high rank",
+                            EnemyRank::Master => "master rank",
+                        };
+                        html!(<div>
+                            {text!("Unlock after hunting in {}", rank)}
+                            {em_tag}
+                            {text!("Auto-clear: {}", enemy.is_clear)}
+                        </div>)
+                    }
+                })
+            }
+            </section>),
+        });
+    }
+
+    if let Some(random) = quest.random_group {
+        sections.push(Section {
+            title: "Random rotation".to_owned(),
+            content: html!(<section id="s-random"><h2>"Random rotation"</h2>
+            {
+                let self_quest = random.random_group.iter().find(|q|q.random_quest == quest.param.quest_no).unwrap();
+                html!(<div>{text!("This is a random quest in the following group. Auto-clear: {}", self_quest.is_clear)}
+                <ul>{ random.random_group.iter().map(|q| {
+                    let rate = text!("{}% ", q.rate);
+                    let trigger = q.is_triger.then(||html!(<span class="tag is-primary">"Key"</span>));
+                    if let Some(quest) = pedia_ex.quests.get(&q.random_quest) {
+                        html!(<li class="mh-quest-inline">{rate}{gen_quest_tag(quest, false, false, None, None)}
+                        {trigger}
+                        </li>)
+                    } else {
+                        html!(<li>{rate}{text!("Unknown quest {}", q.random_quest)}
+                        {trigger}
+                        </li>)
+                    }
+                }) }</ul>
+                </div>)
+            }
+            </section>)
+        });
+    }
+
     if let Some(servants) = quest.servant {
         sections.push(Section {
             title: "Fixed followers".to_owned(),

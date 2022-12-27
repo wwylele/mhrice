@@ -71,6 +71,8 @@ Version list:
 11_00_02 = 11.0.2.0
 12_00_00 = 12.0.0.0
 12_00_01 = 12.0.1.1
+13_00_00 = 13.0.0.0
+-        = 13.0.0.1
 
 ****/
 
@@ -680,12 +682,20 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         SupplyData,
         ProgressCheckerUserDataParam,
         ProgressCheckerUserData,
-
         ArenaTalismanSkillData,
         ItemWork,
         ArenaPlayer,
         ArenaQuestDataParam,
         ArenaQuestData,
+        QuestUnlockListGroup,
+        QuestUnlockRelation,
+        QuestUnlockByTalkFlag,
+        UnlockQuestInfoList,
+        QuestUnlockByQuestClear,
+        RandomQuestList,
+        RandomQuestUnlockByQuestClear,
+        QuestUnlockByHuntEnemy,
+        QuestUnlockRequestListUserData,
     );
 
     r!(

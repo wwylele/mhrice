@@ -1266,7 +1266,6 @@ rsz_struct! {
     #[rsz("snow.quest.ArenaQuestData",
         path = "Quest/Arena/ArenaQuestData.user",
         0x371AAF74 = 10_00_02,
-
     )]
     #[derive(Debug, Serialize)]
     pub struct ArenaQuestData {
@@ -1277,5 +1276,151 @@ rsz_struct! {
         pub param_mr: Vec<ArenaQuestDataParam>,
         pub param_mr1: Vec<ArenaQuestDataParam>,
 
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.progress.quest.QuestUnlockListGroup",
+        0xA732DC3F = 13_00_00,
+        0x1197D013 = 12_00_00,
+        0xA06B3109 = 11_00_01,
+        0x8D10F382 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct QuestUnlockListGroup {
+        pub quest_no_array: Vec<i32>, // snow.quest.QuestNo
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.progress.quest.QuestUnlockRelation",
+        0xB522D865 = 13_00_00,
+        0x2945BA18 = 12_00_00,
+        0xB125A5B1 = 11_00_01,
+        0xF675949F = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct QuestUnlockRelation {
+        pub order: i32,
+        pub request_count: i32,
+        pub request_group_idx: Vec<i32>,
+        pub request_talk_flag: Vec<i32>, // snow.npc.TalkFlag
+        pub release_group_idx: Vec<u32>,
+        pub set_talk_flag: i32, // snow.npc.TalkFlag
+
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.progress.quest.QuestUnlockByTalkFlag",
+        0xA2C096E7 = 13_00_00,
+        0xA48596FD = 12_00_00,
+        0x2C741CB6 = 11_00_01,
+        0x0AC85EF5 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct QuestUnlockByTalkFlag {
+        pub quest_no: i32,
+        pub talk_flag: i32, // snow.npc.TalkFlag
+        pub is_clear: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.progress.quest.QuestUnlockByQuestClear.UnlockQuestInfoList",
+        0xDAC7F830 = 13_00_00,
+        0x964C501B = 12_00_00,
+        0xC70EDBDF = 11_00_01,
+        0xBFF62D69 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct UnlockQuestInfoList {
+        pub unlock_quest: i32,
+        pub is_clear: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.progress.quest.QuestUnlockByQuestClear",
+        0x54117276 = 13_00_00,
+        0xA5FCF42F = 12_00_00,
+        0x64C8ACEE = 11_00_01,
+        0x80AACD3E = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct QuestUnlockByQuestClear {
+        pub unlock_quest_no_list: Vec<UnlockQuestInfoList>,
+        pub clear_quest_no_list: Vec<i32>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.progress.quest.RandomQuestUnlockByQuestClear.RandomQuestList",
+        0xEB5E6CB1 = 13_00_00,
+        0xE0AC5830 = 12_00_00,
+        0xB1FBBB0C = 11_00_01,
+        0x67F434DF = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RandomQuestList {
+        pub random_quest: i32,
+        pub is_triger: bool,
+        pub rate: i32,
+        pub is_clear: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.progress.quest.RandomQuestUnlockByQuestClear",
+        0xA90AC50E = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RandomQuestUnlockByQuestClear {
+        pub random_group: Vec<RandomQuestList>
+    }
+}
+
+// snow.progress.quest.EnemyRank
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, PartialOrd, Ord, PartialEq, Eq, Clone, Copy)]
+    pub enum EnemyRank {
+        None = 0,
+        Village = 1,
+        Low = 2,
+        High = 3,
+        Master = 4,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.progress.quest.QuestUnlockByHuntEnemy",
+        0x0023438C = 13_00_00,
+        0xECB2250E = 12_00_00,
+        0x8457868E = 11_00_01,
+        0x9505EE84 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct QuestUnlockByHuntEnemy {
+        pub unlock_quest_no: i32,
+        pub hunt_em_type: i32, // snow.enemy.EnemyDef.EnemyTypeIndex
+        pub enemy_rank: EnemyRank,
+        pub is_clear: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.progress.quest.QuestUnlockRequestListUserData",
+        path = "Progress/quest/userdata/QuestUnlockRequestList.user",
+        0xB5FA4A1A = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct QuestUnlockRequestListUserData {
+        pub quest_group: Vec<QuestUnlockListGroup>,
+        pub relation: Vec<QuestUnlockRelation>,
+        pub quest_unlock_by_talk_flag: Vec<QuestUnlockByTalkFlag>,
+        pub quest_unlock_by_quest_clear: Vec<QuestUnlockByQuestClear>,
+        pub random_quest_unlock_by_quest_clear: Vec<RandomQuestUnlockByQuestClear>,
+        pub quest_unlock_by_hunt_enemy: Vec<QuestUnlockByHuntEnemy>,
     }
 }
