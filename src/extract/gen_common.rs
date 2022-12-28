@@ -91,14 +91,6 @@ pub fn right_aside() -> Box<aside<String>> {
     </ul>
 
     <p class="menu-label">
-        "Use cookie to save preference"
-    </p>
-    <div id="cookie-consent" class="buttons has-addons">
-        <button id="cookie-yes" class="button is-small">"Yes"</button>
-        <button id="cookie-no" class="button is-small is-selected is-danger">"No"</button>
-    </div>
-
-    <p class="menu-label">
         "Version"
     </p>
     <ul class="menu-list">{

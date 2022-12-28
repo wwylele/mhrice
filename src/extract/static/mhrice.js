@@ -1,7 +1,6 @@
 "use strict";
 
 let g_supported_mh_lang = [];
-let g_cookie_consent = false;
 let g_language_code = "en";
 
 let g_navbar_menu_active = false;
@@ -22,13 +21,14 @@ let g_map_pos = { top: 0, left: 0, x: 0, y: 0, container: null };
 let g_diagram_current = new Map();
 
 document.addEventListener('DOMContentLoaded', function () {
+    delete_all_cookie();
     addEventListensers();
 
     for (const element of document.getElementsByClassName("mh-lang-menu")) {
         g_supported_mh_lang.push(removePrefix(element.id, "mh-lang-menu-"));
     }
 
-    check_cookie();
+    loadPreference();
     switchLanguage();
     adjustVersionMenu();
     hide_class("mh-ride-cond");
@@ -55,8 +55,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function addEventListensers() {
     addEventListenerToClass("mh-lang-menu", "click", selectLanguage);
-    addEventListenerToId("cookie-yes", "click", enableCookie);
-    addEventListenerToId("cookie-no", "click", disableCookie);
     addEventListenerToId("navbarBurger", "click", onToggleNavbarMenu);
 
     addEventListenerToId("left-aside-button", "click", onToggleLeftAside);
@@ -155,56 +153,11 @@ function onDropdownClick(e) {
     //e.currentTarget.classList.toggle("is-active");
 }
 
-function check_cookie() {
-    const cookies = document.cookie.split(";");
-    for (const cookie of cookies) {
-        const s = cookie.trim().split("=");
-        const cookie_name = s[0];
-        const cookie_value = s[1];
-        if (cookie_name === null || cookie_value === null) {
-            continue;
-        }
-        if (cookie_name === "consent" && cookie_value === "yes") {
-            g_cookie_consent = true;
-        }
-
-        if (cookie_name === "mh-language") {
-            g_language_code = cookie_value
-            if (!(g_supported_mh_lang.includes(g_language_code))) {
-                g_language_code = "en";
-            }
-        }
+function loadPreference() {
+    const language = localStorage.getItem("mh-language");
+    if (language !== null && g_supported_mh_lang.includes(language)) {
+        g_language_code = language;
     }
-
-    updateCookieButtons();
-}
-
-function updateCookieButtons() {
-    const yes = document.getElementById("cookie-yes");
-    const no = document.getElementById("cookie-no");
-    if (yes && no) {
-        if (g_cookie_consent) {
-            yes.classList.add("is-selected", "is-success");
-            no.classList.remove("is-selected", "is-danger");
-        } else {
-            yes.classList.remove("is-selected", "is-success");
-            no.classList.add("is-selected", "is-danger");
-        }
-    }
-
-}
-
-function enableCookie() {
-    document.cookie = "consent=yes;path=/;samesite=strict;max-age=31536000";
-    g_cookie_consent = true;
-    updateCookieButtons();
-    saveLanguageToCookie();
-}
-
-function disableCookie() {
-    g_cookie_consent = false;
-    delete_all_cookie();
-    updateCookieButtons();
 }
 
 function delete_all_cookie() {
@@ -300,18 +253,13 @@ function show_class(c) {
     refresh_visibility(c);
 }
 
-function saveLanguageToCookie() {
-    document.cookie = `mh-language=${g_language_code};path=/;samesite=strict;max-age=31536000`;
-}
 
 function selectLanguage(e) {
     const language = removePrefix(e.currentTarget.id, "mh-lang-menu-");
     g_toc = null;
     g_language_code = language;
     switchLanguage();
-    if (g_cookie_consent) {
-        saveLanguageToCookie()
-    }
+    localStorage.setItem("mh-language", language)
 }
 
 function switchLanguage() {
