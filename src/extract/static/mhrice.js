@@ -97,7 +97,6 @@ function addEventListensers() {
         e => onCheckDisplay(e.currentTarget, 'mh-hitzone-internal', null));
 
     addEventListenerToClass("mh-color-diagram-switch", "click", onChangeDiagramColor);
-    addEventListenerToClass("has-dropdown", "click", onDropdownClick);
 }
 
 function addEventListenerToClass(class_name, event_name, f) {
@@ -146,12 +145,6 @@ function onToggleRightAside() {
 //        left_aside.classList.remove("is-active");
 //    }
 //}
-
-function onDropdownClick(e) {
-    // TODO: make this work well
-    e
-    //e.currentTarget.classList.toggle("is-active");
-}
 
 function loadPreference() {
     const language = localStorage.getItem("mh-language");
