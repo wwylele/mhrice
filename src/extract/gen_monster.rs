@@ -1682,7 +1682,7 @@ pub fn gen_monster(
                 {reward.additional_quest_reward.iter().map(|r| html!(
                     <div class="mh-reward-box"><div class="mh-table"><table>
                         <thead><tr>
-                            <th>"Additional quest rewards"<br/>
+                            <th>"Quest bonus rewards"<br/>
                             {translate_rule(r.lot_rule)}</th>
                             <th>"Probability"</th>
                         </tr></thead>

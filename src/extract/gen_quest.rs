@@ -1303,7 +1303,7 @@ fn gen_quest(
                     html!(<div class="mh-reward-box">
                     <div class="mh-table"><table>
                         <thead><tr>
-                            <th>"Addtional rewards"<br/>{
+                            <th>"Quest bonus rewards"<br/>{
                                 translate_rule(additional_quest_reward.lot_rule)
                             }</th>
                             <th>"Probability"</th>
