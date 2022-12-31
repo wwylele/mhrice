@@ -94,6 +94,7 @@ pub struct Pedia {
     pub supply_data_mr: SupplyDataMr,
     pub arena_quest: ArenaQuestData,
     pub quest_unlock: QuestUnlockRequestListUserData,
+    pub time_attack_reward: TimeAttackRewardUserData,
     pub quest_hall_msg: Msg,
     pub quest_hall_msg_mr: Msg,
     pub quest_hall_msg_mr2: Msg,
@@ -273,6 +274,11 @@ pub enum QuestUnlock<'a> {
     Enemy(&'a QuestUnlockByHuntEnemy),
 }
 
+pub struct TimeAttackReward<'a> {
+    pub reward: &'a RewardIdLotTableUserDataParam,
+    pub rank: &'a RankData,
+}
+
 pub struct Quest<'a> {
     pub param: &'a NormalQuestDataParam,
     pub enemy_param: Option<&'a NormalQuestDataForEnemyParam>,
@@ -288,6 +294,7 @@ pub struct Quest<'a> {
     pub arena: Option<&'a ArenaQuestDataParam>,
     pub unlock: Vec<QuestUnlock<'a>>,
     pub random_group: Option<&'a RandomQuestUnlockByQuestClear>,
+    pub time_attack_reward: Vec<TimeAttackReward<'a>>,
 }
 
 pub struct Deco<'a> {

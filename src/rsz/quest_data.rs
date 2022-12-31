@@ -1424,3 +1424,52 @@ rsz_struct! {
         pub quest_unlock_by_hunt_enemy: Vec<QuestUnlockByHuntEnemy>,
     }
 }
+
+// snow.quest.RewardRank
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq)]
+    pub enum RewardRank {
+        RankSS = 0,
+        RankS = 1,
+        RankA = 2,
+        RankB = 3,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.TimeAttackRewardUserData.RankData",
+        0x5DF7AD18 = 0
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RankData {
+        pub rank: RewardRank,
+        pub clear_time: f32,
+        pub reward_table_id: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.TimeAttackRewardUserData.TimeAttackRewardData",
+        0x1142EF9A = 13_00_00,
+        0xC01F0CE3 = 12_00_00,
+        0x6EA33C1C = 11_00_01,
+        0x8D1A9F51 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct TimeAttackRewardData {
+        pub quest_no: i32,
+        pub rank_data_list: Vec<RankData>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.TimeAttackRewardUserData",
+        path = "data/Define/Quest/System/QuestRewardSystem/TimeAttackRewardUserData.user",
+        0xCED3F823 = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct TimeAttackRewardUserData {
+        pub data_list: Vec<TimeAttackRewardData>,
+    }
+}

@@ -924,6 +924,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         supply_data_mr: get_singleton(pak)?,
         arena_quest: get_singleton(pak)?,
         quest_unlock: get_singleton(pak)?,
+        time_attack_reward: get_singleton(pak)?,
         quest_hall_msg,
         quest_hall_msg_mr,
         quest_hall_msg_mr2,
@@ -1652,7 +1653,7 @@ fn prepare_quests<'a>(
     let servant = hash_map_unique(
         &pedia.quest_servant.quest_servant_data_list,
         |s| (s.quest_no, s),
-        true,
+        false,
     )?;
 
     let arena = hash_map_unique(
@@ -1666,7 +1667,13 @@ fn prepare_quests<'a>(
             .chain(&pedia.arena_quest.param_mr)
             .chain(&pedia.arena_quest.param_mr1),
         |p| (p.quest_no, p),
-        true,
+        false,
+    )?;
+
+    let time_attack = hash_map_unique(
+        &pedia.time_attack_reward.data_list,
+        |p| (p.quest_no, p),
+        false,
     )?;
 
     let mut result = pedia
@@ -1777,6 +1784,23 @@ fn prepare_quests<'a>(
                 None
             };
 
+            let time_attack_reward = if let Some(ta) = time_attack.get(&param.quest_no) {
+                ta.rank_data_list
+                    .iter()
+                    .map(|rank| {
+                        let reward = *reward_lot.get(&rank.reward_table_id).with_context(|| {
+                            format!(
+                                "Can't find time attack reward for quest {}, id {}",
+                                param.quest_no, rank.reward_table_id
+                            )
+                        })?;
+                        Ok(TimeAttackReward { reward, rank })
+                    })
+                    .collect::<Result<Vec<_>>>()?
+            } else {
+                vec![]
+            };
+
             Ok((
                 param.quest_no,
                 Quest {
@@ -1794,6 +1818,7 @@ fn prepare_quests<'a>(
                     arena: arena.get(&param.quest_no).cloned(),
                     unlock: vec![],
                     random_group: None,
+                    time_attack_reward,
                 },
             ))
         })
