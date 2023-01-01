@@ -107,6 +107,68 @@ pub fn gen_quest_list(
         }
     }
 
+    let mut sections = vec![];
+
+    for (enemy_level, quests) in quests_ordered {
+        let quest_level_name = match enemy_level {
+            EnemyLevel::Village => "Village",
+            EnemyLevel::Low => "Low rank",
+            EnemyLevel::High => "High rank",
+            EnemyLevel::Master => "Master rank",
+        };
+
+        for (quest_level, quests) in quests {
+            let level_name = match quest_level {
+                QuestLevel::QL1 => "1★",
+                QuestLevel::QL2 => "2★",
+                QuestLevel::QL3 => "3★",
+                QuestLevel::QL4 => "4★",
+                QuestLevel::QL5 => "5★",
+                QuestLevel::QL6 => "6★",
+                QuestLevel::QL7 => "7★",
+                QuestLevel::QL7Ex => "7★Ex",
+            };
+
+            let title = format!("{} {}", quest_level_name, level_name);
+            let id = format!("s-{}s{}", enemy_level.into_raw(), quest_level.into_raw());
+            sections.push(Section {
+                title: title.clone(),
+                content: html!(
+                    <section id={id.as_str()}>
+                        <h2>{text!("{}", title)}</h2>
+                        <ul class="mh-quest-list">{
+                            quests.into_iter().map(|quest|{
+                                html!{<li>
+                                    { gen_quest_tag(quest, false, false, None, None) }
+                                </li>}
+                            })
+                        }</ul>
+                    </section>
+                ),
+            })
+        }
+    }
+
+    for (quest_level, quests) in anomaly_ordered {
+        let title = format!("A{}★", quest_level);
+        let id = format!("s-a{}", quest_level);
+        sections.push(Section {
+            title: title.clone(),
+            content: html!(
+                <section id={id.as_str()}>
+                <h2>{text!("{}", title)}</h2>
+                <ul class="mh-quest-list">{
+                    quests.into_iter().map(|quest|{
+                        html!{<li>
+                            { gen_quest_tag(quest, false, false, None, None) }
+                        </li>}
+                    })
+                }</ul>
+            </section>
+            ),
+        });
+    }
+
     let doc: DOMTree<String> = html!(
         <html lang="en">
             <head itemscope=true>
@@ -115,47 +177,10 @@ pub fn gen_quest_list(
             </head>
             <body>
                 { navbar() }
+                { gen_menu(&sections) }
                 <main>
                 <header><h1>"Quests"</h1></header>
-                {
-                    quests_ordered.into_iter().map(|(enemy_level, quests)|{
-                        html!(<section>
-                        <h2>{text!("{:?}", enemy_level)}</h2>
-                        { quests.into_iter().map(|(quest_level, quests)|{
-                            html!(
-                                <section class="mh-quest-list">
-                                    <h3>{text!("{:?}", quest_level)}</h3>
-                                    <ul class="mh-quest-list">{
-                                        quests.into_iter().map(|quest|{
-                                            html!{<li>
-                                                { gen_quest_tag(quest, false, false, None, None) }
-                                            </li>}
-                                        })
-                                    }</ul>
-                                </section>
-                            )
-                        })}</section>)
-                    })
-                }
-                <section>
-                <h2>"Anomaly quests"</h2>
-                {
-                    anomaly_ordered.into_iter().map(|(quest_level, quests)|{
-                        html!(
-                            <section class="mh-quest-list">
-                                <h3>{text!("A{}", quest_level)}</h3>
-                                <ul class="mh-quest-list">{
-                                    quests.into_iter().map(|quest|{
-                                        html!{<li>
-                                            { gen_quest_tag(quest, false, false, None, None) }
-                                        </li>}
-                                    })
-                                }</ul>
-                            </section>
-                        )
-                    })
-                }
-                </section>
+                { sections.into_iter().map(|s|s.content) }
                 </main>
                 { right_aside() }
             </body>
@@ -456,14 +481,14 @@ fn gen_quest(
             {
                 gen_multi_lang(name)
             } else {
-                html!(<span>{text!("{:?}", em)}</span>)
+                html!(<span>{text!("Unknown monster {:?}", em)}</span>)
             };
             let result = match ty {
                 QuestTargetType::ItemGet => {
                     let item = if let Some(item_entry) = pedia_ex.items.get(item) {
                         gen_multi_lang(item_entry.name)
                     } else {
-                        html!(<span>{text!("{:?}", item)}</span>)
+                        html!(<span>{text!("Unknown item {:?}", item)}</span>)
                     };
                     html!(<span>{text!("Gather {}x ", num)} {item}</span>)
                 }
@@ -502,7 +527,7 @@ fn gen_quest(
         .order_type
         .iter()
         .filter(|&&t| t != QuestOrderType::None)
-        .map(|t| format!("{:?}", t))
+        .map(|t| format!("{}", t))
         .collect::<Vec<String>>()
         .join(", ");
 
@@ -722,7 +747,7 @@ fn gen_quest(
             let item = if let Some(item) = pedia_ex.items.get(&item) {
                 html!(<div class="il">{gen_item_label(item)}</div>)
             } else {
-                html!(<div class="il">{text!("{:?}", item)}</div>)
+                html!(<div class="il">{text!("Unknown item {:?}", item)}</div>)
             };
             html!(<li>
                 {text!("{}x ", num)}
@@ -1037,7 +1062,7 @@ fn gen_quest(
                     let item = if let Some(item) = pedia_ex.items.get(item) {
                         html!(<div class="il">{gen_item_label(item)}</div>)
                     } else {
-                        html!(<div class="il">{text!("{:?}", item)}</div>)
+                        html!(<div class="il">{text!("Unknown item {:?}", item)}</div>)
                     };
                     html!(<li>
                         {text!("{}x ", num)}
@@ -1125,7 +1150,7 @@ fn gen_quest(
                                 let item = if let Some(item) = pedia_ex.items.get(&item_work.item) {
                                     html!(<div class="il">{gen_item_label(item)}</div>)
                                 } else {
-                                    html!(<div class="il">{text!("{:?}", item_work.item)}</div>)
+                                    html!(<div class="il">{text!("Unknown item {:?}", item_work.item)}</div>)
                                 };
                                 html!(<li>
                                     {text!("{}x ", item_work.num)}

@@ -128,6 +128,47 @@ rsz_enum! {
     }
 }
 
+impl std::fmt::Display for QuestOrderType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match *self {
+                QuestOrderType::None => "None",
+                QuestOrderType::Under2 => "At most 2 people",
+                QuestOrderType::H2 => "HR 2",
+                QuestOrderType::H3 => "HR 3",
+                QuestOrderType::H4 => "HR 4",
+                QuestOrderType::H5 => "HR 5",
+                QuestOrderType::H6 => "HR 6",
+                QuestOrderType::H7 => "HR 7",
+                QuestOrderType::H8 => "HR 8",
+                QuestOrderType::H20 => "HR 20",
+                QuestOrderType::H30 => "HR 30",
+                QuestOrderType::H40 => "HR 40",
+                QuestOrderType::H45 => "HR 45",
+                QuestOrderType::H50 => "HR 50",
+                QuestOrderType::H90 => "HR 90",
+                QuestOrderType::H100 => "HR 100",
+                QuestOrderType::M1 => "MR 1",
+                QuestOrderType::M2 => "MR 2",
+                QuestOrderType::M3 => "MR 3",
+                QuestOrderType::M4 => "MR 4",
+                QuestOrderType::M5 => "MR 5",
+                QuestOrderType::M6 => "MR 6",
+                QuestOrderType::M10 => "MR 10",
+                QuestOrderType::M20 => "MR 20",
+                QuestOrderType::M30 => "MR 30",
+                QuestOrderType::M40 => "MR 40",
+                QuestOrderType::M50 => "MR 50",
+                QuestOrderType::M60 => "MR 60",
+                QuestOrderType::M100 => "MR 100",
+                QuestOrderType::Only1 => "Solo",
+            }
+        )
+    }
+}
+
 // snow.quest.QuestTargetType
 rsz_enum! {
     #[rsz(u8)]

@@ -225,14 +225,14 @@ where
 
     let bowgun_param = bullet.into_iter().flat_map(|bullet| {
         [
-            html!(<p class="mh-kv"><span>"Fluctuation"</span>
-            <span>{ text!("{:?}", bullet.fluctuation) }</span></p>),
+            html!(<p class="mh-kv"><span>"Deviation"</span>
+            <span>{ text!("{}", bullet.fluctuation) }</span></p>),
             html!(<p class="mh-kv"><span>"Reload"</span>
             <span>{ text!("{}", bullet.reload) }</span></p>),
             html!(<p class="mh-kv"><span>"Recoil"</span>
             <span>{ text!("{}", bullet.recoil) }</span></p>),
-            html!(<p class="mh-kv"><span>"Kakusan type"</span>
-            <span>{ text!("{:?}", bullet.kakusan_type) }</span></p>),
+            html!(<p class="mh-kv"><span>"Cluster bomb type"</span>
+            <span>{ text!("{}", bullet.kakusan_type) }</span></p>),
         ]
     });
 
@@ -240,15 +240,15 @@ where
         let charge_type: Vec<String> = bow
             .bow_charge_type_list
             .iter()
-            .map(|c| format!("{:?}", c))
+            .map(|c| format!("{}", c))
             .collect();
         [
             html!(<p class="mh-kv"><span>"Default charge lv"</span>
             <span>{ text!("{}", bow.bow_default_charge_lv_limit.0) }</span></p>),
-            html!(<p class="mh-kv"><span>"Charge type"</span>
-            <span>{ text!("{}", charge_type.join("-")) }</span></p>),
-            html!(<p class="mh-kv"><span>"Curve type"</span>
-            <span>{ text!("{:?}", bow.bow_curve_type) }</span></p>),
+            html!(<p class="mh-kv"><span>"Charge shot"</span>
+            <span>{ text!("{}", charge_type.join(", ")) }</span></p>),
+            html!(<p class="mh-kv"><span>"Arc shot"</span>
+            <span>{ text!("{}", bow.bow_curve_type) }</span></p>),
         ]
     });
 
@@ -842,8 +842,8 @@ where
 #[allow(clippy::vec_box)]
 fn slash_axe(param: &SlashAxeBaseUserDataParam) -> Vec<Box<p<String>>> {
     vec![html!(<p class="mh-kv">
-    <span>"Bottle"</span>
-    <span>{text!("{:?} {}", param.slash_axe_bottle_type,
+    <span>"Phial"</span>
+    <span>{text!("{} {}", param.slash_axe_bottle_type,
             param.slash_axe_bottle_element_val)}</span>
     </p>)]
 }
@@ -851,8 +851,8 @@ fn slash_axe(param: &SlashAxeBaseUserDataParam) -> Vec<Box<p<String>>> {
 #[allow(clippy::vec_box)]
 fn gun_lance(param: &GunLanceBaseUserDataParam) -> Vec<Box<p<String>>> {
     vec![html!(<p class="mh-kv">
-    <span>"Type"</span>
-    <span>{text!("{:?} {}", param.gun_lance_fire_type,
+    <span>"Shelling"</span>
+    <span>{text!("{} Lv{}", param.gun_lance_fire_type,
             param.gun_lance_fire_lv.0)}</span>
     </p>)]
 }
@@ -868,16 +868,16 @@ fn insect_glaive(param: &InsectGlaiveBaseUserDataParam) -> Vec<Box<p<String>>> {
 #[allow(clippy::vec_box)]
 fn charge_axe(param: &ChargeAxeBaseUserDataParam) -> Vec<Box<p<String>>> {
     vec![html!(<p class="mh-kv">
-    <span>"Bottle"</span>
-    <span>{text!("{:?}", param.charge_axe_bottle_type)}</span>
+    <span>"Phial"</span>
+    <span>{text!("{}", param.charge_axe_bottle_type)}</span>
     </p>)]
 }
 
 #[allow(clippy::vec_box)]
 fn heavy_bowgun(param: &HeavyBowgunBaseUserDataParam) -> Vec<Box<p<String>>> {
     vec![html!(<p class="mh-kv">
-    <span>"Unique bullet"</span>
-    <span>{text!("{:?}", param.heavy_bowgun_unique_bullet_type)}</span>
+    <span>"Special ammo"</span>
+    <span>{text!("{}", param.heavy_bowgun_unique_bullet_type)}</span>
     </p>)]
 }
 

@@ -158,7 +158,7 @@ rsz_enum! {
 // snow.data.ElementData.ElementType
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, PartialEq, Eq, Clone, Copy)]
     pub enum ElementType {
         None = 0,
         Fire = 1,
@@ -176,11 +176,25 @@ rsz_enum! {
 // snow.data.GunLanceFireData.GunLanceFireType
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Copy, Clone)]
     pub enum GunLanceFireType {
         Normal = 0,
         Radial = 1,
         Diffusion = 2,
+    }
+}
+
+impl std::fmt::Display for GunLanceFireType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match *self {
+                GunLanceFireType::Normal => "Normal",
+                GunLanceFireType::Radial => "Long",
+                GunLanceFireType::Diffusion => "Wide",
+            }
+        )
     }
 }
 
@@ -195,17 +209,30 @@ rsz_newtype! {
 // snow.data.ChargeAxeWeaponBaseData.BottleTypes
 rsz_enum! {
     #[rsz(u32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Copy, Clone)]
     pub enum ChargeAxeBottleTypes {
         Power = 2,
         StrongElement = 1,
     }
 }
 
+impl std::fmt::Display for ChargeAxeBottleTypes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match *self {
+                ChargeAxeBottleTypes::Power => "Power",
+                ChargeAxeBottleTypes::StrongElement => "Elemental",
+            }
+        )
+    }
+}
+
 // snow.data.SlashAxeWeaponBaseData.BottleTypes
 rsz_enum! {
     #[rsz(u32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone, Copy)]
     pub enum SlashAxeBottleTypes {
         Power = 2,
         StrongElement = 1,
@@ -213,6 +240,23 @@ rsz_enum! {
         Paralyze = 4,
         DownStamina = 7,
         Dragon = 8,
+    }
+}
+
+impl std::fmt::Display for SlashAxeBottleTypes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match *self {
+                SlashAxeBottleTypes::Power => "Power",
+                SlashAxeBottleTypes::StrongElement => "Elemental",
+                SlashAxeBottleTypes::Poison => "Poison",
+                SlashAxeBottleTypes::Paralyze => "Paralysis",
+                SlashAxeBottleTypes::DownStamina => "Exhaust",
+                SlashAxeBottleTypes::Dragon => "Dragon",
+            }
+        )
     }
 }
 
@@ -226,10 +270,23 @@ rsz_enum! {
     }
 }
 
+impl std::fmt::Display for UniqueBulletType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match *self {
+                UniqueBulletType::Snipe => "Wynvernsnype",
+                UniqueBulletType::Gatling => "Wynvernheart",
+            }
+        )
+    }
+}
+
 // snow.data.BowWeaponBaseData.ChargeTypes
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Copy, Clone)]
     pub enum BowChargeTypes {
         None = 0,
         BurstLv1 = 1,
@@ -247,6 +304,33 @@ rsz_enum! {
         TransfixLv3 = 13,
         TransfixLv4 = 14,
         TransfixLv5 = 15,
+    }
+}
+
+impl std::fmt::Display for BowChargeTypes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match *self {
+                BowChargeTypes::None => "None",
+                BowChargeTypes::BurstLv1 => "Rapid Lv1",
+                BowChargeTypes::BurstLv2 => "Rapid Lv2",
+                BowChargeTypes::BurstLv3 => "Rapid Lv3",
+                BowChargeTypes::BurstLv4 => "Rapid Lv4",
+                BowChargeTypes::BurstLv5 => "Rapid Lv5",
+                BowChargeTypes::DiffusionLv1 => "Spread Lv1",
+                BowChargeTypes::DiffusionLv2 => "Spread Lv2",
+                BowChargeTypes::DiffusionLv3 => "Spread Lv3",
+                BowChargeTypes::DiffusionLv4 => "Spread Lv4",
+                BowChargeTypes::DiffusionLv5 => "Spread Lv5",
+                BowChargeTypes::TransfixLv1 => "Pierce Lv1",
+                BowChargeTypes::TransfixLv2 => "Pierce Lv2",
+                BowChargeTypes::TransfixLv3 => "Pierce Lv3",
+                BowChargeTypes::TransfixLv4 => "Pierce Lv4",
+                BowChargeTypes::TransfixLv5 => "Pierce Lv5",
+            }
+        )
     }
 }
 

@@ -66,15 +66,20 @@ fn gen_otomo_equip(
         let armor = armor.as_ref()?;
         Some(html!(<tr>
             <td>{gen_atomo_armor_label(armor)}</td>
-            <td>{text!("{}", armor.param.sell_value)}</td>
+            <td>{text!("{}z", armor.param.sell_value)}</td>
             <td>{text!("Defense: {}", armor.param.def)}</td>
             <td>"Defense"
-                <ul>
-                    <li>{text!("Fire: {}", armor.param.element_regist_list[0])}</li>
-                    <li>{text!("Water: {}", armor.param.element_regist_list[1])}</li>
-                    <li>{text!("Thunder: {}", armor.param.element_regist_list[2])}</li>
-                    <li>{text!("Ice: {}", armor.param.element_regist_list[3])}</li>
-                    <li>{text!("Dragon: {}", armor.param.element_regist_list[4])}</li>
+                <ul class="mh-buddy-gear-stat">
+                    <li><img alt="Fire" src="/resources/fire.png" class="mh-small-icon"/>
+                        {text!("Fire: {}", armor.param.element_regist_list[0])}</li>
+                    <li><img alt="Water" src="/resources/water.png" class="mh-small-icon"/>
+                        {text!("Water: {}", armor.param.element_regist_list[1])}</li>
+                    <li><img alt="Thunder" src="/resources/thunder.png" class="mh-small-icon"/>
+                        {text!("Thunder: {}", armor.param.element_regist_list[2])}</li>
+                    <li><img alt="Ice" src="/resources/ice.png" class="mh-small-icon"/>
+                        {text!("Ice: {}", armor.param.element_regist_list[3])}</li>
+                    <li><img alt="Dragon" src="/resources/dragon.png" class="mh-small-icon"/>
+                        {text!("Dragon: {}", armor.param.element_regist_list[4])}</li>
                 </ul>
             </td>
         </tr>))
@@ -142,19 +147,40 @@ fn gen_otomo_equip(
                         <span class="tag is-primary">{text!("{}", atk_type)}</span>
                         <span class="tag is-primary">{text!("{}", specialize)}</span>
                     </td>
-                    <td>{text!("{}", weapon.param.sell_value)}</td>
-                    <td><ul>
-                        <li>{text!("Short: {} (Aff. {}%)",
-                            weapon.param.atk_val_list[0], weapon.param.critical_rate_list[0])}</li>
-                        <li>{text!("Long: {} (Aff. {}%)",
-                            weapon.param.atk_val_list[1], weapon.param.critical_rate_list[1])}</li>
-                        <li>{text!("Def bonus: {}", weapon.param.def_bonus)}</li>
-                    </ul></td>
-                    <td><ul>
-                        <li>{text!("{:?}", weapon.param.element_type)}</li>
-                        <li>{text!("Short: {}", weapon.param.element_val_list[0])}</li>
-                        <li>{text!("Long: {}", weapon.param.element_val_list[1])}</li>
-                    </ul></td>
+                    <td>{text!("{}z", weapon.param.sell_value)}</td>
+                    <td>
+                        <div>{text!("Short: {} (Aff. {}%)",
+                            weapon.param.atk_val_list[0], weapon.param.critical_rate_list[0])}</div>
+                        <div>{text!("Long: {} (Aff. {}%)",
+                            weapon.param.atk_val_list[1], weapon.param.critical_rate_list[1])}</div>
+                        <div>{text!("Def bonus: {}", weapon.param.def_bonus)}</div>
+                    </td>
+                    { (weapon.param.element_type != ElementType::None).then(|| {
+                        let (img, text) = match weapon.param.element_type {
+                            ElementType::None => unreachable!(),
+                            ElementType::Fire => ("fire", "Fire"),
+                            ElementType::Water => ("water", "Water"),
+                            ElementType::Thunder => ("thunder", "Thunder"),
+                            ElementType::Ice => ("ice", "Ice"),
+                            ElementType::Dragon => ("dragon", "Dragon"),
+                            ElementType::Poison => ("poison", "Poison"),
+                            ElementType::Sleep => ("sleep", "Sleep"),
+                            ElementType::Paralyze => ("para", "Paralyze"),
+                            ElementType::Bomb => ("blast", "Blast"),
+                        };
+                        let img = format!("/resources/{img}.png");
+                        html!(<td><div>
+                            <img alt={text} src={img.as_str()} class="mh-small-icon"/>
+                            {text!("{}", text)}
+                        </div>
+                        <div>{text!("Short: {}", weapon.param.element_val_list[0])}</div>
+                        <div>{text!("Long: {}", weapon.param.element_val_list[1])}</div>
+                        </td>)
+                    })}
+
+                    {(weapon.param.element_type == ElementType::None).then(||
+                        html!(<td>"None"</td>)
+                    )}
                 </tr>)})}
                 </tbody>
             </table></div>
@@ -186,7 +212,7 @@ fn gen_otomo_equip(
                 <tbody>
                     {series.head.as_ref().map(|p|{html!(<tr>
                         <td>{gen_atomo_armor_label(p)}</td>
-                        <td>{text!("{}", p.param.sell_value * 3 / 2)}</td>
+                        <td>{text!("{}z", p.param.sell_value * 3 / 2)}</td>
                         {if let Some(product) = &p.product {
                             gen_materials(pedia_ex, &product.item_list, &product.item_num, &series.series.unlock_item)
                         } else {
@@ -195,7 +221,7 @@ fn gen_otomo_equip(
                     </tr>)})}
                     {series.chest.as_ref().map(|p|{html!(<tr>
                         <td>{gen_atomo_armor_label(p)}</td>
-                        <td>{text!("{}", p.param.sell_value * 3 / 2)}</td>
+                        <td>{text!("{}z", p.param.sell_value * 3 / 2)}</td>
                         {if let Some(product) = &p.product {
                             gen_materials(pedia_ex, &product.item_list, &product.item_num, &series.series.unlock_item)
                         } else {
@@ -205,7 +231,7 @@ fn gen_otomo_equip(
                     </tr>)})}
                     {series.weapon.as_ref().map(|p|{html!(<tr>
                         <td>{gen_atomo_weapon_label(p)}</td>
-                        <td>{text!("{}", p.param.sell_value * 3 / 2)}</td>
+                        <td>{text!("{}z", p.param.sell_value * 3 / 2)}</td>
                         {if let Some(product) = &p.product {
                             gen_materials(pedia_ex, &product.item_list, &product.item_num, &series.series.unlock_item)
                         } else {

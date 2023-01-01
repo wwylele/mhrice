@@ -756,12 +756,6 @@ ul.mh-list-monster {
 }
 
 /** Quest list **/
-section.mh-quest-list {
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    padding-left: 1rem;
-}
-
 ul.mh-quest-list {
     list-style: none;
     display: grid;
@@ -1083,4 +1077,12 @@ ul.mh-custom-lot {
 
 .mh-unlock-section {
     margin-bottom: 1rem;
+}
+
+/** Buddy gear table **/
+
+ul.mh-buddy-gear-stat {
+    margin-left: 0;
+    margin-top: 0;
+    list-style: none;
 }

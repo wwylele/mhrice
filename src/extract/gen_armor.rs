@@ -171,11 +171,11 @@ fn gen_armor(
                 <th>"Name"</th>
                 <th>"Buying cost"</th>
                 <th>"Defense"</th>
-                <th>"Fire"</th>
-                <th>"Water"</th>
-                <th>"Ice"</th>
-                <th>"Thunder"</th>
-                <th>"Dragon"</th>
+                <th><img alt="Fire" src="/resources/fire.png" class="mh-small-icon"/>"Fire"</th>
+                <th><img alt="Water" src="/resources/water.png" class="mh-small-icon"/>"Water"</th>
+                <th><img alt="Ice" src="/resources/ice.png" class="mh-small-icon"/>"Ice"</th>
+                <th><img alt="Thunder" src="/resources/thunder.png" class="mh-small-icon"/>"Thunder"</th>
+                <th><img alt="Dragon" src="/resources/dragon.png" class="mh-small-icon"/>"Dragon"</th>
                 <th>"Slots"</th>
                 <th>"Skills"</th>
             </tr></thead>

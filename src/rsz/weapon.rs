@@ -547,6 +547,24 @@ rsz_enum! {
     }
 }
 
+impl std::fmt::Display for Fluctuation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match *self {
+                Fluctuation::None => "None",
+                Fluctuation::LeftLittle => "L Mild",
+                Fluctuation::LeftMuch => "L Severe",
+                Fluctuation::RightLittle => "R Mild",
+                Fluctuation::RightMuch => "R Severe",
+                Fluctuation::RightAndLeftLittle => "LR Mild",
+                Fluctuation::RightAndLeftMuch => "LR Severe",
+            }
+        )
+    }
+}
+
 // snow.data.GameItemEnum.KakusanType
 rsz_enum! {
     #[rsz(i32)]
@@ -554,6 +572,44 @@ rsz_enum! {
     pub enum KakusanType {
         CloseAttack = 0,
         HorizontalAttack = 1,
+    }
+}
+
+impl std::fmt::Display for KakusanType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match *self {
+                KakusanType::CloseAttack => "Arc Shot",
+                KakusanType::HorizontalAttack => "Level Shot",
+            }
+        )
+    }
+}
+
+// snow.data.BowWeaponBaseData.CurveTypes
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize)]
+    pub enum CurveTypes {
+        Curve00 = 0,
+        Curve01 = 1,
+        Curve02 = 2,
+    }
+}
+
+impl std::fmt::Display for CurveTypes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match *self {
+                CurveTypes::Curve00 => "Recovery",
+                CurveTypes::Curve01 => "Affinity",
+                CurveTypes::Curve02 => "Brace",
+            }
+        )
     }
 }
 
@@ -729,7 +785,7 @@ rsz_struct! {
         pub bow_bottle_equip_flag_list: [bool; 7],
         pub bow_default_charge_lv_limit: BowChageStartLvTypes,
         pub bow_charge_type_list: [BowChargeTypes; 4],
-        pub bow_curve_type: i32, // snow.data.BowWeaponBaseData.CurveTypes
+        pub bow_curve_type: CurveTypes,
     }
 }
 impl_tobase!(

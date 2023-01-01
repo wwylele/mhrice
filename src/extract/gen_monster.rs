@@ -594,7 +594,7 @@ fn gen_grouped_reward_table<'a>(
                     let item = if let Some(item) = pedia_ex.items.get(&item) {
                         html!(<div class="il">{gen_item_label(item)}</div>)
                     } else {
-                        html!(<div class="il">{text!("{:?}", item)}</div>)
+                        html!(<div class="il">{text!("Unknown {:?}", item)}</div>)
                     };
 
                     let reward_type: Vec<_> = drop_dictionary
@@ -738,14 +738,14 @@ pub fn gen_lot(
                                 let item = if let Some(item) = pedia_ex.items.get(&item) {
                                     html!(<div class="il">{gen_item_label(item)}</div>)
                                 } else {
-                                    html!(<div class="il">{text!("{:?}", item)}</div>)
+                                    html!(<div class="il">{text!("Unknown {:?}", item)}</div>)
                                 };
 
                                 let part_name = if let Some(name) =
                                     pedia_ex.parts_dictionary.get(&(em_type, part)) {
                                     gen_multi_lang(name)
                                 } else {
-                                    html!(<span>{text!("{:?}", part)}</span>)
+                                    html!(<span>{text!("Unknown {:?}", part)}</span>)
                                 };
 
                                 let parts_list = html!(<div class="mh-part-rule"> {
