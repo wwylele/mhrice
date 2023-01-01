@@ -42,6 +42,29 @@ macro_rules! impl_tobase {
     };
 }
 
+pub trait MaybeToBase<Base> {
+    fn maybe_to_base(&self) -> Option<&Base>;
+}
+
+impl<T, Base> MaybeToBase<Base> for T
+where
+    T: ToBase<Base>,
+{
+    fn maybe_to_base(&self) -> Option<&Base> {
+        Some(self.to_base())
+    }
+}
+
+macro_rules! impl_maybetobase_none {
+    ($name:ty, $base:ty) => {
+        impl MaybeToBase<$base> for $name {
+            fn maybe_to_base(&self) -> Option<&$base> {
+                None
+            }
+        }
+    };
+}
+
 macro_rules! params {
     ($outer:ty, $inner:ty) => {
         impl Deref for $outer {
@@ -56,7 +79,7 @@ macro_rules! params {
 // snow.equip.PlWeaponElementTypes
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq)]
     pub enum PlWeaponElementTypes {
         None = 0,
         Fire = 1,
@@ -646,6 +669,7 @@ impl_tobase!(
     WeaponBaseData
 );
 impl_base!(LightBowgunBaseUserDataParam, BulletWeaponBaseUserDataParam);
+impl_maybetobase_none!(LightBowgunBaseUserDataParam, ElementWeaponBaseData);
 
 rsz_struct! {
     #[rsz("snow.equip.LightBowgunBaseUserData",
@@ -678,6 +702,7 @@ impl_tobase!(
     WeaponBaseData
 );
 impl_base!(HeavyBowgunBaseUserDataParam, BulletWeaponBaseUserDataParam);
+impl_maybetobase_none!(HeavyBowgunBaseUserDataParam, ElementWeaponBaseData);
 
 rsz_struct! {
     #[rsz("snow.equip.HeavyBowgunBaseUserData",

@@ -248,6 +248,13 @@ main {
 
 }
 
+/** small icons before text **/
+.mh-small-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    vertical-align: middle;
+}
+
 /** common interactive helper **/
 .mh-hidden {
     display: none;
@@ -271,6 +278,13 @@ main {
 }
 
 /** colored icon **/
+
+@mixin addon-element {
+    width: 1.5rem;
+    height: 1.5rem;
+    left: -0.25rem;
+    top: 0.75rem;
+}
 
 .mh-colored-icon {
     display: inline-grid;
@@ -356,6 +370,51 @@ main {
             left: 1rem;
             top: 0rem;
             background-image: url('/resources/slot_rampage.png');
+        }
+
+        >.mh-addon-fire {
+            @include addon-element;
+            background-image: url('/resources/fire.png');
+        }
+
+        >.mh-addon-water {
+            @include addon-element;
+            background-image: url('/resources/water.png');
+        }
+
+        >.mh-addon-thunder {
+            @include addon-element;
+            background-image: url('/resources/thunder.png');
+        }
+
+        >.mh-addon-ice {
+            @include addon-element;
+            background-image: url('/resources/ice.png');
+        }
+
+        >.mh-addon-dragon {
+            @include addon-element;
+            background-image: url('/resources/dragon.png');
+        }
+
+        >.mh-addon-poison {
+            @include addon-element;
+            background-image: url('/resources/poison.png');
+        }
+
+        >.mh-addon-sleep {
+            @include addon-element;
+            background-image: url('/resources/sleep.png');
+        }
+
+        >.mh-addon-para {
+            @include addon-element;
+            background-image: url('/resources/para.png');
+        }
+
+        >.mh-addon-blast {
+            @include addon-element;
+            background-image: url('/resources/blast.png');
         }
     }
 }

@@ -213,7 +213,7 @@ fn gen_condition_paralyze(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Paralyze"</td>
+            <td><img src="/resources/para.png" alt="Paralyze" class="mh-small-icon"/>"Paralyze"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Preset={}", data.preset_type)} </td>
         </tr>
@@ -227,7 +227,7 @@ fn gen_condition_sleep(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Sleep"</td>
+            <td><img src="/resources/sleep.png" alt="Sleep" class="mh-small-icon"/>"Sleep"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Preset = {}", data.preset_type)} </td>
         </tr>
@@ -326,7 +326,7 @@ fn gen_condition_poison(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Poison"</td>
+            <td><img src="/resources/poison.png" alt="Poison" class="mh-small-icon"/>"Poison"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Preset = {}", data.preset_type)} </td>
         </tr>
@@ -340,7 +340,7 @@ fn gen_condition_blast(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Blast"</td>
+            <td><img src="/resources/blast.png" alt="Blast" class="mh-small-icon"/>"Blast"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Blast damage = {}, Preset = {}", data.blast_damage, data.preset_type)} </td>
         </tr>
@@ -371,7 +371,7 @@ fn gen_condition_water(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Water"</td>
+            <td><img src="/resources/water.png" alt="Water" class="mh-small-icon"/>"Water"</td>
             { gen_condition_base(&data.base) }
             <td>
             {text!("Melee hzv adjust: hard = {}, soft = {}, judge = {}",
@@ -399,7 +399,7 @@ fn gen_condition_fire(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Fire"</td>
+            <td><img src="/resources/fire.png" alt="Fire" class="mh-small-icon"/>"Fire"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Hit-damage rate = {}, Preset = {}", data.hit_damage_rate, data.preset_type)} </td>
         </tr>
@@ -413,7 +413,7 @@ fn gen_condition_ice(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Ice"</td>
+            <td><img src="/resources/ice.png" alt="Ice" class="mh-small-icon"/>"Ice"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Motion speed rate = {}, Preset = {}", data.motion_speed_rate, data.preset_type)} </td>
         </tr>
@@ -427,7 +427,7 @@ fn gen_condition_thunder(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Thunder"</td>
+            <td><img src="/resources/thunder.png" alt="Thunder" class="mh-small-icon"/>"Thunder"</td>
             { gen_condition_base(&data.base) }
             <td>
             {text!("Stun hzv adjust: rate = {}, min = {}, max = {}, default = {}",
@@ -1319,11 +1319,11 @@ pub fn gen_monster(
                     <th>"Slash"</th>
                     <th>"Impact"</th>
                     <th>"Shot"</th>
-                    <th>"Fire"</th>
-                    <th>"Water"</th>
-                    <th>"Ice"</th>
-                    <th>"Thunder"</th>
-                    <th>"Dragon"</th>
+                    <th><img src="/resources/fire.png" alt="Fire" class="mh-small-icon"/>"Fire"</th>
+                    <th><img src="/resources/water.png" alt="Water" class="mh-small-icon"/>"Water"</th>
+                    <th><img src="/resources/ice.png" alt="Ice" class="mh-small-icon"/>"Ice"</th>
+                    <th><img src="/resources/thunder.png" alt="Thunder" class="mh-small-icon"/>"Thunder"</th>
+                    <th><img src="/resources/dragon.png" alt="Dragon" class="mh-small-icon"/>"Dragon"</th>
                     <th>"Dizzy"</th>
                 </tr>
                 </thead>

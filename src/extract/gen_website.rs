@@ -433,9 +433,9 @@ pub fn gen_colored_icon(color: i32, icon: &str, addons: &[&str]) -> Box<div<Stri
     gen_colored_icon_inner(&color_class, icon, addons)
 }
 
-pub fn gen_rared_icon(rarity: RareTypes, icon: &str) -> Box<div<String>> {
+pub fn gen_rared_icon(rarity: RareTypes, icon: &str, addons: &[&str]) -> Box<div<String>> {
     let color_class = format!("mh-rarity-color-{}", rarity.0);
-    gen_colored_icon_inner(&color_class, icon, &[])
+    gen_colored_icon_inner(&color_class, icon, addons)
 }
 
 fn gen_colored_icon_inner(color_class: &str, icon: &str, addons: &[&str]) -> Box<div<String>> {

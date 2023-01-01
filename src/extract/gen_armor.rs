@@ -31,7 +31,7 @@ pub fn gen_armor_label(piece: Option<&Armor>) -> Box<div<String>> {
             piece.data.pl_armor_id.icon_index()
         );
         html!(<div class="mh-icon-text">
-            { gen_rared_icon(piece.data.rare, &icon) }
+            { gen_rared_icon(piece.data.rare, &icon, &[]) }
             <span>{ gen_multi_lang(piece.name) }</span>
             { gen_sex_tag(piece.data.sexual_equipable) }
         </div>)
@@ -656,7 +656,7 @@ fn gen_armor(
                 <main>
                 <header class="mh-armor-header">
                     <div class="mh-title-icon"> {
-                        gen_rared_icon(rarity, "/resources/equip/006")
+                        gen_rared_icon(rarity, "/resources/equip/006", &[])
                     } </div>
                     <h1>
                     { gen_multi_lang(series.name) }
