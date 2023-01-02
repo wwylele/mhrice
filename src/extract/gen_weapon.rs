@@ -16,6 +16,7 @@ pub fn gen_weapon_icon(
     weapon: &WeaponBaseData,
     white: bool,
     element: PlWeaponElementTypes,
+    element2: PlWeaponElementTypes,
 ) -> Box<div<String>> {
     let icon = format!("/resources/equip/{:03}", weapon.id.icon_index());
     let rare = if white {
@@ -23,34 +24,50 @@ pub fn gen_weapon_icon(
     } else {
         weapon.rare_type
     };
-    let element: &[&str] = match element {
-        PlWeaponElementTypes::None => &[],
-        PlWeaponElementTypes::Fire => &["mh-addon-fire"],
-        PlWeaponElementTypes::Water => &["mh-addon-water"],
-        PlWeaponElementTypes::Thunder => &["mh-addon-thunder"],
-        PlWeaponElementTypes::Ice => &["mh-addon-ice"],
-        PlWeaponElementTypes::Dragon => &["mh-addon-dragon"],
-        PlWeaponElementTypes::Poison => &["mh-addon-poison"],
-        PlWeaponElementTypes::Sleep => &["mh-addon-sleep"],
-        PlWeaponElementTypes::Paralyze => &["mh-addon-para"],
-        PlWeaponElementTypes::Bomb => &["mh-addon-blast"],
+
+    let element_to_class = |element| match element {
+        PlWeaponElementTypes::None => None,
+        PlWeaponElementTypes::Fire => Some("mh-addon-fire"),
+        PlWeaponElementTypes::Water => Some("mh-addon-water"),
+        PlWeaponElementTypes::Thunder => Some("mh-addon-thunder"),
+        PlWeaponElementTypes::Ice => Some("mh-addon-ice"),
+        PlWeaponElementTypes::Dragon => Some("mh-addon-dragon"),
+        PlWeaponElementTypes::Poison => Some("mh-addon-poison"),
+        PlWeaponElementTypes::Sleep => Some("mh-addon-sleep"),
+        PlWeaponElementTypes::Paralyze => Some("mh-addon-para"),
+        PlWeaponElementTypes::Bomb => Some("mh-addon-blast"),
     };
-    gen_rared_icon(rare, &icon, element)
+
+    let e1 = element_to_class(element);
+    let e2 = element_to_class(element2);
+    let addons = match (e1, e2) {
+        (Some(e1), Some(e2)) => vec![format!("{e1} mh-addon-el1"), format!("{e2} mh-addon-el2")],
+        (Some(e), None) | (None, Some(e)) => vec![format!("{e} mh-addon-el")],
+        (None, None) => vec![],
+    };
+
+    gen_rared_icon(rare, &icon, addons.iter().map(|s| s.as_str()))
 }
 
 pub fn gen_weapon_label<Param>(weapon: &Weapon<Param>) -> Box<a<String>>
 where
-    Param: ToBase<MainWeaponBaseData> + MaybeToBase<ElementWeaponBaseData>,
+    Param: ToBase<MainWeaponBaseData>
+        + MaybeToBase<ElementWeaponBaseData>
+        + MaybeToBase<DualBladesBaseUserDataParam>,
 {
     let main = weapon.param.to_base();
     let element_weapon: Option<&ElementWeaponBaseData> = weapon.param.maybe_to_base();
     let icon_element = element_weapon
         .map(|e| e.main_element_type)
         .unwrap_or(PlWeaponElementTypes::None);
+    let db: Option<&DualBladesBaseUserDataParam> = weapon.param.maybe_to_base();
+    let icon_element2 = db
+        .map(|e| e.sub_element_type)
+        .unwrap_or(PlWeaponElementTypes::None);
     let link = format!("/weapon/{}.html", main.id.to_tag());
     html!(
         <a href={link} class="mh-icon-text">
-            {gen_weapon_icon(main, false, icon_element)}
+            {gen_weapon_icon(main, false, icon_element, icon_element2)}
             <span>{gen_multi_lang(weapon.name)}</span>
         </a>
     )
@@ -209,7 +226,9 @@ fn gen_weapon<Param>(
     special: Option<fn(&Param) -> Vec<Box<p<String>>>>,
 ) -> Result<()>
 where
-    Param: ToBase<MainWeaponBaseData> + MaybeToBase<ElementWeaponBaseData>,
+    Param: ToBase<MainWeaponBaseData>
+        + MaybeToBase<ElementWeaponBaseData>
+        + MaybeToBase<DualBladesBaseUserDataParam>,
 {
     toc_sink.add(weapon.name);
 
@@ -723,6 +742,10 @@ where
     let icon_element = element_weapon
         .map(|e| e.main_element_type)
         .unwrap_or(PlWeaponElementTypes::None);
+    let db: Option<&DualBladesBaseUserDataParam> = weapon.param.maybe_to_base();
+    let icon_element2 = db
+        .map(|e| e.sub_element_type)
+        .unwrap_or(PlWeaponElementTypes::None);
 
     let doc: DOMTree<String> = html!(
         <html lang="en">
@@ -739,7 +762,7 @@ where
                 <main>
                 <header>
                     <div class="mh-title-icon">
-                        {gen_weapon_icon(main, false, icon_element)}
+                        {gen_weapon_icon(main, false, icon_element, icon_element2)}
                     </div>
                     <h1> {gen_multi_lang(weapon.name)} </h1>
                 </header>
@@ -758,7 +781,9 @@ where
 
 fn gen_tree_rec<Param>(weapon_tree: &WeaponTree<Param>, list: &[WeaponId]) -> Box<ul<String>>
 where
-    Param: ToBase<MainWeaponBaseData> + MaybeToBase<ElementWeaponBaseData>,
+    Param: ToBase<MainWeaponBaseData>
+        + MaybeToBase<ElementWeaponBaseData>
+        + MaybeToBase<DualBladesBaseUserDataParam>,
 {
     html!(<ul> {
         list.iter().map(|id| {
@@ -792,7 +817,9 @@ fn gen_tree<Param>(
     name: &str,
 ) -> Result<()>
 where
-    Param: ToBase<MainWeaponBaseData> + MaybeToBase<ElementWeaponBaseData>,
+    Param: ToBase<MainWeaponBaseData>
+        + MaybeToBase<ElementWeaponBaseData>
+        + MaybeToBase<DualBladesBaseUserDataParam>,
 {
     let mut list_path = weapon_path.create_html(&format!("{}.html", tag))?;
 
@@ -909,7 +936,8 @@ pub fn gen_weapons(
                 <a href={entry_link.as_str()} class="mh-icon-text">
                     {
                         pedia_ex.$label.weapons.values().next().map(
-                            |first|gen_weapon_icon(&first.param, true, PlWeaponElementTypes::None))
+                            |first|gen_weapon_icon(&first.param, true,
+                                PlWeaponElementTypes::None, PlWeaponElementTypes::None))
                     }
                     <span>{text!("{}", $name)}</span>
                 </a>

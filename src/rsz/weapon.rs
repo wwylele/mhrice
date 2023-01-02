@@ -250,6 +250,7 @@ rsz_struct! {
 }
 
 melee!(GreatSwordBaseUserDataParam);
+impl_maybetobase_none!(GreatSwordBaseUserDataParam, DualBladesBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.GreatSwordBaseUserData",
@@ -276,6 +277,7 @@ rsz_struct! {
 }
 
 melee!(ShortSwordBaseUserDataParam);
+impl_maybetobase_none!(ShortSwordBaseUserDataParam, DualBladesBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.ShortSwordBaseUserData",
@@ -302,6 +304,7 @@ rsz_struct! {
 }
 
 melee!(HammerBaseUserDataParam);
+impl_maybetobase_none!(HammerBaseUserDataParam, DualBladesBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.HammerBaseUserData",
@@ -328,6 +331,7 @@ rsz_struct! {
 }
 
 melee!(LanceBaseUserDataParam);
+impl_maybetobase_none!(LanceBaseUserDataParam, DualBladesBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.LanceBaseUserData",
@@ -354,6 +358,7 @@ rsz_struct! {
 }
 
 melee!(LongSwordBaseUserDataParam);
+impl_maybetobase_none!(LongSwordBaseUserDataParam, DualBladesBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.LongSwordBaseUserData",
@@ -382,6 +387,7 @@ rsz_struct! {
 }
 
 melee!(SlashAxeBaseUserDataParam);
+impl_maybetobase_none!(SlashAxeBaseUserDataParam, DualBladesBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.SlashAxeBaseUserData",
@@ -410,6 +416,7 @@ rsz_struct! {
 }
 
 melee!(GunLanceBaseUserDataParam);
+impl_maybetobase_none!(GunLanceBaseUserDataParam, DualBladesBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.GunLanceBaseUserData",
@@ -465,6 +472,7 @@ rsz_struct! {
 }
 
 melee!(HornBaseUserDataParam);
+impl_maybetobase_none!(HornBaseUserDataParam, DualBladesBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.HornBaseUserData",
@@ -492,6 +500,7 @@ rsz_struct! {
 }
 
 melee!(InsectGlaiveBaseUserDataParam);
+impl_maybetobase_none!(InsectGlaiveBaseUserDataParam, DualBladesBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.InsectGlaiveBaseUserData",
@@ -519,6 +528,7 @@ rsz_struct! {
 }
 
 melee!(ChargeAxeBaseUserDataParam);
+impl_maybetobase_none!(ChargeAxeBaseUserDataParam, DualBladesBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.ChargeAxeBaseUserData",
@@ -726,6 +736,7 @@ impl_tobase!(
 );
 impl_base!(LightBowgunBaseUserDataParam, BulletWeaponBaseUserDataParam);
 impl_maybetobase_none!(LightBowgunBaseUserDataParam, ElementWeaponBaseData);
+impl_maybetobase_none!(LightBowgunBaseUserDataParam, DualBladesBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.LightBowgunBaseUserData",
@@ -759,6 +770,7 @@ impl_tobase!(
 );
 impl_base!(HeavyBowgunBaseUserDataParam, BulletWeaponBaseUserDataParam);
 impl_maybetobase_none!(HeavyBowgunBaseUserDataParam, ElementWeaponBaseData);
+impl_maybetobase_none!(HeavyBowgunBaseUserDataParam, DualBladesBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.HeavyBowgunBaseUserData",
@@ -795,6 +807,7 @@ impl_tobase!(
     WeaponBaseData
 );
 impl_base!(BowBaseUserDataParam, ElementWeaponBaseData);
+impl_maybetobase_none!(BowBaseUserDataParam, DualBladesBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.BowBaseUserData",

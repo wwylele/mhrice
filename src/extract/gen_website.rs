@@ -428,17 +428,29 @@ pub fn title_multi_lang(msg: &MsgEntry) -> Vec<Box<meta<String>>> {
         .collect()
 }
 
-pub fn gen_colored_icon(color: i32, icon: &str, addons: &[&str]) -> Box<div<String>> {
+pub fn gen_colored_icon<'a>(
+    color: i32,
+    icon: &str,
+    addons: impl IntoIterator<Item = &'a str> + 'a,
+) -> Box<div<String>> {
     let color_class = format!("mh-item-color-{}", color);
     gen_colored_icon_inner(&color_class, icon, addons)
 }
 
-pub fn gen_rared_icon(rarity: RareTypes, icon: &str, addons: &[&str]) -> Box<div<String>> {
+pub fn gen_rared_icon<'a>(
+    rarity: RareTypes,
+    icon: &str,
+    addons: impl IntoIterator<Item = &'a str> + 'a,
+) -> Box<div<String>> {
     let color_class = format!("mh-rarity-color-{}", rarity.0);
     gen_colored_icon_inner(&color_class, icon, addons)
 }
 
-fn gen_colored_icon_inner(color_class: &str, icon: &str, addons: &[&str]) -> Box<div<String>> {
+fn gen_colored_icon_inner<'a>(
+    color_class: &str,
+    icon: &str,
+    addons: impl IntoIterator<Item = &'a str> + 'a,
+) -> Box<div<String>> {
     let image_r_base = format!("url('{}.r.png')", icon);
     let image_a_base = format!("url('{}.a.png')", icon);
     let image_r = format!("mask-image: {0}; -webkit-mask-image: {0};", image_r_base);
@@ -446,7 +458,7 @@ fn gen_colored_icon_inner(color_class: &str, icon: &str, addons: &[&str]) -> Box
     html!(<div class="mh-colored-icon">
         <div style={image_r.as_str()} class={color_class}/>
         <div style={image_a.as_str()}/>
-        <div>{ addons.iter().map(|&addon| html!(
+        <div>{ addons.into_iter().map(|addon| html!(
             <div class=addon/>
         )) }</div>
     </div>)

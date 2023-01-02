@@ -45,7 +45,7 @@ fn gen_item_icon(item: &Item) -> Box<div<String>> {
     if item.param.supply {
         addons.push("mh-addon-supply");
     }
-    gen_colored_icon(item.param.icon_color, &icon, &addons)
+    gen_colored_icon(item.param.icon_color, &icon, addons)
 }
 
 pub fn gen_item_label(item: &Item) -> Box<a<String>> {
