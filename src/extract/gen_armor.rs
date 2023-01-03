@@ -46,6 +46,23 @@ pub fn gen_armor_label(piece: Option<&Armor>) -> Box<div<String>> {
     </div>)
 }
 
+// snow.data.CustomBuildupResultData.get_RegElement
+fn custom_buildup_element(id: u16) -> Option<Box<div<String>>> {
+    let (tag, name) = match id {
+        89..=98 => ("fire", "Fire"),
+        99..=108 => ("water", "Water"),
+        109..=118 => ("thunder", "Thunder"),
+        119..=128 => ("ice", "Ice"),
+        129..=138 => ("dragon", "Dragon"),
+        _ => return None,
+    };
+    let url = format!("/resources/{tag}.png");
+    Some(html!(<div>
+        <img src={url.as_str()} alt={name} class="mh-small-icon"/>
+        {text!("{}", name)}
+    </div>))
+}
+
 pub fn gen_armor_list(
     hash_store: &HashStore,
     serieses: &BTreeMap<PlArmorSeriesTypes, ArmorSeries>,
@@ -322,7 +339,7 @@ fn gen_armor(
                             let category_name = match category_id {
                                 13 => text!("Defense"),
                                 14 => text!("Element resistance"),
-                                15 => text!("?"),
+                                15 => text!("Element res down for Skills+"),
                                 19 => text!("Slot"),
                                 20 => text!("Skill"),
                                 c => text!("{}", c)
@@ -349,6 +366,7 @@ fn gen_armor(
                                             {text!("Pt{} skill", piece.data.cost)}
                                         </span></a>)}
                                     ) }
+                                    { custom_buildup_element(piece.data.id) }
                                     <ul class="mh-custom-lot"> {
                                         piece.data.value_table.iter().zip(&piece.data.lot_table)
                                         .filter(|(_, lot)| **lot != 0)
