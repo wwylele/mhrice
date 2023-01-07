@@ -241,7 +241,7 @@ fn gen_condition_stun(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Stun"</td>
+            <td><img src="/resources/stun.png" alt="Stun" class="mh-small-icon"/>"Stun"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Preset = {}", data.preset_type)} </td>
         </tr>
@@ -255,7 +255,7 @@ fn gen_condition_stamina(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Exhaust"</td>
+            <td><img src="/resources/exhaust.png" alt="Exhaust" class="mh-small-icon"/>"Exhaust"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Stamina reduction = {}, Preset={}", data.sub_stamina, data.preset_type)} </td>
         </tr>
@@ -543,7 +543,7 @@ fn gen_condition_dung(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Dung"</td>
+            <td><img src="/resources/dung.png" alt="Dung" class="mh-small-icon"/>"Dung"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Preset = {}", data.preset_type)} </td>
         </tr>
@@ -557,7 +557,7 @@ fn gen_condition_steel_fang(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Steel fang"</td>
+            <td><img src="/resources/steelfang.png" alt="Steel fang" class="mh-small-icon"/>"Steel fang"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Active limit = {}, Preset = {}, Unique target param = {}",
                 data.active_limit_count, data.preset_type, data.is_unique_target_param)}
@@ -1324,7 +1324,7 @@ pub fn gen_monster(
                     <th><img src="/resources/ice.png" alt="Ice" class="mh-small-icon"/>"Ice"</th>
                     <th><img src="/resources/thunder.png" alt="Thunder" class="mh-small-icon"/>"Thunder"</th>
                     <th><img src="/resources/dragon.png" alt="Dragon" class="mh-small-icon"/>"Dragon"</th>
-                    <th>"Dizzy"</th>
+                    <th><img src="/resources/stun.png" alt="Stun" class="mh-small-icon"/>"Dizzy"</th>
                 </tr>
                 </thead>
                 {

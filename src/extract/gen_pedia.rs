@@ -1169,6 +1169,19 @@ static EM_ICON_MAP: Lazy<HashMap<(i32, i32), &'static str>> = Lazy::new(|| {
     m
 });
 
+fn save_spriter(
+    tex: &RgbaImage,
+    group: &SpriterGroup,
+    index: usize,
+    path: &str,
+    output: &impl Sink,
+) -> Result<()> {
+    let spriter = group.spriters.get(index).context("Broken UV group")?;
+    tex.sub_image_f(spriter.p0, spriter.p1)?
+        .save_png(output.create(path)?)?;
+    Ok(())
+}
+
 pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) -> Result<()> {
     let mesh_path_gen = |id, mut sub_id| {
         if id == 99 && sub_id == 5 {
@@ -1362,41 +1375,42 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
         equip_icon_a.save_png(equip_icon_path.create(&format!("{:03}.a.png", i))?)?;
     }
 
-    let icon_uvs = pak.find_file("gui/70_UVSequence/Arms_addonicon.uvs")?;
+    let icon_uvs = pak.find_file("gui/70_UVSequence/state_icon.uvs")?;
     let icon_uvs = Uvs::new(Cursor::new(pak.read_file(icon_uvs)?))?;
     if icon_uvs.textures.is_empty() || equip_icon_uvs.spriter_groups.is_empty() {
-        bail!("Broken Arms_addonicon_MR.uvs");
+        bail!("Broken state_icon.uvs");
     }
     let icon = pak.find_file(&icon_uvs.textures[0].path)?;
     let icon = Tex::new(Cursor::new(pak.read_file(icon)?))?.to_rgba(0, 0)?;
-    let spriters = &icon_uvs.spriter_groups[0].spriters;
-    let spriter = spriters.get(11).context("Broken arms_addonicon")?;
-    icon.sub_image_f(spriter.p0, spriter.p1)?
-        .save_png(output.create("fire.png")?)?;
-    let spriter = spriters.get(12).context("Broken arms_addonicon")?;
-    icon.sub_image_f(spriter.p0, spriter.p1)?
-        .save_png(output.create("water.png")?)?;
-    let spriter = spriters.get(13).context("Broken arms_addonicon")?;
-    icon.sub_image_f(spriter.p0, spriter.p1)?
-        .save_png(output.create("ice.png")?)?;
-    let spriter = spriters.get(14).context("Broken arms_addonicon")?;
-    icon.sub_image_f(spriter.p0, spriter.p1)?
-        .save_png(output.create("thunder.png")?)?;
-    let spriter = spriters.get(15).context("Broken arms_addonicon")?;
-    icon.sub_image_f(spriter.p0, spriter.p1)?
-        .save_png(output.create("dragon.png")?)?;
-    let spriter = spriters.get(16).context("Broken arms_addonicon")?;
-    icon.sub_image_f(spriter.p0, spriter.p1)?
-        .save_png(output.create("para.png")?)?;
-    let spriter = spriters.get(17).context("Broken arms_addonicon")?;
-    icon.sub_image_f(spriter.p0, spriter.p1)?
-        .save_png(output.create("sleep.png")?)?;
-    let spriter = spriters.get(18).context("Broken arms_addonicon")?;
-    icon.sub_image_f(spriter.p0, spriter.p1)?
-        .save_png(output.create("blast.png")?)?;
-    let spriter = spriters.get(19).context("Broken arms_addonicon")?;
-    icon.sub_image_f(spriter.p0, spriter.p1)?
-        .save_png(output.create("poison.png")?)?;
+    let spriters = &icon_uvs.spriter_groups[0];
+    save_spriter(&icon, spriters, 3, "fire.png", output)?;
+    save_spriter(&icon, spriters, 4, "water.png", output)?;
+    save_spriter(&icon, spriters, 5, "thunder.png", output)?;
+    save_spriter(&icon, spriters, 6, "ice.png", output)?;
+    save_spriter(&icon, spriters, 7, "dragon.png", output)?;
+    save_spriter(&icon, spriters, 8, "poison.png", output)?;
+    save_spriter(&icon, spriters, 9, "noxious.png", output)?;
+    save_spriter(&icon, spriters, 10, "para.png", output)?;
+    save_spriter(&icon, spriters, 11, "stun.png", output)?;
+    save_spriter(&icon, spriters, 12, "sleep.png", output)?;
+    save_spriter(&icon, spriters, 13, "blast.png", output)?;
+    save_spriter(&icon, spriters, 14, "bubble.png", output)?;
+    save_spriter(&icon, spriters, 24, "oni.png", output)?;
+    save_spriter(&icon, spriters, 25, "dung.png", output)?;
+    save_spriter(&icon, spriters, 70, "exhaust.png", output)?;
+    save_spriter(&icon, spriters, 76, "steelfang.png", output)?;
+
+    let icon_uvs = pak.find_file("gui/70_UVSequence/state_icon_MR.uvs")?;
+    let icon_uvs = Uvs::new(Cursor::new(pak.read_file(icon_uvs)?))?;
+    if icon_uvs.textures.is_empty() || equip_icon_uvs.spriter_groups.is_empty() {
+        bail!("Broken state_icon_MR.uvs");
+    }
+    let icon = pak.find_file(&icon_uvs.textures[0].path)?;
+    let icon = Tex::new(Cursor::new(pak.read_file(icon)?))?.to_rgba(0, 0)?;
+    let spriters = &icon_uvs.spriter_groups[0];
+    save_spriter(&icon, spriters, 0, "bleed.png", output)?;
+    save_spriter(&icon, spriters, 9, "blood.png", output)?;
+    save_spriter(&icon, spriters, 22, "frenzy.png", output)?;
 
     let icon_uvs = pak.find_file("gui/70_UVSequence/Arms_addonicon_MR.uvs")?;
     let icon_uvs = Uvs::new(Cursor::new(pak.read_file(icon_uvs)?))?;
