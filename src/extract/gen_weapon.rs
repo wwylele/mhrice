@@ -148,52 +148,59 @@ fn gen_craft_row(
     </tr>)
 }
 
+// snow.data.GameItemEnum.convertEnum
+fn bullet_to_item(bullet: BulletType) -> ItemId {
+    match bullet {
+        BulletType::Normal1 => ItemId::Normal(0x001d),
+        BulletType::Normal2 => ItemId::Normal(0x001e),
+        BulletType::Normal3 => ItemId::Normal(0x001f),
+        BulletType::Kantsu1 => ItemId::Normal(0x0020),
+        BulletType::Kantsu2 => ItemId::Normal(0x0021),
+        BulletType::Kantsu3 => ItemId::Normal(0x0022),
+        BulletType::SanW1 => ItemId::Normal(0x0023),
+        BulletType::SanW2 => ItemId::Normal(0x0024),
+        BulletType::SanW3 => ItemId::Normal(0x0025),
+        BulletType::SanO1 => ItemId::Normal(0x008a),
+        BulletType::SanO2 => ItemId::Normal(0x008b),
+        BulletType::SanO3 => ItemId::Normal(0x008c),
+        BulletType::Tekko1 => ItemId::Normal(0x0026),
+        BulletType::Tekko2 => ItemId::Normal(0x0027),
+        BulletType::Tekko3 => ItemId::Normal(0x0098),
+        BulletType::Kakusan1 => ItemId::Normal(0x0028),
+        BulletType::Kakusan2 => ItemId::Normal(0x0029),
+        BulletType::Kakusan3 => ItemId::Normal(0x0099),
+        BulletType::Poison1 => ItemId::Normal(0x002a),
+        BulletType::Poison2 => ItemId::Normal(0x002b),
+        BulletType::Paralyze1 => ItemId::Normal(0x002c),
+        BulletType::Paralyze2 => ItemId::Normal(0x002d),
+        BulletType::Sleep1 => ItemId::Normal(0x002e),
+        BulletType::Sleep2 => ItemId::Normal(0x002f),
+        BulletType::Genki1 => ItemId::Normal(0x0030),
+        BulletType::Genki2 => ItemId::Normal(0x0031),
+        BulletType::Heal1 => ItemId::Normal(0x0032),
+        BulletType::Heal2 => ItemId::Normal(0x009a),
+        BulletType::Kijin => ItemId::Normal(0x009b),
+        BulletType::Kouka => ItemId::Normal(0x009c),
+        BulletType::Fire => ItemId::Normal(0x0033),
+        BulletType::FireKantsu => ItemId::Normal(0x009d),
+        BulletType::Water => ItemId::Normal(0x0034),
+        BulletType::WaterKantsu => ItemId::Normal(0x009e),
+        BulletType::Ice => ItemId::Normal(0x0036),
+        BulletType::IceKantsu => ItemId::Normal(0x009f),
+        BulletType::Thunder => ItemId::Normal(0x0035),
+        BulletType::ThunderKantsu => ItemId::Normal(0x00a0),
+        BulletType::Dragon => ItemId::Normal(0x00a1),
+        BulletType::DragonKantsu => ItemId::Normal(0x00a2),
+        BulletType::Zanretsu => ItemId::Normal(0x0037),
+        BulletType::Ryugeki => ItemId::Normal(0x0038),
+        BulletType::Capture => ItemId::Normal(0x0039),
+        _ => ItemId::None,
+    }
+}
+
 fn display_bullet_type(bullet: BulletType) -> &'static str {
     match bullet {
         BulletType::None => "<None>",
-        BulletType::Normal1 => "Normal Ammo 1",
-        BulletType::Normal2 => "Normal Ammo 2",
-        BulletType::Normal3 => "Normal Ammo 3",
-        BulletType::Kantsu1 => "Pierce Ammo 1",
-        BulletType::Kantsu2 => "Pierce Ammo 2",
-        BulletType::Kantsu3 => "Pierce Ammo 3",
-        BulletType::SanW1 => "Spread Ammo 1",
-        BulletType::SanW2 => "Spread Ammo 2",
-        BulletType::SanW3 => "Spread Ammo 3",
-        BulletType::SanO1 => "Shrapnel Ammo 1",
-        BulletType::SanO2 => "Shrapnel Ammo 2",
-        BulletType::SanO3 => "Shrapnel Ammo 3",
-        BulletType::Tekko1 => "Sticky Ammo 1",
-        BulletType::Tekko2 => "Sticky Ammo 2",
-        BulletType::Tekko3 => "Sticky Ammo 3",
-        BulletType::Kakusan1 => "Cluster Bomb 1",
-        BulletType::Kakusan2 => "Cluster Bomb 2",
-        BulletType::Kakusan3 => "Cluster Bomb 3",
-        BulletType::Poison1 => "Poison Ammo 1",
-        BulletType::Poison2 => "Poison Ammo 2",
-        BulletType::Paralyze1 => "Paralysis Ammo 1",
-        BulletType::Paralyze2 => "Paralysis Ammo 2",
-        BulletType::Sleep1 => "Sleep Ammo 1",
-        BulletType::Sleep2 => "Sleep Ammo 2",
-        BulletType::Genki1 => "Exhaust Ammo 1",
-        BulletType::Genki2 => "Exhaust Ammo 2",
-        BulletType::Heal1 => "Recover Ammo 1",
-        BulletType::Heal2 => "Recover Ammo 2",
-        BulletType::Kijin => "Demon Ammo",
-        BulletType::Kouka => "Amor Ammo",
-        BulletType::Fire => "Flaming Ammo",
-        BulletType::FireKantsu => "Piercing Fire Ammo",
-        BulletType::Water => "Water Ammo",
-        BulletType::WaterKantsu => "Piercing Water Ammo",
-        BulletType::Ice => "Freeze Ammo",
-        BulletType::IceKantsu => "Piercing Ice Ammo",
-        BulletType::Thunder => "Thunder Ammo",
-        BulletType::ThunderKantsu => "Piercing Thunder Ammo",
-        BulletType::Dragon => "Dragon Ammo",
-        BulletType::DragonKantsu => "Piercing Drago Ammo",
-        BulletType::Zanretsu => "Slicing Ammo",
-        BulletType::Ryugeki => "Wyvern Ammo",
-        BulletType::Capture => "Tranq Ammo",
         BulletType::Setti => "<Setti>",
         BulletType::Gatling => "<Gatling>",
         BulletType::Snipe => "<Snipe>",
@@ -202,6 +209,7 @@ fn display_bullet_type(bullet: BulletType) -> &'static str {
         BulletType::WireBullet => "<WireBullet>",
         BulletType::FullAuto => "<FullAuto>",
         BulletType::Max => "<Max>",
+        _ => "?",
     }
 }
 
@@ -531,16 +539,20 @@ where
                             shoot_types.push("Rapid shot")
                         }
                         let shoot_types = shoot_types.join(", ");
+                        let bullet_item = pedia_ex.items.get(&bullet_to_item(bullet_type));
                         html!(<tr class={class}>
-                            <td>{ text!("{}", display_bullet_type(bullet_type)) }</td>
+                            <td>
+                                { bullet_item.map(gen_item_label) }
+                                { (bullet_item.is_none()).then(|| text!("{}", display_bullet_type(bullet_type))) }
+                            </td>
                             <td>{ text!("{}", num) }</td>
                             <td>{ text!("{}", shoot_types) }</td>
                         </tr>)
                     })
             }
-            { lbg.map(|lbg| {
+            /*{ lbg.map(|lbg| {
                 html!(<tr><td>{ text!("{}", display_bullet_type(lbg.unique_bullet)) }</td></tr>)
-            }) }
+            }) }*/
             </tbody>
             </table></div>
             </section>),

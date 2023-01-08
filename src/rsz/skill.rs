@@ -276,8 +276,8 @@ impl std::fmt::Display for UniqueBulletType {
             f,
             "{}",
             match *self {
-                UniqueBulletType::Snipe => "Wynvernsnype",
-                UniqueBulletType::Gatling => "Wynvernheart",
+                UniqueBulletType::Snipe => "Wyvernsnipe",
+                UniqueBulletType::Gatling => "Wyvernheart",
             }
         )
     }
