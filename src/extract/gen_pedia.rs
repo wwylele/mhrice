@@ -1395,8 +1395,14 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
     save_spriter(&icon, spriters, 12, "sleep.png", output)?;
     save_spriter(&icon, spriters, 13, "blast.png", output)?;
     save_spriter(&icon, spriters, 14, "bubble.png", output)?;
+    save_spriter(&icon, spriters, 15, "bubblel.png", output)?;
+    save_spriter(&icon, spriters, 16, "attackup.png", output)?;
+    save_spriter(&icon, spriters, 18, "defencedown.png", output)?;
+    save_spriter(&icon, spriters, 20, "resdown.png", output)?;
     save_spriter(&icon, spriters, 24, "oni.png", output)?;
     save_spriter(&icon, spriters, 25, "dung.png", output)?;
+    save_spriter(&icon, spriters, 30, "capture.png", output)?; //?
+    save_spriter(&icon, spriters, 52, "heal.png", output)?;
     save_spriter(&icon, spriters, 70, "exhaust.png", output)?;
     save_spriter(&icon, spriters, 76, "steelfang.png", output)?;
 

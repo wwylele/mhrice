@@ -1770,21 +1770,68 @@ pub fn gen_monster(
                         damages.push(html!(<li>{text!("Raw {}", atk.data.base_damage)}</li>))
                     }
                     if atk.data.base_attack_element_value != 0 || atk.data.base_attack_element != AttackElement::None {
-                        damages.push(html!(<li>{text!("{:?} {}",
-                            atk.data.base_attack_element, atk.data.base_attack_element_value)}</li>))
+                        let image = match atk.data.base_attack_element {
+                            AttackElement::None => None,
+                            AttackElement::Fire => Some(("fire", "Fire")),
+                            AttackElement::Thunder => Some(("thunder", "Thunder")),
+                            AttackElement::Water => Some(("water", "Water")),
+                            AttackElement::Ice => Some(("ice", "Ice")),
+                            AttackElement::Dragon => Some(("dragon", "Dragon")),
+                            AttackElement::Heal => Some(("heal", "Heal")),
+                        };
+                        let image = image.map(|(file, alt)| {
+                            let path = format!("/resources/{file}.png");
+                            html!(<img src={path.as_str()} class="mh-small-icon" alt={alt}/>)
+                        });
+                        damages.push(html!(<li>{image}
+                            {text!("{}", atk.data.base_attack_element_value)}</li>))
                     }
 
                     let mut statuss = vec![];
 
                     if atk.data.base_piyo_value != 0 {
-                        statuss.push(html!(<li>{text!("Stun {}", atk.data.base_piyo_value)}</li>))
+                        statuss.push(html!(<li>
+                            <img src="/resources/stun.png" class="mh-small-icon" alt="Stunt"/>
+                            {text!("{}", atk.data.base_piyo_value)}</li>))
                     }
 
                     let mut add_debuff = |t: DebuffType, v: u8, s: MeqF32| {
                         if t != DebuffType::None || v != 0 || s.0 != 0.0 {
+                            let (image, text): (&[(&str, &str)], &str) = match t {
+                                DebuffType::None => (&[], ""),
+                                DebuffType::Fire => (&[("fire", "Fire")], ""),
+                                DebuffType::Thunder =>(&[("thunder", "Thunder")], ""),
+                                DebuffType::Water => (&[("water", "Water")], ""),
+                                DebuffType::Ice => (&[("ice", "Ice")], ""),
+                                DebuffType::Dragon => (&[("dragon", "Dragon")], ""),
+                                DebuffType::Sleep => (&[("sleep", "Sleep")], ""),
+                                DebuffType::Paralyze => (&[("para", "Paralyze")], ""),
+                                DebuffType::Poison => (&[("poison", "Poison")], ""),
+                                DebuffType::NoxiousPoison => (&[("noxious", "Venom")], ""),
+                                DebuffType::Bomb => (&[("blast", "Blast")], ""),
+                                DebuffType::BubbleS => (&[("bubble", "Bubble")], ""),
+                                DebuffType::BubbleRedS => (&[("bubble", "Bubble"), ("attackup", "Attack up")], ""),
+                                DebuffType::RedS => (&[("attackup", "Attack up")], ""),
+                                DebuffType::BubbleL => (&[("bubblel", "Bubble L")], ""),
+                                DebuffType::DefenceDown => (&[("defencedown", "Defense down")], ""),
+                                DebuffType::ResistanceDown =>(&[("resdown", "Resistance down")], ""),
+                                DebuffType::Stink => (&[("dung", "Stink")], ""),
+                                DebuffType::Capture => (&[("capture", "Capture")], ""),
+                                DebuffType::OniBomb => (&[("oni", "Hellfire")], ""),
+                                DebuffType::Kijin => (&[], "Kijin"), // TODO
+                                DebuffType::Kouka => (&[], "Kouka"), // TODO
+                                DebuffType::Bleeding => (&[("bleed", "Bleed")], ""),
+                                DebuffType::ParalyzeShort => (&[("para", "Paralyze")], "(Short)"),
+                                DebuffType::Virus => (&[("frenzy", "Frenzy")], ""),
+                            };
+
                             statuss.push(html!(<li>
-                                { text!("{:?}", t) }
-                                { (v != 0).then(||text!(" {}", v)) }
+                                { image.iter().map(|&(file, alt)| {
+                                    let path = format!("/resources/{file}.png");
+                                    html!(<img src={path.as_str()} class="mh-small-icon" alt={alt}/>)
+                                }) }
+                                { text!("{}", text) }
+                                { (v != 0).then(||text!("{}", v)) }
                                 { (s.0 != 0.0).then(||text!(" {}sec", s)) }
                             </li>))
                         }
@@ -1795,7 +1842,9 @@ pub fn gen_monster(
                     add_debuff(atk.data.base_debuff_type3, atk.data.base_debuff_value3, atk.data.base_debuff_sec3);
 
                     if atk.data.is_mystery_debuff {
-                        statuss.push(html!(<li>{text!("Bloodblight {}sec", atk.data.mystery_debuff_sec)}</li>))
+                        statuss.push(html!(<li>
+                            <img src="/resources/blood.png" class="mh-small-icon" alt="BloodBlight"/>
+                            {text!("{}sec", atk.data.mystery_debuff_sec)}</li>))
                     }
 
                     let mut flags = vec![];

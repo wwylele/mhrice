@@ -929,6 +929,10 @@ ul.mh-damages {
     margin-left: 0;
     margin-top: 0;
     list-style: none;
+
+    >li {
+        white-space: nowrap;
+    }
 }
 
 /** Weapon list **/
