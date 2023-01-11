@@ -209,6 +209,7 @@ pub fn gen_hyakuryu_skill(
     }
 
     if let Some(deco) = &skill.deco {
+        toc_sink.add(deco.name);
         sections.push(Section {
             title: "Decoration".to_owned(),
             content: html!(
@@ -230,7 +231,7 @@ pub fn gen_hyakuryu_skill(
                             <td>{(deco.product.enemy_flag != EmTypes::Em(0)).then(
                                 ||gen_monster_tag(pedia_ex, deco.product.enemy_flag, false, false, None, None)
                             )}</td>
-                            <td>{text!("{}z", deco.data.base_price)}</td>
+                            <td>{text!("{}z", deco.data.base_price * 2)}</td>
                             { gen_category(pedia_ex, deco.product.material_category,
                                 deco.product.point) }
                             { gen_materials(pedia_ex, &deco.product.item_id_list,
