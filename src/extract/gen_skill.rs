@@ -283,9 +283,9 @@ pub fn gen_skill(
                 <div class="mh-table"><table>
                 <thead><tr>
                     <th>"Melding type"</th>
-                    <th>"Pick rate"</th>
                     <th>"First skill level"</th>
                     <th>"Second skill level"</th>
+                    <th>"Target skill Pick rate"</th>
                     <th>"Skill level if missed target"</th>
                 </tr></thead>
                 <tbody>{
@@ -302,9 +302,9 @@ pub fn gen_skill(
                         };
                         html!(<tr>
                             <td>{text!("{}", pattern)}</td>
-                            <td>{text!("{}%", data.pick_rate)}</td>
                             <td>{display_rate(&data.skill1_rate_list)}</td>
                             <td>{display_rate(&data.skill2_rate_list)}</td>
+                            <td>{text!("{}%", data.pick_rate)}</td>
                             <td>{display_rate(&data.miss_rate_list)}</td>
                         </tr>)
                     })
