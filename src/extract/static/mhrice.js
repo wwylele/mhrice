@@ -456,20 +456,33 @@ function doSearch() {
 
     let results = [];
     for (const entry of g_toc) {
-        let matched = 0;
-        let matched_length = 0;
-        for (const matcher of matchers) {
-            if (entry.title.toLowerCase().includes(matcher.toLowerCase())) {
-                matched += 1;
-                matched_length += matcher.length;
+        let score = Number.MIN_VALUE;
+        let best_title = null;
+        for (const title of entry.title) {
+            let matched = 0;
+            let matched_length = 0;
+            for (const matcher of matchers) {
+                if (title.toLowerCase().includes(matcher.toLowerCase())) {
+                    matched += 1;
+                    matched_length += matcher.length;
+                }
+            }
+            if (matched === 0) {
+                continue;
+            }
+
+            const new_score = matched * 10 - (title.length - matched_length);
+            if (new_score > score) {
+                score = new_score;
+                best_title = title;
             }
         }
-        if (matched === 0) {
-            continue;
+
+        if (best_title === null) {
+            continue
         }
 
-        const score = matched * 10 - (entry.title.length - matched_length);
-        const result = { score, ...entry };
+        const result = { score, title: best_title, path: entry.path };
         results.push(result);
     }
 
@@ -489,6 +502,8 @@ function doSearch() {
             tag = "Monster";
         } else if (result.path.includes("armor")) {
             tag = "Armor";
+        } else if (result.path.includes("hyakuryu_skill")) {
+            tag = "Rampage skill";
         } else if (result.path.includes("skill")) {
             tag = "Skill";
         } else if (result.path.includes("item")) {
@@ -532,7 +547,7 @@ function search(e) {
 
 function loadTocAndDoSearch() {
     if (g_toc === null) {
-        fetch(`/toc/${g_language_code}.json`)
+        fetch(`/tocv2/${g_language_code}.json`)
             .then(response => response.json())
             .then(json => {
                 g_toc = json;

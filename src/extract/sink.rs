@@ -18,12 +18,12 @@ use crate::msg::MsgEntry;
 
 #[derive(Serialize, Clone)]
 struct OutputTocEntry<'a, 'b> {
-    title: &'a str,
+    title: Vec<&'a str>,
     path: &'b str,
 }
 
 struct TocEntry {
-    title: Vec<String>,
+    title: Vec<Vec<String>>,
     path: String,
 }
 
@@ -46,13 +46,12 @@ impl Toc {
         let mut toc_by_language = vec![vec![]; languages];
         for entry in &self.entries {
             for (i, title) in entry.title.iter().enumerate() {
-                let title = title.trim();
                 if title.is_empty() {
                     continue;
                 }
 
                 toc_by_language[i].push(OutputTocEntry {
-                    title,
+                    title: title.iter().map(String::as_str).collect(),
                     path: &entry.path,
                 });
             }
@@ -74,13 +73,13 @@ impl Toc {
 pub struct TocSink<'a> {
     toc: &'a mut Toc,
     path: String,
-    title: Vec<String>, // For each language
+    title: Vec<Vec<String>>, // For each language
 }
 
 impl<'a> TocSink<'a> {
     pub fn add(&mut self, title: &MsgEntry) {
         if self.title.len() < title.content.len() {
-            self.title.resize_with(title.content.len(), String::default);
+            self.title.resize_with(title.content.len(), Vec::default);
         }
 
         // When adding multiple language, join them for each language
@@ -89,12 +88,7 @@ impl<'a> TocSink<'a> {
             if t.is_empty() {
                 continue;
             }
-            if self.title[i].is_empty() {
-                self.title[i] = t.to_string();
-            } else {
-                self.title[i] += ", ";
-                self.title[i] += t;
-            }
+            self.title[i].push(t.to_owned());
         }
     }
 

@@ -632,6 +632,6 @@ pub fn gen_website(
     gen_otomo_equip_list(hash_store, pedia_ex, output)?;
     gen_about(hash_store, output)?;
     gen_search(hash_store, output)?;
-    toc.finalize(&output.sub_sink("toc")?)?;
+    toc.finalize(&output.sub_sink("tocv2")?)?;
     Ok(())
 }
