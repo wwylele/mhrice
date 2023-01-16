@@ -158,38 +158,24 @@ impl<F: Read + Seek> PakReader<F> {
             .get(&path[dot + 1..])
             .context("Unknown extension")?;
         for suffix in suffix.iter().rev() {
-            let full_path = format!("natives/STM/{}.{}", path, suffix);
-            let full_path_x64 = format!("{}.x64", &full_path);
-            let full_path_stm = format!("{}.STM", &full_path);
+            let full_paths = [
+                format!("natives/NSW/{}.{}", path, suffix),
+                format!("natives/NSW/{}.{}.NSW", path, suffix),
+                format!("natives/STM/{}.{}", path, suffix),
+                format!("natives/STM/{}.{}.x64", path, suffix),
+                format!("natives/STM/{}.{}.STM", path, suffix),
+            ];
 
             let mut result = vec![];
 
             for &language in LANGUAGE_LIST {
-                let (path_l, path_x64_l, path_stm_l) = if language.is_empty() {
-                    (
-                        full_path.clone(),
-                        full_path_x64.clone(),
-                        full_path_stm.clone(),
-                    )
-                } else {
-                    let path_l = format!("{}.{}", &full_path, language);
-                    let path_x64_l = format!("{}.{}", &full_path_x64, language);
-                    let path_stm_l = format!("{}.{}", &full_path_stm, language);
-                    (path_l, path_x64_l, path_stm_l)
-                };
-                if let Some(index) = self.find_file_internal(path_l) {
-                    result.push(I18nPakFileIndex { language, index });
-                    continue;
-                }
-
-                if let Some(index) = self.find_file_internal(path_x64_l) {
-                    result.push(I18nPakFileIndex { language, index });
-                    continue;
-                }
-
-                if let Some(index) = self.find_file_internal(path_stm_l) {
-                    result.push(I18nPakFileIndex { language, index });
-                    continue;
+                for full_path in &full_paths {
+                    let dot = if language.is_empty() { "" } else { "." };
+                    let with_language = format!("{}{}{}", full_path, dot, language);
+                    if let Some(index) = self.find_file_internal(with_language) {
+                        result.push(I18nPakFileIndex { language, index });
+                        break;
+                    }
                 }
             }
             if !result.is_empty() {
