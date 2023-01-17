@@ -1109,8 +1109,24 @@ fn gen_quest(
                 </div>
 
                 { arena.arena_pl.iter().enumerate().map(|(i, pl)|{
+                    let weapon_control_ref = |name: &str| {
+                        if let Some(entry) = pedia.weapon_control.get_entry(name) {
+                            Some(entry)
+                        } else if let  Some(entry) = pedia.weapon_control_mr.get_entry(name) {
+                            Some(entry)
+                        } else {
+                            None
+                        }
+                    };
+
                     let weapon_action = |actions: &[i32]| {
-                        html!(<span>{text!("{:?}", actions)}</span>) // TODO
+                        html!(<ul class="mh-arena-switch-skill">{actions.iter().map(|action|{
+                            if let Some(skill) = pedia_ex.switch_skills.get(action) {
+                                html!(<li>{gen_multi_lang_with_ref(&skill.name, weapon_control_ref)}</li>)
+                            } else {
+                                html!(<li>{text!("Unknown skill {:?}", action)}</li>)
+                            }
+                        })}</ul>)
                     };
 
                     let deco_label_li = |id: DecorationsId| {

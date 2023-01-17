@@ -313,14 +313,32 @@ fn parse_msg(content: &str) -> (Seq, bool) {
     (root, has_warning)
 }
 
-pub fn translate_msg(content: &str) -> (Box<span<String>>, bool) {
+pub fn translate_msg<'r, RefF>(
+    content: &str,
+    language_i: usize,
+    reference: RefF,
+) -> (Box<span<String>>, bool)
+where
+    RefF: Fn(&str) -> Option<&'r MsgEntry> + Clone,
+{
     let (root, has_warning) = parse_msg(content);
 
-    fn translate_rec(node: &Node<'_>) -> Box<dyn PhrasingContent<String>> {
+    fn translate_rec<'r, RefF>(
+        node: &Node<'_>,
+        language_i: usize,
+        reference: RefF,
+    ) -> Box<dyn PhrasingContent<String>>
+    where
+        RefF: Fn(&str) -> Option<&'r MsgEntry> + Clone,
+    {
         match node {
             Node::Raw(s) => Box::new(TextNode::<String>::new(*s)),
             Node::Tagged(t) => {
-                let inner = t.seq.nodes.iter().map(translate_rec);
+                let inner = t
+                    .seq
+                    .nodes
+                    .iter()
+                    .map(|n| translate_rec(n, language_i, reference.clone()));
                 match t.tag {
                     "COLOR" => {
                         let style = format!("color: #{};", t.arg);
@@ -353,6 +371,19 @@ pub fn translate_msg(content: &str) -> (Box<span<String>>, bool) {
                     "ПУСТО" => {
                         html!(<span> "<ПУСТО>" </span>)
                     }
+                    "REF" => {
+                        if let Some(entry) = reference(t.arg) {
+                            let (translated, _inner_has_warning) = translate_msg(
+                                &entry.content[language_i],
+                                language_i,
+                                reference.clone(),
+                            );
+                            //has_warning |= _inner_has_warning; // TODO: ehh
+                            translated
+                        } else {
+                            html!(<span class="mh-msg-place-holder">{text!("{{{} {}}}", t.tag, t.arg)}</span>)
+                        }
+                    }
                     _ => {
                         eprintln!("Unknown tag: {}", t.tag);
                         html!(<span>
@@ -366,7 +397,7 @@ pub fn translate_msg(content: &str) -> (Box<span<String>>, bool) {
         }
     }
 
-    let result = html!(<span> {root.nodes.iter().map(translate_rec)} </span>);
+    let result = html!(<span> {root.nodes.iter().map(|n|translate_rec(n, language_i, reference.clone()))} </span>);
     (result, has_warning)
 }
 
@@ -390,6 +421,13 @@ pub fn translate_msg_plain(content: &str) -> String {
 }
 
 pub fn gen_multi_lang(msg: &MsgEntry) -> Box<span<String>> {
+    gen_multi_lang_with_ref(msg, |_| None)
+}
+
+pub fn gen_multi_lang_with_ref<'r, RefF>(msg: &MsgEntry, reference: RefF) -> Box<span<String>>
+where
+    RefF: Fn(&str) -> Option<&'r MsgEntry> + Clone,
+{
     html!(<span> {
         (0..32).filter_map(|i|{
             let class_string = if i == 1 {
@@ -399,7 +437,7 @@ pub fn gen_multi_lang(msg: &MsgEntry) -> Box<span<String>> {
             };
             let (_, language_code) = LANGUAGE_MAP[i]?;
             let language_code: LanguageTag = language_code.parse().unwrap();
-            let (msg, warning) = translate_msg(&msg.content[i]);
+            let (msg, warning) = translate_msg(&msg.content[i], i, reference.clone());
             let warning = warning.then(||html!(<span class="icon has-text-warning">
                 <i class="fas fa-triangle-exclamation" title="There is a parsing error"/>
             </span>));

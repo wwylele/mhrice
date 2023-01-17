@@ -882,6 +882,20 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         }
     }
 
+    let switch_action_name = get_msg(
+        pak,
+        "data/Define/Player/Skill/PlSwitchAction/PlayerSwitchAction_Name.msg",
+    )?;
+
+    let switch_action_name_mr = get_msg(
+        pak,
+        "data/Define/Player/Skill/PlSwitchAction/PlayerSwitchAction_Name_MR.msg",
+    )?;
+
+    let weapon_control = get_msg(pak, "Message/HunterNote/HN_WeaponControlsMsg.msg")?;
+
+    let weapon_control_mr = get_msg(pak, "Message/HunterNote_MR/HN_WeaponControlsMsg_MR.msg")?;
+
     Ok(Pedia {
         monsters,
         small_monsters,
@@ -1071,6 +1085,10 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         progress: get_singleton(pak)?,
         enemy_rank: get_singleton(pak)?,
         species: get_singleton(pak)?,
+        switch_action_name,
+        switch_action_name_mr,
+        weapon_control,
+        weapon_control_mr,
     })
 }
 
@@ -3608,6 +3626,25 @@ pub fn prepare_progress(pedia: &Pedia) -> Result<HashMap<i32, &ProgressCheckerUs
     )
 }
 
+pub fn prepare_switch_skills(pedia: &Pedia) -> Result<HashMap<i32, SwitchSkill<'_>>> {
+    let mut result = HashMap::new();
+    for entry in pedia
+        .switch_action_name
+        .entries
+        .iter()
+        .chain(&pedia.switch_action_name_mr.entries)
+    {
+        if let Some(s) = entry.name.strip_prefix("PlayerSwitchAction_") {
+            if let Some(s) = s.strip_suffix("_Name") {
+                if let Ok(id) = s.parse::<i32>() {
+                    result.insert(id, SwitchSkill { name: entry });
+                }
+            }
+        }
+    }
+    Ok(result)
+}
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     let monster_order = pedia
         .monster_list
@@ -3705,5 +3742,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
 
         supply: prepare_supply(pedia)?,
         progress: prepare_progress(pedia)?,
+
+        switch_skills: prepare_switch_skills(pedia)?,
     })
 }

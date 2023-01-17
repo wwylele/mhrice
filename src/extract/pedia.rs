@@ -256,6 +256,11 @@ pub struct Pedia {
 
     pub enemy_rank: EnemyRankData,
     pub species: SystemEnemyDragonSpeciesData,
+
+    pub switch_action_name: Msg,
+    pub switch_action_name_mr: Msg,
+    pub weapon_control: Msg,
+    pub weapon_control_mr: Msg,
 }
 
 pub struct QuestReward<'a> {
@@ -482,6 +487,10 @@ pub struct WeaponCustomBuildup<'a> {
     pub categories: BTreeMap<u16, WeaponCustomBuildupCategory<'a>>,
 }
 
+pub struct SwitchSkill<'a> {
+    pub name: &'a MsgEntry,
+}
+
 pub struct PediaEx<'a> {
     pub monsters: BTreeMap<EmTypes, MonsterEx<'a>>,
     pub sizes: HashMap<EmTypes, &'a SizeInfo>,
@@ -525,4 +534,6 @@ pub struct PediaEx<'a> {
 
     pub supply: HashMap<i32, &'a SupplyDataParam>,
     pub progress: HashMap<i32, &'a ProgressCheckerUserDataParam>,
+
+    pub switch_skills: HashMap<i32, SwitchSkill<'a>>,
 }
