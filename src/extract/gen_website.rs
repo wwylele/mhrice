@@ -77,6 +77,7 @@ pub fn head_common(hash_store: &HashStore) -> Vec<Box<dyn MetadataContent<String
     vec![
         html!(<meta charset="UTF-8" />),
         html!(<meta name="viewport" content="width=device-width, initial-scale=1" />),
+        html!(<meta name="keywords" content="Monster Hunter,Monster Hunter Rise,MHR,MHRise,Database,Guide,Hitzone,HZV"/>),
         html!(<link rel="icon" type="image/png" href="/favicon.png" />),
         html!(<link rel="stylesheet" href={main_css} />),
         html!(<link rel="stylesheet" href={part_color} />),
@@ -506,8 +507,9 @@ pub fn gen_search(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html lang="en">
             <head itemscope=true>
-                <title>{text!("Monsters - MHRice")}</title>
+                <title>{text!("Monsters - MHRice - Monster Hunter Rise Database")}</title>
                 { head_common(hash_store) }
+                <meta name="description" content="Monster Hunter Rise Database" />
             </head>
             <body>
                 { navbar() }

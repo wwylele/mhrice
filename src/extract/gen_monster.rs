@@ -2034,8 +2034,9 @@ pub fn gen_monsters(
     let doc: DOMTree<String> = html!(
         <html lang="en">
             <head itemscope=true>
-                <title>{text!("Monsters - MHRice")}</title>
+                <title>{text!("Monsters - MHRice - Monster Hunter Rise Database")}</title>
                 { head_common(hash_store) }
+                <meta name="description" content="List of monsters. Monster Hunter Rise Database" />
             </head>
             <body>
                 { navbar() }
