@@ -3,6 +3,7 @@ use crate::file_ext::*;
 use crate::hash::hash_as_utf16;
 use crate::suffix::SUFFIX_MAP;
 use anyhow::{bail, Context, Result};
+use base64::prelude::*;
 use compress::flate;
 use num_bigint::BigUint;
 use once_cell::sync::Lazy;
@@ -12,11 +13,17 @@ use std::io::{Read, Seek, SeekFrom};
 
 static PAK_MAIN_KEY_MOD: Lazy<Option<Vec<u8>>> = Lazy::new(|| None);
 
-static PAK_SUB_KEY_MOD: Lazy<Vec<u8>> =
-    Lazy::new(|| base64::decode("E9eciYiRSBDXqniu+FnffTxDoNC7Nne18FwCr2XYdwM=").unwrap());
+static PAK_SUB_KEY_MOD: Lazy<Vec<u8>> = Lazy::new(|| {
+    BASE64_STANDARD
+        .decode("E9eciYiRSBDXqniu+FnffTxDoNC7Nne18FwCr2XYdwM=")
+        .unwrap()
+});
 
-static PAK_SUB_KEY_EXP: Lazy<Vec<u8>> =
-    Lazy::new(|| base64::decode("wMJ3H1s0agHH1NeFLkIrOxY6FxMW6oMwMN8/9CWTIAE=").unwrap());
+static PAK_SUB_KEY_EXP: Lazy<Vec<u8>> = Lazy::new(|| {
+    BASE64_STANDARD
+        .decode("wMJ3H1s0agHH1NeFLkIrOxY6FxMW6oMwMN8/9CWTIAE=")
+        .unwrap()
+});
 
 const LANGUAGE_LIST: &[&str] = &[
     "", "Ja", "En", "Fr", "It", "De", "Es", "Ru", "Pl", "Nl", "Pt", "PtBR", "Ko", "ZhTW", "ZhCN",
