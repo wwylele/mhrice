@@ -3,6 +3,7 @@ use super::gen_common::*;
 use super::gen_hyakuryu_skill::*;
 use super::gen_item::*;
 use super::gen_map::*;
+use super::gen_misc::*;
 use super::gen_monster::*;
 use super::gen_otomo::*;
 use super::gen_quest::*;
@@ -190,6 +191,18 @@ pub fn navbar() -> Box<nav<String>> {
                 <a class="navbar-item" href="/item.html">
                    "Items"
                 </a>
+
+                <a class="navbar-item navbar-folded" href="/misc.html">
+                    "Misc."
+                </a>
+                <div class="navbar-item has-dropdown is-hoverable navbar-expanded">
+                <a class="navbar-link" href="/misc.html">
+                    "Misc."
+                </a>
+                <div class="navbar-dropdown">
+                    <a class="navbar-item" href="/misc/petalace.html">"Petalace"</a>
+                </div>
+                </div>
             </div>
         </div>
     </div></nav>)
@@ -672,6 +685,7 @@ pub fn gen_website(
     gen_otomo_equip_list(hash_store, pedia_ex, output)?;
     gen_about(hash_store, output)?;
     gen_search(hash_store, output)?;
+    gen_misc(hash_store, pedia, pedia_ex, config, output, &mut toc)?;
     toc.finalize(&output.sub_sink("tocv2")?)?;
     Ok(())
 }

@@ -6,6 +6,7 @@ mod gen_common;
 mod gen_hyakuryu_skill;
 mod gen_item;
 mod gen_map;
+mod gen_misc;
 mod gen_monster;
 mod gen_otomo;
 mod gen_pedia;

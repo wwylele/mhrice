@@ -187,11 +187,11 @@ rsz_struct! {
         pub rarity: RareTypes,
         pub model_lv: i32, // snow.equip.LvBuffCageModelLv
         pub model_color_index: ColorTypes,
-        pub status_buff_limit: Vec<u32>,
-        pub status_buff_add_value: Vec<u32>,
-        pub status_buff_all_add_value: Vec<u32>,
-        pub status_start_revise_val: Vec<u32>,
-        pub element_revise_val: Vec<i32>,
+        pub status_buff_limit: [u32; 5], // Health, Stamina, Attack, Defense, ?(always 3)
+        pub status_buff_add_value: [u32; 4], // Health, Stamina, Attack, Defense
+        pub status_buff_all_add_value: [u32; 4], // Health, Stamina, Attack, Defense
+        pub status_start_revise_val: [u32; 5], // all zero?
+        pub element_revise_val: [u32; 5], // all zero?
     }
 }
 
