@@ -9,6 +9,7 @@ mod condition_damage_preset;
 mod custom_buildup;
 mod data_base;
 mod data_tune;
+mod facility;
 mod item;
 mod lot;
 mod map;
@@ -33,6 +34,7 @@ pub use condition_damage_preset::*;
 pub use custom_buildup::*;
 pub use data_base::*;
 pub use data_tune::*;
+pub use facility::*;
 pub use item::*;
 pub use lot::*;
 pub use map::*;
@@ -990,6 +992,8 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         ReleaseData,
         RandomMysteryMonsterRankReleaseData
     );
+
+    r!(ItemShopDisplayUserDataParam, ItemShopDisplayUserData,);
 
     m
 });

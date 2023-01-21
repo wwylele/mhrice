@@ -201,6 +201,7 @@ pub fn navbar() -> Box<nav<String>> {
                 </a>
                 <div class="navbar-dropdown">
                     <a class="navbar-item" href="/misc/petalace.html">"Petalace"</a>
+                    <a class="navbar-item" href="/misc/market.html">"Market"</a>
                 </div>
                 </div>
             </div>
@@ -685,7 +686,7 @@ pub fn gen_website(
     gen_otomo_equip_list(hash_store, pedia_ex, output)?;
     gen_about(hash_store, output)?;
     gen_search(hash_store, output)?;
-    gen_misc(hash_store, pedia, pedia_ex, config, output, &mut toc)?;
+    gen_misc(hash_store, pedia, pedia_ex, output, &mut toc)?;
     toc.finalize(&output.sub_sink("tocv2")?)?;
     Ok(())
 }

@@ -265,6 +265,8 @@ pub struct Pedia {
     pub buff_cage: NormalLvBuffCageBaseUserData,
     pub buff_cage_name: Msg,
     pub buff_cage_explain: Msg,
+
+    pub item_shop: ItemShopDisplayUserData,
 }
 
 pub struct QuestReward<'a> {
