@@ -1,6 +1,6 @@
 # ![](src/extract/static/favicon.png) mhrice
 
-:warning: This project mainly targets the PC version. It might or might not work for the Switch version
+:warning: This project mainly targets the steam version. It might or might not work for the other versions
 
 ## What?
 
