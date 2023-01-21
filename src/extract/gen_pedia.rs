@@ -896,6 +896,16 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
 
     let weapon_control_mr = get_msg(pak, "Message/HunterNote_MR/HN_WeaponControlsMsg_MR.msg")?;
 
+    let buff_cage_name = get_msg(
+        pak,
+        "data/System/ContentsIdSystem/LvBuffCage/Normal/LvBuffCage_Name.msg",
+    )?;
+
+    let buff_cage_explain = get_msg(
+        pak,
+        "data/System/ContentsIdSystem/LvBuffCage/Normal/LvBuffCage_Explain.msg",
+    )?;
+
     Ok(Pedia {
         monsters,
         small_monsters,
@@ -1089,6 +1099,9 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         switch_action_name_mr,
         weapon_control,
         weapon_control_mr,
+        buff_cage: get_singleton(pak)?,
+        buff_cage_name,
+        buff_cage_explain,
     })
 }
 
@@ -3645,6 +3658,40 @@ pub fn prepare_switch_skills(pedia: &Pedia) -> Result<HashMap<i32, SwitchSkill<'
     Ok(result)
 }
 
+pub fn prepare_buff_cage(pedia: &Pedia) -> Result<BTreeMap<LvBuffCageId, BuffCage<'_>>> {
+    let name = pedia.buff_cage_name.get_name_map();
+    let explain = pedia.buff_cage_explain.get_name_map();
+    let mut result = BTreeMap::new();
+    for param in &pedia.buff_cage.param {
+        if result.contains_key(&param.id) {
+            bail!("Duplicate buff cage {:?}", param.id)
+        }
+        let (name_tag, explain_tag) = if let LvBuffCageId::Normal(id) = param.id {
+            (
+                format!("LvC_Normal_{:03}_Name", id),
+                format!("LvC_Normal_{:03}_Explain", id),
+            )
+        } else {
+            bail!("Unknown buff cage ID {:?}", param.id)
+        };
+        let name = name
+            .get(&name_tag)
+            .with_context(|| format!("Name not found for {:?}", param.id))?;
+        let explain = explain
+            .get(&explain_tag)
+            .with_context(|| format!("Explain not found for {:?}", param.id))?;
+        result.insert(
+            param.id,
+            BuffCage {
+                name,
+                explain,
+                data: param,
+            },
+        );
+    }
+    Ok(result)
+}
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     let monster_order = pedia
         .monster_list
@@ -3744,5 +3791,6 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         progress: prepare_progress(pedia)?,
 
         switch_skills: prepare_switch_skills(pedia)?,
+        buff_cage: prepare_buff_cage(pedia)?,
     })
 }

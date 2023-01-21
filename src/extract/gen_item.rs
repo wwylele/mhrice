@@ -879,3 +879,13 @@ pub fn gen_reward_table<'a>(
             </tr>)
         })
 }
+
+pub fn gen_buff_cage_label(buff_cage: &BuffCage<'_>) -> Box<a<String>> {
+    let link = format!("/petalace.html");
+    html!(
+        <a href={link} class="mh-icon-text">
+            {gen_rared_icon(buff_cage.data.rarity, "/resources/equip/030", [])}
+            <span>{gen_multi_lang(buff_cage.name)}</span>
+        </a>
+    )
+}

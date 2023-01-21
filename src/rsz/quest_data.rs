@@ -1271,7 +1271,7 @@ rsz_struct! {
         pub armor_lv_leg: u32,
         pub deco_leg: Vec<DecorationsId>,
 
-        pub lv_buff_cage_id: u32, // snow.data.ContentsIdSystem.LvBuffCageId
+        pub lv_buff_cage_id: LvBuffCageId,
         pub talisman_id: u32, // snow.data.DataDef.PlTalismanId
         pub talisman_skill: Vec<ArenaTalismanSkillData>,
         pub deco_talisman: Vec<DecorationsId>,

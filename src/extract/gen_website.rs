@@ -507,7 +507,7 @@ pub fn gen_search(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html lang="en">
             <head itemscope=true>
-                <title>{text!("Monsters - MHRice - Monster Hunter Rise Database")}</title>
+                <title>{text!("MHRice - Monster Hunter Rise Database")}</title>
                 { head_common(hash_store) }
                 <meta name="description" content="Monster Hunter Rise Database" />
             </head>

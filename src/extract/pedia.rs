@@ -261,6 +261,10 @@ pub struct Pedia {
     pub switch_action_name_mr: Msg,
     pub weapon_control: Msg,
     pub weapon_control_mr: Msg,
+
+    pub buff_cage: NormalLvBuffCageBaseUserData,
+    pub buff_cage_name: Msg,
+    pub buff_cage_explain: Msg,
 }
 
 pub struct QuestReward<'a> {
@@ -491,6 +495,12 @@ pub struct SwitchSkill<'a> {
     pub name: &'a MsgEntry,
 }
 
+pub struct BuffCage<'a> {
+    pub name: &'a MsgEntry,
+    pub explain: &'a MsgEntry,
+    pub data: &'a NormalLvBuffCageBaseUserDataParam,
+}
+
 pub struct PediaEx<'a> {
     pub monsters: BTreeMap<EmTypes, MonsterEx<'a>>,
     pub sizes: HashMap<EmTypes, &'a SizeInfo>,
@@ -536,4 +546,5 @@ pub struct PediaEx<'a> {
     pub progress: HashMap<i32, &'a ProgressCheckerUserDataParam>,
 
     pub switch_skills: HashMap<i32, SwitchSkill<'a>>,
+    pub buff_cage: BTreeMap<LvBuffCageId, BuffCage<'a>>,
 }

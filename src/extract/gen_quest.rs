@@ -1176,6 +1176,12 @@ fn gen_quest(
                         } </ul>)
                     };
 
+                    let buff_cage = if let Some(buff_cage) = pedia_ex.buff_cage.get(&pl.lv_buff_cage_id) {
+                        html!(<td>{gen_buff_cage_label(&buff_cage)}</td>)
+                    } else {
+                        html!(<td>{text!("Unknown {:?}", pl.lv_buff_cage_id)}</td>)
+                    };
+
                     html!(<section class="mh-arena-set">
                     <h3>{text!("Set {}", i + 1)}</h3>
                     <div class="mh-table"><table>
@@ -1252,7 +1258,7 @@ fn gen_quest(
                     </tr>
                     <tr>
                         <td>"Petalace"</td>
-                        <td>{text!("{}", pl.lv_buff_cage_id)}</td> // TODO
+                        {buff_cage}
                         <td/>
                         <td/>
                     </tr>

@@ -767,7 +767,12 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         SlotWorthTableUserData,
     );
 
-    r!(ItemUserDataParam, ItemUserData);
+    r!(
+        ItemUserDataParam,
+        ItemUserData,
+        NormalLvBuffCageBaseUserDataParam,
+        NormalLvBuffCageBaseUserData
+    );
 
     r!(
         MonsterLotTableUserDataParam,
