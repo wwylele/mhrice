@@ -56,7 +56,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.facility.itemShop.ShopFukudamaLotTableUserData",
-        path = "data/Facility/ItemShop/VillageShop/ItemShopFukudamaLotTableUserData10.user",
+        path = "data/Facility/ItemShop/VillageShop/ItemShopFukudamaLotTableUserData.user",
         0x8E88CEBB = 10_00_02,
     )]
     #[derive(Debug, Serialize)]
@@ -69,6 +69,9 @@ rsz_struct! {
 rsz_struct! {
     #[rsz("snow.facility.itemShop.ShopFukudamaUserData.Param",
         0x3FC2B801 = 10_00_02,
+        0x2F3791A4 = 11_00_01,
+        0x0779A339 = 12_00_00,
+        0xA9771CAB = 13_00_00,
     )]
     #[derive(Debug, Serialize)]
     pub struct ShopFukudamaUserDataParam {
@@ -80,7 +83,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.facility.itemShop.ShopFukudamaUserData",
-        path = "data/Facility/ItemShop/VillageShop/ItemShopFukudamaPrizeUserData10.user",
+        path = "data/Facility/ItemShop/VillageShop/ItemShopFukudamaPrizeUserData.user",
         0x75B36D1D = 10_00_02,
     )]
     #[derive(Debug, Serialize)]

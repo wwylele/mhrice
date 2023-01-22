@@ -268,6 +268,7 @@ pub struct Pedia {
 
     pub item_shop: ItemShopDisplayUserData,
     pub item_shop_lot: ItemShopLotUserData,
+    pub fukudama: ShopFukudamaUserData,
 }
 
 pub struct QuestReward<'a> {

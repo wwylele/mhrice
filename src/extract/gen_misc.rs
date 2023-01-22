@@ -5,6 +5,7 @@ use super::gen_website::*;
 use super::hash_store::*;
 use super::pedia::*;
 use super::sink::*;
+use crate::rsz::*;
 use anyhow::Result;
 use std::io::Write;
 use typed_html::{dom::*, html, text};
@@ -160,6 +161,36 @@ fn gen_market(
             </section>)})}
             </section>
         ),
+    });
+
+    let gen_lucky_prize_row = |param: &ShopFukudamaUserDataParam| {
+        let item_label = if let Some(item_data) = pedia_ex.items.get(&param.item_id) {
+            html!(<div class="il">{gen_item_label(item_data)}</div>)
+        } else {
+            html!(<div class="il">{text!("Unknown item {:?}", param.item_id)}</div>)
+        };
+        html!(<tr>
+            <td>{text!("{}x ", param.item_num)}{item_label}</td>
+            <td>{text!("{}", param.fukudama_num)}</td>
+        </tr>)
+    };
+
+    sections.push(Section {
+        title: "Lucky prize".to_owned(),
+        content: html!(<section id="s-lucky">
+            <h2>"Lucky prize"</h2>
+            <div class="mh-table"><table>
+            <thead><tr>
+            <th>"Item"</th><th>"Lucky ball points"</th>
+            </tr></thead>
+            <tbody>
+            {pedia.fukudama.no_count_stop_param.iter().map(gen_lucky_prize_row)}
+            <tr><td/><td>"Stop counting points at this point"</td></tr>
+            {pedia.fukudama.count_stop_param.iter().map(gen_lucky_prize_row)}
+            </tbody>
+            </table>
+            </div>
+            </section>),
     });
 
     let doc: DOMTree<String> = html!(
