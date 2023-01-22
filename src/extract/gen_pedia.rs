@@ -1103,6 +1103,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         buff_cage_name,
         buff_cage_explain,
         item_shop: get_singleton(pak)?,
+        item_shop_lot: get_singleton(pak)?,
     })
 }
 
@@ -3693,6 +3694,32 @@ pub fn prepare_buff_cage(pedia: &Pedia) -> Result<BTreeMap<LvBuffCageId, BuffCag
     Ok(result)
 }
 
+fn prepare_item_shop_lot<'a>(
+    pedia: &'a Pedia,
+    reward_lot: &'_ HashMap<u32, &'a RewardIdLotTableUserDataParam>,
+) -> Result<Vec<ItemShopLot<'a>>> {
+    let mut result: Vec<ItemShopLot> = vec![];
+    for lot in &pedia.item_shop_lot.param {
+        let reward_tables = lot
+            .table_id_list
+            .iter()
+            .map(|id| {
+                reward_lot
+                    .get(id)
+                    .copied()
+                    .with_context(|| format!("Reward table {id} not found for item shop lot"))
+            })
+            .collect::<Result<Vec<_>>>()?;
+        result.push(ItemShopLot {
+            data: lot,
+            reward_tables,
+        })
+    }
+
+    result.sort_by_key(|r| (r.data.rank_type, r.data.lot_type));
+    Ok(result)
+}
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     let monster_order = pedia
         .monster_list
@@ -3793,5 +3820,6 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
 
         switch_skills: prepare_switch_skills(pedia)?,
         buff_cage: prepare_buff_cage(pedia)?,
+        item_shop_lot: prepare_item_shop_lot(pedia, &reward_lot)?,
     })
 }

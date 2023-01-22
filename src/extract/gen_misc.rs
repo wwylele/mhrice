@@ -1,5 +1,6 @@
 use super::gen_common::*;
-use super::gen_item::gen_item_label;
+use super::gen_item::*;
+use super::gen_quest::*;
 use super::gen_website::*;
 use super::hash_store::*;
 use super::pedia::*;
@@ -108,6 +109,57 @@ fn gen_market(
                 </tbody>
             </table></div>
         </section>),
+    });
+
+    sections.push(Section {
+        title: "Lottery".to_owned(),
+        content: html!(<section id="s-lottery">
+            <h2 >"Lottery"</h2>
+            {pedia_ex.item_shop_lot.iter().map(|lot| {
+                let lot_type = match lot.data.lot_type {
+                    crate::rsz::ItemLotFuncLotType::Heal => "Heal",
+                    crate::rsz::ItemLotFuncLotType::Trap => "Traps",
+                    crate::rsz::ItemLotFuncLotType::Support => "Support",
+                    crate::rsz::ItemLotFuncLotType::Special => "Special goods",
+                    crate::rsz::ItemLotFuncLotType::Amiibo => "Amiibo",
+                };
+
+                html!(<section>
+                <h3>{text!("Type: {} - Rank {}", lot_type, lot.data.rank_type)}</h3>
+                {text!("Unlock at: {} {} {}",
+                    lot.data.village.display().unwrap_or_default(),
+                    lot.data.hall.display().unwrap_or_default(),
+                    lot.data.mr.display().unwrap_or_default()
+                )}
+                <div class="mh-reward-tables">
+                {lot.reward_tables.iter().zip(&lot.data.probability_list).enumerate().map(|(i, (table, probability))| {
+                    let grade = match i {
+                        0 => "Jackpot",
+                        1 => "Bingo",
+                        2 => "Miss",
+                        _ => unreachable!()
+                    };
+                    html!(
+                    <div class="mh-reward-box">
+                    <div class="mh-table"><table>
+                    <thead><tr>
+                        <th>{text!("{} ({}%)", grade, probability)}
+                            <br/>{translate_rule(table.lot_rule)}</th>
+                        <th>"Probability"</th>
+                    </tr></thead>
+                    <tbody> {
+                        gen_reward_table(pedia_ex,
+                            &table.item_id_list,
+                            &table.num_list,
+                            &table.probability_list)
+                    } </tbody>
+                    </table></div>
+                    </div>
+                )})}
+                </div>
+            </section>)})}
+            </section>
+        ),
     });
 
     let doc: DOMTree<String> = html!(

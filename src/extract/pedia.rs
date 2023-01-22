@@ -267,6 +267,7 @@ pub struct Pedia {
     pub buff_cage_explain: Msg,
 
     pub item_shop: ItemShopDisplayUserData,
+    pub item_shop_lot: ItemShopLotUserData,
 }
 
 pub struct QuestReward<'a> {
@@ -503,6 +504,11 @@ pub struct BuffCage<'a> {
     pub data: &'a NormalLvBuffCageBaseUserDataParam,
 }
 
+pub struct ItemShopLot<'a> {
+    pub data: &'a ItemShopLotUserDataParam,
+    pub reward_tables: Vec<&'a RewardIdLotTableUserDataParam>,
+}
+
 pub struct PediaEx<'a> {
     pub monsters: BTreeMap<EmTypes, MonsterEx<'a>>,
     pub sizes: HashMap<EmTypes, &'a SizeInfo>,
@@ -549,4 +555,5 @@ pub struct PediaEx<'a> {
 
     pub switch_skills: HashMap<i32, SwitchSkill<'a>>,
     pub buff_cage: BTreeMap<LvBuffCageId, BuffCage<'a>>,
+    pub item_shop_lot: Vec<ItemShopLot<'a>>,
 }

@@ -49,11 +49,16 @@ fn gen_item_icon(item: &Item) -> Box<div<String>> {
 }
 
 pub fn gen_item_label(item: &Item) -> Box<a<String>> {
+    let annotation = match item.param.id {
+        ItemId::Normal(1057) => Some(html!(<span class="mh-item-anno">"[Trinket]"</span>)),
+        _ => None,
+    };
     let link = format!("/item/{}", item_page(item.param.id));
     html!(
         <a href={link} class="mh-icon-text">
             {gen_item_icon(item)}
-            <span>{gen_multi_lang(item.name)}</span>
+            {annotation.is_none().then(||html!(<span>{gen_multi_lang(item.name)}</span>))}
+            {annotation}
         </a>
     )
 }

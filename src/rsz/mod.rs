@@ -993,7 +993,17 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         RandomMysteryMonsterRankReleaseData
     );
 
-    r!(ItemShopDisplayUserDataParam, ItemShopDisplayUserData,);
+    r!(
+        ItemShopDisplayUserDataParam,
+        ItemShopDisplayUserData,
+        ShopFukudamaLotTableUserDataParam,
+        ShopFukudamaLotTableUserDataTable,
+        ShopFukudamaLotTableUserData,
+        ShopFukudamaUserDataParam,
+        ShopFukudamaUserData,
+        ItemShopLotUserDataParam,
+        ItemShopLotUserData,
+    );
 
     m
 });

@@ -240,7 +240,7 @@ main {
         padding-left: 1rem;
         border-bottom: solid 2px $border;
 
-        >section.mh-arena-set {
+        >section {
             padding-top: 1rem;
             padding-left: 2rem;
         }
@@ -1094,4 +1094,10 @@ ul.mh-buddy-gear-stat {
     margin-left: 0;
     margin-top: 0;
     list-style: none;
+}
+
+/** Item name annotation **/
+.mh-item-anno {
+    font-style: italic;
+    color: purple;
 }
