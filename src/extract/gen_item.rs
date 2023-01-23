@@ -622,6 +622,47 @@ fn gen_item_source_map(
     }
 }
 
+fn gen_item_source_misc(
+    item_id: ItemId,
+    pedia: &Pedia,
+    pedia_ex: &PediaEx,
+) -> Option<Box<div<String>>> {
+    let mut htmls = vec![];
+
+    if pedia.item_shop.param.iter().any(|item| item.id == item_id) {
+        htmls.push(html!(<li><a href="/misc/market.html#s-item">"Market"</a></li>));
+    }
+
+    if pedia_ex.item_shop_lot.iter().any(|lot| {
+        lot.reward_tables
+            .iter()
+            .any(|table| table.item_id_list.iter().any(|item| *item == item_id))
+    }) {
+        htmls.push(html!(<li><a href="/misc/market.html#s-lottery">"Market lottery"</a></li>));
+    }
+
+    if pedia
+        .fukudama
+        .count_stop_param
+        .iter()
+        .chain(&pedia.fukudama.no_count_stop_param)
+        .any(|p| p.item_id == item_id)
+    {
+        htmls.push(html!(<li><a href="/misc/market.html#s-lucky">"Market lucky prize"</a></li>));
+    }
+
+    if !htmls.is_empty() {
+        Some(
+            html!(<div class="mh-item-in-out"> <h3>"From other places: "</h3>
+            <ul class="mh-item-list">{
+                htmls
+            }</ul> </div>),
+        )
+    } else {
+        None
+    }
+}
+
 static ITEM_TYPES: Lazy<BTreeMap<ItemTypes, (&'static str, &'static str)>> = Lazy::new(|| {
     BTreeMap::from_iter([
         (ItemTypes::Consume, ("consume", "Consumable")),
@@ -734,6 +775,7 @@ pub fn gen_item(
             {gen_item_source_map(item.param.id, pedia, pedia_ex)}
             {gen_item_source_weapon(item.param.id, pedia_ex)}
             {gen_item_source_armor(item.param.id, pedia_ex)}
+            {gen_item_source_misc(item.param.id, pedia, pedia_ex)}
             </section>
         ),
     });
