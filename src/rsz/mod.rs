@@ -1003,6 +1003,8 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         ShopFukudamaUserData,
         ItemShopLotUserDataParam,
         ItemShopLotUserData,
+        MysteryLaboTradeItemUserDataParam,
+        MysteryLaboTradeItemUserData,
     );
 
     m

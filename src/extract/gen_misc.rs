@@ -1,5 +1,6 @@
 use super::gen_common::*;
 use super::gen_item::*;
+use super::gen_monster::*;
 use super::gen_quest::*;
 use super::gen_website::*;
 use super::hash_store::*;
@@ -214,6 +215,89 @@ fn gen_market(
     Ok(())
 }
 
+fn gen_lab(
+    hash_store: &HashStore,
+    pedia: &Pedia,
+    pedia_ex: &PediaEx,
+    mut output: impl Write,
+) -> Result<()> {
+    let gen_em = |em| {
+        (em != EmTypes::Em(0))
+            .then(|| html!(<li>{gen_monster_tag(pedia_ex, em, false, true, None, None)}</li>))
+    };
+
+    let content = if let Some(lab) = &pedia.mystery_labo_trade_item {
+        let mut lab: Vec<_> = lab
+            .param
+            .iter()
+            .filter(|p| !matches!(p.item_id, ItemId::Null | ItemId::None))
+            .collect();
+        lab.sort_by_key(|p| p.sort_id);
+        html!(<div class="mh-table"><table>
+        <thead><tr>
+            <th>"Item"</th>
+            <th>"Price"</th>
+            <th>"Unlock by research lv"</th>
+            <th>"Unlock by item"</th>
+            <th>"Unlock by monster"</th>
+            <th>"Monster count"</th>
+        </tr></thead>
+        <tbody>
+        { lab.iter().map(|param| {
+            let item_label = if let Some(item_data) = pedia_ex.items.get(&param.item_id) {
+                html!(<td>{gen_item_label(item_data)}</td>)
+            } else {
+                html!(<td>{text!("Unknown item {:?}", param.item_id)}</td>)
+            };
+            let unlock_item_label = if matches!(param.unlock_condition_item_id, ItemId::Null | ItemId::None) {
+                html!(<td>"-"</td>)
+            } else if let Some(item_data) = pedia_ex.items.get(&param.unlock_condition_item_id) {
+                html!(<td>{gen_item_label(item_data)}</td>)
+            } else {
+                html!(<td>{text!("Unknown item {:?}", param.unlock_condition_item_id)}</td>)
+            };
+            html!(<tr>
+                {item_label}
+                <td>{text!("{}", param.cost)}</td>
+                <td>{text!("{}", param.unlock_condition_mystery_research_lv)}</td>
+                {unlock_item_label}
+                <td>
+                <ul class="mh-rampage-em-list">
+                {gen_em(param.unlock_condition_enemy_id_1)}
+                {gen_em(param.unlock_condition_enemy_id_2)}
+                {gen_em(param.unlock_condition_enemy_id_3)}
+                {gen_em(param.unlock_condition_enemy_id_4)}
+                {gen_em(param.unlock_condition_enemy_id_5)}
+                </ul>
+                </td>
+                <td>{text!("x{}", param.unlock_condition_enemy_hunt_count)}</td>
+            </tr>)
+        }) }
+        </tbody>
+        </table></div>)
+    } else {
+        html!(<div>"Not open"</div>)
+    };
+    let doc: DOMTree<String> = html!(
+        <html lang="en">
+            <head itemscope=true>
+                <title>{text!("Anomaly research lab - MHRice")}</title>
+                { head_common(hash_store) }
+            </head>
+            <body>
+                { navbar() }
+                <main>
+                <header><h1>"Anomaly research lab"</h1></header>
+                {content}
+                </main>
+                { right_aside() }
+            </body>
+        </html>
+    );
+    output.write_all(doc.to_string().as_bytes())?;
+    Ok(())
+}
+
 fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html lang="en">
@@ -228,6 +312,7 @@ fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
 
                 <a href="/misc/petalace.html">"Petalace"</a>
                 <a href="/misc/market.html">"Market"</a>
+                <a href="/misc/lab.html">"Anomaly research lab"</a>
                 </main>
                 { right_aside() }
             </body>
@@ -251,6 +336,9 @@ pub fn gen_misc(
 
     let path = folder.create_html("market.html")?;
     gen_market(hash_store, pedia, pedia_ex, path)?;
+
+    let path = folder.create_html("lab.html")?;
+    gen_lab(hash_store, pedia, pedia_ex, path)?;
 
     gen_misc_page(hash_store, output.create_html("misc.html")?)?;
 

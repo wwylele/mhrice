@@ -1177,7 +1177,7 @@ fn gen_quest(
                     };
 
                     let buff_cage = if let Some(buff_cage) = pedia_ex.buff_cage.get(&pl.lv_buff_cage_id) {
-                        html!(<td>{gen_buff_cage_label(&buff_cage)}</td>)
+                        html!(<td>{gen_buff_cage_label(buff_cage)}</td>)
                     } else {
                         html!(<td>{text!("Unknown {:?}", pl.lv_buff_cage_id)}</td>)
                     };

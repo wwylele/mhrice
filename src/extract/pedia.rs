@@ -269,6 +269,7 @@ pub struct Pedia {
     pub item_shop: ItemShopDisplayUserData,
     pub item_shop_lot: ItemShopLotUserData,
     pub fukudama: ShopFukudamaUserData,
+    pub mystery_labo_trade_item: Option<MysteryLaboTradeItemUserData>,
 }
 
 pub struct QuestReward<'a> {

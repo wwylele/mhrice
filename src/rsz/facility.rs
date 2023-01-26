@@ -132,3 +132,38 @@ rsz_struct! {
         pub param: Vec<ItemShopLotUserDataParam>
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.facility.mysteryLabo.MysteryLaboTradeItemUserData.Param",
+        0x6B818975 = 13_00_00,
+        0x920575DD = 12_00_00,
+        0x252C969B = 11_00_01,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct MysteryLaboTradeItemUserDataParam {
+        pub index_no: u32,
+        pub item_id: ItemId,
+        pub unlock_condition_mystery_research_lv: u32,
+        pub unlock_condition_item_id: ItemId,
+        pub unlock_condition_enemy_id_1: EmTypes,
+        pub unlock_condition_enemy_id_2: EmTypes,
+        pub unlock_condition_enemy_id_3: EmTypes,
+        pub unlock_condition_enemy_id_4: EmTypes,
+        pub unlock_condition_enemy_id_5: EmTypes,
+        pub unlock_condition_enemy_hunt_count: u32,
+        pub cost: u32,
+        pub item_type: i32, // snow.facility.mysteryLabo.ItemFilterTypes
+        pub sort_id: i32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.facility.mysteryLabo.MysteryLaboTradeItemUserData",
+        path = "data/Facility/MysteryLabo/MysteryLaboTradeItemUserData.user",
+        0x36F0016F = 11_00_01,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct MysteryLaboTradeItemUserData {
+        pub param: Vec<MysteryLaboTradeItemUserDataParam>
+    }
+}

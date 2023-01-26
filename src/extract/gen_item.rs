@@ -651,6 +651,14 @@ fn gen_item_source_misc(
         htmls.push(html!(<li><a href="/misc/market.html#s-lucky">"Market lucky prize"</a></li>));
     }
 
+    if pedia
+        .mystery_labo_trade_item
+        .as_ref()
+        .map_or(false, |lab| lab.param.iter().any(|p| p.item_id == item_id))
+    {
+        htmls.push(html!(<li><a href="/misc/lab.html">"Anomaly research lab"</a></li>));
+    }
+
     if !htmls.is_empty() {
         Some(
             html!(<div class="mh-item-in-out"> <h3>"From other places: "</h3>
@@ -928,9 +936,8 @@ pub fn gen_reward_table<'a>(
 }
 
 pub fn gen_buff_cage_label(buff_cage: &BuffCage<'_>) -> Box<a<String>> {
-    let link = format!("/misc/petalace.html");
     html!(
-        <a href={link} class="mh-icon-text">
+        <a href={"/misc/petalace.html"} class="mh-icon-text">
             {gen_rared_icon(buff_cage.data.rarity, "/resources/equip/030", [])}
             <span>{gen_multi_lang(buff_cage.name)}</span>
         </a>
