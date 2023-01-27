@@ -1101,3 +1101,11 @@ ul.mh-buddy-gear-stat {
     font-style: italic;
     color: purple;
 }
+
+
+/** Misc **/
+.mh-misc-list {
+    >* {
+        display: block;
+    }
+}

@@ -362,11 +362,12 @@ fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
                 { navbar() }
                 <main>
                 <header><h1>"Miscellaneous"</h1></header>
-
+                <div class="mh-misc-list">
                 <a href="/misc/petalace.html">"Petalace"</a>
                 <a href="/misc/market.html">"Market"</a>
                 <a href="/misc/lab.html">"Anomaly research lab"</a>
                 <a href="/misc/mix.html">"Item crafting"</a>
+                </div>
                 </main>
                 { right_aside() }
             </body>
