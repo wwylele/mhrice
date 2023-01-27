@@ -1106,6 +1106,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         item_shop_lot: get_singleton(pak)?,
         fukudama: get_singleton(pak)?,
         mystery_labo_trade_item: get_singleton_opt(pak)?,
+        item_mix: get_singleton(pak)?,
     })
 }
 

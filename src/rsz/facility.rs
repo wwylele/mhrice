@@ -167,3 +167,35 @@ rsz_struct! {
         pub param: Vec<MysteryLaboTradeItemUserDataParam>
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.data.ItemMixRecipeUserData.Param",
+        0x10A910AE = 13_00_00,
+        0xD4D26A8B = 12_00_00,
+        0x57984480 = 11_00_01,
+        0x841CBFD8 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ItemMixRecipeUserDataParam {
+        pub recipe_no: u32,
+        pub item_id_list: Vec<ItemId>,
+        pub generated_item_id: ItemId,
+        pub generated_item_num: u32,
+        pub quest_type: i32, // snow.data.ItemMixData.QuestTypes
+        pub default_open_flag: bool,
+        pub auto_mix_enable_flag: bool,
+        pub auto_mix_default: bool,
+        pub recipe_tab_type: i32, // snow.data.itemMix.FromListFunc.RecipeTabTypes
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.ItemMixRecipeUserData",
+        path = "data/Define/Player/System/ItemMix/ItemMixRecipeData.user",
+        0xD5F19AF5 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ItemMixRecipeUserData {
+        pub param: Vec<ItemMixRecipeUserDataParam>
+    }
+}

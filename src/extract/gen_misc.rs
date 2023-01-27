@@ -298,6 +298,59 @@ fn gen_lab(
     Ok(())
 }
 
+fn gen_mix(
+    hash_store: &HashStore,
+    pedia: &Pedia,
+    pedia_ex: &PediaEx,
+    mut output: impl Write,
+) -> Result<()> {
+    let content = html!(<div class="mh-table"><table>
+        <thead><tr>
+            <th>"Item"</th>
+            <th>"Material"</th>
+            <th>"Revealed"</th>
+            <th>"Can auto"</th>
+            <th>"default auto"</th>
+        </tr></thead>
+        <tbody>
+        { pedia.item_mix.param.iter().map(|p| {
+            html!(<tr>
+                <td>{text!("{}x ", p.generated_item_num)}
+                {gen_item_label_from_id(p.generated_item_id, pedia_ex)}
+                </td>
+                <td><ul class="mh-armor-skill-list">
+                {p.item_id_list.iter()
+                    .filter(|i|!matches!(i, ItemId::Null | ItemId::None))
+                    .map(|&i|html!(<li>{gen_item_label_from_id(i, pedia_ex)}</li>))}
+                </ul></td>
+                <td>{text!("{}", p.default_open_flag)}</td>
+                <td>{text!("{}", p.auto_mix_enable_flag)}</td>
+                <td>{text!("{}", p.auto_mix_default)}</td>
+            </tr>)
+        })}
+        </tbody>
+        </table></div>);
+
+    let doc: DOMTree<String> = html!(
+        <html lang="en">
+            <head itemscope=true>
+                <title>{text!("Item crafting - MHRice")}</title>
+                { head_common(hash_store) }
+            </head>
+            <body>
+                { navbar() }
+                <main>
+                <header><h1>"Item crafting"</h1></header>
+                {content}
+                </main>
+                { right_aside() }
+            </body>
+        </html>
+    );
+    output.write_all(doc.to_string().as_bytes())?;
+    Ok(())
+}
+
 fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html lang="en">
@@ -313,6 +366,7 @@ fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
                 <a href="/misc/petalace.html">"Petalace"</a>
                 <a href="/misc/market.html">"Market"</a>
                 <a href="/misc/lab.html">"Anomaly research lab"</a>
+                <a href="/misc/mix.html">"Item crafting"</a>
                 </main>
                 { right_aside() }
             </body>
@@ -339,6 +393,9 @@ pub fn gen_misc(
 
     let path = folder.create_html("lab.html")?;
     gen_lab(hash_store, pedia, pedia_ex, path)?;
+
+    let path = folder.create_html("mix.html")?;
+    gen_mix(hash_store, pedia, pedia_ex, path)?;
 
     gen_misc_page(hash_store, output.create_html("misc.html")?)?;
 

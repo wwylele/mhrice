@@ -63,6 +63,14 @@ pub fn gen_item_label(item: &Item) -> Box<a<String>> {
     )
 }
 
+pub fn gen_item_label_from_id(item: ItemId, pedia_ex: &PediaEx) -> Box<dyn FlowContent<String>> {
+    if let Some(item) = pedia_ex.items.get(&item) {
+        gen_item_label(item)
+    } else {
+        text!("Unknown item {:?}", item)
+    }
+}
+
 pub fn gen_materials(
     pedia_ex: &PediaEx,
     item: &[ItemId],
