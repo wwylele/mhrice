@@ -18,7 +18,7 @@ mod monster_hitzone;
 pub use bc7::*;
 pub use monster_hitzone::*;
 
-static INIT_CONTEXT: Lazy<Mutex<Option<Context<NotCurrent>>>> = Lazy::new(|| Mutex::new(None));
+static INIT_CONTEXT: Mutex<Option<Context<NotCurrent>>> = Mutex::new(None);
 
 struct Job {
     f: Box<dyn FnOnce(&GlHandle) + Send + 'static>,
