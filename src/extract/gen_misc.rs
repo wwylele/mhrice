@@ -165,13 +165,9 @@ fn gen_market(
     });
 
     let gen_lucky_prize_row = |param: &ShopFukudamaUserDataParam| {
-        let item_label = if let Some(item_data) = pedia_ex.items.get(&param.item_id) {
-            html!(<div class="il">{gen_item_label(item_data)}</div>)
-        } else {
-            html!(<div class="il">{text!("Unknown item {:?}", param.item_id)}</div>)
-        };
         html!(<tr>
-            <td>{text!("{}x ", param.item_num)}{item_label}</td>
+            <td>{text!("{}x ", param.item_num)}
+            <div class="il">{gen_item_label_from_id(param.item_id, pedia_ex)}</div></td>
             <td>{text!("{}", param.fukudama_num)}</td>
         </tr>)
     };
@@ -244,20 +240,13 @@ fn gen_lab(
         </tr></thead>
         <tbody>
         { lab.iter().map(|param| {
-            let item_label = if let Some(item_data) = pedia_ex.items.get(&param.item_id) {
-                html!(<td>{gen_item_label(item_data)}</td>)
-            } else {
-                html!(<td>{text!("Unknown item {:?}", param.item_id)}</td>)
-            };
             let unlock_item_label = if matches!(param.unlock_condition_item_id, ItemId::Null | ItemId::None) {
                 html!(<td>"-"</td>)
-            } else if let Some(item_data) = pedia_ex.items.get(&param.unlock_condition_item_id) {
-                html!(<td>{gen_item_label(item_data)}</td>)
-            } else {
-                html!(<td>{text!("Unknown item {:?}", param.unlock_condition_item_id)}</td>)
+            } else{
+                html!(<td>{gen_item_label_from_id(param.unlock_condition_item_id, pedia_ex)}</td>)
             };
             html!(<tr>
-                {item_label}
+                <td>{gen_item_label_from_id(param.item_id, pedia_ex)}</td>
                 <td>{text!("{}", param.cost)}</td>
                 <td>{text!("{}", param.unlock_condition_mystery_research_lv)}</td>
                 {unlock_item_label}

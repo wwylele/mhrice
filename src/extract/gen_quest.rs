@@ -741,14 +741,9 @@ fn gen_quest(
         quest.param.tgt_item_id.iter().zip(quest.param.tgt_num.iter())
             .filter(|&(&item, _)| item != ItemId::None)
             .map(|(&item, num)|{
-            let item = if let Some(item) = pedia_ex.items.get(&item) {
-                html!(<div class="il">{gen_item_label(item)}</div>)
-            } else {
-                html!(<div class="il">{text!("Unknown item {:?}", item)}</div>)
-            };
             html!(<li>
                 {text!("{}x ", num)}
-                {item}
+                <div class="il">{gen_item_label_from_id(item, pedia_ex)}</div>
             </li>)
         })
         }</ul>
@@ -1056,14 +1051,9 @@ fn gen_quest(
             html!(<div><ul class="mh-item-list"> {
                 supply.item_id.iter().zip(&supply.num).filter(|(&item, _)| item != ItemId::Null && item != ItemId::None )
                 .map(|(item, &num)| {
-                    let item = if let Some(item) = pedia_ex.items.get(item) {
-                        html!(<div class="il">{gen_item_label(item)}</div>)
-                    } else {
-                        html!(<div class="il">{text!("Unknown item {:?}", item)}</div>)
-                    };
                     html!(<li>
                         {text!("{}x ", num)}
-                        {item}
+                        <div class="il">{gen_item_label_from_id(*item, pedia_ex)}</div>
                     </li>)
                 })
             } </ul></div>)
@@ -1154,14 +1144,9 @@ fn gen_quest(
                         html!(<ul class="mh-item-list-arena-set"> {
                             items.iter().filter(|item_work| item_work.item != ItemId::Null && item_work.item != ItemId::None )
                             .map(|item_work| {
-                                let item = if let Some(item) = pedia_ex.items.get(&item_work.item) {
-                                    html!(<div class="il">{gen_item_label(item)}</div>)
-                                } else {
-                                    html!(<div class="il">{text!("Unknown item {:?}", item_work.item)}</div>)
-                                };
                                 html!(<li>
                                     {text!("{}x ", item_work.num)}
-                                    {item}
+                                    <div class="il">{gen_item_label_from_id(item_work.item, pedia_ex)}</div>
                                 </li>)
                             })
                         } </ul>)

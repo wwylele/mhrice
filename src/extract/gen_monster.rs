@@ -591,12 +591,6 @@ fn gen_grouped_reward_table<'a>(
                 .filter(|&((&item, _), _)| item != ItemId::None)
                 .enumerate()
                 .map(move |(i, ((&item, &num), &probability))| {
-                    let item = if let Some(item) = pedia_ex.items.get(&item) {
-                        html!(<div class="il">{gen_item_label(item)}</div>)
-                    } else {
-                        html!(<div class="il">{text!("Unknown {:?}", item)}</div>)
-                    };
-
                     let reward_type: Vec<_> = drop_dictionary
                         .get(&reward_type)
                         .unwrap_or(&vec![])
@@ -608,7 +602,8 @@ fn gen_grouped_reward_table<'a>(
 
                     html!(<tr>
                         {group}
-                        <td>{text!("{}x ", num)}{item}</td>
+                        <td>{text!("{}x ", num)}
+                        <div class="il">{gen_item_label_from_id(item, pedia_ex)}</div></td>
                         <td>{text!("{}%", probability)}</td>
                     </tr>)
                 })
@@ -735,12 +730,6 @@ pub fn gen_lot(
                             .filter(|&((&item, _), _)|item != ItemId::None)
                             .enumerate()
                             .map(move |(i, ((&item, &num), &probability))|{
-                                let item = if let Some(item) = pedia_ex.items.get(&item) {
-                                    html!(<div class="il">{gen_item_label(item)}</div>)
-                                } else {
-                                    html!(<div class="il">{text!("Unknown {:?}", item)}</div>)
-                                };
-
                                 let part_name = if let Some(name) =
                                     pedia_ex.parts_dictionary.get(&(em_type, part)) {
                                     gen_multi_lang(name)
@@ -784,7 +773,8 @@ pub fn gen_lot(
 
                                 html!(<tr>
                                     {group}
-                                    <td>{text!("{}x ", num)}{item}</td>
+                                    <td>{text!("{}x ", num)}
+                                    <div class="il">{gen_item_label_from_id(item, pedia_ex)}</div></td>
                                     <td>{text!("{}%", probability)}</td>
                                 </tr>)
                             })

@@ -103,11 +103,7 @@ fn gen_map(
 
                     let item_id = get_fish_item_id(f.fish_id);
                     let item = if let Some(item) = item_id {
-                        if let Some(item) = pedia_ex.items.get(&item) {
-                            html!(<div class="il">{gen_item_label(item)}</div>)
-                        } else {
-                            html!(<div class="il">{text!("{:?}", item)}</div>)
-                        }
+                        html!(<div class="il">{gen_item_label_from_id(item, pedia_ex)}</div>)
                     } else {
                         html!(<div class="il">{text!("Unknown fish {}", f.fish_id)}</div>)
                     };
