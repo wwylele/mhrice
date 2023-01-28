@@ -1050,6 +1050,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         fukudama: get_singleton(pak)?,
         mystery_labo_trade_item: get_singleton_opt(pak)?,
         item_mix: get_singleton(pak)?,
+        bbq: get_singleton(pak)?,
     })
 }
 
@@ -3651,6 +3652,30 @@ fn prepare_item_shop_lot<'a>(
     Ok(result)
 }
 
+fn prepare_bbq<'a>(
+    pedia: &'a Pedia,
+    reward_lot: &'_ HashMap<u32, &'a RewardIdLotTableUserDataParam>,
+) -> Result<Vec<BbqData<'a>>> {
+    let mut result = pedia
+        .bbq
+        .param
+        .iter()
+        .map(|param| {
+            let table = (param.table_id != 0)
+                .then(|| {
+                    reward_lot
+                        .get(&param.table_id)
+                        .copied()
+                        .with_context(|| format!("BBQ reward not found for {}", param.table_id))
+                })
+                .transpose()?;
+            Ok(BbqData { param, table })
+        })
+        .collect::<Result<Vec<BbqData>>>()?;
+    result.sort_by_key(|p| p.param.sort_id);
+    Ok(result)
+}
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     let monster_order = pedia
         .monster_list
@@ -3752,5 +3777,6 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         switch_skills: prepare_switch_skills(pedia)?,
         buff_cage: prepare_buff_cage(pedia)?,
         item_shop_lot: prepare_item_shop_lot(pedia, &reward_lot)?,
+        bbq: prepare_bbq(pedia, &reward_lot)?,
     })
 }

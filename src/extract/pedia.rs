@@ -271,6 +271,7 @@ pub struct Pedia {
     pub fukudama: ShopFukudamaUserData,
     pub mystery_labo_trade_item: Option<MysteryLaboTradeItemUserData>,
     pub item_mix: ItemMixRecipeUserData,
+    pub bbq: BbqConvertUserData,
 }
 
 pub struct QuestReward<'a> {
@@ -512,6 +513,11 @@ pub struct ItemShopLot<'a> {
     pub reward_tables: Vec<&'a RewardIdLotTableUserDataParam>,
 }
 
+pub struct BbqData<'a> {
+    pub param: &'a BbqConvertUserDataParam,
+    pub table: Option<&'a RewardIdLotTableUserDataParam>,
+}
+
 pub struct PediaEx<'a> {
     pub monsters: BTreeMap<EmTypes, MonsterEx<'a>>,
     pub sizes: HashMap<EmTypes, &'a SizeInfo>,
@@ -559,4 +565,5 @@ pub struct PediaEx<'a> {
     pub switch_skills: HashMap<i32, SwitchSkill<'a>>,
     pub buff_cage: BTreeMap<LvBuffCageId, BuffCage<'a>>,
     pub item_shop_lot: Vec<ItemShopLot<'a>>,
+    pub bbq: Vec<BbqData<'a>>,
 }

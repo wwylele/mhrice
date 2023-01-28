@@ -586,6 +586,28 @@ fn gen_item_usage_mix(
     }
 }
 
+fn gen_item_usage_misc(
+    item_id: ItemId,
+    _pedia: &Pedia,
+    pedia_ex: &PediaEx,
+) -> Option<Box<div<String>>> {
+    let mut htmls = vec![];
+    if pedia_ex.bbq.iter().any(|bbq| bbq.param.item_id == item_id) {
+        htmls.push(html!(<li><a href="/misc/bbq.html">"Motley mix"</a></li>));
+    }
+
+    if !htmls.is_empty() {
+        Some(
+            html!(<div class="mh-item-in-out"> <h3>"From other places: "</h3>
+            <ul class="mh-item-list">{
+                htmls
+            }</ul> </div>),
+        )
+    } else {
+        None
+    }
+}
+
 fn gen_item_source_map(
     item_id: ItemId,
     pedia: &Pedia,
@@ -713,6 +735,15 @@ fn gen_item_source_misc(
         .map_or(false, |lab| lab.param.iter().any(|p| p.item_id == item_id))
     {
         htmls.push(html!(<li><a href="/misc/lab.html">"Anomaly research lab"</a></li>));
+    }
+
+    if pedia_ex.bbq.iter().any(|bbq| {
+        bbq.param.fix_out_item_id_list.contains(&item_id)
+            || bbq
+                .table
+                .map_or(false, |table| table.item_id_list.contains(&item_id))
+    }) {
+        htmls.push(html!(<li><a href="/misc/bbq.html">"Motley mix"</a></li>));
     }
 
     if !htmls.is_empty() {
@@ -857,6 +888,7 @@ pub fn gen_item(
             {gen_item_usage_hyakuryu(item.param.id, pedia_ex)}
             {gen_item_usage_hyakuryu_deco(item.param.id, pedia_ex)}
             {gen_item_usage_mix(item.param.id, pedia, pedia_ex)}
+            {gen_item_usage_misc(item.param.id, pedia, pedia_ex)}
             </section>
         ),
     });

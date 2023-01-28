@@ -340,6 +340,77 @@ fn gen_mix(
     Ok(())
 }
 
+fn gen_bbq(hash_store: &HashStore, pedia_ex: &PediaEx, mut output: impl Write) -> Result<()> {
+    let content = html!(<div class="mh-table"><table>
+        <thead><tr>
+            <th>"Item"</th>
+            <th>"Money cost"</th>
+            <th>"Point cost"</th>
+            <th>"Bonus point"</th>
+            <th>"Fixed output"</th>
+            <th>"Random output"</th>
+        </tr></thead>
+        <tbody>
+        { pedia_ex.bbq.iter().map(|bbq| {
+
+            html!(<tr>
+            <td>{gen_item_label_from_id(bbq.param.item_id, pedia_ex)}</td>
+            <td>{text!("{}z", bbq.param.money_cost)}</td>
+            <td>{text!("{}pts", bbq.param.point_cost)}</td>
+            <td>{text!("{}", bbq.param.bonus_point)}</td>
+            <td><ul class="mh-armor-skill-list">
+            {bbq.param.fix_out_item_id_list.iter().zip(&bbq.param.fix_out_num_list)
+                .filter(|&(&item, _)|!matches!(item, ItemId::Null | ItemId::None))
+                .map(|(&item, &num)| {
+                    html!(<li class="il">
+                        {text!("{}x ", num)}
+                        {gen_item_label_from_id(item, pedia_ex)}
+                    </li>)
+                })
+            }
+            </ul></td>
+            <td> {
+                bbq.table.map(|table| html!(
+                <div class="mh-reward-box"><div class="mh-table"><table>
+                    <thead><tr>
+                        <th>{text!("{}x random choice", bbq.param.random_out_item_num)}
+                        //<br/>{translate_rule(table.lot_rule)}
+                        </th>
+                        <th>"Probability"</th>
+                    </tr></thead>
+                    <tbody> {
+                        gen_reward_table(pedia_ex,
+                            &table.item_id_list,
+                            &table.num_list,
+                            &table.probability_list)
+                    } </tbody>
+                </table></div></div>)
+            )}</td>
+            </tr>)
+        })}
+        </tbody>
+        </table></div>);
+
+    let doc: DOMTree<String> = html!(
+        <html lang="en">
+            <head itemscope=true>
+                <title>{text!("Motley mix - MHRice")}</title>
+                { head_common(hash_store) }
+            </head>
+            <body>
+                { navbar() }
+                <main>
+                <header><h1>"Motley mix"</h1></header>
+                {content}
+                </main>
+                { right_aside() }
+            </body>
+        </html>
+    );
+    output.write_all(doc.to_string().as_bytes())?;
+    Ok(())
+}
+
 fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html lang="en">
@@ -356,6 +427,7 @@ fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
                 <a href="/misc/market.html">"Market"</a>
                 <a href="/misc/lab.html">"Anomaly research lab"</a>
                 <a href="/misc/mix.html">"Item crafting"</a>
+                <a href="/misc/bbq.html">"Motley mix"</a>
                 </div>
                 </main>
                 { right_aside() }
@@ -386,6 +458,9 @@ pub fn gen_misc(
 
     let path = folder.create_html("mix.html")?;
     gen_mix(hash_store, pedia, pedia_ex, path)?;
+
+    let path = folder.create_html("bbq.html")?;
+    gen_bbq(hash_store, pedia_ex, path)?;
 
     gen_misc_page(hash_store, output.create_html("misc.html")?)?;
 

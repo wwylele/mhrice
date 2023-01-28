@@ -199,3 +199,38 @@ rsz_struct! {
         pub param: Vec<ItemMixRecipeUserDataParam>
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.facility.kitchen.BbqConvertUserData.Param",
+        0x3C4D8DE4 = 13_00_00,
+        0xD42FF9ED = 12_00_00,
+        0xDF26D59B = 11_00_01,
+        0xC7900744 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct BbqConvertUserDataParam {
+        // base: snow.facility.kitchen.BbqConvertData
+
+        pub item_id: ItemId,
+        pub sort_id: u32,
+        pub filter_type: i32, // snow.facility.kitchen.BbqFunc.FilterTypes
+        pub money_cost: u32,
+        pub point_cost: u32,
+        pub bonus_point: u32,
+        pub fix_out_item_id_list: Vec<ItemId>,
+        pub fix_out_num_list: Vec<u32>,
+        pub random_out_item_num: u32,
+        pub table_id: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.facility.kitchen.BbqConvertUserData",
+        path = "data/Define/Lobby/Facility/Kitchen/BbqConvertUserData.user",
+        0xF324E28A = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct BbqConvertUserData {
+        pub param: Vec<BbqConvertUserDataParam>
+    }
+}
