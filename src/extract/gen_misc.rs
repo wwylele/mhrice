@@ -119,7 +119,7 @@ fn gen_market(
             <h2 >"Lottery"</h2>
             {pedia_ex.item_shop_lot.iter().map(|lot| {
                 let lot_type = match lot.data.lot_type {
-                    crate::rsz::ItemLotFuncLotType::Heal => "Heal",
+                    crate::rsz::ItemLotFuncLotType::Heal => "Recovery",
                     crate::rsz::ItemLotFuncLotType::Trap => "Traps",
                     crate::rsz::ItemLotFuncLotType::Support => "Support",
                     crate::rsz::ItemLotFuncLotType::Special => "Special goods",
@@ -299,7 +299,7 @@ fn gen_mix(
             <th>"Material"</th>
             <th>"Revealed"</th>
             <th>"Can auto"</th>
-            <th>"default auto"</th>
+            <th>"Default auto"</th>
         </tr></thead>
         <tbody>
         { pedia.item_mix.param.iter().map(|p| {
