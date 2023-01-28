@@ -267,7 +267,7 @@ where
         let charge_type: Vec<String> = bow
             .bow_charge_type_list
             .iter()
-            .map(|c| format!("{}", c))
+            .map(|c| format!("{c}"))
             .collect();
         [
             html!(<p class="mh-kv"><span>"Default charge lv"</span>
@@ -297,8 +297,8 @@ where
                     let pos = sharpness_pos as f32 * 0.25;
                     sharpness_pos += s;
                     let width = s as f32 * 0.25;
-                    let class = format!("mh-sharpness mh-sharpness-color-{}", i);
-                    let style = format!("left:{}%;width:{}%;", pos, width);
+                    let class = format!("mh-sharpness mh-sharpness-color-{i}");
+                    let style = format!("left:{pos}%;width:{width}%;");
                     html!(<span class={class.as_str()} style={style.as_str()} />)
                 })
             }
@@ -308,7 +308,7 @@ where
                     sharpness_pos += s;
                     let width = s as f32 * 0.25;
                     let class = format!("mh-sharpness-half mh-sharpness-color-{}", i + highest);
-                    let style = format!("left:{}%;width:{}%;", pos, width);
+                    let style = format!("left:{pos}%;width:{width}%;");
                     html!(<span class={class.as_str()} style={style.as_str()} />)
                 })
             }
@@ -833,7 +833,7 @@ where
         + MaybeToBase<ElementWeaponBaseData>
         + MaybeToBase<DualBladesBaseUserDataParam>,
 {
-    let mut list_path = weapon_path.create_html(&format!("{}.html", tag))?;
+    let mut list_path = weapon_path.create_html(&format!("{tag}.html"))?;
 
     let doc: DOMTree<String> = html!(
         <html lang="en">

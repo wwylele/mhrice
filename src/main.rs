@@ -427,7 +427,7 @@ fn open_pak_files(mut pak: Vec<String>) -> Result<Vec<File>> {
         }
         pak.sort();
         for path in &pak {
-            eprintln!("Found PAK file: {}", path);
+            eprintln!("Found PAK file: {path}");
         }
     }
 
@@ -437,7 +437,7 @@ fn open_pak_files(mut pak: Vec<String>) -> Result<Vec<File>> {
 fn dump(pak: Vec<String>, name: String, output: String) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
     let index = pak.find_file(&name).context("Cannot find subfile")?;
-    println!("Index {:?}", index);
+    println!("Index {index:?}");
     let content = pak.read_file(index)?;
     std::fs::write(output, content)?;
     Ok(())
@@ -485,29 +485,29 @@ fn scan_rsz(pak: Vec<String>) -> Result<()> {
     for index in pak.all_file_indexs() {
         let content = pak
             .read_file(index)
-            .context(format!("Failed to open file at {:?}", index))?;
+            .context(format!("Failed to open file at {index:?}"))?;
         if content.len() < 4 {
             continue;
         }
 
         if &content[0..3] == b"USR" {
             User::new(Cursor::new(&content))
-                .context(format!("Failed to open USER at {:?}", index))?
+                .context(format!("Failed to open USER at {index:?}"))?
                 .rsz
                 .verify_crc(&mut crc_mismatches);
         } else if &content[0..3] == b"PFB" {
             Pfb::new(Cursor::new(&content))
-                .context(format!("Failed to open PFB at {:?}", index))?
+                .context(format!("Failed to open PFB at {index:?}"))?
                 .rsz
                 .verify_crc(&mut crc_mismatches);
         } else if &content[0..3] == b"SCN" {
             Scn::new(Cursor::new(&content))
-                .context(format!("Failed to open SCN at {:?}", index))?
+                .context(format!("Failed to open SCN at {index:?}"))?
                 .rsz
                 .verify_crc(&mut crc_mismatches);
         } else if &content[0..4] == b"RCOL" {
             Rcol::new(Cursor::new(&content), false)
-                .context(format!("Failed to open RCOL at {:?}", index))?
+                .context(format!("Failed to open RCOL at {index:?}"))?
                 .rsz
                 .verify_crc(&mut crc_mismatches);
         }
@@ -524,7 +524,7 @@ fn gen_json(pak: Vec<String>) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
     let pedia = extract::gen_pedia(&mut pak)?;
     let json = serde_json::to_string_pretty(&pedia)?;
-    println!("{}", json);
+    println!("{json}");
     Ok(())
 }
 
@@ -569,7 +569,7 @@ struct OffsetFile<F> {
 impl<F: Seek> OffsetFile<F> {
     fn new(file: F, offset: u64) -> Result<Self> {
         let mut of = OffsetFile { file, offset };
-        of.seek(SeekFrom::Start(0))?;
+        of.rewind()?;
         Ok(of)
     }
 }
@@ -764,7 +764,7 @@ fn scan_msg(pak: Vec<String>, output: String) -> Result<()> {
         if file.len() < 8 || file[4..8] != b"GMSG"[..] {
             continue;
         }
-        let msg = Msg::new(Cursor::new(&file)).context(format!("at {:?}", i))?;
+        let msg = Msg::new(Cursor::new(&file)).context(format!("at {i:?}"))?;
         for e in &msg.entries {
             extract::gen_multi_lang(e);
         }
@@ -785,11 +785,11 @@ fn grep_msg(pak: Vec<String>, pattern: String) -> Result<()> {
         if file.len() < 8 || file[4..8] != b"GMSG"[..] {
             continue;
         }
-        let msg = Msg::new(Cursor::new(&file)).context(format!("at {:?}", i))?;
+        let msg = Msg::new(Cursor::new(&file)).context(format!("at {i:?}"))?;
         for entry in &msg.entries {
             for text in &entry.content {
                 if regex.is_match(text) {
-                    println!("Found @ {:?}", i);
+                    println!("Found @ {i:?}");
                 }
             }
         }
@@ -804,7 +804,7 @@ fn scan_mesh(pak: Vec<String>) -> Result<()> {
         if file.len() < 4 || file[0..4] != b"MESH"[..] {
             continue;
         }
-        let _ = Mesh::new(Cursor::new(&file)).context(format!("at {:?}", i))?;
+        let _ = Mesh::new(Cursor::new(&file)).context(format!("at {i:?}"))?;
     }
     Ok(())
 }
@@ -816,7 +816,7 @@ fn scan_tex(pak: Vec<String>) -> Result<()> {
         if file.len() < 4 || file[0..4] != b"TEX\0"[..] {
             continue;
         }
-        let _ = Tex::new(Cursor::new(&file)).context(format!("at {:?}", i))?;
+        let _ = Tex::new(Cursor::new(&file)).context(format!("at {i:?}"))?;
     }
 
     Ok(())
@@ -829,7 +829,7 @@ fn scan_gui(pak: Vec<String>) -> Result<()> {
         if file.len() < 8 || file[4..8] != b"GUIR"[..] {
             continue;
         }
-        let _ = Gui::new(Cursor::new(&file)).context(format!("at {:?}", i))?;
+        let _ = Gui::new(Cursor::new(&file)).context(format!("at {i:?}"))?;
     }
 
     Ok(())
@@ -842,7 +842,7 @@ fn scan_uvs(pak: Vec<String>) -> Result<()> {
         if file.len() < 4 || file[0..4] != b".SVU"[..] {
             continue;
         }
-        let _ = Uvs::new(Cursor::new(&file)).context(format!("at {:?}", i))?;
+        let _ = Uvs::new(Cursor::new(&file)).context(format!("at {i:?}"))?;
     }
 
     Ok(())
@@ -865,7 +865,7 @@ fn grep(pak: Vec<String>, utf16: bool, mut pattern: String) -> Result<()> {
     for i in pak.all_file_indexs() {
         let file = pak.read_file(i)?;
         if re.is_match(&file) {
-            println!("Matched @ {:?}", i);
+            println!("Matched @ {i:?}");
         }
     }
     Ok(())
@@ -930,7 +930,7 @@ fn search_path(pak: Vec<String>, dmp: Vec<String>) -> Result<()> {
 
         let counter_prev = counter.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         if counter_prev % 100 == 0 {
-            eprintln!("Found {} paths so far", counter_prev)
+            eprintln!("Found {counter_prev} paths so far")
         }
 
         Ok(paths)
@@ -994,7 +994,7 @@ fn search_path(pak: Vec<String>, dmp: Vec<String>) -> Result<()> {
     paths.dedup_by(|(p, _), (q, _)| p == q);
 
     for (path, index) in paths {
-        println!("{} $ {:?}", path, index);
+        println!("{path} $ {index:?}");
     }
 
     Ok(())
@@ -1044,7 +1044,7 @@ fn dump_tree(pak: Vec<String>, list: String, output: String) -> Result<()> {
                     format.push(*c as char);
                 } else {
                     use std::fmt::Write as _;
-                    write!(format, "_{:02x}", c)?;
+                    write!(format, "_{c:02x}")?;
                 }
             }
             format
@@ -1079,7 +1079,7 @@ fn dump_rcol(rcol: String) -> Result<()> {
     let rcol = match Rcol::new(File::open(&rcol)?, true) {
         Ok(rcol) => rcol,
         Err(e) => {
-            eprintln!("Deserialize RSZ failed because:\n {}", e);
+            eprintln!("Deserialize RSZ failed because:\n {e}");
             Rcol::new(File::open(&rcol)?, false)?
         }
     };
@@ -1162,11 +1162,8 @@ fn dump_meat(_mesh: String, _rcol: String, _output: String) -> Result<()> {
 fn gen_meat(pak: Vec<String>, index: u32, output: impl Write) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
 
-    let mesh_path = format!("enemy/em{0:03}/00/mod/em{0:03}_00.mesh", index);
-    let rcol_path = format!(
-        "enemy/em{0:03}/00/collision/em{0:03}_00_colliders.rcol",
-        index
-    );
+    let mesh_path = format!("enemy/em{index:03}/00/mod/em{index:03}_00.mesh");
+    let rcol_path = format!("enemy/em{index:03}/00/collision/em{index:03}_00_colliders.rcol");
     let mesh = pak.find_file(&mesh_path)?;
     let rcol = pak.find_file(&rcol_path)?;
     let mesh = Mesh::new(Cursor::new(pak.read_file(mesh)?))?;

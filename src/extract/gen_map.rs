@@ -324,7 +324,7 @@ fn gen_map(
                         } else {
                             "mh-map-layer undraggable mh-hidden"
                         };
-                        let html_id = format!("mh-map-layer-{}", j);
+                        let html_id = format!("mh-map-layer-{j}");
                         html!(
                             <img alt="Map" class={c} id={html_id.as_str()} draggable=false
                                 src={format!("/resources/map{id:02}_{j}.png")}/>

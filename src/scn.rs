@@ -220,13 +220,13 @@ impl Scn {
 
         println!("Resource:");
         for r in &self.resource_names {
-            println!(" - {}", r)
+            println!(" - {r}")
         }
         println!();
 
         println!("Prefab:");
         for r in &self.prefab_paths {
-            println!(" - {}", r)
+            println!(" - {r}")
         }
         println!();
 
@@ -245,7 +245,7 @@ impl Scn {
                 }
             }
             Err(e) => {
-                println!("Failed to serialize because {}", e);
+                println!("Failed to serialize because {e}");
                 for (i, type_descriptor) in self.rsz.type_descriptors.iter().enumerate() {
                     // let type_descriptor = self.rsz.type_descriptors[*root as usize];
                     let hash = type_descriptor.hash;

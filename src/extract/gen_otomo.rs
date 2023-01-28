@@ -27,7 +27,7 @@ pub fn gen_atomo_weapon_label(piece: &OtWeapon) -> Box<div<String>> {
         (OtWeaponId::None, _) => 9,
     };
 
-    let icon = format!("/resources/equip/{:03}", icon_index);
+    let icon = format!("/resources/equip/{icon_index:03}");
     html!(<div class="mh-icon-text">
         { gen_rared_icon(piece.param.rare_type, &icon, []) }
         <span>{ gen_multi_lang(piece.name) }</span>
@@ -338,7 +338,7 @@ pub fn gen_otomo_equip_list(
                             } else {
                                 series.series.sort_id
                             };
-                            let sort_tag = format!("{},{}", index, sort_id);
+                            let sort_tag = format!("{index},{sort_id}");
                             let filter = match series.series.rank {
                                 OtRankTypes::Lower => "lr",
                                 OtRankTypes::Upper => "hr",

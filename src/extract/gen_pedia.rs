@@ -78,31 +78,19 @@ fn exactly_one<T>(mut iterator: impl Iterator<Item = T>) -> Result<T> {
 }
 
 fn gen_em_collider_path(id: u32, sub_id: u32) -> String {
-    format!(
-        "enemy/em{0:03}/{1:02}/collision/em{0:03}_{1:02}_colliders.rcol",
-        id, sub_id
-    )
+    format!("enemy/em{id:03}/{sub_id:02}/collision/em{id:03}_{sub_id:02}_colliders.rcol")
 }
 
 fn gen_ems_collider_path(id: u32, sub_id: u32) -> String {
-    format!(
-        "enemy/ems{0:03}/{1:02}/collision/ems{0:03}_{1:02}_colliders.rcol",
-        id, sub_id
-    )
+    format!("enemy/ems{id:03}/{sub_id:02}/collision/ems{id:03}_{sub_id:02}_colliders.rcol")
 }
 
 fn gen_em_atk_collider_path(id: u32, sub_id: u32) -> String {
-    format!(
-        "enemy/em{0:03}/{1:02}/collision/em{0:03}_{1:02}_atk_colliders.rcol",
-        id, sub_id
-    )
+    format!("enemy/em{id:03}/{sub_id:02}/collision/em{id:03}_{sub_id:02}_atk_colliders.rcol")
 }
 
 fn gen_ems_atk_collider_path(id: u32, sub_id: u32) -> String {
-    format!(
-        "enemy/ems{0:03}/{1:02}/collision/ems{0:03}_{1:02}_atk_colliders.rcol",
-        id, sub_id
-    )
+    format!("enemy/ems{id:03}/{sub_id:02}/collision/ems{id:03}_{sub_id:02}_atk_colliders.rcol")
 }
 
 fn gen_em_shell_collider_path(id: u32, sub_id: u32) -> Vec<String> {
@@ -213,8 +201,7 @@ fn gen_em_shell_collider_path(id: u32, sub_id: u32) -> Vec<String> {
 
 fn gen_ems_shell_collider_path(id: u32, sub_id: u32) -> Vec<String> {
     vec![format!(
-        "enemy/ems{0:03}/{1:02}/shell/collision/ems{0:03}_{1:02}_shell_collider.rcol",
-        id, sub_id
+        "enemy/ems{id:03}/{sub_id:02}/shell/collision/ems{id:03}_{sub_id:02}_shell_collider.rcol"
     )]
 }
 
@@ -464,77 +451,51 @@ fn get_weapon_list<BaseData: 'static>(
     Ok(WeaponList {
         base_data: get_user(
             pak,
-            &format!(
-                "data/Define/Player/Weapon/{0}/{0}BaseData.user",
-                weapon_class
-            ),
+            &format!("data/Define/Player/Weapon/{weapon_class}/{weapon_class}BaseData.user"),
         )?,
         product: get_user(
             pak,
-            &format!(
-                "data/Define/Player/Weapon/{0}/{0}ProductData.user",
-                weapon_class
-            ),
+            &format!("data/Define/Player/Weapon/{weapon_class}/{weapon_class}ProductData.user"),
         )?,
         change: get_user(
             pak,
-            &format!(
-                "data/Define/Player/Weapon/{0}/{0}ChangeData.user",
-                weapon_class
-            ),
+            &format!("data/Define/Player/Weapon/{weapon_class}/{weapon_class}ChangeData.user"),
         )?,
         process: get_user(
             pak,
-            &format!(
-                "data/Define/Player/Weapon/{0}/{0}ProcessData.user",
-                weapon_class
-            ),
+            &format!("data/Define/Player/Weapon/{weapon_class}/{weapon_class}ProcessData.user"),
         )?,
         tree: get_user(
             pak,
-            &format!(
-                "data/Define/Player/Weapon/{0}/{0}UpdateTreeData.user",
-                weapon_class
-            ),
+            &format!("data/Define/Player/Weapon/{weapon_class}/{weapon_class}UpdateTreeData.user"),
         )?,
         overwear: get_user_opt(
             pak,
             &format!(
-                "data/Define/Player/Weapon/{0}/{0}OverwearBaseData.user",
-                weapon_class
+                "data/Define/Player/Weapon/{weapon_class}/{weapon_class}OverwearBaseData.user"
             ),
         )?,
         overwear_product: get_user_opt(
             pak,
             &format!(
-                "data/Define/Player/Weapon/{0}/{0}OverwearProductData.user",
-                weapon_class
+                "data/Define/Player/Weapon/{weapon_class}/{weapon_class}OverwearProductData.user"
             ),
         )?,
         name: get_msg(
             pak,
-            &format!("data/Define/Player/Weapon/{0}/{0}_Name.msg", weapon_class),
+            &format!("data/Define/Player/Weapon/{weapon_class}/{weapon_class}_Name.msg"),
         )?,
         explain: get_msg(
             pak,
-            &format!(
-                "data/Define/Player/Weapon/{0}/{0}_Explain.msg",
-                weapon_class
-            ),
+            &format!("data/Define/Player/Weapon/{weapon_class}/{weapon_class}_Explain.msg"),
         )?,
         name_mr: get_msg(
             pak,
-            &format!(
-                "data/Define/Player/Weapon/{0}/{0}_Name_MR.msg",
-                weapon_class
-            ),
+            &format!("data/Define/Player/Weapon/{weapon_class}/{weapon_class}_Name_MR.msg"),
         )?,
         explain_mr: get_msg(
             pak,
-            &format!(
-                "data/Define/Player/Weapon/{0}/{0}_Explain_MR.msg",
-                weapon_class
-            ),
+            &format!("data/Define/Player/Weapon/{weapon_class}/{weapon_class}_Explain_MR.msg"),
         )?,
     })
 }
@@ -544,31 +505,21 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         if id == 99 && sub_id == 5 {
             // wow
             return Some(format!(
-                "enemy/em{0:03}/00/user_data/em{0:03}_{1:02}_boss_init_set_data.user",
-                id, sub_id
+                "enemy/em{id:03}/00/user_data/em{id:03}_{sub_id:02}_boss_init_set_data.user"
             ));
         }
         Some(format!(
-            "enemy/em{0:03}/{1:02}/user_data/em{0:03}_{1:02}_boss_init_set_data.user",
-            id, sub_id
+            "enemy/em{id:03}/{sub_id:02}/user_data/em{id:03}_{sub_id:02}_boss_init_set_data.user"
         ))
     }
 
     let monsters = gen_monsters(
         pak,
-        |id, sub_id| {
-            format!(
-                "enemy/em{0:03}/{1:02}/prefab/em{0:03}_{1:02}.pfb",
-                id, sub_id
-            )
-        },
+        |id, sub_id| format!("enemy/em{id:03}/{sub_id:02}/prefab/em{id:03}_{sub_id:02}.pfb"),
         boss_init_set_path,
         gen_em_collider_path,
         |id, sub_id| {
-            format!(
-                "enemy/em{0:03}/{1:02}/user_data/em{0:03}_{1:02}_datatune.user",
-                id, sub_id
-            )
+            format!("enemy/em{id:03}/{sub_id:02}/user_data/em{id:03}_{sub_id:02}_datatune.user")
         },
         gen_em_atk_collider_path,
         gen_em_shell_collider_path,
@@ -578,19 +529,11 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
 
     let small_monsters = gen_monsters(
         pak,
-        |id, sub_id| {
-            format!(
-                "enemy/ems{0:03}/{1:02}/prefab/ems{0:03}_{1:02}.pfb",
-                id, sub_id
-            )
-        },
+        |id, sub_id| format!("enemy/ems{id:03}/{sub_id:02}/prefab/ems{id:03}_{sub_id:02}.pfb"),
         |_, _| None,
         gen_ems_collider_path,
         |id, sub_id| {
-            format!(
-                "enemy/ems{0:03}/{1:02}/user_data/ems{0:03}_{1:02}_datatune.user",
-                id, sub_id
-            )
+            format!("enemy/ems{id:03}/{sub_id:02}/user_data/ems{id:03}_{sub_id:02}_datatune.user")
         },
         gen_ems_atk_collider_path,
         gen_ems_shell_collider_path,
@@ -1158,7 +1101,7 @@ fn gen_monster_hitzones(
             }
 
             if collider.get_special_ammo_filter() != 0 {
-                eprintln!("Found special ammo collider for em{}_{}", index, sub_id);
+                eprintln!("Found special ammo collider for em{index}_{sub_id}");
             }
 
             let meat_path = output.create(&meat_file_name_gen(index, sub_id))?;
@@ -1223,7 +1166,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
         if id == 99 && sub_id == 5 {
             sub_id = 0;
         }
-        format!("enemy/em{0:03}/{1:02}/mod/em{0:03}_{1:02}.mesh", id, sub_id)
+        format!("enemy/em{id:03}/{sub_id:02}/mod/em{id:03}_{sub_id:02}.mesh")
     };
 
     gen_monster_hitzones(
@@ -1231,33 +1174,25 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
         output,
         gen_em_collider_path,
         mesh_path_gen,
-        |id, sub_id| format!("em{0:03}_{1:02}_meat.png", id, sub_id),
-        |id, sub_id| format!("em{0:03}_{1:02}_parts_group.png", id, sub_id),
+        |id, sub_id| format!("em{id:03}_{sub_id:02}_meat.png"),
+        |id, sub_id| format!("em{id:03}_{sub_id:02}_parts_group.png"),
     )?;
 
     gen_monster_hitzones(
         pak,
         output,
         gen_ems_collider_path,
-        |id, sub_id| {
-            format!(
-                "enemy/ems{0:03}/{1:02}/mod/ems{0:03}_{1:02}.mesh",
-                id, sub_id
-            )
-        },
-        |id, sub_id| format!("ems{0:03}_{1:02}_meat.png", id, sub_id),
-        |id, sub_id| format!("ems{0:03}_{1:02}_parts_group.png", id, sub_id),
+        |id, sub_id| format!("enemy/ems{id:03}/{sub_id:02}/mod/ems{id:03}_{sub_id:02}.mesh"),
+        |id, sub_id| format!("ems{id:03}_{sub_id:02}_meat.png"),
+        |id, sub_id| format!("ems{id:03}_{sub_id:02}_parts_group.png"),
     )?;
 
     for index in 0..1000 {
         for sub_id in 0..10 {
             let icon_path = if let Some(name) = EM_ICON_MAP.get(&(index, sub_id)) {
-                format!("gui/80_Texture/boss_icon/{}_IAM.tex", name)
+                format!("gui/80_Texture/boss_icon/{name}_IAM.tex")
             } else {
-                format!(
-                    "gui/80_Texture/boss_icon/em{:03}_{1:02}_IAM.tex",
-                    index, sub_id
-                )
+                format!("gui/80_Texture/boss_icon/em{index:03}_{sub_id:02}_IAM.tex")
             };
             let icon = if let Ok(icon) = pak.find_file(&icon_path) {
                 icon
@@ -1268,17 +1203,14 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
             icon.save_png(
                 0,
                 0,
-                output.create(&format!("em{0:03}_{1:02}_icon.png", index, sub_id))?,
+                output.create(&format!("em{index:03}_{sub_id:02}_icon.png"))?,
             )?;
         }
     }
 
     for index in 0..1000 {
         for sub_id in 0..10 {
-            let icon_path = format!(
-                "gui/80_Texture/boss_icon/ems{:03}_{1:02}_IAM.tex",
-                index, sub_id
-            );
+            let icon_path = format!("gui/80_Texture/boss_icon/ems{index:03}_{sub_id:02}_IAM.tex");
             let icon = if let Ok(icon) = pak.find_file(&icon_path) {
                 icon
             } else {
@@ -1288,7 +1220,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
             icon.save_png(
                 0,
                 0,
-                output.create(&format!("ems{0:03}_{1:02}_icon.png", index, sub_id))?,
+                output.create(&format!("ems{index:03}_{sub_id:02}_icon.png"))?,
             )?;
         }
     }
@@ -1346,11 +1278,11 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
             let item_icon = item_icon.sub_image_f(spriter.p0, spriter.p1)?;
 
             if ITEM_ICON_SPECIAL_COLOR.contains(&(i as i32)) {
-                item_icon.save_png(item_icon_path.create(&format!("{:03}.png", i))?)?;
+                item_icon.save_png(item_icon_path.create(&format!("{i:03}.png"))?)?;
             } else {
                 let (item_icon_r, item_icon_a) = item_icon.gen_double_mask();
-                item_icon_r.save_png(item_icon_path.create(&format!("{:03}.r.png", i))?)?;
-                item_icon_a.save_png(item_icon_path.create(&format!("{:03}.a.png", i))?)?;
+                item_icon_r.save_png(item_icon_path.create(&format!("{i:03}.r.png"))?)?;
+                item_icon_a.save_png(item_icon_path.create(&format!("{i:03}.a.png"))?)?;
             }
         }
     }
@@ -1365,7 +1297,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
     for (i, spriter) in item_addon_uvs.spriter_groups[0].spriters.iter().enumerate() {
         item_addon
             .sub_image_f(spriter.p0, spriter.p1)?
-            .save_png(output.create(&format!("item_addon_{}.png", i))?)?;
+            .save_png(output.create(&format!("item_addon_{i}.png"))?)?;
     }
 
     let message_window_uvs = pak.find_file("gui/70_UVSequence/message_window.uvs")?;
@@ -1407,8 +1339,8 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
         let (equip_icon_r, equip_icon_a) = equip_icon
             .sub_image_f(spriter.p0, spriter.p1)?
             .gen_double_mask();
-        equip_icon_r.save_png(equip_icon_path.create(&format!("{:03}.r.png", i))?)?;
-        equip_icon_a.save_png(equip_icon_path.create(&format!("{:03}.a.png", i))?)?;
+        equip_icon_r.save_png(equip_icon_path.create(&format!("{i:03}.r.png"))?)?;
+        equip_icon_a.save_png(equip_icon_path.create(&format!("{i:03}.a.png"))?)?;
     }
 
     let icon_uvs = pak.find_file("gui/70_UVSequence/state_icon.uvs")?;
@@ -1478,7 +1410,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
     for (i, spriter) in common_uvs.spriter_groups[1].spriters.iter().enumerate() {
         common
             .sub_image_f(spriter.p0, spriter.p1)?
-            .save_png(output.create(&format!("questtype_{}.png", i))?)?;
+            .save_png(output.create(&format!("questtype_{i}.png"))?)?;
     }
 
     let common_uvs = pak.find_file("gui/70_UVSequence/Slot_Icon.uvs")?;
@@ -1496,7 +1428,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
     {
         common
             .sub_image_f(spriter.p0, spriter.p1)?
-            .save_png(output.create(&format!("slot_{}.png", i))?)?;
+            .save_png(output.create(&format!("slot_{i}.png"))?)?;
     }
 
     let common_uvs = pak.find_file("gui/70_UVSequence/Slot_Icon_MR.uvs")?;
@@ -1583,8 +1515,7 @@ fn gen_gui_colors(
 
         writeln!(
             file,
-            ".{}{} {{background-color: #{:02X}{:02X}{:02X}}}",
-            css_prefix, id, r, g, b,
+            ".{css_prefix}{id} {{background-color: #{r:02X}{g:02X}{b:02X}}}",
         )?;
     }
 
@@ -1635,7 +1566,7 @@ fn hash_map_unique<T, K: Eq + std::hash::Hash + std::fmt::Debug, V>(
                     slot.key()
                 );
                 if ignore_duplicate {
-                    eprintln!("{}", message);
+                    eprintln!("{message}");
                 } else {
                     bail!("{}", message);
                 }
@@ -1922,11 +1853,11 @@ fn prepare_quests<'a>(
                 .quest_unlock
                 .quest_group
                 .get(usize::try_from(release)?)
-                .with_context(|| format!("Release group index {} out of bound", release))?;
+                .with_context(|| format!("Release group index {release} out of bound"))?;
             for &quest_no in &release_group.quest_no_array {
                 result
                     .get_mut(&quest_no)
-                    .with_context(|| format!("Unknown quest {} for group unlock", quest_no))?
+                    .with_context(|| format!("Unknown quest {quest_no} for group unlock"))?
                     .unlock
                     .push(QuestUnlock::Group(p))
             }
@@ -2193,16 +2124,16 @@ fn prepare_hyakuryu_skills(
             bail!("None Hyakuryu skill ID")
         };
 
-        let name_tag = format!("HyakuryuSkill_{:03}_Name", raw_id);
-        let explain_tag = format!("HyakuryuSkill_{:03}_Explain", raw_id);
+        let name_tag = format!("HyakuryuSkill_{raw_id:03}_Name");
+        let explain_tag = format!("HyakuryuSkill_{raw_id:03}_Explain");
         let name = *names
             .get(&name_tag)
             .or_else(|| names_mr.get(&name_tag))
-            .with_context(|| format!("No name found for hyakuryu skill {:?}", id))?;
+            .with_context(|| format!("No name found for hyakuryu skill {id:?}"))?;
         let explain = *explains
             .get(&explain_tag)
             .or_else(|| explains_mr.get(&explain_tag))
-            .with_context(|| format!("No explain found for hyakuryu skill {:?}", id))?;
+            .with_context(|| format!("No explain found for hyakuryu skill {id:?}"))?;
 
         Ok((name, explain))
     };
@@ -2695,8 +2626,8 @@ where
             bail!("Multiple definition for weapon {:?}", param.to_base().id)
         }
         let tag = id.to_tag();
-        let name_tag = format!("W_{}_Name", tag);
-        let explain_tag = format!("W_{}_Explain", tag);
+        let name_tag = format!("W_{tag}_Name");
+        let explain_tag = format!("W_{tag}_Explain");
 
         let name = name_map
             .remove(&name_tag)
@@ -2739,15 +2670,15 @@ where
     }
 
     if !product_map.is_empty() {
-        eprintln!("Left over product data: {:?}", product_map)
+        eprintln!("Left over product data: {product_map:?}")
     }
 
     if !process_map.is_empty() {
-        eprintln!("Left over process data: {:?}", process_map)
+        eprintln!("Left over process data: {process_map:?}")
     }
 
     if !change_map.is_empty() {
-        eprintln!("Left over change data: {:?}", change_map)
+        eprintln!("Left over change data: {change_map:?}")
     }
 
     let mut tree_map = HashMap::new();
@@ -2795,7 +2726,7 @@ where
         } else {
             let prev = tree_map
                 .get(&(node.prev_weapon_type, node.prev_weapon_index))
-                .with_context(|| format!("Unknown previous position for {:?}", node))?;
+                .with_context(|| format!("Unknown previous position for {node:?}"))?;
             weapons.get_mut(&node.weapon_id).unwrap().parent = Some(prev.weapon_id);
             if !prev
                 .next_weapon_type_list
@@ -2914,7 +2845,7 @@ fn prepare_horn_melody(pedia: &Pedia) -> HashMap<i32, &'_ MsgEntry> {
     let map = pedia.horn_melody.get_name_map();
     let map_mr = pedia.horn_melody_mr.get_name_map();
     for id in 0..999 {
-        let name = format!("Horn_UniqueParam_{:03}_Name", id);
+        let name = format!("Horn_UniqueParam_{id:03}_Name");
         if let Some(&name) = map.get(&name) {
             res.insert(id, name);
         } else if let Some(&name) = map_mr.get(&name) {
@@ -3531,17 +3462,14 @@ pub fn prepare_armor_custom_buildup<'a>(
         }
         let data = custom_buildup_pieces
             .remove(&(piece_lot.table_no, piece_lot.category_id, piece_lot.id))
-            .with_context(|| format!("No data found for custom buildup {:?}", piece_lot))?;
+            .with_context(|| format!("No data found for custom buildup {piece_lot:?}"))?;
         let category = result
             .get_mut(&piece_lot.table_no)
-            .with_context(|| format!("Armor customer buildup table not found for {:?}", piece_lot))?
+            .with_context(|| format!("Armor customer buildup table not found for {piece_lot:?}"))?
             .categories
             .get_mut(&piece_lot.category_id)
             .with_context(|| {
-                format!(
-                    "Armor customer buildup category not found for {:?}",
-                    piece_lot
-                )
+                format!("Armor customer buildup category not found for {piece_lot:?}")
             })?;
         if category.pieces.contains_key(&piece_lot.id) {
             bail!("Duplicate armor custom buildup piece entry {:?}", piece_lot)
@@ -3673,8 +3601,8 @@ pub fn prepare_buff_cage(pedia: &Pedia) -> Result<BTreeMap<LvBuffCageId, BuffCag
         }
         let (name_tag, explain_tag) = if let LvBuffCageId::Normal(id) = param.id {
             (
-                format!("LvC_Normal_{:03}_Name", id),
-                format!("LvC_Normal_{:03}_Explain", id),
+                format!("LvC_Normal_{id:03}_Name"),
+                format!("LvC_Normal_{id:03}_Explain"),
             )
         } else {
             bail!("Unknown buff cage ID {:?}", param.id)

@@ -11,7 +11,7 @@ pub fn ser_hash<S>(bytes: &[u8; 0x10], serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
-    serializer.serialize_str(&format!("{:?}", bytes))
+    serializer.serialize_str(&format!("{bytes:?}"))
 }
 
 #[derive(Debug, Serialize)]

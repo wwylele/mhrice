@@ -132,7 +132,7 @@ pub fn gen_skill_list(
 
 fn deco_icon_path(lv: i32) -> String {
     let icon_id = if lv == 4 { 200 } else { 63 + lv };
-    format!("/resources/item/{:03}", icon_id)
+    format!("/resources/item/{icon_id:03}")
 }
 
 pub fn gen_deco_label(deco: &Deco) -> Box<div<String>> {
@@ -244,7 +244,7 @@ pub fn gen_skill(
     }
 
     if let Some(cost) = skill.custom_buildup_cost {
-        let class = format!("tag mh-cb-lv{}", cost);
+        let class = format!("tag mh-cb-lv{cost}");
         sections.push(Section {
             title: "Qurious crafting".to_owned(),
             content: html!(

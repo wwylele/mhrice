@@ -166,11 +166,11 @@ impl<F: Read + Seek> PakReader<F> {
             .context("Unknown extension")?;
         for suffix in suffix.iter().rev() {
             let full_paths = [
-                format!("natives/NSW/{}.{}", path, suffix),
-                format!("natives/NSW/{}.{}.NSW", path, suffix),
-                format!("natives/STM/{}.{}", path, suffix),
-                format!("natives/STM/{}.{}.x64", path, suffix),
-                format!("natives/STM/{}.{}.STM", path, suffix),
+                format!("natives/NSW/{path}.{suffix}"),
+                format!("natives/NSW/{path}.{suffix}.NSW"),
+                format!("natives/STM/{path}.{suffix}"),
+                format!("natives/STM/{path}.{suffix}.x64"),
+                format!("natives/STM/{path}.{suffix}.STM"),
             ];
 
             let mut result = vec![];
@@ -178,7 +178,7 @@ impl<F: Read + Seek> PakReader<F> {
             for &language in LANGUAGE_LIST {
                 for full_path in &full_paths {
                     let dot = if language.is_empty() { "" } else { "." };
-                    let with_language = format!("{}{}{}", full_path, dot, language);
+                    let with_language = format!("{full_path}{dot}{language}");
                     if let Some(index) = self.find_file_internal(with_language) {
                         result.push(I18nPakFileIndex { language, index });
                         break;
@@ -196,7 +196,7 @@ impl<F: Read + Seek> PakReader<F> {
         Ok(self
             .find_file_i18n(path)?
             .first()
-            .with_context(|| format!("No matching hash for {}", path))?
+            .with_context(|| format!("No matching hash for {path}"))?
             .index)
     }
 

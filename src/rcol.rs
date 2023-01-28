@@ -499,7 +499,7 @@ impl Rcol {
         }
 
         for ignore_tag in &self.ignore_tags {
-            println!("* {}", ignore_tag);
+            println!("* {ignore_tag}");
         }
 
         for c in &self.group_attachments {

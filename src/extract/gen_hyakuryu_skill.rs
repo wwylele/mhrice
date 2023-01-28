@@ -24,7 +24,7 @@ pub fn gen_hyakuryu_skill_label(skill: &HyakuryuSkill) -> Box<a<String>> {
 pub fn hyakuryu_skill_page(id: PlHyakuryuSkillId) -> String {
     match id {
         PlHyakuryuSkillId::None => "none.html".to_string(),
-        PlHyakuryuSkillId::Skill(id) => format!("{:03}.html", id),
+        PlHyakuryuSkillId::Skill(id) => format!("{id:03}.html"),
     }
 }
 
@@ -150,7 +150,7 @@ pub fn gen_hyakuryu_deco_label(deco: &HyakuryuDeco) -> Box<div<String>> {
     } else {
         63 + deco.data.decoration_lv
     };
-    let icon = format!("/resources/item/{:03}", icon_id);
+    let icon = format!("/resources/item/{icon_id:03}");
     html!(<div class="mh-icon-text">
         { gen_colored_icon(deco.data.icon_color, &icon, ["mh-addon-hyakuryu"]) }
         <span>{gen_multi_lang(deco.name)}</span>

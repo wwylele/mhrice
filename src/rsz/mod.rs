@@ -462,9 +462,9 @@ pub enum ExternUser<T> {
 }
 
 impl<T: 'static> ExternUser<T> {
-    pub fn load<'a, 'b>(
+    pub fn load<'a>(
         &'a mut self,
-        pak: &'b mut crate::pak::PakReader<impl Read + Seek>,
+        pak: &'_ mut crate::pak::PakReader<impl Read + Seek>,
     ) -> Result<&'a mut T> {
         match self {
             ExternUser::Path(path) => {

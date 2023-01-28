@@ -723,7 +723,7 @@ impl Mesh {
             let x = buffer.read_f32()?;
             let y = buffer.read_f32()?;
             let z = buffer.read_f32()?;
-            writeln!(output, "v {} {} {}", x, y, z)?;
+            writeln!(output, "v {x} {y} {z}")?;
         }
 
         let mut buffer = &self.vertex_buffer[normal.offset as usize..];
@@ -733,7 +733,7 @@ impl Mesh {
                 let y = buffer.read_i8()? as f32 / 128.0;
                 let z = buffer.read_i8()? as f32 / 128.0; // always 0?
                 let _ = buffer.read_u8()?;
-                writeln!(output, "vn {} {} {}", x, y, z)?;
+                writeln!(output, "vn {x} {y} {z}")?;
             } else if normal.width == 8 {
                 let x = buffer.read_i8()? as f32 / 128.0;
                 let y = buffer.read_i8()? as f32 / 128.0;
@@ -745,7 +745,7 @@ impl Mesh {
                 let _ty = buffer.read_i8()? as f32 / 128.0;
                 let _tz = buffer.read_i8()? as f32 / 128.0;
                 let _ = buffer.read_i8()? as f32 / 128.0; // always 1?
-                writeln!(output, "vn {} {} {} ", x, y, z,)?;
+                writeln!(output, "vn {x} {y} {z} ",)?;
             } else {
                 bail!("Unknown width for normal {}", normal.width)
             }

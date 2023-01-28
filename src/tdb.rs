@@ -230,7 +230,7 @@ fn display_param_modifier(param_modifier: u32, return_pos: bool) -> String {
         2 => "ref",
         _ => "unknown-mod",
     };
-    format!("[{}{}]", return_pos, tag)
+    format!("[{return_pos}{tag}]")
 }
 
 fn display_type_flags(flags: TypeFlag) -> String {
@@ -2114,7 +2114,7 @@ impl Tdb {
         let chunk = 1000;
         for (i, t) in self.types.chunks(chunk).enumerate() {
             let start_index = i * chunk;
-            let file = PathBuf::from(path).join(format!("{}.json", start_index));
+            let file = PathBuf::from(path).join(format!("{start_index}.json"));
             let wrapper = TdbTypeChunk {
                 types: t,
                 start_index,
@@ -2168,7 +2168,7 @@ impl Tdb {
                 for attribute in attributes {
                     let symbol = &type_infos[attribute.ti_attribute].full_name;
                     let return_pos = if return_pos { "return:" } else { "" };
-                    write!(output, "[{}{}(", return_pos, symbol)?;
+                    write!(output, "[{return_pos}{symbol}(")?;
                     for positional in &attribute.positional_args {
                         print_arg(positional, output)?;
                         write!(output, ",")?;
@@ -2186,7 +2186,7 @@ impl Tdb {
         fn print_constant(value: &Option<ValueInfo>, output: &mut File) -> Result<()> {
             match value {
                 None => (),
-                Some(ValueInfo::String(s)) => write!(output, " = \"{}\"", s)?,
+                Some(ValueInfo::String(s)) => write!(output, " = \"{s}\"")?,
                 Some(ValueInfo::Bytes(b)) => match b.len() {
                     1 => write!(output, " = 0x{:02X}", b[0])?,
                     2 => write!(
@@ -2204,7 +2204,7 @@ impl Tdb {
                         " = 0x{:016X}",
                         u64::from_le_bytes(b.as_slice().try_into().unwrap())
                     )?,
-                    _ => write!(output, " = {:?}", b)?,
+                    _ => write!(output, " = {b:?}")?,
                 },
             }
             Ok(())
@@ -2244,7 +2244,7 @@ impl Tdb {
             } else {
                 ""
             };
-            writeln!(output, "class {}: {}", full_name, base_name)?;
+            writeln!(output, "class {full_name}: {base_name}")?;
 
             if calc_hash != type_info.hash {
                 bail!("Mismatched hash for {}", full_name)
@@ -2281,7 +2281,7 @@ impl Tdb {
             match &type_info.generics {
                 None => (),
                 Some(Generics::Template { params }) => {
-                    writeln!(output, "    // Template = {}", full_name)?;
+                    writeln!(output, "    // Template = {full_name}")?;
                     for param in params {
                         writeln!(
                             output,
@@ -2354,7 +2354,7 @@ impl Tdb {
                     "".to_string()
                 };
 
-                writeln!(output, "    ){};\n", address)?;
+                writeln!(output, "    ){address};\n")?;
             }
 
             writeln!(output,)?;
@@ -2409,7 +2409,7 @@ impl Tdb {
         }
 
         for s in &self.intern_strings {
-            writeln!(output, "// ~ {}", s)?;
+            writeln!(output, "// ~ {s}")?;
         }
 
         for assembly in &self.assemblies {

@@ -23,8 +23,8 @@ pub fn item_page(item: ItemId) -> String {
     match item {
         ItemId::Null => "null.html".to_string(),
         ItemId::None => "none.html".to_string(),
-        ItemId::Normal(id) => format!("normal_{:04}.html", id),
-        ItemId::Ec(id) => format!("ec_{:04}.html", id),
+        ItemId::Normal(id) => format!("normal_{id:04}.html"),
+        ItemId::Ec(id) => format!("ec_{id:04}.html"),
     }
 }
 

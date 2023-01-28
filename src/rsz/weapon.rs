@@ -124,21 +124,21 @@ impl WeaponId {
         match self {
             WeaponId::Null => "Null".to_string(),
             WeaponId::None => "None".to_string(),
-            WeaponId::GreatSword(i) => format!("GreatSword_{:03}", i),
-            WeaponId::ShortSword(i) => format!("ShortSword_{:03}", i),
-            WeaponId::Hammer(i) => format!("Hammer_{:03}", i),
-            WeaponId::Lance(i) => format!("Lance_{:03}", i),
-            WeaponId::LongSword(i) => format!("LongSword_{:03}", i),
-            WeaponId::SlashAxe(i) => format!("SlashAxe_{:03}", i),
-            WeaponId::GunLance(i) => format!("GunLance_{:03}", i),
-            WeaponId::DualBlades(i) => format!("DualBlades_{:03}", i),
-            WeaponId::Horn(i) => format!("Horn_{:03}", i),
-            WeaponId::InsectGlaive(i) => format!("InsectGlaive_{:03}", i),
-            WeaponId::ChargeAxe(i) => format!("ChargeAxe_{:03}", i),
-            WeaponId::LightBowgun(i) => format!("LightBowgun_{:03}", i),
-            WeaponId::HeavyBowgun(i) => format!("HeavyBowgun_{:03}", i),
-            WeaponId::Bow(i) => format!("Bow_{:03}", i),
-            WeaponId::Insect(i) => format!("Insect_{:03}", i),
+            WeaponId::GreatSword(i) => format!("GreatSword_{i:03}"),
+            WeaponId::ShortSword(i) => format!("ShortSword_{i:03}"),
+            WeaponId::Hammer(i) => format!("Hammer_{i:03}"),
+            WeaponId::Lance(i) => format!("Lance_{i:03}"),
+            WeaponId::LongSword(i) => format!("LongSword_{i:03}"),
+            WeaponId::SlashAxe(i) => format!("SlashAxe_{i:03}"),
+            WeaponId::GunLance(i) => format!("GunLance_{i:03}"),
+            WeaponId::DualBlades(i) => format!("DualBlades_{i:03}"),
+            WeaponId::Horn(i) => format!("Horn_{i:03}"),
+            WeaponId::InsectGlaive(i) => format!("InsectGlaive_{i:03}"),
+            WeaponId::ChargeAxe(i) => format!("ChargeAxe_{i:03}"),
+            WeaponId::LightBowgun(i) => format!("LightBowgun_{i:03}"),
+            WeaponId::HeavyBowgun(i) => format!("HeavyBowgun_{i:03}"),
+            WeaponId::Bow(i) => format!("Bow_{i:03}"),
+            WeaponId::Insect(i) => format!("Insect_{i:03}"),
         }
     }
 
@@ -936,7 +936,7 @@ impl VillageProgress {
     pub fn display(self) -> Option<String> {
         match self {
             VillageProgress::None => None,
-            VillageProgress::VillageProgress(x) => Some(format!("Village {}☆", x)),
+            VillageProgress::VillageProgress(x) => Some(format!("Village {x}☆")),
         }
     }
 }
@@ -956,7 +956,7 @@ impl HallProgress {
         match self {
             HallProgress::None => None,
             HallProgress::HallProgress(8) => Some("Hall 7☆+".to_owned()),
-            HallProgress::HallProgress(x) => Some(format!("Hub {}☆", x)),
+            HallProgress::HallProgress(x) => Some(format!("Hub {x}☆")),
         }
     }
 }
@@ -975,7 +975,7 @@ impl MasterRankProgress {
     pub fn display(self) -> Option<String> {
         match self {
             MasterRankProgress::None => None,
-            MasterRankProgress::MasterRankProgress(x) => Some(format!("MR {}☆", x)),
+            MasterRankProgress::MasterRankProgress(x) => Some(format!("MR {x}☆")),
         }
     }
 }

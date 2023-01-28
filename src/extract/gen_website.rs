@@ -271,7 +271,7 @@ fn parse_msg(content: &str) -> (Seq, bool) {
         } else {
             if !stack.is_empty() {
                 has_warning = true;
-                eprintln!("Parse error: {}", content);
+                eprintln!("Parse error: {content}");
             }
             break;
         };
@@ -283,12 +283,12 @@ fn parse_msg(content: &str) -> (Seq, bool) {
                 stack_tag
             } else {
                 has_warning = true;
-                eprintln!("Parse error: {}", content);
+                eprintln!("Parse error: {content}");
                 break;
             };
             if stack_tag.tag != tag {
                 has_warning = true;
-                eprintln!("Parse error: {}", content);
+                eprintln!("Parse error: {content}");
             }
             let tag = Node::Tagged(stack_tag);
             if let Some(last) = stack.last_mut() {
@@ -371,7 +371,7 @@ where
                                 "black"
                             }
                         };
-                        let style = format!("color: {};", color);
+                        let style = format!("color: {color};");
                         html!(<span style={style}> {inner} </span>)
                     }
                     "LSNR" => {
@@ -488,7 +488,7 @@ pub fn gen_colored_icon<'a>(
     icon: &str,
     addons: impl IntoIterator<Item = &'a str> + 'a,
 ) -> Box<div<String>> {
-    let color_class = format!("mh-item-color-{}", color);
+    let color_class = format!("mh-item-color-{color}");
     gen_colored_icon_inner(&color_class, icon, addons)
 }
 
@@ -506,10 +506,10 @@ fn gen_colored_icon_inner<'a>(
     icon: &str,
     addons: impl IntoIterator<Item = &'a str> + 'a,
 ) -> Box<div<String>> {
-    let image_r_base = format!("url('{}.r.png')", icon);
-    let image_a_base = format!("url('{}.a.png')", icon);
-    let image_r = format!("mask-image: {0}; -webkit-mask-image: {0};", image_r_base);
-    let image_a = format!("mask-image: {0}; -webkit-mask-image: {0};", image_a_base);
+    let image_r_base = format!("url('{icon}.r.png')");
+    let image_a_base = format!("url('{icon}.a.png')");
+    let image_r = format!("mask-image: {image_r_base}; -webkit-mask-image: {image_r_base};");
+    let image_a = format!("mask-image: {image_a_base}; -webkit-mask-image: {image_a_base};");
     html!(<div class="mh-colored-icon">
         <div style={image_r.as_str()} class={color_class}/>
         <div style={image_a.as_str()}/>
@@ -654,7 +654,7 @@ pub fn gen_part_color_css(hash_store: &mut HashStore, output: &impl Sink) -> Res
     let mut file = output.create_with_hash("part_color.css", FileTag::PartColor, hash_store)?;
 
     for (i, color) in PART_COLORS.iter().enumerate() {
-        writeln!(file, ".mh-part-{} {{background-color: {}}}", i, color)?;
+        writeln!(file, ".mh-part-{i} {{background-color: {color}}}")?;
     }
 
     Ok(())

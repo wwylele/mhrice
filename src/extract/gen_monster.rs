@@ -102,7 +102,7 @@ pub fn gen_sub_type_tag(_em_type: EmTypes, sub_type: Option<u8>) -> Option<Box<s
 
         (EmTypes::Em(136 | 392), Some(1)) => Some("Sleeping".to_owned()),
 
-        (_, Some(x)) => Some(format!("type{}", x)),
+        (_, Some(x)) => Some(format!("type{x}")),
     };
     text.map(|t| html!(<span class="tag">{text!("{}", t)}</span>))
 }
@@ -161,11 +161,11 @@ fn gen_extractive_type(extractive_type: ExtractiveType) -> Result<Box<span<Strin
 }
 
 fn safe_float(v: f32) -> String {
-    let normal = format!("{}", v);
+    let normal = format!("{v}");
     if normal.len() < 5 {
         normal
     } else {
-        format!("{:e}", v)
+        format!("{v:e}")
     }
 }
 
@@ -866,7 +866,7 @@ pub fn gen_multipart<'a>(
                         .enumerate().filter(|&(_, &p)| p)
                         .map(|(part, _)| part);
                     html!(<span>
-                        {parts().map(|part|{let part_color = format!("mh-part-group mh-part-{}", part);
+                        {parts().map(|part|{let part_color = format!("mh-part-group mh-part-{part}");
                             html!(<span class=part_color.as_str()/>)})}
                         {parts().map(|part|html!(<span>{text!("[{}]", part)}</span>))}
                     </span>)
@@ -1337,7 +1337,7 @@ pub fn gen_monster(
                             "".to_owned()
                         };
 
-                        let part_color = format!("mh-part mh-part-{}", part);
+                        let part_color = format!("mh-part mh-part-{part}");
 
                         let span = meats.meat_group_info.len();
                         let mut part_common: Option<Vec<Box<td<String>>>> = Some(vec![
@@ -1392,7 +1392,7 @@ pub fn gen_monster(
 
                                     phase_text.to_string()
                                 } else {
-                                    format!("{}", phase)
+                                    format!("{phase}")
                                 };
 
                                 tds.extend(vec![
@@ -1460,7 +1460,7 @@ pub fn gen_monster(
                         "".to_owned()
                     };
 
-                    let part_color = format!("mh-part-group mh-part-{}", index);
+                    let part_color = format!("mh-part-group mh-part-{index}");
 
                     let class_str = if part.extractive_type == ExtractiveType::None {
                         "mh-invalid-part mh-color-diagram-switch"

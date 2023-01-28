@@ -2,7 +2,7 @@ use crate::align::*;
 use anyhow::{bail, Result};
 use nalgebra_glm::*;
 use std::convert::TryInto;
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{Read, Seek};
 pub trait ReadExt {
     fn read_bool(&mut self) -> Result<bool>;
     fn read_u8(&mut self) -> Result<u8>;
@@ -143,7 +143,7 @@ impl<T: Read + ?Sized> ReadExt for T {
 
 impl<T: Seek + Read + ?Sized> SeekExt for T {
     fn seek_noop(&mut self, from_start: u64) -> Result<u64> {
-        let pos = self.seek(SeekFrom::Current(0))?;
+        let pos = self.stream_position()?;
         if pos != from_start {
             bail!(
                 "This seek is expected to be no-op. At 0x{:08X}, seeking to 0x{:08X}",
@@ -155,7 +155,7 @@ impl<T: Seek + Read + ?Sized> SeekExt for T {
     }
 
     fn seek_assert_align_up(&mut self, from_start: u64, align: u64) -> Result<u64> {
-        let pos = self.seek(SeekFrom::Current(0))?;
+        let pos = self.stream_position()?;
         if align_up(pos, align) != from_start {
             bail!(
                 "This seek is expected to only align up {}. At 0x{:08X}, seeking to 0x{:08X}",
@@ -176,7 +176,7 @@ impl<T: Seek + Read + ?Sized> SeekExt for T {
     }
 
     fn seek_align_up(&mut self, align: u64) -> Result<u64> {
-        let pos = self.seek(SeekFrom::Current(0))?;
+        let pos = self.stream_position()?;
         let aligned = align_up(pos, align);
         if aligned != pos {
             let mut buf = vec![0; (aligned - pos).try_into()?];
@@ -190,6 +190,6 @@ impl<T: Seek + Read + ?Sized> SeekExt for T {
     }
 
     fn tell(&mut self) -> Result<u64> {
-        Ok(self.seek(SeekFrom::Current(0))?)
+        Ok(self.stream_position()?)
     }
 }
