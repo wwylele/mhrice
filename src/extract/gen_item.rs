@@ -746,6 +746,23 @@ fn gen_item_source_misc(
         htmls.push(html!(<li><a href="/misc/bbq.html">"Motley mix"</a></li>));
     }
 
+    if pedia.trade.param.iter().any(|p| p.item_id == item_id)
+        || pedia.trade_rare.param.iter().any(|p| p.item_id == item_id)
+        || pedia.trade_dust.param.iter().any(|p| p.item_id == item_id)
+        || pedia
+            .trade_feature
+            .param
+            .iter()
+            .any(|p| p.item_id == item_id)
+        || pedia
+            .exchange_item
+            .param
+            .iter()
+            .any(|p| p.item_id == item_id)
+    {
+        htmls.push(html!(<li><a href="/misc/argosy.html">"Argosy"</a></li>));
+    }
+
     if !htmls.is_empty() {
         Some(
             html!(<div class="mh-item-in-out"> <h3>"From other places: "</h3>

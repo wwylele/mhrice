@@ -272,6 +272,12 @@ pub struct Pedia {
     pub mystery_labo_trade_item: Option<MysteryLaboTradeItemUserData>,
     pub item_mix: ItemMixRecipeUserData,
     pub bbq: BbqConvertUserData,
+
+    pub exchange_item: ExchangeItemUserData,
+    pub trade_dust: TradeDustUserData,
+    pub trade_feature: TradeFeatureUserData,
+    pub trade_rare: TradeRareUserData,
+    pub trade: TradeUserData,
 }
 
 pub struct QuestReward<'a> {

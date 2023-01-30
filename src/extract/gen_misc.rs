@@ -428,6 +428,7 @@ fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
                 <a href="/misc/lab.html">"Anomaly research lab"</a>
                 <a href="/misc/mix.html">"Item crafting"</a>
                 <a href="/misc/bbq.html">"Motley mix"</a>
+                <a href="/misc/argosy.html">"Argosy"</a>
                 </div>
                 </main>
                 { right_aside() }
@@ -436,6 +437,203 @@ fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
     );
     output.write_all(doc.to_string().as_bytes())?;
 
+    Ok(())
+}
+
+fn gen_argosy(
+    hash_store: &HashStore,
+    pedia: &Pedia,
+    pedia_ex: &PediaEx,
+    mut output: impl Write,
+) -> Result<()> {
+    let mut sections = vec![];
+
+    let mut trade: Vec<_> = pedia.trade.param.iter().collect();
+    trade.sort_by_key(|p| p.sort_id);
+    sections.push(Section {
+        title: "Trade request".to_owned(),
+        content: html!(<section id="s-trade">
+        <h1>"Trade request"</h1>
+        <div class="mh-table"><table>
+        <thead><tr>
+            <th>"Item"</th>
+            <th>"Category"</th>
+            <th>"Count (base; bargain)"</th>
+            <th>"Random add count (base; bargain)"</th>
+            //<th>"feature_add_rate"</th>
+            <th>"Unlock by village"</th>
+            <th>"Unlock by hub"</th>
+            <th>"Unlock by MR"</th>
+        </tr></thead>
+        <tbody>{trade.iter().map(|p| html!(<tr>
+            <td>{gen_item_label_from_id(p.item_id, pedia_ex)}</td>
+            <td>{text!("{}", p.area)}</td>
+            <td>{text!("{0}; {1}/{2}/{0}/{3}/{4}/{0}",
+                p.num, p.num + p.add_num[0], p.num + p.add_num[1], p.num + p.add_num[2], p.num + p.add_num[3])}</td>
+            <td>{text!("{0}; {1}/{2}/0/{3}/{4}/0",
+                p.range, p.add_range[0], p.add_range[1], p.add_range[2], p.add_range[3])}</td>
+            //<td>{text!("{}", p.feature_add_rate)}</td>
+            <td>{gen_progress(p.unlock_flag_village, pedia_ex)}</td>
+            <td>{gen_progress(p.unlock_flag_hall, pedia_ex)}</td>
+            <td>{gen_progress(p.unlock_flag_mr_village, pedia_ex)}</td>
+        </tr>))}</tbody>
+        </table>
+        </div>
+    </section>),
+    });
+
+    sections.push(Section {
+        title: "Trade bonus".to_owned(),
+        content: html!(<section id="s-rare">
+        <h1>"Trade bonus"</h1>
+        <div class="mh-table"><table>
+        <thead><tr>
+            <th>"Item"</th>
+            <th>"Category"</th>
+            <th>"Rate (base; bargain)"</th>
+            <th>"Unlock by village"</th>
+            <th>"Unlock by hub"</th>
+            <th>"Unlock by MR"</th>
+        </tr></thead>
+        <tbody>{pedia.trade_rare.param.iter().map(|p| html!(<tr>
+            <td>{gen_item_label_from_id(p.item_id, pedia_ex)}</td>
+            <td>{text!("{}", p.area)}</td>
+            <td>{text!("{0}; {0}/{0}/{1}/{0}/{0}/{2}", p.rate[0], p.rate[1], p.rate[2])}</td>
+            <td>{gen_progress(p.unlock_flag_village, pedia_ex)}</td>
+            <td>{gen_progress(p.unlock_flag_hall, pedia_ex)}</td>
+            <td>{gen_progress(p.unlock_flag_mr_village, pedia_ex)}</td>
+        </tr>))}</tbody>
+        </table>
+        </div>
+        </section>),
+    });
+
+    sections.push(Section {
+        title: "Backroom deals".to_owned(),
+        content: html!(<section id="s-feature">
+        <h1>"Backroom deals"</h1>
+        <div class="mh-table"><table>
+        <thead><tr>
+            <th>"Item"</th>
+            <th>"Rate"</th>
+            <th>"Count"</th>
+            <th>"Unlock by MR"</th>
+            //<th>"Check have"</th>
+        </tr></thead>
+        <tbody>{pedia.trade_feature.param.iter().map(|p| html!(<tr>
+            <td>{gen_item_label_from_id(p.item_id, pedia_ex)}</td>
+            <td>{text!("{}", p.rate)}</td>
+            <td>{text!("{}", p.drop_num)}</td>
+            <td>{gen_progress(p.unlock_flag_mr_village, pedia_ex)}</td>
+            //<td>{text!("{}", p.check_have_item)}</td>
+        </tr>))}</tbody>
+        </table>
+        </div>
+        </section>),
+    });
+
+    sections.push(Section {
+        title: "Backroom deals junk".to_owned(),
+        content: html!(<section id="s-dust">
+        <h1>"Backroom deals junk"</h1>
+        <div class="mh-table"><table>
+        <thead><tr>
+            <th>"Item"</th>
+            <th>"Rate"</th>
+            <th>"Count"</th>
+            <th>"unlock MR"</th>
+        </tr></thead>
+        <tbody>{pedia.trade_dust.param.iter().map(|p| html!(<tr>
+            <td>{gen_item_label_from_id(p.item_id, pedia_ex)}</td>
+            <td>{text!("{}", p.rate)}</td>
+            <td>{text!("{}", p.drop_num)}</td>
+            <td>{gen_progress(p.unlock_flag_mr_village, pedia_ex)}</td>
+        </tr>))}</tbody>
+        </table>
+        </div>
+        </section>),
+    });
+
+    let mut exchange: Vec<_> = pedia.exchange_item.param.iter().collect();
+    exchange.sort_by_key(|p| (p.item_type, p.sort_id));
+
+    sections.push(Section {
+        title: "Exchange for items".to_owned(),
+        content: html!(<section id="s-exchange">
+        <h1>"Exchange for items"</h1>
+        <div class="mh-table"><table>
+        <thead><tr>
+            <th>"Item"</th>
+            <th>"Type"</th>
+            <th>"Cost"</th>
+            <th>"Rate"</th>
+            <th>"Count"</th>
+            <th>"Unlock by village"</th>
+            <th>"Unlock by hub"</th>
+            <th>"Unlock by MR"</th>
+            <th>"Unlock by monster"</th>
+            <th>"Monster count"</th>
+            <th>"Unlock by quest"</th>
+        </tr></thead>
+        <tbody>{exchange.iter().map(|p| html!(<tr>
+            <td>{gen_item_label_from_id(p.item_id, pedia_ex)}</td>
+            <td>{text!("{}", match p.item_type {
+                ExchangeItemTypes::Normal => "Trade goods",
+                ExchangeItemTypes::Special => "Special goods",
+                ExchangeItemTypes::Random => "Rare Finds",
+            })}
+            </td>
+            <td>{text!("{}pts", p.cost)}</td>
+            <td>{text!("{}", p.rate)}</td>
+            <td>{text!("{}", p.item_num)}</td>
+            <td>{gen_progress(p.unlock_flag_village, pedia_ex)}</td>
+            <td>{gen_progress(p.unlock_flag_hall, pedia_ex)}</td>
+            <td>{gen_progress(p.unlock_flag_mr_village, pedia_ex)}</td>
+            { if p.enemy_num != 0 {
+                // TODO: better searching
+                let em = pedia_ex.monsters.iter()
+                    .find(|(_, monster)|monster.data.enemy_type == Some(p.enemy_id))
+                    .map(|(em, _)|*em);
+                if let Some(em) = em {
+                    html!(<td>{gen_monster_tag(pedia_ex, em, false, false, None, None)}</td>)
+                } else {
+                    html!(<td>{text!("Unknown monster {}", p.enemy_id)}</td>)
+                }
+            } else {
+                html!(<td/>)
+            }}
+            <td>{if p.enemy_num != 0 {text!("x{}", p.enemy_num)} else {text!("")}}</td>
+            {if p.quest_no != 0 {if let Some(quest) = pedia_ex.quests.get(&p.quest_no) {
+                html!(<td>{gen_quest_tag(quest, false, false, None, None)}</td>)
+            } else {
+                html!(<td>{text!("Unknown quest {}", p.quest_no)}</td>)
+            }} else {
+                html!(<td/>)
+            }}
+        </tr>))}</tbody>
+        </table>
+        </div>
+        </section>),
+    });
+
+    let doc: DOMTree<String> = html!(
+        <html lang="en">
+            <head itemscope=true>
+                <title>{text!("Argosy - MHRice")}</title>
+                { head_common(hash_store) }
+            </head>
+            <body>
+                { navbar() }
+                { gen_menu(&sections) }
+                <main>
+                <header><h1>"Argosy"</h1></header>
+                { sections.into_iter().map(|s|s.content) }
+                </main>
+                { right_aside() }
+            </body>
+        </html>
+    );
+    output.write_all(doc.to_string().as_bytes())?;
     Ok(())
 }
 
@@ -461,6 +659,9 @@ pub fn gen_misc(
 
     let path = folder.create_html("bbq.html")?;
     gen_bbq(hash_store, pedia_ex, path)?;
+
+    let path = folder.create_html("argosy.html")?;
+    gen_argosy(hash_store, pedia, pedia_ex, path)?;
 
     gen_misc_page(hash_store, output.create_html("misc.html")?)?;
 

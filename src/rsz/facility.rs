@@ -234,3 +234,173 @@ rsz_struct! {
         pub param: Vec<BbqConvertUserDataParam>
     }
 }
+
+// snow.facility.tradeCenter.ExchangeItemTypes
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, PartialOrd, Ord, PartialEq, Eq, Copy, Clone)]
+    pub enum ExchangeItemTypes {
+        Normal = 0,
+        Special = 1,
+        Random = 2,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.facility.tradeCenter.ExchangeItemUserData.Param",
+        0xBE9B9979 = 13_00_00,
+        0x77FA345F = 12_00_00,
+        0x867138F4 = 11_00_01,
+        0x0A24E70A = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ExchangeItemUserDataParam {
+        pub index_no: u32,
+        pub item_type: ExchangeItemTypes, // snow.facility.tradeCenter.ExchangeItemTypes
+        pub item_id: ItemId,
+        pub unlock_flag_village: i32, // snow.data.DataDef.UnlockProgressTypes
+        pub unlock_flag_hall: i32, // snow.data.DataDef.UnlockProgressTypes
+        pub unlock_flag_mr_village: i32, // snow.data.DataDef.UnlockProgressTypes
+        pub enemy_id: i32, // snow.enemy.EnemyDef.EnemyTypeIndex
+        pub enemy_num: u32,
+        pub quest_no: i32,
+        pub cost: u32,
+        pub rate: u32,
+        pub item_num: u32,
+        pub sort_id: i32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.facility.tradeCenter.ExchangeItemUserData",
+        path = "data/Facility/TradeCenter/ExchangeItemUserData.user",
+        0x6A90E840 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ExchangeItemUserData {
+        pub param: Vec<ExchangeItemUserDataParam>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.facility.tradeCenter.TradeDustUserData.Param",
+        0x1A7475C4 = 13_00_00,
+        0x933588FC = 12_00_00,
+        0xE322B86C = 11_00_01,
+        0x0DF264DE = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct TradeDustUserDataParam {
+        pub index_no: i32,
+        pub rate: u32,
+        pub item_id: ItemId,
+        pub drop_num: u32,
+        pub unlock_flag_mr_village: i32, // snow.data.DataDef.UnlockProgressTypes
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.facility.tradeCenter.TradeDustUserData",
+        path = "data/Facility/TradeCenter/TradeDustUserData.user",
+        0x8FF3787B = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct TradeDustUserData  {
+        pub param: Vec<TradeDustUserDataParam>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.facility.tradeCenter.TradeFeatureUserData.Param",
+        0x9D884127 = 13_00_00,
+        0xE17EBDE3 = 12_00_00,
+        0x2FD79B85 = 11_00_01,
+        0x084BDD9F = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct TradeFeatureUserDataParam {
+        pub index_no: i32,
+        pub rate: u32,
+        pub item_id: ItemId,
+        pub drop_num: u32,
+        pub unlock_flag_mr_village: i32, // snow.data.DataDef.UnlockProgressTypes
+        pub check_have_item: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.facility.tradeCenter.TradeFeatureUserData",
+        path = "data/Facility/TradeCenter/TradeFeatureUserData.user",
+        0xBF48F9C7 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct TradeFeatureUserData {
+        pub param: Vec<TradeFeatureUserDataParam>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.facility.tradeCenter.TradeRareUserData.Param",
+        0xE30F6088 = 13_00_00,
+        0x9C10FFDA = 12_00_00,
+        0x60665179 = 11_00_01,
+        0x3B68D3EB = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct TradeRareUserDataParam {
+        pub index_no: i32,
+        pub item_id: ItemId,
+        pub area: i32, // snow.facility.tradeCenter.TradeAreaTypes
+        pub unlock_flag_village: i32, // snow.data.DataDef.UnlockProgressTypes
+        pub unlock_flag_hall: i32, // snow.data.DataDef.UnlockProgressTypes
+        pub unlock_flag_mr_village: i32, // snow.data.DataDef.UnlockProgressTypes
+        pub rate: [u32; 3],
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.facility.tradeCenter.TradeRareUserData",
+        path = "data/Facility/TradeCenter/TradeRareUserData.user",
+        0x17755770 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct TradeRareUserData {
+        pub param: Vec<TradeRareUserDataParam>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.facility.tradeCenter.TradeUserData.Param",
+        0x43C85A56 = 13_00_00,
+        0x0B976739 = 12_00_00,
+        0x0DAF0A26 = 11_00_01,
+        0xB23E7D08 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct TradeUserDataParam {
+        pub index_no: i32,
+        pub item_id: ItemId,
+        pub area: i32, // snow.facility.tradeCenter.TradeAreaTypes
+        pub num: u32,
+        pub range: u32,
+        pub add_num: [u32; 4],
+        pub add_range: [u32; 4],
+        pub membership_range: Vec<u32>,
+        pub feature_add_rate: f32,
+        pub unlock_flag_village: i32, // snow.data.DataDef.UnlockProgressTypes
+        pub unlock_flag_hall: i32, // snow.data.DataDef.UnlockProgressTypes
+        pub unlock_flag_mr_village: i32, // snow.data.DataDef.UnlockProgressTypes
+        pub sort_id: i32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.facility.tradeCenter.TradeUserData",
+        path = "data/Facility/TradeCenter/TradeUserData.user",
+        0x590BC77F = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct TradeUserData {
+        pub param: Vec<TradeUserDataParam>
+    }
+}

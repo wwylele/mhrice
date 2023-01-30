@@ -1009,6 +1009,16 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         ItemMixRecipeUserData,
         BbqConvertUserDataParam,
         BbqConvertUserData,
+        ExchangeItemUserDataParam,
+        ExchangeItemUserData,
+        TradeDustUserDataParam,
+        TradeDustUserData,
+        TradeFeatureUserDataParam,
+        TradeFeatureUserData,
+        TradeRareUserDataParam,
+        TradeRareUserData,
+        TradeUserDataParam,
+        TradeUserData,
     );
 
     m
