@@ -171,6 +171,9 @@ impl<F: Read + Seek> PakReader<F> {
                 format!("natives/STM/{path}.{suffix}"),
                 format!("natives/STM/{path}.{suffix}.x64"),
                 format!("natives/STM/{path}.{suffix}.STM"),
+                format!("natives/MSG/{path}.{suffix}"),
+                format!("natives/MSG/{path}.{suffix}.x64"),
+                format!("natives/MSG/{path}.{suffix}.MSG"),
             ];
 
             let mut result = vec![];
