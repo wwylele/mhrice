@@ -53,7 +53,7 @@ rsz_enum! {
 // snow.data.DataDef.RankTypes
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
     pub enum RankTypes {
         Low = 0,
         Upper = 1,

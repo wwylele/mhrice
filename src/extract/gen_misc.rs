@@ -1,5 +1,6 @@
 use super::gen_common::*;
 use super::gen_item::*;
+use super::gen_map::*;
 use super::gen_monster::*;
 use super::gen_quest::*;
 use super::gen_website::*;
@@ -411,35 +412,6 @@ fn gen_bbq(hash_store: &HashStore, pedia_ex: &PediaEx, mut output: impl Write) -
     Ok(())
 }
 
-fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
-    let doc: DOMTree<String> = html!(
-        <html lang="en">
-            <head itemscope=true>
-                <title>{text!("Misc - MHRice")}</title>
-                { head_common(hash_store) }
-            </head>
-            <body>
-                { navbar() }
-                <main>
-                <header><h1>"Miscellaneous"</h1></header>
-                <div class="mh-misc-list">
-                <a href="/misc/petalace.html">"Petalace"</a>
-                <a href="/misc/market.html">"Market"</a>
-                <a href="/misc/lab.html">"Anomaly research lab"</a>
-                <a href="/misc/mix.html">"Item crafting"</a>
-                <a href="/misc/bbq.html">"Motley mix"</a>
-                <a href="/misc/argosy.html">"Argosy"</a>
-                </div>
-                </main>
-                { right_aside() }
-            </body>
-        </html>
-    );
-    output.write_all(doc.to_string().as_bytes())?;
-
-    Ok(())
-}
-
 fn gen_argosy(
     hash_store: &HashStore,
     pedia: &Pedia,
@@ -453,7 +425,7 @@ fn gen_argosy(
     sections.push(Section {
         title: "Trade request".to_owned(),
         content: html!(<section id="s-trade">
-        <h1>"Trade request"</h1>
+        <h2>"Trade request"</h2>
         <div class="mh-table"><table>
         <thead><tr>
             <th>"Item"</th>
@@ -485,7 +457,7 @@ fn gen_argosy(
     sections.push(Section {
         title: "Trade bonus".to_owned(),
         content: html!(<section id="s-rare">
-        <h1>"Trade bonus"</h1>
+        <h2>"Trade bonus"</h2>
         <div class="mh-table"><table>
         <thead><tr>
             <th>"Item"</th>
@@ -511,7 +483,7 @@ fn gen_argosy(
     sections.push(Section {
         title: "Backroom deals".to_owned(),
         content: html!(<section id="s-feature">
-        <h1>"Backroom deals"</h1>
+        <h2>"Backroom deals"</h2>
         <div class="mh-table"><table>
         <thead><tr>
             <th>"Item"</th>
@@ -535,7 +507,7 @@ fn gen_argosy(
     sections.push(Section {
         title: "Backroom deals junk".to_owned(),
         content: html!(<section id="s-dust">
-        <h1>"Backroom deals junk"</h1>
+        <h2>"Backroom deals junk"</h2>
         <div class="mh-table"><table>
         <thead><tr>
             <th>"Item"</th>
@@ -560,7 +532,7 @@ fn gen_argosy(
     sections.push(Section {
         title: "Exchange for items".to_owned(),
         content: html!(<section id="s-exchange">
-        <h1>"Exchange for items"</h1>
+        <h2>"Exchange for items"</h2>
         <div class="mh-table"><table>
         <thead><tr>
             <th>"Item"</th>
@@ -637,6 +609,152 @@ fn gen_argosy(
     Ok(())
 }
 
+fn gen_meowcenaries(
+    hash_store: &HashStore,
+    pedia: &Pedia,
+    pedia_ex: &PediaEx,
+    mut output: impl Write,
+) -> Result<()> {
+    let mut sections = vec![];
+    let mut grid: Vec<_> = pedia.spy.param.iter().collect();
+    grid.sort_by_key(|g| (g.map_name, g.rank));
+    let mut i = 0;
+    while i < grid.len() {
+        let mut j = i;
+        while j < grid.len() && (grid[j].map_name, grid[j].rank) == (grid[i].map_name, grid[i].rank)
+        {
+            j += 1;
+        }
+        let group = &grid[i..j];
+
+        let rank = match group[0].rank {
+            RankTypes::Low => "Low rank",
+            RankTypes::Upper => "High rank",
+            RankTypes::Master => "Master rank",
+        };
+
+        let name = get_map_name(group[0].map_name, pedia);
+        let (name, name_plane) = if let Some(name) = name {
+            (gen_multi_lang(name), translate_msg_plain(&name.content[1]))
+        } else {
+            (
+                html!(<span> "Unknown map" </span>),
+                "Unknown map".to_owned(),
+            )
+        };
+        let title_plane = format!("{name_plane} - {rank}");
+        let title = html!(<h2>{name}{text!(" - {}", rank)}</h2>);
+
+        let id = format!("s-{}-{}", group[0].map_name, group[0].rank.into_raw());
+
+        sections.push(Section {
+            title: title_plane,
+            content: html!(<section id={id.as_str()}>
+            {title}
+            <div class="mh-table"><table>
+            <thead><tr>
+                <th>"Type"</th>
+                <th>"Each step probability"</th>
+                <th>"Unlock"</th>
+                <th>"Item"</th>
+                <th>"Count"</th>
+                <th>"Probability"</th>
+            </tr></thead>
+            <tbody> {group.iter().flat_map(|grid| {
+                let sp = grid.item_id.iter().filter(|&&item|item != ItemId::None).count();
+
+                grid.item_id.iter()
+                    .zip(&grid.item_num)
+                    .zip(&grid.item_rate)
+                    .filter(|&((&item, _), _)| item != ItemId::None)
+                    .enumerate()
+                    .map(move |(i, ((&item, &num), &rate))| {
+                        html!(<tr>
+                        {(i == 0).then(||
+                        html!(<td rowspan={sp}>{match grid.icon {
+                            GridIcon::Gathering(i) => text!("Gathering {}", i),
+                            GridIcon::GatheringRare(i) => text!("Rare gathering {}", i),
+                            GridIcon::Monster(_) => text!("Monster"),
+                        }}</td>))}
+                        {(i == 0).then(||html!(<td rowspan={sp}>{text!("{}/{}/{}/{}/{}",
+                            grid.step_rate[0],
+                            grid.step_rate[1],
+                            grid.step_rate[2],
+                            grid.step_rate[3],
+                            grid.step_rate[4]
+                        )}</td>))}
+                        {(i == 0).then(||html!(<td rowspan={sp}>{ text!("{} {} {}",
+                                grid.unlock_village.display().unwrap_or_default(),
+                                grid.unlock_hall.display().unwrap_or_default(),
+                                grid.unlock_mr_progress.display().unwrap_or_default()) }</td>))}
+                        <td>{gen_item_label_from_id(item, pedia_ex)}</td>
+                        // snow.data.OtomoSpyUnitGridUserData.Param.lotteryItemNum
+                        <td>{text!("{}", num % 100)}
+                            {(num / 100 != 0).then(||text!(" ~ {}", num % 100 + num / 100))}
+                        </td>
+                        <td>{text!("{}%", rate)}</td>
+                        </tr>)
+                    })
+            })} </tbody>
+            </table></div>
+            </section>),
+        });
+
+        i = j;
+    }
+
+    let doc: DOMTree<String> = html!(
+        <html lang="en">
+            <head itemscope=true>
+                <title>{text!("Meowcenaries - MHRice")}</title>
+                { head_common(hash_store) }
+            </head>
+            <body>
+                { navbar() }
+                { gen_menu(&sections) }
+                <main>
+                <header><h1>"Meowcenaries"</h1></header>
+                { sections.into_iter().map(|s|s.content) }
+                </main>
+                { right_aside() }
+            </body>
+        </html>
+    );
+
+    output.write_all(doc.to_string().as_bytes())?;
+    Ok(())
+}
+
+fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
+    let doc: DOMTree<String> = html!(
+        <html lang="en">
+            <head itemscope=true>
+                <title>{text!("Misc - MHRice")}</title>
+                { head_common(hash_store) }
+            </head>
+            <body>
+                { navbar() }
+                <main>
+                <header><h1>"Miscellaneous"</h1></header>
+                <div class="mh-misc-list">
+                <a href="/misc/petalace.html">"Petalace"</a>
+                <a href="/misc/market.html">"Market"</a>
+                <a href="/misc/lab.html">"Anomaly research lab"</a>
+                <a href="/misc/mix.html">"Item crafting"</a>
+                <a href="/misc/bbq.html">"Motley mix"</a>
+                <a href="/misc/argosy.html">"Argosy"</a>
+                <a href="/misc/meowcenaries.html">"Meowcenaries"</a>
+                </div>
+                </main>
+                { right_aside() }
+            </body>
+        </html>
+    );
+    output.write_all(doc.to_string().as_bytes())?;
+
+    Ok(())
+}
+
 pub fn gen_misc(
     hash_store: &HashStore,
     pedia: &Pedia,
@@ -662,6 +780,9 @@ pub fn gen_misc(
 
     let path = folder.create_html("argosy.html")?;
     gen_argosy(hash_store, pedia, pedia_ex, path)?;
+
+    let path = folder.create_html("meowcenaries.html")?;
+    gen_meowcenaries(hash_store, pedia, pedia_ex, path)?;
 
     gen_misc_page(hash_store, output.create_html("misc.html")?)?;
 

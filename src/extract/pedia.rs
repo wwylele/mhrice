@@ -278,6 +278,8 @@ pub struct Pedia {
     pub trade_feature: TradeFeatureUserData,
     pub trade_rare: TradeRareUserData,
     pub trade: TradeUserData,
+
+    pub spy: OtomoSpyUnitGridUserData,
 }
 
 pub struct QuestReward<'a> {

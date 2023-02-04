@@ -394,6 +394,17 @@ rsz_struct! {
     }
 }
 
+// snow.data.OtomoSpyUnitDefine.GridIcon
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, PartialOrd, Ord, PartialEq, Eq, Copy, Clone)]
+    pub enum GridIcon {
+        Gathering(i32) = 0..=5,
+        GatheringRare(i32) = 6..=11,
+        Monster(i32) = 12..=1000
+    }
+}
+
 rsz_struct! {
     #[rsz("snow.facility.tradeCenter.TradeUserData",
         path = "data/Facility/TradeCenter/TradeUserData.user",
@@ -402,5 +413,40 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct TradeUserData {
         pub param: Vec<TradeUserDataParam>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.OtomoSpyUnitGridUserData.Param",
+        0xB95F8A6B = 10_00_02,
+        0x8F614474 = 11_00_01,
+        0xB520EF5C = 12_00_00,
+        0x02B74274 = 13_00_00,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct OtomoSpyUnitGridUserDataParam {
+        pub unique_id: u32,
+        pub grid_id: String,
+        pub map_name: i32, // snow.QuestMapManager.MapNoType
+        pub rank: RankTypes,
+        pub icon: GridIcon,
+        pub unlock_village: VillageProgress,
+        pub unlock_hall: HallProgress,
+        pub unlock_mr_progress: MasterRankProgress,
+        pub step_rate: [u32; 5],
+        pub item_id: Vec<ItemId>,
+        pub item_num: Vec<u32>,
+        pub item_rate: Vec<u32>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.OtomoSpyUnitGridUserData",
+        path = "data/Facility/OtomoSpyUnit/OtomoSpyUnitGrid.user",
+        0x1E8546BF = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct OtomoSpyUnitGridUserData {
+        pub param: Vec<OtomoSpyUnitGridUserDataParam>
     }
 }

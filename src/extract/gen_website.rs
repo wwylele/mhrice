@@ -206,6 +206,7 @@ pub fn navbar() -> Box<nav<String>> {
                     <a class="navbar-item" href="/misc/mix.html">"Item crafting"</a>
                     <a class="navbar-item" href="/misc/bbq.html">"Motley mix"</a>
                     <a class="navbar-item" href="/misc/argosy.html">"Argosy"</a>
+                    <a class="navbar-item" href="/misc/meowcenaries.html">"Meowcenaries"</a>
                 </div>
                 </div>
             </div>

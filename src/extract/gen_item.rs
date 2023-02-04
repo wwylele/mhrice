@@ -763,6 +763,10 @@ fn gen_item_source_misc(
         htmls.push(html!(<li><a href="/misc/argosy.html">"Argosy"</a></li>));
     }
 
+    if pedia.spy.param.iter().any(|p| p.item_id.contains(&item_id)) {
+        htmls.push(html!(<li><a href="/misc/meowcenaries.html">"Meowcenaries"</a></li>));
+    }
+
     if !htmls.is_empty() {
         Some(
             html!(<div class="mh-item-in-out"> <h3>"From other places: "</h3>
