@@ -672,9 +672,16 @@ fn gen_meowcenaries(
                         html!(<tr>
                         {(i == 0).then(||
                         html!(<td rowspan={sp}>{match grid.icon {
-                            GridIcon::Gathering(i) => text!("Gathering {}", i),
-                            GridIcon::GatheringRare(i) => text!("Rare gathering {}", i),
-                            GridIcon::Monster(_) => text!("Monster"),
+                            GridIcon::Gathering(i) | GridIcon::GatheringRare(i) => {
+                                let alt = format!("gathering {i}");
+                                let path = format!("/resources/spy{i}.png");
+                                html!(<div class="mh-quest-monster">
+
+                                <img alt={alt.as_str()} class="mh-quest-list-monster-icon" src={path. as_str()} />
+                                {(matches!(grid.icon, GridIcon::GatheringRare(_))).then(||text!("(Rare)"))}
+                                </div>)
+                            }
+                            GridIcon::Monster(_) => html!(<div>"Monster"</div>),
                         }}</td>))}
                         {(i == 0).then(||html!(<td rowspan={sp}>{text!("{}/{}/{}/{}/{}",
                             grid.step_rate[0],

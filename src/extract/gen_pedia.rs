@@ -1232,6 +1232,24 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
         }
     }
 
+    let path = pak.find_file("gui/80_Texture/boss_icon/em_spy_ore_IAM.tex")?;
+    Tex::new(Cursor::new(pak.read_file(path)?))?.save_png(0, 0, output.create("spy0.png")?)?;
+
+    let path = pak.find_file("gui/80_Texture/boss_icon/em_spy_bone_IAM.tex")?;
+    Tex::new(Cursor::new(pak.read_file(path)?))?.save_png(0, 0, output.create("spy1.png")?)?;
+
+    let path = pak.find_file("gui/80_Texture/boss_icon/em_spy_herbs_IAM.tex")?;
+    Tex::new(Cursor::new(pak.read_file(path)?))?.save_png(0, 0, output.create("spy2.png")?)?;
+
+    let path = pak.find_file("gui/80_Texture/boss_icon/em_spy_mushroom_IAM.tex")?;
+    Tex::new(Cursor::new(pak.read_file(path)?))?.save_png(0, 0, output.create("spy3.png")?)?;
+
+    let path = pak.find_file("gui/80_Texture/boss_icon/em_spy_fish_IAM.tex")?;
+    Tex::new(Cursor::new(pak.read_file(path)?))?.save_png(0, 0, output.create("spy4.png")?)?;
+
+    let path = pak.find_file("gui/80_Texture/boss_icon/em_spy_insect_IAM.tex")?;
+    Tex::new(Cursor::new(pak.read_file(path)?))?.save_png(0, 0, output.create("spy5.png")?)?;
+
     let guild_card = pak.find_file("gui/80_Texture/GuildCard_IAM.tex")?;
     let guild_card = Tex::new(Cursor::new(pak.read_file(guild_card)?))?.to_rgba(0, 0)?;
 
