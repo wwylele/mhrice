@@ -598,7 +598,7 @@ fn gen_item_usage_misc(
 
     if !htmls.is_empty() {
         Some(
-            html!(<div class="mh-item-in-out"> <h3>"From other places: "</h3>
+            html!(<div class="mh-item-in-out"> <h3>"For other places: "</h3>
             <ul class="mh-item-list">{
                 htmls
             }</ul> </div>),
