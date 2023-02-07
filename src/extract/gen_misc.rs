@@ -10,7 +10,7 @@ use super::sink::*;
 use crate::rsz::*;
 use anyhow::Result;
 use std::io::Write;
-use typed_html::{dom::*, html, text};
+use typed_html::{dom::*, elements::*, html, text};
 
 fn gen_petalace(
     hash_store: &HashStore,
@@ -732,6 +732,77 @@ fn gen_meowcenaries(
     Ok(())
 }
 
+fn gen_scraps(
+    hash_store: &HashStore,
+    pedia: &Pedia,
+    pedia_ex: &PediaEx,
+    mut output: impl Write,
+) -> Result<()> {
+    let mut records: Vec<_> = pedia.offcut_convert.param.iter().collect();
+    records.sort_by_cached_key(|r| {
+        (
+            pedia_ex
+                .items
+                .get(&r.convert_item_id)
+                .map_or(u32::MAX, |i| i.param.sort_id),
+            r.convert_item_id,
+            pedia_ex
+                .items
+                .get(&r.base_item_id)
+                .map_or(u32::MAX, |i| i.param.sort_id),
+            r.base_item_id,
+        )
+    });
+
+    let mut rows: Vec<Box<tr<String>>> = vec![];
+    let mut i = 0;
+    while i < records.len() {
+        let mut j = i;
+        while j < records.len() && records[j].convert_item_id == records[i].convert_item_id {
+            j += 1;
+        }
+        let group = &records[i..j];
+        for (k, r) in group.iter().enumerate() {
+            let size = j - i;
+            rows.push(html!(<tr>
+                {(k == 0).then(||html!(<td rowspan={size}>{gen_item_label_from_id(r.convert_item_id, pedia_ex)}</td>))}
+                <td>{gen_item_label_from_id(r.base_item_id, pedia_ex)}</td>
+                <td>{text!("{}", r.num)}</td>
+            </tr>));
+        }
+
+        i = j;
+    }
+
+    let doc: DOMTree<String> = html!(
+        <html lang="en">
+            <head itemscope=true>
+                <title>{text!("Trade for scraps - MHRice")}</title>
+                { head_common(hash_store) }
+            </head>
+            <body>
+                { navbar() }
+                <main>
+                <header><h1>"Trade for scraps"</h1></header>
+                <div class="mh-table"><table>
+                <thead><tr>
+                    <th>"Scrap"</th>
+                    <th>"Source material"</th>
+                    <th>"Output count"</th>
+                </tr></thead>
+                <tbody>
+                {rows}
+                </tbody>
+                </table></div>
+                </main>
+                { right_aside() }
+            </body>
+        </html>
+    );
+    output.write_all(doc.to_string().as_bytes())?;
+    Ok(())
+}
+
 fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html lang="en">
@@ -751,6 +822,7 @@ fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
                 <a href="/misc/bbq.html">"Motley mix"</a>
                 <a href="/misc/argosy.html">"Argosy"</a>
                 <a href="/misc/meowcenaries.html">"Meowcenaries"</a>
+                <a href="/misc/scraps.html">"Trade for scraps"</a>
                 </div>
                 </main>
                 { right_aside() }
@@ -790,6 +862,9 @@ pub fn gen_misc(
 
     let path = folder.create_html("meowcenaries.html")?;
     gen_meowcenaries(hash_store, pedia, pedia_ex, path)?;
+
+    let path = folder.create_html("scraps.html")?;
+    gen_scraps(hash_store, pedia, pedia_ex, path)?;
 
     gen_misc_page(hash_store, output.create_html("misc.html")?)?;
 

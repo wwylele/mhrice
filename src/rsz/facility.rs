@@ -450,3 +450,29 @@ rsz_struct! {
         pub param: Vec<OtomoSpyUnitGridUserDataParam>
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.data.OffcutsItemConvertTable.Param",
+        0x5D6924F0 = 10_00_02,
+        0x3F6FDC44 = 11_00_01,
+        0xE0D3C5D6 = 12_00_00,
+        0xE498D44D = 13_00_00,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct OffcutsItemConvertTableParam {
+        pub base_item_id: ItemId,
+        pub convert_item_id: ItemId,
+        pub num: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.OffcutsItemConvertTable",
+        path = "data/Define/Lobby/Facility/OtomoSmithy/OffcutsItemConvertTable.user",
+        0x26EE9DDF = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct OffcutsItemConvertTable {
+        pub param: Vec<OffcutsItemConvertTableParam>
+    }
+}

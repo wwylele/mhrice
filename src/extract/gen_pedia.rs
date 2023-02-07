@@ -1057,6 +1057,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         trade_rare: get_singleton(pak)?,
         trade: get_singleton(pak)?,
         spy: get_singleton(pak)?,
+        offcut_convert: get_singleton(pak)?,
     })
 }
 

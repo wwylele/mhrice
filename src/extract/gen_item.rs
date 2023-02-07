@@ -586,6 +586,30 @@ fn gen_item_usage_mix(
     }
 }
 
+fn gen_item_usage_convert(
+    item_id: ItemId,
+    pedia: &Pedia,
+    pedia_ex: &PediaEx,
+) -> Option<Box<div<String>>> {
+    let htmls: Vec<_> = pedia
+        .offcut_convert
+        .param
+        .iter()
+        .filter(|p| p.base_item_id == item_id)
+        .map(|p| html!(<li>{gen_item_label_from_id(p.convert_item_id, pedia_ex)}</li>))
+        .collect();
+
+    if !htmls.is_empty() {
+        Some(html!(<div class="mh-item-in-out">
+            <h3>"For " <a href="/misc/scraps.html">"trading for scraps"</a>": "</h3>
+            <ul class="mh-item-list">{
+                htmls
+            }</ul> </div>))
+    } else {
+        None
+    }
+}
+
 fn gen_item_usage_misc(
     item_id: ItemId,
     _pedia: &Pedia,
@@ -692,6 +716,30 @@ fn gen_item_source_mix(
     if !htmls.is_empty() {
         Some(html!(<div class="mh-item-in-out">
             <h3>"From " <a href="/misc/mix.html">"item crafting"</a>": "</h3>
+            <ul class="mh-item-list">{
+                htmls
+            }</ul> </div>))
+    } else {
+        None
+    }
+}
+
+fn gen_item_source_convert(
+    item_id: ItemId,
+    pedia: &Pedia,
+    pedia_ex: &PediaEx,
+) -> Option<Box<div<String>>> {
+    let htmls: Vec<_> = pedia
+        .offcut_convert
+        .param
+        .iter()
+        .filter(|p| p.convert_item_id == item_id)
+        .map(|p| html!(<li>{gen_item_label_from_id(p.base_item_id, pedia_ex)}</li>))
+        .collect();
+
+    if !htmls.is_empty() {
+        Some(html!(<div class="mh-item-in-out">
+            <h3>"From " <a href="/misc/scraps.html">"trading for scraps"</a>": "</h3>
             <ul class="mh-item-list">{
                 htmls
             }</ul> </div>))
@@ -892,6 +940,7 @@ pub fn gen_item(
             {gen_item_source_weapon(item.param.id, pedia_ex)}
             {gen_item_source_armor(item.param.id, pedia_ex)}
             {gen_item_source_mix(item.param.id, pedia, pedia_ex)}
+            {gen_item_source_convert(item.param.id, pedia, pedia_ex)}
             {gen_item_source_misc(item.param.id, pedia, pedia_ex)}
             </section>
         ),
@@ -909,6 +958,7 @@ pub fn gen_item(
             {gen_item_usage_hyakuryu(item.param.id, pedia_ex)}
             {gen_item_usage_hyakuryu_deco(item.param.id, pedia_ex)}
             {gen_item_usage_mix(item.param.id, pedia, pedia_ex)}
+            {gen_item_usage_convert(item.param.id, pedia, pedia_ex)}
             {gen_item_usage_misc(item.param.id, pedia, pedia_ex)}
             </section>
         ),

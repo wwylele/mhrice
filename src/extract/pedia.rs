@@ -280,6 +280,7 @@ pub struct Pedia {
     pub trade: TradeUserData,
 
     pub spy: OtomoSpyUnitGridUserData,
+    pub offcut_convert: OffcutsItemConvertTable,
 }
 
 pub struct QuestReward<'a> {

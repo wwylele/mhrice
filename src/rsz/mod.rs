@@ -1021,6 +1021,8 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         TradeUserData,
         OtomoSpyUnitGridUserDataParam,
         OtomoSpyUnitGridUserData,
+        OffcutsItemConvertTableParam,
+        OffcutsItemConvertTable
     );
 
     m
