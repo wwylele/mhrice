@@ -218,6 +218,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.stage.pop.CampFindCheck",
+        0x8F5C6E20 = 14_00_00,
         0x5588A2F2 = 10_00_02,
         0xA0F8501B = 11_00_01,
         0xE158D6D7 = 12_00_00
@@ -302,6 +303,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.gui.GuiQuestStart",
+        0x0EFDD92B = 14_00_00,
         0xe295d8a4 = 0,
     )]
     #[derive(Debug, Serialize)]
@@ -313,6 +315,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.gui.GuiQuestEnd",
+        0xF9C7D3BA = 14_00_00,
         0x5246719b = 0,
     )]
     #[derive(Debug, Serialize)]
@@ -325,6 +328,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.gui.QuestUIManager",
+        0x2F9C4016 = 14_00_00,
         0x66c59972 = 0,
     )]
     #[derive(Debug, Serialize)]
@@ -346,6 +350,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.gui.GuiHoldBoxChange",
+        0x3D6F990A = 14_00_00,
         0x1973d0e3 = 0,
     )]
     #[derive(Debug, Serialize)]
@@ -356,6 +361,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.TrialNaviSignToTargetMonster",
+        0xAD983E8A = 14_00_00,
         0x52d82992 = 0,
     )]
     #[derive(Debug, Serialize)]
@@ -390,6 +396,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.ItemPopLotTableUserData.Param",
+        0xFD1D44F1 = 14_00_00,
         0x47242315 = 13_00_00,
         0xa1800433 = 10_00_02,
         0xF99CD6BA = 11_00_01,
@@ -961,6 +968,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.stage.StageObjectStateController.TargetObject",
+        0x593EB8B0 = 14_00_00,
         0xD18507FA = 13_00_00,
         0x502b2c47 = 10_00_02
     )]

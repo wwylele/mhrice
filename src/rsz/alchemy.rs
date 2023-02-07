@@ -37,6 +37,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.AlchemyPatturnUserData.Param",
+        0x8F4D1882 = 14_00_00,
         0xF023B4E2 = 13_00_00,
         0x41f213e8 = 0
     )]
@@ -175,6 +176,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.alchemy.SkillGradeLotRateTableUserData.Param",
+        0x8FEBC6B1 = 14_00_00,
         0xed421f20 = 0
     )]
     #[derive(Debug, Serialize)]
@@ -212,6 +214,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.alchemy.SlotNumTableUserData.SkillParam",
+        0xF8EFB8DE = 14_00_00,
         0xa284155e = 0
     )]
     #[derive(Debug, Serialize)]

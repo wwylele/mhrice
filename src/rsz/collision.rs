@@ -279,6 +279,7 @@ rsz_enum! {
         QuakeIndirect = 0x00000025,
         ButtobiHm = 0x00000026,
         NoMediationCatchAttackWithSmash = 0x00000027,
+        PlFreeze = 0x00000028,
     }
 }
 
@@ -360,6 +361,7 @@ rsz_bitflags! {
         const RESTRAINT_ALL = 0x00004000;
         const SUCK_BLOOD = 0x00008000;
         const FORCE_PARTS_LOSS_PERMIT_DAMAGE_ATTR_STRIKE = 0x00010000;
+        const FROZEN_ZAKO_EM = 0x00020000;
     }
 }
 
@@ -415,6 +417,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.hit.userdata.EmHitAttackRSData",
+        0xFB4BC1AC = 14_00_00,
         0x54158991 = 10_00_02,
         0xC510FF49 = 12_00_00, // what changed in this?
     )]
@@ -427,6 +430,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.hit.userdata.EmShellHitAttackRSData",
+        0x206C4FE7 = 14_00_00,
         0x7cfb2121 = 10_00_02,
         0x6FB5D79D = 12_00_00, // what changed in this?
     )]

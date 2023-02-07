@@ -67,6 +67,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.RandomMysteryDifficultyRateKindData",
+        0xE9DE3A6F = 14_00_00,
         0x81573281 = 11_00_01,
     )]
     #[derive(Debug, Serialize)]
@@ -146,6 +147,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.RandomMysteryLotEnemyData.NGAppearanceData",
+        0x0405560B = 14_00_00,
         0xCE7A98B5 = 13_00_00,
         0xe609a59a = 11_00_01,
         0x36F97D99 = 12_00_00,
@@ -160,6 +162,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.RandomMysteryLotEnemyData.LotEnemyData",
+        0x4DD6D4AF = 14_00_00,
         0x9D4D71DE = 13_00_00,
         0xBA8468A5 = 11_00_01,
         0xFDCAC2BE = 12_00_00,

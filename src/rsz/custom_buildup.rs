@@ -34,6 +34,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.CustomBuildupOpenUserData.Param",
+        0xEB068B0B = 14_00_00,
         0x0D31BF18 = 13_00_00,
         0xC0A94CBE = 11_00_01,
         0x3EF94613 = 12_00_00
@@ -167,6 +168,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.CustomBuildupWeaponMaterialUserData.Param",
+        0xDC72D8EA = 14_00_00,
         0x17BE58F6 = 13_00_00,
         0x2A2ABE7B = 11_00_01,
         0xC0C006CC = 12_00_00

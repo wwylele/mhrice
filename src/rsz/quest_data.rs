@@ -318,6 +318,7 @@ impl Ord for EmTypes {
 
 rsz_struct! {
     #[rsz("snow.quest.NormalQuestData.Param",
+        0xA5344203 = 14_00_00,
         0x04AAB3CD = 13_00_00,
         0x708b71d8 = 10_00_02,
         0x6213ED03 = 11_00_01,
@@ -554,6 +555,7 @@ macro_rules! impl_enemy_param {
 
 rsz_struct! {
     #[rsz("snow.quest.NormalQuestDataForEnemy.Param",
+        0x46FFE13A = 14_00_00,
         0x7E1E92C8 = 10_00_02,
         0x3663ECD6 = 11_00_01,
         0xA718C7EA = 12_00_00,
@@ -757,6 +759,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.enemy.SystemEnemySizeListData.SizeInfo",
+        0xEE952AF3 = 14_00_00,
         0xE6D33804 = 13_00_00,
         0xB66C1F4D = 10_00_02,
         0x198674C0 = 11_00_01,
@@ -789,6 +792,7 @@ pub const DISCOVER_MAP_LIST: [i32; 7] = [1, 4, 2, 3, 5, 12, 13];
 
 rsz_struct! {
     #[rsz("snow.quest.DiscoverEmSetData.Param",
+        0xF1533F35 = 14_00_00,
         0xFEDEF6E7 = 13_00_00,
         0xa9f8ec2d = 10_00_02,
         0x761D06CD = 11_00_01,
@@ -903,6 +907,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.RewardIdLotTableUserData.Param",
+        0x7CF9C05C = 14_00_00,
         0x766F6930 = 13_00_00,
         0x11de5dc7 = 10_00_02,
         0x0F2FF775 = 11_00_01,
@@ -938,6 +943,7 @@ rsz_with_singleton! {
 
 rsz_struct! {
     #[rsz("snow.quest.HyakuryuQuestData.WaveData",
+        0x743D1792 = 14_00_00,
         0xC19E2A63 = 13_00_00,
         0x43C9A46C = 10_00_02,
         0x65A33E4E = 11_00_01,
@@ -976,6 +982,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.quest.HyakuryuQuestData",
+        0xAB666DA4 = 14_00_00,
         0x238dcfc8 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
@@ -1019,6 +1026,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.MysteryRewardItemUserData.Param",
+        0x1F3C6123 = 14_00_00,
         0xE158B503 = 13_00_00,
         0xc3438c68 = 10_00_02,
         0x15C40983 = 11_00_01,
@@ -1108,6 +1116,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.ai.QuestServantDataList.QuestServantData",
+        0x2A6F910D = 14_00_00,
         0xBED4B9C5 = 13_00_00,
         0x29c450b1 = 10_00_02,
         0x44843229 = 11_00_01,
@@ -1133,6 +1142,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.SupplyData.Param",
+        0x8EA61FDD = 14_00_00,
         0x6E57F8E4 = 13_00_00,
         0xDF132E6C = 10_00_02,
         0xCB4B87E1 = 11_00_01,
@@ -1177,6 +1187,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.checker.ProgressCheckerUserData.Param",
+        0xC389194D = 14_00_00,
         0x0D6992CA = 13_00_00,
         0x418a9339 = 10_00_02,
         0xbd01b69b = 11_00_01,
@@ -1222,6 +1233,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.ItemWork",
+        0xD5BE703B = 14_00_00,
         0x56D8E30A = 13_00_00,
         0x33517B1D = 12_00_00,
         0x6E3FD481 = 11_00_01,
@@ -1236,6 +1248,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.ArenaQuestData.ArenaPlayer",
+        0x0BB2475D = 14_00_00,
         0x11445F02 = 13_00_00,
         0x8FDD5FC1 = 12_00_00,
         0x01A94B6D = 11_00_01,
@@ -1322,6 +1335,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.progress.quest.QuestUnlockListGroup",
+        0xC924586B = 14_00_00,
         0xA732DC3F = 13_00_00,
         0x1197D013 = 12_00_00,
         0xA06B3109 = 11_00_01,
@@ -1335,6 +1349,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.progress.quest.QuestUnlockRelation",
+        0xC67F73E3 = 14_00_00,
         0xB522D865 = 13_00_00,
         0x2945BA18 = 12_00_00,
         0xB125A5B1 = 11_00_01,
@@ -1354,6 +1369,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.progress.quest.QuestUnlockByTalkFlag",
+        0x99B7B190 = 14_00_00,
         0xA2C096E7 = 13_00_00,
         0xA48596FD = 12_00_00,
         0x2C741CB6 = 11_00_01,
@@ -1369,6 +1385,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.progress.quest.QuestUnlockByQuestClear.UnlockQuestInfoList",
+        0x3021A0EC = 14_00_00,
         0xDAC7F830 = 13_00_00,
         0x964C501B = 12_00_00,
         0xC70EDBDF = 11_00_01,
@@ -1383,6 +1400,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.progress.quest.QuestUnlockByQuestClear",
+        0xC3FA2284 = 14_00_00,
         0x54117276 = 13_00_00,
         0xA5FCF42F = 12_00_00,
         0x64C8ACEE = 11_00_01,
@@ -1397,6 +1415,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.progress.quest.RandomQuestUnlockByQuestClear.RandomQuestList",
+        0xC5EE12A5 = 14_00_00,
         0xEB5E6CB1 = 13_00_00,
         0xE0AC5830 = 12_00_00,
         0xB1FBBB0C = 11_00_01,
@@ -1436,6 +1455,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.progress.quest.QuestUnlockByHuntEnemy",
+        0xCDEA2434 = 14_00_00,
         0x0023438C = 13_00_00,
         0xECB2250E = 12_00_00,
         0x8457868E = 11_00_01,
@@ -1492,6 +1512,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.TimeAttackRewardUserData.TimeAttackRewardData",
+        0x82AA9CA6 = 14_00_00,
         0x1142EF9A = 13_00_00,
         0xC01F0CE3 = 12_00_00,
         0x6EA33C1C = 11_00_01,

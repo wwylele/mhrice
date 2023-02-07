@@ -1936,6 +1936,9 @@ pub fn gen_monster(
                     if atk.data.base_attack_attr.contains(AttackAttr::FORCE_PARTS_LOSS_PERMIT_DAMAGE_ATTR_STRIKE) {
                         flags.push(html!(<span class="tag">"ForcePartsLossPermistDamageAttrStrike"</span>))
                     }
+                    if atk.data.base_attack_attr.contains(AttackAttr::FROZEN_ZAKO_EM) {
+                        flags.push(html!(<span class="tag">"Frozen small monster"</span>))
+                    }
 
                     html!(<tr>
                         <td lang="ja">{text!("{}", atk.data.name)}</td>
