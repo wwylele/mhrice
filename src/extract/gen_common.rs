@@ -5,7 +5,7 @@ use crate::msg::MsgEntry;
 use typed_html::{elements::*, html, text};
 
 const WEBSITE_VERSIONS: &[&str] = &[
-    "10.0.2", "10.0.3", "11.0.1", "11.0.2", "12.0.0", "12.0.1", "13.0.0",
+    "10.0.2", "10.0.3", "11.0.1", "11.0.2", "12.0.0", "12.0.1", "13.0.0", "14.0.0",
 ];
 
 pub fn open_graph(
