@@ -200,6 +200,28 @@ aside {
             content: "<";
         }
     }
+
+    .mh-version-block {
+        display: flex;
+        align-items: center;
+        padding: 0rem 0.75rem;
+
+        .mh-major {
+            font-style: italic;
+            padding-right: 1rem;
+        }
+
+        .mh-version-menu {
+            padding: 0.5rem 0.5rem;
+        }
+
+        .mh-version-menu-latest::after {
+            font-size: .83em;
+            vertical-align: super;
+            content: 'latest';
+            color: red;
+        }
+    }
 }
 
 main {

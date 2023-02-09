@@ -73,6 +73,35 @@ pub fn gen_menu(sections: &[Section]) -> Box<aside<String>> {
 }
 
 pub fn right_aside() -> Box<aside<String>> {
+    let mut version_tree: Vec<(
+        &str, /*major*/
+        Vec<(
+            &str,   /*minor*/
+            String, /*url*/
+            bool,   /*latest*/
+        )>,
+    )> = vec![];
+
+    for (i, version) in WEBSITE_VERSIONS.iter().enumerate() {
+        let latest = i == WEBSITE_VERSIONS.len() - 1;
+        let dot = version.find('.').unwrap();
+        let (major, minor) = version.split_at(dot);
+        let url = if latest {
+            "".to_owned()
+        } else {
+            "-".to_owned() + &version.replace('.', "-")
+        };
+        if version_tree.last().map(|v| v.0) == Some(major) {
+            version_tree
+                .last_mut()
+                .unwrap()
+                .1
+                .push((minor, url, latest))
+        } else {
+            version_tree.push((major, vec![(minor, url, latest)]))
+        }
+    }
+
     html!(<aside id="right-aside">
     <div class="aside-button" id="right-aside-button"/>
     <div class="side-menu">
@@ -95,25 +124,20 @@ pub fn right_aside() -> Box<aside<String>> {
         "Version"
     </p>
     <ul class="menu-list">{
-        WEBSITE_VERSIONS.iter().enumerate().map(|(i, &version)| {
-            let latest = i == WEBSITE_VERSIONS.len() - 1;
-            let href = if latest {
-                "https://mhrise.mhrice.info".to_owned()
-            } else {
-                format!("https://mhrise-{}.mhrice.info", version.replace('.', "-"))
-            };
-            let text = if latest {
-                format!("{version} (Latest)")
-            } else {
-                version.to_owned()
-            };
-            let mut class = "navbar-item mh-version-menu".to_owned();
-            if latest {
-                class += " mh-version-menu-latest";
-            }
-            html!(<li><a class={class.as_str()} href={href.as_str()}>
-                {text!("{}", text)}
-            </a></li>)
+        version_tree.into_iter().map(|(major, minors)| {
+            html!(<li class="mh-version-block">
+                <span class="mh-major">{text!("{}", major)}</span>
+                {minors.into_iter().map(|(minor, url, latest)| {
+                    let href = format!("https://mhrise{url}.mhrice.info");
+                    let mut class = "mh-version-menu".to_owned();
+                    if latest {
+                        class += " mh-version-menu-latest";
+                    }
+                    html!(<a class={class.as_str()} href={href.as_str()}>
+                        {text!("{}", minor)}
+                    </a>)
+                })}
+            </li>)
         })
     }</ul>
 
