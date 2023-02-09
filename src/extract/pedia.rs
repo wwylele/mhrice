@@ -247,6 +247,7 @@ pub struct Pedia {
     pub custom_buildup_armor_category_lot: Option<CustomBuildupArmorCategoryLotUserData>,
     pub custom_buildup_equip_skill_detail: Option<CustomBuildupEquipSkillDetailUserData>,
     pub custom_buildup_wep_table: Option<CustomBuildupWepTableUserData>,
+    pub custom_buildup_slot_bonus: Option<CustomBuildupSlotBonusUserData>, // v14
 
     pub random_mystery_difficulty: Option<RandomMysteryDifficultyRateListData>,
     pub random_mystery_enemy: Option<RandomMysteryLotEnemyData>,
@@ -505,6 +506,7 @@ pub struct WeaponCustomBuildupCategory<'a> {
 #[derive(Default, Debug)]
 pub struct WeaponCustomBuildup<'a> {
     pub categories: BTreeMap<u16, WeaponCustomBuildupCategory<'a>>,
+    pub slot_bonus: HashMap<u16 /*piece id*/, &'a CustomBuildupSlotBonusUserDataParam>,
 }
 
 pub struct SwitchSkill<'a> {

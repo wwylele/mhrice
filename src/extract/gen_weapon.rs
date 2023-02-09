@@ -724,7 +724,29 @@ where
                                     text!("{:+}", value)
                                 }
                             } </li>))
-                        } </ul>
+                        }
+                        {
+                            table.slot_bonus.get(&piece.data.id).into_iter().flat_map(|slot_bonus| {
+                                slot_bonus.category_id.iter().zip(&slot_bonus.value_table)
+                                    .filter(|(category, _)| **category != 0)
+                                    .map(|(category, bonus)|{
+                                    let category = match category {
+                                        1 => "Attack".to_owned(),
+                                        2 => "Affinity".to_owned(),
+                                        3 => "Element".to_owned(),
+                                        4 => "Status".to_owned(),
+                                        5 => "Sharpness".to_owned(),
+                                        6 => "Rampage slot".to_owned(),
+                                        7 => "Anomaly slot".to_owned(),
+                                        8 => "Element/status".to_owned(),
+                                        9 => "Shelling level".to_owned(),
+                                        c => format!("{c}")
+                                    };
+                                    html!(<li>{text!("{} +{}", category, bonus)}</li>)
+                                })
+                            })
+                        }
+                        </ul>
                         </td>
                         <td>{text!("{}z", piece.material.price)}</td>
                         {gen_category(pedia_ex, piece.material.material_category, piece.material.material_category_num)}

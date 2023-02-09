@@ -1032,6 +1032,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         custom_buildup_armor_category_lot: get_singleton_opt(pak)?,
         custom_buildup_equip_skill_detail: get_singleton_opt(pak)?,
         custom_buildup_wep_table: get_singleton_opt(pak)?,
+        custom_buildup_slot_bonus: get_singleton_opt(pak)?,
         random_mystery_difficulty,
         random_mystery_enemy: get_singleton_opt(pak)?,
         random_mystery_rank_release: get_singleton_opt(pak)?,
@@ -3567,6 +3568,26 @@ pub fn prepare_weapon_custom_buildup<'a>(
                 category.table_no,
                 category.category_id
             );
+        }
+    }
+
+    for slot_bonus in pedia
+        .custom_buildup_slot_bonus
+        .iter()
+        .flat_map(|p| &p.param)
+    {
+        if result
+            .get_mut(&slot_bonus.table_no)
+            .with_context(|| format!("Table {} not found for slot bonus", slot_bonus.table_no))?
+            .slot_bonus
+            .insert(slot_bonus.id, slot_bonus)
+            .is_some()
+        {
+            bail!(
+                "Duplicate slot bonus for table {}, id {}",
+                slot_bonus.table_no,
+                slot_bonus.id
+            )
         }
     }
 

@@ -218,3 +218,27 @@ rsz_struct! {
         pub param: Vec<CustomBuildupWepTableUserDataParam>
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.data.CustomBuildupSlotBonusUserData.Param",
+        0x7FE40518 = 14_00_00,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct CustomBuildupSlotBonusUserDataParam {
+        pub table_no: u32,
+        pub id: u16, // snow.data.DataDef.CustomBuildupId
+        pub category_id: Vec<u16>, // snow.data.DataDef.CustomBuildupCategoryId
+        pub value_table: Vec<i32>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.CustomBuildupSlotBonusUserData",
+        path = "data/Define/Player/Equip/CustomBuildup/CustomBuildupSlotBonusUserData.user",
+        0x9D44CA1B = 14_00_00,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct CustomBuildupSlotBonusUserData {
+        pub param: Vec<CustomBuildupSlotBonusUserDataParam>
+    }
+}

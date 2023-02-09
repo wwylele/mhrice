@@ -209,10 +209,12 @@ aside {
         .mh-major {
             font-style: italic;
             padding-right: 1rem;
+            flex-grow: 0;
         }
 
         .mh-version-menu {
             padding: 0.5rem 0.5rem;
+            flex-grow: 1;
         }
 
         .mh-version-menu-latest::after {

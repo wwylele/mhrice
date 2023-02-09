@@ -73,14 +73,12 @@ pub fn gen_menu(sections: &[Section]) -> Box<aside<String>> {
 }
 
 pub fn right_aside() -> Box<aside<String>> {
-    let mut version_tree: Vec<(
-        &str, /*major*/
-        Vec<(
-            &str,   /*minor*/
-            String, /*url*/
-            bool,   /*latest*/
-        )>,
-    )> = vec![];
+    type VersionRow<'a> = Vec<(
+        &'a str, /*minor*/
+        String,  /*url*/
+        bool,    /*latest*/
+    )>;
+    let mut version_tree: Vec<(&str /*major*/, VersionRow)> = vec![];
 
     for (i, version) in WEBSITE_VERSIONS.iter().enumerate() {
         let latest = i == WEBSITE_VERSIONS.len() - 1;
