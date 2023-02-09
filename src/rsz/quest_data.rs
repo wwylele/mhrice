@@ -74,7 +74,7 @@ rsz_enum! {
         QL5 = 4,
         QL6 = 5,
         QL7 = 6,
-        QL7Ex = 7,
+        QL7Ex = 7, // also added as "QL8Ex" in v14... what is this?
     }
 }
 
