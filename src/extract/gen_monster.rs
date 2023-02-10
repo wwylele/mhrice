@@ -105,6 +105,8 @@ pub fn gen_sub_type_tag(em_type: EmTypes, sub_type: Option<u8>) -> Option<Box<sp
         (EmTypes::Em(134), Some(1)) => Some("QuickGoApe".to_owned()), // what
 
         (EmTypes::Em(136 | 392), Some(1)) => Some("Sleeping".to_owned()),
+        (EmTypes::Em(392), Some(2)) => Some("High level".to_owned()),
+        (EmTypes::Em(392), Some(3)) => Some("High level sleeping".to_owned()),
 
         (_, Some(x)) => Some(format!("type{x}")),
     };
