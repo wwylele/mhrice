@@ -40,4 +40,4 @@ quick-xml = "0.27"
 md-5 = "0.10"
 
 [build-dependencies]
-built = { version = "0.5", features = ["git2"] }
+built = { version = "0.6", features = ["git2"] }
