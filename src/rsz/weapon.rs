@@ -954,7 +954,7 @@ impl VillageProgress {
     pub fn display(self) -> Option<String> {
         match self {
             VillageProgress::None => None,
-            VillageProgress::VillageProgress(x) => Some(format!("Village {x}☆")),
+            VillageProgress::VillageProgress(x) => Some(format!("Village {x}★")),
         }
     }
 }
@@ -973,8 +973,8 @@ impl HallProgress {
     pub fn display(self) -> Option<String> {
         match self {
             HallProgress::None => None,
-            HallProgress::HallProgress(8) => Some("Hall 7☆+".to_owned()),
-            HallProgress::HallProgress(x) => Some(format!("Hub {x}☆")),
+            HallProgress::HallProgress(8) => Some("Hall 7★Ex".to_owned()),
+            HallProgress::HallProgress(x) => Some(format!("Hub {x}★")),
         }
     }
 }
@@ -993,7 +993,7 @@ impl MasterRankProgress {
     pub fn display(self) -> Option<String> {
         match self {
             MasterRankProgress::None => None,
-            MasterRankProgress::MasterRankProgress(x) => Some(format!("MR {x}☆")),
+            MasterRankProgress::MasterRankProgress(x) => Some(format!("MR {x}★")),
         }
     }
 }

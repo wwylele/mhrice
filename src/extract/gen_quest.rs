@@ -35,7 +35,7 @@ pub fn quest_level_tag(quest: &Quest) -> Box<span<String>> {
         QuestLevel::QL5 => "5",
         QuestLevel::QL6 => "6",
         QuestLevel::QL7 => "7",
-        QuestLevel::QL7Ex => "7+",
+        QuestLevel::QL7Ex => "7Ex",
     };
     let level_tag_class = format!("tag {quest_level_tag}");
     html!(<span class={level_tag_class.as_str()}>{
