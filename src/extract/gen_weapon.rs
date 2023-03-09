@@ -813,14 +813,19 @@ where
     Ok(())
 }
 
-fn gen_tree_rec<Param>(weapon_tree: &WeaponTree<Param>, list: &[WeaponId]) -> Box<ul<String>>
+fn gen_tree_rec<Param>(
+    pedia: &Pedia,
+    weapon_tree: &WeaponTree<Param>,
+    list: &[WeaponId],
+    parent_series: Option<TreeType>,
+) -> Box<ul<String>>
 where
     Param: ToBase<MainWeaponBaseData>
         + MaybeToBase<ElementWeaponBaseData>
         + MaybeToBase<DualBladesBaseUserDataParam>,
 {
     html!(<ul> {
-        list.iter().map(|id| {
+        list.iter().enumerate().map(|(index, id)| {
             let weapon = weapon_tree.weapons.get(id).unwrap();
             let mut filter_tags = vec![];
             if weapon.children.is_empty() {
@@ -833,17 +838,47 @@ where
                 filter_tags.push("rampage");
             }
             let filter = filter_tags.join(" ");
+            let tree_type = weapon.update.as_ref().map(|u|u.tree_type);
             html!(<li>
+                {(index != 0 || parent_series != tree_type)
+                    .then(||{
+                        let tree_string = if let Some(tree_type) = tree_type {
+                            let tree_type = tree_type.into_raw() as usize;
+                            #[allow(clippy::collapsible_else_if)]
+                            if tree_type < 100 {
+                                if let Some(entry) = pedia.weapon_series.entries.get(tree_type) {
+                                    if let (32, Some(another)) = (tree_type, pedia.weapon_series.entries.get(33)) {
+                                        // snow.data.DataShortcut.getName: special case for type A/B player
+                                        html!(<span>{gen_multi_lang(entry)}" / "{gen_multi_lang(another)}</span>)
+                                    } else {
+                                        gen_multi_lang(entry)
+                                    }
+                                } else {
+                                    html!(<span>{text!("Unknown {}", tree_type)}</span>)
+                                }
+                            } else {
+                                if let Some(entry) = pedia.weapon_series_mr.entries.get(tree_type - 100) {
+                                    gen_multi_lang(entry)
+                                } else {
+                                    html!(<span>{text!("Unknown {}", tree_type)}</span>)
+                                }
+                            }
+                        } else {
+                            html!(<span>"<None>"</span>)
+                        };
+                        html!(<div class="mh-weapon-series">{tree_string}</div>)
+                    })}
                 <div class="mh-main-filter-item" data-filter={filter}>{
                     gen_weapon_label(weapon)
                 }</div>
-                { gen_tree_rec(weapon_tree, &weapon.children) }
+                { gen_tree_rec(pedia, weapon_tree, &weapon.children, tree_type) }
             </li>)
         })
     } </ul>)
 }
 
 fn gen_tree<Param>(
+    pedia: &Pedia,
     hash_store: &HashStore,
     weapon_tree: &WeaponTree<Param>,
     weapon_path: &impl Sink,
@@ -887,7 +922,7 @@ where
                         <a>"Layered for rampage"</a></li>
                 </ul></div>
                 <div class="mh-weapon-tree">
-                { gen_tree_rec(weapon_tree, &weapon_tree.roots) }
+                { gen_tree_rec(pedia, weapon_tree, &weapon_tree.roots, None) }
                 </div>
                 </main>
                 { right_aside() }
@@ -976,7 +1011,7 @@ pub fn gen_weapons(
                     <span>{text!("{}", $name)}</span>
                 </a>
             </li>));
-            gen_tree(hash_store, &pedia_ex.$label, &path, stringify!($label), $name)?;
+            gen_tree(pedia, hash_store, &pedia_ex.$label, &path, stringify!($label), $name)?;
             for (weapon_id, weapon) in &pedia_ex.$label.weapons {
                 let (file_path, toc_sink) =
                     path.create_html_with_toc(&format!("{}.html", weapon_id.to_tag()), toc)?;

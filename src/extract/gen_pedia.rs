@@ -699,6 +699,14 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         pak,
         "data/Define/Player/Weapon/Horn/Horn_UniqueParam_MR.msg",
     )?;
+    let weapon_series = get_msg(
+        pak,
+        "data/Define/Player/Weapon/WeaponSeries_Hunter_Name.msg",
+    )?;
+    let weapon_series_mr = get_msg(
+        pak,
+        "data/Define/Player/Weapon/WeaponSeries_Hunter_Name_MR.msg",
+    )?;
 
     let maps = prepare_maps(pak)?;
     let map_name = get_msg(pak, "Message/Common_Msg/Stage_Name.msg")?;
@@ -981,6 +989,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         horn_melody_mr,
         hyakuryu_weapon_buildup: get_singleton(pak)?,
         weapon_chaos_critical: get_singleton_opt(pak)?,
+        weapon_series,
+        weapon_series_mr,
         maps,
         map_name,
         map_name_mr,

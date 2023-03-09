@@ -193,6 +193,8 @@ pub struct Pedia {
     pub horn_melody_mr: Msg,
     pub hyakuryu_weapon_buildup: HyakuryuWeaponHyakuryuBuildupUserData,
     pub weapon_chaos_critical: Option<WeaponChaosCriticalUserData>,
+    pub weapon_series: Msg,
+    pub weapon_series_mr: Msg,
 
     pub maps: BTreeMap<i32, GameMap>,
     pub map_name: Msg,
