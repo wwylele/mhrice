@@ -1,10 +1,10 @@
 use super::hash_store::*;
 use anyhow::{anyhow, Context, Result};
+use aws_sdk_s3 as s3;
 use bytes::Bytes;
-use futures::{stream, StreamExt, TryStreamExt};
+use futures::{StreamExt, TryStreamExt};
 use md5::{Digest, Md5};
-use rusoto_core::{ByteStream, Region};
-use rusoto_s3::*;
+use s3::types::ByteStream;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::fs;
@@ -277,35 +277,29 @@ impl S3SinkInner {
             let rt = Runtime::new().unwrap();
 
             let result = rt.block_on(async move {
-                let client = S3Client::new(Region::UsEast1);
+                let config = aws_config::load_from_env().await;
+                let client = s3::Client::new(&config);
 
                 let mut existing_objects = HashMap::new();
                 let mut continuation_token = None;
                 loop {
                     eprintln!("Listing existing files in the bucket..");
-                    let request = ListObjectsV2Request {
-                        bucket: bucket.clone(),
-                        continuation_token: continuation_token.take(),
-                        delimiter: None,
-                        encoding_type: None,
-                        expected_bucket_owner: None,
-                        fetch_owner: None,
-                        max_keys: None,
-                        prefix: None,
-                        request_payer: None,
-                        start_after: None,
-                    };
-                    let result = client.list_objects_v2(request).await?;
+                    let result = client
+                        .list_objects_v2()
+                        .bucket(bucket.clone())
+                        .set_continuation_token(continuation_token.take())
+                        .send()
+                        .await?;
 
-                    existing_objects.extend(
-                        result
-                            .contents
-                            .into_iter()
-                            .flatten()
-                            .flat_map(|o| o.key.map(|key| (key, o.e_tag))),
-                    );
+                    existing_objects.extend(result.contents().into_iter().flatten().flat_map(
+                        |o| {
+                            o.key()
+                                .map(|s| s.to_owned())
+                                .zip(o.e_tag().map(|s| s.to_owned()))
+                        },
+                    ));
 
-                    if result.is_truncated.unwrap_or(false) {
+                    if result.is_truncated() {
                         continuation_token = result.next_continuation_token;
                     } else {
                         break;
@@ -322,7 +316,7 @@ impl S3SinkInner {
                             unreachable!()
                         };
 
-                        if let Some(etag) = existing_objects.remove(&name).flatten() {
+                        if let Some(etag) = existing_objects.remove(&name) {
                             let md5: [u8; 16] = Md5::digest(&data).try_into().unwrap();
                             let md5_tag: String = md5
                                 .into_iter()
@@ -348,27 +342,22 @@ impl S3SinkInner {
                             Some("json") => "application/json",
                             _ => panic!("Unknown extension"),
                         };
-                        let content_length = Some(i64::try_from(data.len()).unwrap());
+                        let content_length = i64::try_from(data.len()).unwrap();
                         let bucket = &bucket;
                         let client = &client;
                         async move {
                             let byte = Bytes::from(data);
                             let mut result = Ok(());
                             for retry in 0..3 {
-                                let byte_clone = byte.clone();
-                                let request = PutObjectRequest {
-                                    bucket: bucket.clone(),
-                                    key: name.clone(),
-                                    body: Some(ByteStream::new_with_size(
-                                        stream::once(async move { Ok(byte_clone) }),
-                                        byte.len(),
-                                    )),
-                                    content_length,
-                                    content_type: Some(mime.to_owned()),
-                                    ..PutObjectRequest::default()
-                                };
+                                let future = client
+                                    .put_object()
+                                    .bucket(bucket.clone())
+                                    .key(name.clone())
+                                    .body(ByteStream::from(byte.clone()))
+                                    .content_length(content_length)
+                                    .content_type(mime)
+                                    .send();
 
-                                let future = client.put_object(request);
                                 if let Err(e) = future.await {
                                     eprintln!(
                                         "Failed to upload object {name} on attempt {retry}: {e}"
@@ -392,33 +381,27 @@ impl S3SinkInner {
                 let mut objects = existing_objects.into_keys();
 
                 loop {
-                    let batch: Vec<_> = objects
-                        .by_ref()
-                        .take(1000)
-                        .map(|key| {
-                            eprintln!("Deleting {key}...");
-                            ObjectIdentifier {
-                                key,
-                                version_id: None,
-                            }
-                        })
-                        .collect();
-                    if batch.is_empty() {
+                    let mut delete = s3::model::Delete::builder().quiet(true);
+                    let mut more = false;
+                    for key in objects.by_ref().take(1000) {
+                        eprintln!("Deleting {key}...");
+                        delete = delete.objects(
+                            aws_sdk_s3::model::ObjectIdentifier::builder()
+                                .key(key)
+                                .build(),
+                        );
+                        more = true;
+                    }
+                    if !more {
                         break;
                     }
-                    let request = DeleteObjectsRequest {
-                        bucket: bucket.clone(),
-                        bypass_governance_retention: None,
-                        delete: Delete {
-                            objects: batch,
-                            quiet: Some(true),
-                        },
-                        expected_bucket_owner: None,
-                        mfa: None,
-                        request_payer: None,
-                    };
 
-                    client.delete_objects(request).await?;
+                    client
+                        .delete_objects()
+                        .bucket(bucket.clone())
+                        .delete(delete.build())
+                        .send()
+                        .await?;
                 }
 
                 Ok(())
