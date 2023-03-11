@@ -20,6 +20,8 @@ let g_map_pos = { top: 0, left: 0, x: 0, y: 0, container: null };
 
 let g_diagram_current = new Map();
 
+let g_weapon_masonry = null;
+
 document.addEventListener('DOMContentLoaded', function () {
     delete_all_cookie();
     addEventListensers();
@@ -51,7 +53,15 @@ document.addEventListener('DOMContentLoaded', function () {
     initFilter("main")
 
     autoSearch();
+
+    initWeaponTreeMasonry();
 });
+
+function initWeaponTreeMasonry() {
+    if (document.getElementById("mh-weapon-tree") !== null) {
+        g_weapon_masonry = new Masonry(".mh-weapon-tree-list>ul");
+    }
+}
 
 function addEventListensers() {
     addEventListenerToClass("mh-lang-menu", "click", selectLanguage);
@@ -70,6 +80,8 @@ function addEventListensers() {
     addEventListenerToClass("mh-skill-filter-button", "click", changeSkillFilter);
     addEventListenerToClass("mh-main-filter-button", "click", changeMainFilter);
     addEventListenerToClass("mh-scombo", "change", onChangeSort);
+
+    addEventListenerToId("combo-weapon-tree", "change", onChangeWeaponTree)
 
     addEventListenerToClass("mh-map-filter-item", "click", onShowMapExplain);
     addEventListenerToClass("mh-map-filter-button", "click", changeMapFilter);
@@ -184,6 +196,23 @@ function parse_sort_tag(node) {
 function onChangeSort(e) {
     const select = e.currentTarget;
     change_sort(removePrefix(select.id, "scombo-"), parseInt(select.value))
+}
+
+function onChangeWeaponTree(e) {
+    const select = e.currentTarget;
+    const root = document.getElementById("mh-weapon-tree");
+    if (root === null) {
+        return;
+    }
+    if (select.value === "grid") {
+        g_weapon_masonry.destroy();
+        root.classList.remove("mh-weapon-tree-list");
+        root.classList.add("mh-weapon-tree-grid");
+    } else {
+        root.classList.remove("mh-weapon-tree-grid");
+        root.classList.add("mh-weapon-tree-list");
+        initWeaponTreeMasonry();
+    }
 }
 
 function change_sort(list_name, selecter) {

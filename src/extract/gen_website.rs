@@ -636,6 +636,10 @@ pub fn gen_static(hash_store: &mut HashStore, output: &impl Sink) -> Result<()> 
         .write_all(include_bytes!("static/mhrice.js"))?;
 
     output
+        .create_with_hash("masonry.pkgd.min.js", FileTag::Masonry, hash_store)?
+        .write_all(include_bytes!("static/masonry.pkgd.min.js"))?;
+
+    output
         .create("favicon.png")?
         .write_all(include_bytes!("static/favicon.png"))?;
     output

@@ -11,6 +11,7 @@ pub enum FileTag {
     FaBrand,
     FaSolid,
     PartColor,
+    Masonry,
 }
 
 pub struct HashStore {

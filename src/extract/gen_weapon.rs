@@ -8,7 +8,7 @@ use super::pedia::*;
 use super::sink::*;
 use crate::rsz::*;
 use anyhow::Result;
-use std::collections::HashSet;
+use std::collections::*;
 use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
 
@@ -68,7 +68,7 @@ where
     html!(
         <a href={link} class="mh-icon-text">
             {gen_weapon_icon(main, false, icon_element, icon_element2)}
-            <span>{gen_multi_lang(weapon.name)}</span>
+            <span class="mh-weapon-name">{gen_multi_lang(weapon.name)}</span>
         </a>
     )
 }
@@ -818,6 +818,8 @@ fn gen_tree_rec<Param>(
     weapon_tree: &WeaponTree<Param>,
     list: &[WeaponId],
     parent_series: Option<TreeType>,
+    (parent_row, parent_col): (i32, i32),
+    row_counter: &mut i32,
 ) -> Box<ul<String>>
 where
     Param: ToBase<MainWeaponBaseData>
@@ -839,7 +841,17 @@ where
             }
             let filter = filter_tags.join(" ");
             let tree_type = weapon.update.as_ref().map(|u|u.tree_type);
-            html!(<li>
+            if index == 0 && parent_series.is_some() && parent_series != tree_type {
+                *row_counter += 1
+            }
+
+            let row = *row_counter;
+            let col = weapon.update.as_ref().map_or(0, |u|u.index);
+            let row_rel = row - parent_row;
+            let col_rel = col - parent_col;
+            let css_var = format!("--data-row:{row_rel};--data-col:{col_rel};");
+            let series_css_var = format!("--data-col:{col};");
+            let result = html!(<li style={css_var.as_str()}>
                 {(index != 0 || parent_series != tree_type)
                     .then(||{
                         let tree_string = if let Some(tree_type) = tree_type {
@@ -866,13 +878,17 @@ where
                         } else {
                             html!(<span>"<None>"</span>)
                         };
-                        html!(<div class="mh-weapon-series">{tree_string}</div>)
+                        html!(<div class="mh-weapon-series" style={series_css_var.as_str()}>{tree_string}</div>)
                     })}
-                <div class="mh-main-filter-item" data-filter={filter}>{
+                <div class="mh-weapon-tree-label mh-main-filter-item" data-filter={filter}>{
                     gen_weapon_label(weapon)
                 }</div>
-                { gen_tree_rec(pedia, weapon_tree, &weapon.children, tree_type) }
-            </li>)
+                { gen_tree_rec(pedia, weapon_tree, &weapon.children, tree_type, (row, col), row_counter) }
+            </li>);
+            if index != list.len() - 1 {
+                *row_counter += 1;
+            }
+            result
         })
     } </ul>)
 }
@@ -891,12 +907,27 @@ where
         + MaybeToBase<DualBladesBaseUserDataParam>,
 {
     let mut list_path = weapon_path.create_html(&format!("{tag}.html"))?;
+    let masonry_js = format!(
+        "/masonry.pkgd.min.js?h={}",
+        hash_store.get(FileTag::Masonry)
+    );
+
+    let cols = weapon_tree
+        .weapons
+        .values()
+        .filter_map(|w| w.update.map(|u| u.index))
+        .max()
+        .unwrap_or(0)
+        + 1;
+
+    let mut row_counter = 0;
 
     let doc: DOMTree<String> = html!(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("{} - MHRice", name)}</title>
                 { head_common(hash_store) }
+                <script src={masonry_js}/>
                 <style id="mh-main-list-style">""</style>
             </head>
             <body>
@@ -921,8 +952,18 @@ where
                     <li id="mh-main-filter-button-rampage" class="mh-main-filter-button">
                         <a>"Layered for rampage"</a></li>
                 </ul></div>
-                <div class="mh-weapon-tree">
-                { gen_tree_rec(pedia, weapon_tree, &weapon_tree.roots, None) }
+                <div class="select"><select id="combo-weapon-tree">
+                    <option value="list">"List view"</option>
+                    <option value="grid">"Grid view"</option>
+                </select></div>
+                <div class="mh-weapon-tree-list" id="mh-weapon-tree">
+                {
+                    let mut root = gen_tree_rec(pedia, weapon_tree, &weapon_tree.roots, None, (0, 0), &mut row_counter);
+                    let rows = row_counter + 1;
+                    let style = format!("--data-rows:{rows}; --data-cols:{cols};");
+                    root.attrs.style = Some(style);
+                    root
+                }
                 </div>
                 </main>
                 { right_aside() }
