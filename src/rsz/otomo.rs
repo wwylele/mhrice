@@ -315,3 +315,78 @@ rsz_struct! {
         pub param: Vec<OtEquipSeriesUserDataParam>
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.equip.OtOverwearBaseUserData.Param",
+        0x95124FA4 = 14_00_00,
+        0x22A5CCF6 = 13_00_00,
+        0x1A9737A4 = 12_00_00,
+        0x76EF6841 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct OtOverwearBaseUserDataParam {
+        pub id: OtArmorId,
+        pub is_valid: bool,
+        pub sort_id: u32,
+        pub relative_id: OtArmorId,
+        pub series_id: OtEquipSeriesId,
+        pub rare_type: RareTypes,
+        pub model_id: u32, // snow.data.DataDef.OtEquipModelId
+        pub base_color_index: u32,
+        pub sell_value: u32,
+        pub is_one_set: bool,
+        pub is_one_color: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.equip.OtOverwearBaseUserData",
+        0xB2CA3CD1 = 14_00_00,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct OtOverwearBaseUserData {
+        pub param: Vec<OtOverwearBaseUserDataParam>
+    }
+}
+
+rsz_with_singleton! {
+    #[path("data/Define/Otomo/Equip/Overwear/OtAirouOverwearBaseData.user")]
+    pub struct OtAirouOverwearBaseUserData(OtOverwearBaseUserData);
+
+    #[path("data/Define/Otomo/Equip/Overwear/OtDogOverwearBaseData.user")]
+    pub struct OtDogOverwearBaseUserData(OtOverwearBaseUserData);
+}
+
+rsz_struct! {
+    #[rsz("snow.equip.OtOverwearRecipeUserData.Param",
+        0xFED893C8 = 14_00_00,
+        0x015973AA = 13_00_00,
+        0xDBA438DD = 12_00_00,
+        0x6662814D = 11_00_01,
+        0xAB9590BD = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct OtOverwearRecipeUserDataParam {
+        pub id: OtArmorId,
+        pub evaluation: EvaluationTypeFor3Argument,
+        pub unlock_id: Vec<ItemId>,
+        pub unlock_enemy: EmTypes,
+        pub unlock_progress: i32, // snow.data.DataDef.UnlockProgressTypes
+        pub hr_limit_flag: bool,
+        pub mystery_flag: bool,
+        pub required_item: Vec<ItemId>,
+        pub required_num: Vec<u32>,
+        pub is_one_set: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.equip.OtOverwearRecipeUserData",
+        path = "data/Define/Otomo/Equip/Overwear/OtOverwearRecipeData.user",
+        0x8162DA35 = 14_00_00,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct OtOverwearRecipeUserData {
+        pub param: Vec<OtOverwearRecipeUserDataParam>
+    }
+}

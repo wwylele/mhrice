@@ -209,6 +209,9 @@ pub struct Pedia {
     pub dog_weapon: OtDogWeaponBaseUserData,
     pub dog_weapon_product: OtDogWeaponProductUserData,
     pub ot_equip_series: OtEquipSeriesUserData,
+    pub airou_overwear: OtAirouOverwearBaseUserData,
+    pub dog_overwear: OtDogOverwearBaseUserData,
+    pub ot_overwear_recipe: OtOverwearRecipeUserData,
     pub airou_armor_head_name: Msg,
     pub airou_armor_head_explain: Msg,
     pub airou_armor_chest_name: Msg,
@@ -434,6 +437,8 @@ pub struct OtWeapon<'a> {
 pub struct OtArmor<'a> {
     pub param: &'a OtArmorBase,
     pub product: Option<&'a OtArmorProductUserDataParam>,
+    pub overwear: Option<&'a OtOverwearBaseUserDataParam>,
+    pub overwear_recipe: Option<&'a OtOverwearRecipeUserDataParam>,
     pub name: &'a MsgEntry,
     pub explain: &'a MsgEntry,
 }

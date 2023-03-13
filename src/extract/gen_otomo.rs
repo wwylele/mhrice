@@ -188,6 +188,42 @@ fn gen_otomo_equip(
         ),
     });
 
+    let three_item_condition = |ty: EvaluationTypeFor3Argument, item: &[ItemId]| {
+        let item0 = item.get(0).filter(|&&i| i != ItemId::None);
+        let item1 = item.get(1).filter(|&&i| i != ItemId::None);
+        let item2 = item.get(2).filter(|&&i| i != ItemId::None);
+        let item0 = if let Some(&item) = item0 {
+            gen_item_label_from_id(item, pedia_ex)
+        } else {
+            text!("None")
+        };
+        let item1 = if let Some(&item) = item1 {
+            gen_item_label_from_id(item, pedia_ex)
+        } else {
+            text!("None")
+        };
+        let item2 = if let Some(&item) = item2 {
+            gen_item_label_from_id(item, pedia_ex)
+        } else {
+            text!("None")
+        };
+
+        match ty {
+            EvaluationTypeFor3Argument::AndAnd => {
+                html!(<div>{item0} " and " {item1} " and " {item2}</div>)
+            }
+            EvaluationTypeFor3Argument::OrOr => {
+                html!(<div>{item0} " or " {item1} " or " {item2}</div>)
+            }
+            EvaluationTypeFor3Argument::AndOr => {
+                html!(<div>"("{item0} " and " {item1} ") or " {item2}</div>)
+            }
+            EvaluationTypeFor3Argument::OrAnd => {
+                html!(<div>"("{item0} " or " {item1} ") and " {item2}</div>)
+            }
+        }
+    };
+
     sections.push(Section {
         title: "Crafting".to_owned(),
         content: html!(
@@ -201,6 +237,11 @@ fn gen_otomo_equip(
             {(series.series.unlock_enemy != EmTypes::Em(0)).then(
                 ||html!(<div><span class="has-text-weight-bold">"Key monster: "</span> {
                     gen_monster_tag(pedia_ex, series.series.unlock_enemy, false, false, None, None)
+                }</div>)
+            )}
+            {(series.series.unlock_item.iter().any(|&i|i != ItemId::None)).then(
+                ||html!(<div><span class="has-text-weight-bold">"Key item: "</span> {
+                    three_item_condition(series.series.evaluation, &series.series.unlock_item)
                 }</div>)
             )}
             <div class="mh-table"><table>
@@ -242,6 +283,62 @@ fn gen_otomo_equip(
             </table></div>
             </section>
         )
+    });
+
+    let layered_row = |piece: &Option<OtArmor>| {
+        let Some(piece) = piece else {return None};
+        piece.overwear.map(|overwear| {
+            html!(<tr>
+                <td>{gen_atomo_armor_label(piece)}</td>
+                <td>{text!("{}z", overwear.sell_value * 3 / 2)}</td>
+                {
+                    if let Some(recipe) = piece.overwear_recipe {
+                        [
+                            gen_materials(pedia_ex, &recipe.required_item, &recipe.required_num, &recipe.unlock_id),
+                            html!(<td>{(recipe.unlock_enemy != EmTypes::Em(0)).then(
+                                ||gen_monster_tag(pedia_ex, recipe.unlock_enemy, false, false, None, None))}</td>),
+                            html!(<td>{(recipe.unlock_id.iter().any(|&i|i != ItemId::None)).then(
+                                ||three_item_condition(recipe.evaluation, &recipe.unlock_id))}</td>),
+                            html!(<td>{(recipe.unlock_progress != 0).then(
+                                ||gen_progress(recipe.unlock_progress, pedia_ex))}
+                                {recipe.hr_limit_flag.then(||html!(<span class="tag">"HR limit"</span>))}
+                                {recipe.mystery_flag.then(||html!(<span class="tag">"Anomaly"</span>))}
+                            </td>),
+                        ]
+                    } else {
+                        [
+                            html!(<td>"-"</td>),
+                            html!(<td>"-"</td>),
+                            html!(<td>"-"</td>),
+                            html!(<td>"-"</td>),
+                        ]
+                    }
+                }
+            </tr>)
+        })
+    };
+
+    sections.push(Section {
+        title: "Layered".to_owned(),
+        content: html!(
+            <section id="s-layered">
+            <h2 >"Layered"</h2>
+            <div class="mh-table"><table>
+                <thead><tr>
+                    <th>"Name"</th>
+                    <th>"Cost"</th>
+                    <th>"Material"</th>
+                    <th>"Key monster"</th>
+                    <th>"Key item"</th>
+                    <th>"Unlock"</th>
+                </tr></thead>
+                <tbody>
+                    {layered_row(&series.head)}
+                    {layered_row(&series.chest)}
+                </tbody>
+            </table></div>
+            </section>
+        ),
     });
 
     let doc: DOMTree<String> = html!(<html lang="en">
@@ -326,6 +423,8 @@ pub fn gen_otomo_equip_list(
                             <a>"High rank"</a></li>
                         <li id="mh-armor-filter-button-mr" class="mh-armor-filter-button">
                             <a>"Master rank"</a></li>
+                        <li id="mh-armor-filter-button-layered" class="mh-armor-filter-button">
+                            <a>"Layered"</a></li>
                     </ul></div>
                     <div class="select"><select id="scombo-armor" class="mh-scombo">
                         <option value="0">"Sort by internal ID"</option>
@@ -339,11 +438,15 @@ pub fn gen_otomo_equip_list(
                                 series.series.sort_id
                             };
                             let sort_tag = format!("{index},{sort_id}");
-                            let filter = match series.series.rank {
+                            let mut filter = match series.series.rank {
                                 OtRankTypes::Lower => "lr",
                                 OtRankTypes::Upper => "hr",
                                 OtRankTypes::Master => "mr",
-                            };
+                            }.to_owned();
+                            if (series.head.is_some() && series.head.as_ref().unwrap().overwear.is_some())
+                                || (series.chest.is_some() && series.chest.as_ref().unwrap().overwear.is_some()) {
+                                filter += " layered";
+                            }
                             let series_name = gen_multi_lang(series.name);
                             html!(
                                 <li class="mh-armor-filter-item" data-sort=sort_tag data-filter={filter}>

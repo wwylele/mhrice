@@ -88,6 +88,8 @@ pub fn gen_armor_list(
                         <a>"High rank"</a></li>
                     <li id="mh-armor-filter-button-mr" class="mh-armor-filter-button">
                         <a>"Master rank"</a></li>
+                    <li id="mh-armor-filter-button-layered" class="mh-armor-filter-button">
+                        <a>"Layered"</a></li>
                 </ul></div>
                 <div class="select"><select id="scombo-armor" class="mh-scombo">
                     <option value="0">"Sort by internal ID"</option>
@@ -104,11 +106,14 @@ pub fn gen_armor_list(
                         let sort_tag = format!("{},{}",
                             series.series.armor_series.0, sort);
 
-                        let filter = match series.series.difficulty_group {
+                        let mut filter = match series.series.difficulty_group {
                             EquipDifficultyGroup::Lower => "lr",
                             EquipDifficultyGroup::Upper => "hr",
                             EquipDifficultyGroup::Master => "mr",
-                        };
+                        }.to_owned();
+                        if series.pieces.iter().any(|p|p.is_some() && p.as_ref().unwrap().overwear.is_some()) {
+                            filter += " layered";
+                        }
                         let series_name = gen_multi_lang(series.name);
                         html!(
                             <li class="mh-armor-filter-item" data-sort=sort_tag data-filter={filter}>

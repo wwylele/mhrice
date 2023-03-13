@@ -1004,6 +1004,9 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         dog_weapon: get_singleton(pak)?,
         dog_weapon_product: get_singleton(pak)?,
         ot_equip_series: get_singleton(pak)?,
+        airou_overwear: get_singleton(pak)?,
+        dog_overwear: get_singleton(pak)?,
+        ot_overwear_recipe: get_singleton(pak)?,
         airou_armor_head_name,
         airou_armor_head_explain,
         airou_armor_chest_name,
@@ -3146,6 +3149,8 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
         let entry = OtArmor {
             param: armor,
             product: armor_products.remove(&armor.id),
+            overwear: None,
+            overwear_recipe: None,
             name,
             explain,
         };
@@ -3175,6 +3180,54 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
 
     if !armor_products.is_empty() {
         bail!("Left over otomo armor product")
+    }
+
+    let mut overwear_recipe = hash_map_unique(
+        pedia
+            .ot_overwear_recipe
+            .param
+            .iter()
+            .filter(|p| p.id != OtArmorId::None),
+        |p| (p.id, p),
+        true, // crapcom please: multiple AirouHead(0)
+    )?;
+
+    for overwear in pedia
+        .airou_overwear
+        .param
+        .iter()
+        .chain(&pedia.dog_overwear.param)
+    {
+        if !overwear.is_valid || overwear.id == OtArmorId::None {
+            continue;
+        }
+        if overwear.id != overwear.relative_id {
+            bail!(
+                "Overwear ID not matching itself: {:?} vs {:?}",
+                overwear.id,
+                overwear.relative_id
+            )
+        }
+        let series = res.get_mut(&overwear.series_id).with_context(|| {
+            format!(
+                "Series {:?} not found for overwear {:?}",
+                overwear.series_id, overwear.id
+            )
+        })?;
+        let piece = match overwear.id {
+            OtArmorId::None => unreachable!(),
+            OtArmorId::AirouHead(_) | OtArmorId::DogHead(_) => &mut series.head,
+            OtArmorId::AirouChest(_) | OtArmorId::DogChest(_) => &mut series.chest,
+        };
+        let piece = piece
+            .as_mut()
+            .with_context(|| format!("OtArmor not init for overwear {:?}", overwear.id))?;
+        piece.overwear = Some(overwear);
+        piece.overwear_recipe = overwear_recipe.remove(&overwear.id);
+    }
+
+    if !overwear_recipe.is_empty() {
+        bail!("Leftover recipe {:?}", overwear_recipe)
     }
 
     Ok(res)
