@@ -181,7 +181,8 @@ macro_rules! rsz_bitflags {
         }
     ) => {
         bitflags! {
-            #[derive(Serialize)]
+            $(#[$outer_meta])*
+            #[derive(Serialize, Clone, Debug, Hash, PartialEq, Eq)]
             #[serde(into = "Vec<&'static str>")]
             pub struct $name : $base {
                 $( const $field_name = $field_value; )*
