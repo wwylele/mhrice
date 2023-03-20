@@ -1535,3 +1535,28 @@ rsz_struct! {
         pub data_list: Vec<TimeAttackRewardData>,
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.npc.QuestGroup",
+        0x24364BAE = 14_00_00,
+        0x98FC5F75 = 13_00_00,
+        0x5F8315C6 = 12_00_00,
+        0xE9A5D28D = 11_00_01,
+        0x654A07EC = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct QuestGroup {
+        pub quest_no_array: Vec<i32>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.npc.TalkConditionQuestListUserData",
+        path = "npc/userdata/common/TalkConditionQuestList.user",
+        0xB78D58EF = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct TalkConditionQuestListUserData {
+        pub quest_group: [QuestGroup; 2],
+    }
+}

@@ -900,6 +900,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         arena_quest: get_singleton(pak)?,
         quest_unlock: get_singleton(pak)?,
         time_attack_reward: get_singleton(pak)?,
+        talk_condition_quest_list: get_singleton(pak)?,
         quest_hall_msg,
         quest_hall_msg_mr,
         quest_hall_msg_mr2,
@@ -1739,6 +1740,18 @@ fn prepare_quests<'a>(
         false,
     )?;
 
+    let mr_all_clear_quest: HashSet<_> = pedia.talk_condition_quest_list.quest_group[0]
+        .quest_no_array
+        .iter()
+        .copied()
+        .collect();
+
+    let mr_all_clear_follower_quest: HashSet<_> = pedia.talk_condition_quest_list.quest_group[1]
+        .quest_no_array
+        .iter()
+        .copied()
+        .collect();
+
     let mut result = pedia
         .normal_quest_data
         .param
@@ -1882,6 +1895,9 @@ fn prepare_quests<'a>(
                     unlock: vec![],
                     random_group: None,
                     time_attack_reward,
+                    is_mr_all_clear_quest: mr_all_clear_quest.contains(&param.quest_no),
+                    is_mr_all_clear_follower_quest: mr_all_clear_follower_quest
+                        .contains(&param.quest_no),
                 },
             ))
         })

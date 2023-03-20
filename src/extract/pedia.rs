@@ -95,6 +95,7 @@ pub struct Pedia {
     pub arena_quest: ArenaQuestData,
     pub quest_unlock: QuestUnlockRequestListUserData,
     pub time_attack_reward: TimeAttackRewardUserData,
+    pub talk_condition_quest_list: TalkConditionQuestListUserData,
     pub quest_hall_msg: Msg,
     pub quest_hall_msg_mr: Msg,
     pub quest_hall_msg_mr2: Msg,
@@ -326,6 +327,9 @@ pub struct Quest<'a> {
     pub unlock: Vec<QuestUnlock<'a>>,
     pub random_group: Option<&'a RandomQuestUnlockByQuestClear>,
     pub time_attack_reward: Vec<TimeAttackReward<'a>>,
+    // TODO: how to display this?
+    pub is_mr_all_clear_quest: bool,
+    pub is_mr_all_clear_follower_quest: bool,
 }
 
 pub struct Deco<'a> {
