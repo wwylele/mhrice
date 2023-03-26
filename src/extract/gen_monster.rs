@@ -1216,7 +1216,7 @@ pub fn gen_monster(
             <section id="s-anomaly">
             <h2>"Anomaly investigation"</h2>
             <div class="mh-kvlist">
-            <p class="mh-kv"><span>"Appear at"</span>
+            <p class="mh-kv"><span>"Appear as afflicted at"</span>
             {
                 let release = rank_release.release_level_data[0].param_data.iter().find(
                     |p|p.monster_rank == random_quest.mystery_rank
@@ -1230,7 +1230,7 @@ pub fn gen_monster(
                 html!(<span>{rank}{or}{level}{none}</span>)
             }
             </p>
-            <p class="mh-kv"><span>"Appear as sub target at"</span>
+            <p class="mh-kv"><span>"Appear as normal at"</span>
             {
                 let release = rank_release.release_level_data[1].param_data.iter().find(
                     |p|p.monster_rank == random_quest.normal_rank
@@ -1244,23 +1244,23 @@ pub fn gen_monster(
                 html!(<span>{rank}{or}{level}{none}</span>)
             }
             </p>
-            <p class="mh-kv"><span>"Afflicted"</span>
+            <p class="mh-kv"><span>"Main target"</span>
                 <span>{text!("{}", random_quest.is_mystery)}</span>
             </p>
             <p class="mh-kv"><span>"Sub target"</span>
                 <span>{text!("{}", random_quest.is_enable_sub)}</span>
             </p>
-            <p class="mh-kv"><span>"Extra"</span>
+            <p class="mh-kv"><span>"Extra monster"</span>
                 <span>{text!("{}", random_quest.is_enable_extra)}</span>
             </p>
             <p class="mh-kv"><span>"Intrusion"</span>
                 <span>{text!("{}", random_quest.is_intrusion)}</span>
             </p>
-            <p class="mh-kv"><span>"Stats table as main target"</span>
+            <p class="mh-kv"><span>"Stats table as target"</span>
                 <span><a href={diff_table.as_str()}>{
                 text!("Table {}", random_quest.difficulty_table_type)}</a></span>
             </p>
-            <p class="mh-kv"><span>"Stats table as sub target"</span>
+            <p class="mh-kv"><span>"Stats table as extra"</span>
                 <span><a href={extra_diff_table.as_str()}>{
                 text!("Table {}", random_quest.difficulty_table_type_extra)}</a></span>
             </p>
