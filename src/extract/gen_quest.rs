@@ -4,6 +4,7 @@ use super::gen_hyakuryu_skill::*;
 use super::gen_item::*;
 use super::gen_map::*;
 use super::gen_monster::*;
+use super::gen_otomo::*;
 use super::gen_skill::*;
 use super::gen_weapon::*;
 use super::gen_website::*;
@@ -180,6 +181,14 @@ pub fn gen_quest_list(
                 { gen_menu(&sections) }
                 <main>
                 <header><h1>"Quests"</h1></header>
+                <div>
+                    <a href="/villager_request.html"><span class="icon-text">
+                    <span class="icon">
+                    <i class="fas fa-arrow-right"></i>
+                    </span>
+                    <span>"go to villager requests"</span>
+                    </span></a>
+                </div>
                 { sections.into_iter().map(|s|s.content) }
                 </main>
                 { right_aside() }
@@ -1580,6 +1589,312 @@ pub fn gen_quests(
                 )?
             }
         }
+    }
+
+    Ok(())
+}
+
+pub fn gen_npc_mission_tag(mission: &NpcMission) -> Box<div<String>> {
+    html!(<div>
+        <a href={format!("/villager_request/{:03}.html", mission.param.id)}>
+        {gen_multi_lang(mission.name)}
+        </a>
+    </div>)
+}
+
+pub fn gen_npc_mission_list(
+    hash_store: &HashStore,
+    pedia_ex: &PediaEx,
+    output: &impl Sink,
+) -> Result<()> {
+    let doc: DOMTree<String> = html!(
+        <html lang="en">
+            <head itemscope=true>
+                <title>{text!("Villager requests - MHRice")}</title>
+                { head_common(hash_store) }
+            </head>
+            <body>
+                { navbar() }
+                <main>
+                <header><h1>"Villager requests"</h1></header>
+                <div>
+                    <a href="/quest.html"><span class="icon-text">
+                    <span class="icon">
+                    <i class="fas fa-arrow-right"></i>
+                    </span>
+                    <span>"go to main quests"</span>
+                    </span></a>
+                </div>
+                /*<div class="select"><select id="scombo-npcmission" class="mh-scombo">
+                    <option value="0">"Sort by internal ID"</option>
+                    <option value="1">"Sort by in-game order"</option>
+                </select></div>*/ // two has the same order now
+                <ul class="mh-quest-list" id="slist-npcmission"> {
+                    pedia_ex.npc_missions.values().map(|mission|{
+                        // is the index actually the in-game order?
+                        let sort_tag = format!("{},{}", mission.param.id, mission.param.index);
+                        html!{<li data-sort=sort_tag>
+                            { gen_npc_mission_tag(mission) }
+                        </li>}
+                    })
+                }</ul>
+                </main>
+                { right_aside() }
+            </body>
+        </html>
+    );
+
+    output
+        .create_html("villager_request.html")?
+        .write_all(doc.to_string().as_bytes())?;
+
+    Ok(())
+}
+
+fn gen_npc_mission(
+    hash_store: &HashStore,
+    mission: &NpcMission,
+    pedia: &Pedia,
+    pedia_ex: &PediaEx<'_>,
+    config: &WebsiteConfig,
+    mut output: impl Write,
+    mut toc_sink: TocSink<'_>,
+) -> Result<()> {
+    toc_sink.add(mission.name);
+
+    let mut sections = vec![];
+
+    sections.push(Section {
+        title: "Description".to_owned(),
+        content: html!(
+            <section id="s-description">
+            <h2 >"Description"</h2>
+            <p><span>"Objective: "</span><span> {
+                if let Some(target) = mission.target {
+                    gen_multi_lang(target)
+                } else {
+                    html!(<span>"-"</span>)
+                }
+            }</span></p>
+            <p><span>"From: "</span><span> {
+                gen_multi_lang(mission.requester)
+            }</span></p>
+            <p><span>"Reward: "</span><span>{
+                if let Some(reward) = mission.reward {
+                    gen_multi_lang(reward)
+                } else {
+                    html!(<span>"-"</span>)
+                }
+            }</span></p>
+            <p><span>"Detail: "</span></p><div><pre>{
+                gen_multi_lang(mission.detail)
+            }</pre></div>
+            // <div>{text!("{:?}", mission.param)}</div>
+            </section>
+        ),
+    });
+
+    sections.push(Section {
+        title: "Target monster".to_owned(),
+        content: html!(
+            <section id="s-monster">
+            <h2 >"Target monster"</h2>
+            {
+                (mission.param.map_no != -1).then(||html!(
+                    <div>"Map: " {gen_map_label(mission.param.map_no, pedia) }</div>
+                ))
+            }
+            {
+                (mission.param.em_type != EmTypes::Em(0)).then(||html!(<div>
+                    {text!("{}x", mission.param.tgt_num.first().copied().unwrap_or(0))}
+                    <div class="il">{ gen_monster_tag(pedia_ex, mission.param.em_type, false, false, None, None) }</div>
+                    {match mission.param.rank {
+                            MissionRank::Any => None,
+                            MissionRank::Low => Some(text!(" (low rank)")),
+                            MissionRank::High => Some(text!(" (high rank)")),
+                            MissionRank::Master => Some(text!(" (master rank)")),
+                     }}
+                </div>))
+            }
+            </section>
+        ),
+    });
+    sections.push(Section {
+        title: "Target material".to_owned(),
+        content: html!(
+            <section id="s-material">
+            <h2 >"Target material"</h2>
+            <ul class="mh-item-list">{
+                mission.param.item_id.iter().zip(mission.param.tgt_num.iter())
+                    .filter(|&(&item, _)| item != ItemId::None)
+                    .map(|(&item, num)|{
+                    html!(<li>
+                        {text!("{}x ", num)}
+                        <div class="il">{gen_item_label_from_id(item, pedia_ex)}</div>
+                    </li>)
+                })
+                }</ul>
+            </section>
+        ),
+    });
+
+    macro_rules! check_weapon {
+        ($weapon:ident) => {{
+            let weapons = &pedia_ex.$weapon;
+            weapons
+                .weapons
+                .values()
+                .filter_map(|w| {
+                    let mut tags = vec![];
+                    if w.product
+                        .and_then(|p| pedia_ex.progress.get(&p.base.progress_flag))
+                        .map(|p| p.talk_flag)
+                        == Some(mission.param.end_flag)
+                    {
+                        tags.push(html!(<span class="tag">"Forge"</span>));
+                    }
+
+                    if w.process
+                        .and_then(|p| pedia_ex.progress.get(&p.base.progress_flag))
+                        .map(|p| p.talk_flag)
+                        == Some(mission.param.end_flag)
+                    {
+                        tags.push(html!(<span class="tag">"Upgrade"</span>));
+                    }
+
+                    if w.change
+                        .and_then(|p| pedia_ex.progress.get(&p.base.progress_flag))
+                        .map(|p| p.talk_flag)
+                        == Some(mission.param.end_flag)
+                    {
+                        tags.push(html!(<span class="tag">"Rampage layered"</span>));
+                    }
+
+                    if w.overwear
+                        .and_then(|p| pedia_ex.progress.get(&p.progress_flag))
+                        .map(|p| p.talk_flag)
+                        == Some(mission.param.end_flag)
+                    {
+                        tags.push(html!(<span class="tag">"Layered"</span>));
+                    }
+
+                    if tags.is_empty() {
+                        None
+                    } else {
+                        Some((w, tags))
+                    }
+                })
+                .map(|(w, tags)| html!(<li>{gen_weapon_label(w)}{tags}</li>))
+        }};
+    }
+
+    sections.push(Section {
+        title: "Unlock".to_owned(),
+        content: html!(
+            <section id="s-unlock">
+            <h2 >"Unlock"</h2>
+            <div>"(Not an exhaustive list)"</div>
+            <ul class="mh-item-list">
+            {check_weapon!(great_sword)}
+            {check_weapon!(short_sword)}
+            {check_weapon!(hammer)}
+            {check_weapon!(lance)}
+            {check_weapon!(long_sword)}
+            {check_weapon!(slash_axe)}
+            {check_weapon!(gun_lance)}
+            {check_weapon!(dual_blades)}
+            {check_weapon!(horn)}
+            {check_weapon!(insect_glaive)}
+            {check_weapon!(charge_axe)}
+            {check_weapon!(light_bowgun)}
+            {check_weapon!(heavy_bowgun)}
+            {check_weapon!(bow)}
+
+            {pedia_ex.armors.values().flat_map(|a|&a.pieces).flatten().filter_map(|p| {
+                let mut tags = vec![];
+                if p.product.and_then(|p|pedia_ex.progress.get(&p.progress_flag)).map(|p|p.talk_flag)
+                    == Some(mission.param.end_flag) {
+                    tags.push(html!(<span class="tag">"Crafting"</span>))
+                }
+                if p.overwear_product.and_then(|p|pedia_ex.progress.get(&p.progress_flag)).map(|p|p.talk_flag)
+                    == Some(mission.param.end_flag) {
+                    tags.push(html!(<span class="tag">"Layered"</span>))
+                }
+                if tags.is_empty() {
+                    None
+                } else {
+                    Some((p, tags))
+                }
+            }).map(|(p, tags)|html!(<li>
+                <a class="il" href={format!("/armor/{:03}.html", p.data.series.0)}>
+                {gen_armor_label(Some(p))}
+                </a>
+            {tags}</li>))}
+
+            {pedia_ex.ot_equip.values().filter(|ot|pedia_ex.progress.get(&ot.series.unlock_progress).map(|p|p.talk_flag)
+                == Some(mission.param.end_flag)).flat_map(|ot| {
+                    let mut items = vec![];
+                    let href = format!("/otomo/{}.html", ot.series.id.to_tag());
+                    if let Some(weapon) = &ot.weapon {
+                        items.push(html!(<li><a href={&href}>{gen_atomo_weapon_label(weapon)}</a></li>))
+                    }
+                    if let Some(head) = &ot.head {
+                        items.push(html!(<li><a href={&href}>{gen_atomo_armor_label(head)}</a></li>))
+                    }
+                    if let Some(chest) = &ot.chest {
+                        items.push(html!(<li><a href={&href}>{gen_atomo_armor_label(chest)}</a></li>))
+                    }
+                    items
+                })
+            }
+            </ul>
+            </section>
+        ),
+    });
+
+    let plain_title = format!("Villager request {:03}", mission.param.id);
+    let doc: DOMTree<String> = html!(
+        <html lang="en">
+            <head itemscope=true>
+                <title>{text!("{}", plain_title)}</title>
+                { head_common(hash_store) }
+                { title_multi_lang(mission.name)}
+                { open_graph(Some(mission.name), &plain_title,
+                    Some(mission.detail), "", None, toc_sink.path(), config) }
+            </head>
+            <body>
+                { navbar() }
+                { gen_menu(&sections) }
+                <main>
+                <header class="mh-quest-header">
+                    <h1> { gen_multi_lang(mission.name) } </h1>
+                </header>
+
+                { sections.into_iter().map(|s|s.content) }
+
+                </main>
+                { right_aside() }
+            </body>
+        </html>
+    );
+
+    output.write_all(doc.to_string().as_bytes())?;
+    Ok(())
+}
+
+pub fn gen_npc_missions(
+    hash_store: &HashStore,
+    pedia: &Pedia,
+    pedia_ex: &PediaEx<'_>,
+    config: &WebsiteConfig,
+    output: &impl Sink,
+    toc: &mut Toc,
+) -> Result<()> {
+    let mission_path = output.sub_sink("villager_request")?;
+    for mission in pedia_ex.npc_missions.values() {
+        let (path, toc_sink) =
+            mission_path.create_html_with_toc(&format!("{:03}.html", mission.param.id), toc)?;
+        gen_npc_mission(hash_store, mission, pedia, pedia_ex, config, path, toc_sink)?;
     }
 
     Ok(())

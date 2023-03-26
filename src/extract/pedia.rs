@@ -96,6 +96,8 @@ pub struct Pedia {
     pub quest_unlock: QuestUnlockRequestListUserData,
     pub time_attack_reward: TimeAttackRewardUserData,
     pub talk_condition_quest_list: TalkConditionQuestListUserData,
+    pub npc_mission: NPCMissionDataListLrHr,
+    pub npc_mission_mr: NPCMissionDataListMr,
     pub quest_hall_msg: Msg,
     pub quest_hall_msg_mr: Msg,
     pub quest_hall_msg_mr2: Msg,
@@ -104,6 +106,8 @@ pub struct Pedia {
     pub quest_tutorial_msg: Msg,
     pub quest_arena_msg: Msg,
     pub quest_dlc_msg: Msg,
+    pub npc_mission_msg: Msg,
+    pub npc_mission_msg_mr: Msg,
 
     pub armor: ArmorBaseUserData,
     pub armor_series: ArmorSeriesUserData,
@@ -332,6 +336,15 @@ pub struct Quest<'a> {
     pub is_mr_all_clear_follower_quest: bool,
 }
 
+pub struct NpcMission<'a> {
+    pub param: &'a NPCMissionData,
+    pub name: &'a MsgEntry,
+    pub requester: &'a MsgEntry,
+    pub detail: &'a MsgEntry,
+    pub target: Option<&'a MsgEntry>,
+    pub reward: Option<&'a MsgEntry>,
+}
+
 pub struct Deco<'a> {
     pub data: &'a DecorationsBaseUserDataParam,
     pub product: &'a DecorationsProductUserDataParam,
@@ -545,6 +558,7 @@ pub struct PediaEx<'a> {
     pub sizes: HashMap<EmTypes, &'a SizeInfo>,
     pub size_dists: HashMap<i32, &'a [ScaleAndRateData]>,
     pub quests: BTreeMap<i32, Quest<'a>>,
+    pub npc_missions: BTreeMap<i32, NpcMission<'a>>,
     pub skills: BTreeMap<PlEquipSkillId, Skill<'a>>,
     pub hyakuryu_skills: BTreeMap<PlHyakuryuSkillId, HyakuryuSkill<'a>>,
     pub armors: BTreeMap<PlArmorSeriesTypes, ArmorSeries<'a>>,

@@ -121,9 +121,19 @@ pub fn navbar() -> Box<nav<String>> {
                 <a class="navbar-item" href="/monster.html">
                     "Monsters"
                 </a>
-                <a class="navbar-item" href="/quest.html">
+
+                <a class="navbar-item navbar-folded" href="/quest.html">
                     "Quests"
                 </a>
+                <div class="navbar-item has-dropdown is-hoverable navbar-expanded">
+                <a class="navbar-link" href="/quest.html">
+                    "Quests"
+                </a>
+                <div class="navbar-dropdown">
+                    <a class="navbar-item" href="/quest.html">"Main quests"</a>
+                    <a class="navbar-item" href="/villager_request.html">"Villager requests"</a>
+                </div>
+                </div>
 
                 <a class="navbar-item navbar-folded" href="/skill.html">
                     "Skills"
@@ -680,6 +690,8 @@ pub fn gen_website(
     gen_part_color_css(hash_store, output)?;
     gen_quests(hash_store, pedia, pedia_ex, config, output, &mut toc)?;
     gen_quest_list(hash_store, &pedia_ex.quests, output)?;
+    gen_npc_missions(hash_store, pedia, pedia_ex, config, output, &mut toc)?;
+    gen_npc_mission_list(hash_store, pedia_ex, output)?;
     gen_skills(hash_store, pedia_ex, config, output, &mut toc)?;
     gen_skill_list(hash_store, &pedia_ex.skills, output)?;
     gen_hyakuryu_skills(hash_store, pedia_ex, config, output, &mut toc)?;

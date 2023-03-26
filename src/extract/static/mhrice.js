@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
     change_sort("monster", 1);
     change_sort("item", 1);
     change_sort("armor", 1);
+    //change_sort("npcmission", 1);
 
     initFilter("map");
     initFilter("item");

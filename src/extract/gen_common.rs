@@ -221,7 +221,16 @@ pub fn gen_progress(progress_flag: i32, pedia_ex: &PediaEx) -> Box<div<String>> 
         }
     }
     if progress.talk_flag != -1 {
-        flags.push(html!(<div>{text!("NPC:{}", progress.talk_flag)}</div>));
+        // TODO: fast search
+        if let Some(mission) = pedia_ex
+            .npc_missions
+            .values()
+            .find(|m| m.param.end_flag == progress.talk_flag)
+        {
+            flags.push(gen_npc_mission_tag(mission))
+        } else {
+            flags.push(html!(<div>{text!("NPC:{}", progress.talk_flag)}</div>));
+        }
     }
     if progress.enable_progress_hr_check {
         flags.push(html!(<div>{text!("Check:{:?}", progress.progress_hr)}</div>));

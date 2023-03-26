@@ -702,7 +702,9 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         TimeAttackRewardData,
         TimeAttackRewardUserData,
         QuestGroup,
-        TalkConditionQuestListUserData
+        TalkConditionQuestListUserData,
+        NPCMissionData,
+        NPCMissionDataList,
     );
 
     r!(

@@ -563,6 +563,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let quest_tutorial_msg = get_msg(pak, "Message/Quest/QuestData_Tutorial.msg")?;
     let quest_arena_msg = get_msg(pak, "Message/Quest/QuestData_Arena.msg")?;
     let quest_dlc_msg = get_msg(pak, "Message/Quest/QuestData_Dlc.msg")?;
+    let npc_mission_msg = get_msg(pak, "Message/Quest/QuestData_NpcMission.msg")?;
+    let npc_mission_msg_mr = get_msg(pak, "Message/Quest/QuestData_NpcMission_MR.msg")?;
 
     let armor_head_name_msg = get_msg(pak, "data/Define/Player/Armor/Head/A_Head_Name.msg")?;
     let armor_chest_name_msg = get_msg(pak, "data/Define/Player/Armor/Chest/A_Chest_Name.msg")?;
@@ -901,6 +903,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         quest_unlock: get_singleton(pak)?,
         time_attack_reward: get_singleton(pak)?,
         talk_condition_quest_list: get_singleton(pak)?,
+        npc_mission: get_singleton(pak)?,
+        npc_mission_mr: get_singleton(pak)?,
         quest_hall_msg,
         quest_hall_msg_mr,
         quest_hall_msg_mr2,
@@ -909,6 +913,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         quest_tutorial_msg,
         quest_arena_msg,
         quest_dlc_msg,
+        npc_mission_msg,
+        npc_mission_msg_mr,
         armor: get_singleton(pak)?,
         armor_series: get_singleton(pak)?,
         armor_product: get_singleton(pak)?,
@@ -3801,6 +3807,56 @@ fn prepare_bbq<'a>(
     Ok(result)
 }
 
+fn prepare_npc_mission(pedia: &'_ Pedia) -> Result<BTreeMap<i32, NpcMission<'_>>> {
+    let mut result: BTreeMap<i32, NpcMission> = BTreeMap::new();
+
+    let all_msg = pedia
+        .npc_mission_msg
+        .entries
+        .iter()
+        .chain(&pedia.npc_mission_msg_mr.entries);
+
+    let all_msg = hash_map_unique(all_msg, |e| (&e.name, e), false)?;
+
+    for param in pedia
+        .npc_mission
+        .param
+        .iter()
+        .chain(&pedia.npc_mission_mr.param)
+    {
+        let tag = format!("NSQ{:03}", param.id);
+        let name_tag = format!("{tag}_01");
+        let requester_tag = format!("{tag}_02");
+        let detail_tag = format!("{tag}_03");
+        let reward_tag = format!("{tag}_04");
+        let target_tag = format!("{tag}_09");
+        let name = *all_msg
+            .get(&name_tag)
+            .with_context(|| format!("{name_tag} not found"))?;
+        let requester = *all_msg
+            .get(&requester_tag)
+            .with_context(|| format!("{requester_tag} not found"))?;
+        let detail = *all_msg
+            .get(&detail_tag)
+            .with_context(|| format!("{detail_tag} not found"))?;
+        let reward = all_msg.get(&reward_tag).copied();
+        let target = all_msg.get(&target_tag).copied();
+        let mission = NpcMission {
+            param,
+            name,
+            requester,
+            detail,
+            target,
+            reward,
+        };
+        if result.insert(param.id, mission).is_some() {
+            bail!("duplicate NPC mission {}", param.id)
+        }
+    }
+
+    Ok(result)
+}
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     let monster_order = pedia
         .monster_list
@@ -3863,6 +3919,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         sizes: prepare_size_map(&pedia.size_list)?,
         size_dists: prepare_size_dist_map(&pedia.random_scale)?,
         quests: prepare_quests(pedia, &reward_lot)?,
+        npc_missions: prepare_npc_mission(pedia)?,
         skills: prepare_skills(pedia)?,
         hyakuryu_skills: prepare_hyakuryu_skills(pedia)?,
         armors: prepare_armors(pedia)?,
