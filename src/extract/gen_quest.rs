@@ -77,6 +77,11 @@ pub fn gen_quest_tag(
                 ||html!(<span class="tag mh-quest-follower">{text!("Survey")}</span>)
             )
         }
+        {
+            quest.param.is_from_npc.then(
+                ||html!(<span class="tag mh-quest-npc">{text!("NPC")}</span>)
+            )
+        }
         {quest.name.map_or(
             html!(<span>{text!("Quest {:06}", quest.param.quest_no)}</span>),
             gen_multi_lang
@@ -1437,6 +1442,11 @@ fn gen_quest(
                     {
                         quest.param.is_kingdom().then(
                             ||html!(<span class="tag mh-quest-follower">{text!("Survey")}</span>)
+                        )
+                    }
+                    {
+                        quest.param.is_from_npc.then(
+                            ||html!(<span class="tag mh-quest-npc">{text!("NPC")}</span>)
                         )
                     }
                     {
