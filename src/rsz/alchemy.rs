@@ -51,7 +51,7 @@ rsz_struct! {
         pub require_talisman_num: u32,
         pub output_min_num: u32,
         pub output_max_num: u32,
-        pub cheat_check_priority: Versioned<u32, 13_00_00, 0xFFFFFFFF>,
+        pub cheat_check_priority: Versioned<u32, 13_00_00>,
     }
 }
 

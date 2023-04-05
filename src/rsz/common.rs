@@ -480,7 +480,7 @@ impl<T> Deref for Flatten<T> {
 
 #[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[serde(transparent)]
-pub struct Versioned<T, const MIN: u32, const MAX: u32>(pub Option<T>);
+pub struct Versioned<T, const MIN: u32, const MAX: u32 = 0xFFFFFFFF>(pub Option<T>);
 
 impl<T: FieldFromRsz, const MIN: u32, const MAX: u32> FieldFromRsz for Versioned<T, MIN, MAX> {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
@@ -594,6 +594,16 @@ impl FieldFromRsz for Vec3 {
         let v = rsz.read_f32vec3()?;
         rsz.cursor.seek_align_up(16)?;
         Ok(v)
+    }
+}
+
+impl FieldFromRsz for IVec3 {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.cursor.seek_align_up(4)?;
+        let x = rsz.read_i32()?;
+        let y = rsz.read_i32()?;
+        let z = rsz.read_i32()?;
+        Ok(vec3(x, y, z))
     }
 }
 

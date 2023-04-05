@@ -1,4 +1,5 @@
 use super::gen_common::*;
+use super::gen_dlc::*;
 use super::gen_item::*;
 use super::gen_monster::*;
 use super::gen_skill::*;
@@ -539,6 +540,54 @@ fn gen_armor(
                 </section>
             ),
         });
+    }
+
+    let dlc: Vec<(&Dlc, bool, bool)> = pedia_ex
+        .dlc
+        .values()
+        .filter_map(|dlc| {
+            if let Some(add) = dlc.add {
+                let is_normal = add.pl_armor_list.iter().any(|&id| {
+                    series
+                        .pieces
+                        .iter()
+                        .flatten()
+                        .any(|a| a.data.pl_armor_id == id)
+                });
+
+                let is_layered = add.pl_overwear_id_list.iter().any(|&id| {
+                    series
+                        .pieces
+                        .iter()
+                        .flatten()
+                        .any(|a| a.overwear.map(|ow| ow.id) == Some(id))
+                });
+
+                if is_normal || is_layered {
+                    Some((dlc, is_normal, is_layered))
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    if !dlc.is_empty() {
+        sections.push(Section {
+            title: "DLC".to_owned(),
+            content: html!(<section id="s-dlc">
+            <h2 >"DLC"</h2>
+            <ul class="mh-item-list">
+            {dlc.into_iter().map(|(dlc, is_normal, is_layered)| html!(<li>
+                {gen_dlc_label(dlc)}
+                {is_normal.then(||html!(<span class="tag">"Normal"</span>))}
+                {is_layered.then(||html!(<span class="tag">"Layered"</span>))}
+            </li>))}
+            </ul>
+            </section>),
+        })
     }
 
     sections.push(Section {

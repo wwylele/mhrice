@@ -1,4 +1,5 @@
 use super::gen_common::*;
+use super::gen_dlc::*;
 use super::gen_item::*;
 use super::gen_monster::*;
 use super::gen_website::*;
@@ -187,6 +188,43 @@ fn gen_otomo_equip(
             </section>
         ),
     });
+
+    let dlc: Vec<&Dlc> = pedia_ex
+        .dlc
+        .values()
+        .filter(|dlc| {
+            if let Some(add) = dlc.add {
+                if let Some(id) = series.head.as_ref().and_then(|p| p.overwear).map(|p| p.id) {
+                    if add.ot_overwear_id_list.contains(&id) {
+                        return true;
+                    }
+                }
+                if let Some(id) = series.chest.as_ref().and_then(|p| p.overwear).map(|p| p.id) {
+                    if add.ot_overwear_id_list.contains(&id) {
+                        return true;
+                    }
+                }
+                false
+            } else {
+                false
+            }
+        })
+        .collect();
+
+    if !dlc.is_empty() {
+        sections.push(Section {
+            title: "DLC".to_owned(),
+            content: html!(<section id="s-dlc">
+            <h2 >"DLC"</h2>
+            <ul class="mh-item-list">
+            {dlc.into_iter().map(|dlc| html!(<li>
+                {gen_dlc_label(dlc)}
+                <span class="tag">"Layered"</span>
+            </li>))}
+            </ul>
+            </section>),
+        })
+    }
 
     let three_item_condition = |ty: EvaluationTypeFor3Argument, item: &[ItemId]| {
         let item0 = item.get(0).filter(|&&i| i != ItemId::None);

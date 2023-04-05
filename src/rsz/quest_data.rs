@@ -571,7 +571,7 @@ rsz_struct! {
         pub zako_multi: u8,
         pub route_no: Vec<u8>,
         pub init_set_name: Vec<String>,
-        pub sub_type_v11: Versioned<Vec<u8>, 11_00_01, 0xFFFFFFFF>,
+        pub sub_type_v11: Versioned<Vec<u8>, 11_00_01>,
         pub individual_type: Vec<EnemyIndividualType>,
         pub sub_type: Versioned<Vec<u8>, 10_00_00, 10_99_99>,
         pub vital_tbl: Vec<u16>,
@@ -1043,9 +1043,9 @@ rsz_struct! {
         pub item_num: u32,
         pub quest_reward_table_index: u32,
         pub additional_quest_reward_table_index: Vec<u32>,
-        pub special_quest_reward_table_index: Versioned<u32, 11_00_01, 0xFFFFFFFF>,
-        pub multiple_target_reward_table_index: Versioned<u32, 11_00_01, 0xFFFFFFFF>,
-        pub multiple_fix_reward_table_index: Versioned<u32, 11_00_01, 0xFFFFFFFF>,
+        pub special_quest_reward_table_index: Versioned<u32, 11_00_01>,
+        pub multiple_target_reward_table_index: Versioned<u32, 11_00_01>,
+        pub multiple_fix_reward_table_index: Versioned<u32, 11_00_01>,
     }
 }
 

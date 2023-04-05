@@ -823,6 +823,7 @@ fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
                 <a href="/misc/argosy.html">"Argosy"</a>
                 <a href="/misc/meowcenaries.html">"Meowcenaries"</a>
                 <a href="/misc/scraps.html">"Trade for scraps"</a>
+                <a href="/dlc.html">"DLC"</a>
                 </div>
                 </main>
                 { right_aside() }

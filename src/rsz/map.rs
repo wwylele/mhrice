@@ -754,7 +754,7 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct StageSceneLoader {
         pub enabled: bool,
-        pub stop_on_ready: Versioned<bool, 13_00_00, 0xFFFFFFFF>,
+        pub stop_on_ready: Versioned<bool, 13_00_00>,
         pub target_scene_names: Vec<String>,
     }
 }
@@ -959,7 +959,7 @@ rsz_struct! {
     pub struct QuestAreaMovePopMarker {
         pub base: ObjectPopMarker,
         pub area_move_infos: Vec<AreaMoveInfo>,
-        pub reset_delay_time: Versioned<f32, 13_00_00, 0xFFFFFFFF>,
+        pub reset_delay_time: Versioned<f32, 13_00_00>,
         pub mr_area_move_set_pos: Vec3,
         pub mr_area_move_set_angle: Quat,
         pub mr_area_move_offset_pos: Vec<Vec3>,
@@ -989,9 +989,9 @@ rsz_struct! {
     pub struct StageObjectStateController {
         pub enabled: bool,
         pub data: ExternUser<()>, // snow.stage.StageObjectStateUserData
-        pub is_apply_all_targets: Versioned<bool, 13_00_00, 0xFFFFFFFF>,
+        pub is_apply_all_targets: Versioned<bool, 13_00_00>,
         pub targets: Vec<StageObjectStateControllerTargetObject>,
-        pub target_object_names: Versioned<Vec<String>, 13_00_00, 0xFFFFFFFF>,
+        pub target_object_names: Versioned<Vec<String>, 13_00_00>,
     }
 }
 
@@ -1047,7 +1047,7 @@ rsz_struct! {
     pub struct EffectFollowTarget {
         pub key: String,
         pub key_hash: u32,
-        pub target_type: Versioned<i32, 13_00_00, 0xFFFFFFFF>, // snow.stage.StageObjectEffectController.TargetType
+        pub target_type: Versioned<i32, 13_00_00>, // snow.stage.StageObjectEffectController.TargetType
         pub game_object: Guid,
     }
 }

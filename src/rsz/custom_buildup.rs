@@ -78,9 +78,9 @@ rsz_struct! {
         pub rare: RareTypes,
         pub material_category: MaterialCategory,
         pub material_category_num: u32,
-        pub material_category_num_def: Versioned<u32, 13_00_00, 0xFFFFFFFF>,
-        pub material_category_num_skill: Versioned<u32, 13_00_00, 0xFFFFFFFF>,
-        pub material_category_num_slot: Versioned<u32, 13_00_00, 0xFFFFFFFF>,
+        pub material_category_num_def: Versioned<u32, 13_00_00>,
+        pub material_category_num_skill: Versioned<u32, 13_00_00>,
+        pub material_category_num_slot: Versioned<u32, 13_00_00>,
         pub price: u32,
     }
 }

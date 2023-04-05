@@ -1,4 +1,5 @@
 use super::gen_common::*;
+use super::gen_dlc::*;
 use super::gen_hyakuryu_skill::*;
 use super::gen_item::*;
 use super::gen_monster::*;
@@ -582,6 +583,50 @@ where
         })
     };
 
+    let dlc: Vec<(&Dlc, bool, bool)> = pedia_ex
+        .dlc
+        .values()
+        .filter_map(|dlc| {
+            if let Some(add) = dlc.add {
+                let is_normal = add.pl_weapon_list.contains(&main.id);
+
+                let is_layered = if let Some(ow) = weapon.overwear {
+                    add.pl_overwear_weapon_id_list
+                        .0
+                        .as_deref()
+                        .unwrap_or_default()
+                        .contains(&ow.id)
+                } else {
+                    false
+                };
+
+                if is_normal || is_layered {
+                    Some((dlc, is_normal, is_layered))
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    if !dlc.is_empty() {
+        sections.push(Section {
+            title: "DLC".to_owned(),
+            content: html!(<section id="s-dlc">
+            <h2 >"DLC"</h2>
+            <ul class="mh-item-list">
+            {dlc.into_iter().map(|(dlc, is_normal, is_layered)| html!(<li>
+                {gen_dlc_label(dlc)}
+                {is_normal.then(||html!(<span class="tag">"Normal"</span>))}
+                {is_layered.then(||html!(<span class="tag">"Layered"</span>))}
+            </li>))}
+            </ul>
+            </section>),
+        })
+    }
+
     sections.push(Section {
         title: "Crafting".to_owned(),
         content: html!(<section id="s-crafting">
@@ -631,7 +676,7 @@ where
                     gen_craft_row(pedia_ex, html!(<td>"As layered (rampage weapon)"</td>), None,
                         &change.base, None)
                 })}
-                {weapon.overwear.as_ref().map(|data| {
+                {weapon.overwear_product.as_ref().map(|data| {
                     let category = gen_category(pedia_ex, data.material_category, data.material_category_num);
                     let materials = gen_materials(pedia_ex, &data.item, &data.item_num, &[data.item_flag]);
                     html!(<tr>
@@ -833,7 +878,7 @@ where
             if weapon.children.is_empty() {
                 filter_tags.push("final");
             }
-            if weapon.overwear.is_some() {
+            if weapon.overwear_product.is_some() {
                 filter_tags.push("layer");
             }
             if weapon.change.is_some() {
@@ -965,6 +1010,20 @@ where
                     root
                 }
                 </div>
+
+                <section>
+                <h2>"Other"</h2>
+                <ul class="mh-item-list">
+                {
+                    weapon_tree.unpositioned.iter().map(|w| {
+                        html!(<li class="il">{
+                            gen_weapon_label(&weapon_tree.weapons[w])
+                        }</li>)
+                    })
+                }
+                </ul>
+                </section>
+
                 </main>
                 { right_aside() }
             </body>

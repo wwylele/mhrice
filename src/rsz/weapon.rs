@@ -190,8 +190,8 @@ rsz_struct! {
         pub hyakuryu_skill_id_list: Vec<PlHyakuryuSkillId>,
         pub slot_num_list: [u32; 4],
         pub hyakuryu_slot_num_list: [u32; 3],
-        pub custom_table_no: Versioned<u32, 11_00_01, 0xFFFFFFFF>,
-        pub custom_cost: Versioned<u32, 11_00_01, 0xFFFFFFFF>,
+        pub custom_table_no: Versioned<u32, 11_00_01>,
+        pub custom_cost: Versioned<u32, 11_00_01>,
     }
 }
 

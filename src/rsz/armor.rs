@@ -314,7 +314,7 @@ rsz_struct! {
         pub lv_up_rate: i32,
         pub up_val: i32,
         pub cost: i32,
-        pub max_cost: Versioned<i32, 13_00_00, 0xFFFFFFFF>,
+        pub max_cost: Versioned<i32, 13_00_00>,
     }
 }
 

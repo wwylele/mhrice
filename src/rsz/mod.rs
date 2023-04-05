@@ -9,6 +9,7 @@ mod condition_damage_preset;
 mod custom_buildup;
 mod data_base;
 mod data_tune;
+mod dlc;
 mod facility;
 mod item;
 mod lot;
@@ -34,6 +35,7 @@ pub use condition_damage_preset::*;
 pub use custom_buildup::*;
 pub use data_base::*;
 pub use data_tune::*;
+pub use dlc::*;
 pub use facility::*;
 pub use item::*;
 pub use lot::*;
@@ -1033,6 +1035,16 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         OtomoSpyUnitGridUserData,
         OffcutsItemConvertTableParam,
         OffcutsItemConvertTable
+    );
+
+    r!(
+        CustomBuildupResult,
+        SymbolColorData,
+        EquipmentInventoryData,
+        AddDataInfo,
+        DlcAddUserData,
+        DlcData,
+        DlcListUserData,
     );
 
     m

@@ -1,5 +1,6 @@
 use super::gen_armor::*;
 use super::gen_common::*;
+use super::gen_dlc::*;
 use super::gen_hyakuryu_skill::*;
 use super::gen_item::*;
 use super::gen_map::*;
@@ -218,6 +219,7 @@ pub fn navbar() -> Box<nav<String>> {
                     <a class="navbar-item" href="/misc/argosy.html">"Argosy"</a>
                     <a class="navbar-item" href="/misc/meowcenaries.html">"Meowcenaries"</a>
                     <a class="navbar-item" href="/misc/scraps.html">"Trade for scraps"</a>
+                    <a class="navbar-item" href="/dlc.html">"DLC"</a>
                 </div>
                 </div>
             </div>
@@ -709,6 +711,8 @@ pub fn gen_website(
     gen_about(hash_store, output)?;
     gen_search(hash_store, output)?;
     gen_misc(hash_store, pedia, pedia_ex, output, &mut toc)?;
+    gen_dlc_list(hash_store, pedia_ex, output)?;
+    gen_dlcs(hash_store, pedia, pedia_ex, config, output, &mut toc)?;
     toc.finalize(&output.sub_sink("tocv2")?)?;
     Ok(())
 }

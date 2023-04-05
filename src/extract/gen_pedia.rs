@@ -859,6 +859,11 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         "data/System/ContentsIdSystem/LvBuffCage/Normal/LvBuffCage_Explain.msg",
     )?;
 
+    let dlc_name = get_msg(pak, "Message/DLC/DLC_Name.msg")?;
+    let dlc_name_mr = get_msg(pak, "Message/DLC/DLC_Name_MR.msg")?;
+    let dlc_explain = get_msg(pak, "Message/DLC/DLC_Explain.msg")?;
+    let dlc_explain_mr = get_msg(pak, "Message/DLC/DLC_Explain_MR.msg")?;
+
     Ok(Pedia {
         monsters,
         small_monsters,
@@ -1079,6 +1084,13 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         trade: get_singleton(pak)?,
         spy: get_singleton(pak)?,
         offcut_convert: get_singleton(pak)?,
+
+        dlc: get_singleton(pak)?,
+        dlc_add: get_singleton(pak)?,
+        dlc_name,
+        dlc_name_mr,
+        dlc_explain,
+        dlc_explain_mr,
     })
 }
 
@@ -2699,19 +2711,15 @@ where
             .remove(&explain_tag)
             .or_else(|| explain_map_mr.remove(&explain_tag));
 
-        let overwear = if let Some(overwear) = overwear_map.get(&id) {
-            if let Some(product) = overwear_product_map.get(&overwear.id) {
-                Some(*product)
+        let (overwear, overwear_product) = if let Some(&overwear) = overwear_map.get(&id) {
+            if let Some(&product) = overwear_product_map.get(&overwear.id) {
+                (Some(overwear), Some(product))
             } else {
                 // This happens for DLC layered
-                eprintln!(
-                    "Overwear product not found for weapon {:?}, overwear{}",
-                    id, overwear.id
-                );
-                None
+                (Some(overwear), None)
             }
         } else {
-            None
+            (None, None)
         };
 
         let weapon = Weapon {
@@ -2720,6 +2728,7 @@ where
             change: change_map.remove(&id),
             process: process_map.remove(&id),
             overwear,
+            overwear_product,
             name,
             explain,
             children: vec![],
@@ -3857,6 +3866,52 @@ fn prepare_npc_mission(pedia: &'_ Pedia) -> Result<BTreeMap<i32, NpcMission<'_>>
     Ok(result)
 }
 
+pub fn prepare_dlc(pedia: &'_ Pedia) -> Result<BTreeMap<i32, Dlc<'_>>> {
+    let mut result = BTreeMap::new();
+
+    let mut dlc_adds = hash_map_unique(
+        pedia
+            .dlc_add
+            .add_data_info_list
+            .iter()
+            .filter(|p| p.dlc_id != 0 && p.slc_id == SaveLinkContents::Invalid),
+        |p| (p.dlc_id, p),
+        true, // crapcom: there seems to be duplicated identical stuff...
+    )?;
+
+    let names = pedia.dlc_name.get_name_map();
+    let names_mr = pedia.dlc_name_mr.get_name_map();
+    let explains = pedia.dlc_explain.get_name_map();
+    let explains_mr = pedia.dlc_explain_mr.get_name_map();
+
+    for dlc in &pedia.dlc.data_list {
+        let add = dlc_adds.remove(&dlc.dlc_id);
+        let name = names
+            .get(&dlc.title_msg_id)
+            .or_else(|| names_mr.get(&dlc.title_msg_id))
+            .cloned();
+        let explain = explains
+            .get(&dlc.explain_msg_id)
+            .or_else(|| explains_mr.get(&dlc.explain_msg_id))
+            .cloned();
+        let entry = Dlc {
+            data: dlc,
+            add,
+            name,
+            explain,
+        };
+        if result.insert(dlc.dlc_id, entry).is_some() {
+            bail!("duplicate dlc {}", dlc.dlc_id)
+        }
+    }
+
+    if !dlc_adds.is_empty() {
+        bail!("Leftover dlc add: {:?}", dlc_adds)
+    }
+
+    Ok(result)
+}
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     let monster_order = pedia
         .monster_list
@@ -3960,5 +4015,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         buff_cage: prepare_buff_cage(pedia)?,
         item_shop_lot: prepare_item_shop_lot(pedia, &reward_lot)?,
         bbq: prepare_bbq(pedia, &reward_lot)?,
+
+        dlc: prepare_dlc(pedia)?,
     })
 }

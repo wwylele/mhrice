@@ -292,6 +292,13 @@ pub struct Pedia {
 
     pub spy: OtomoSpyUnitGridUserData,
     pub offcut_convert: OffcutsItemConvertTable,
+
+    pub dlc: DlcListUserData,
+    pub dlc_add: DlcAddUserData,
+    pub dlc_name: Msg,
+    pub dlc_name_mr: Msg,
+    pub dlc_explain: Msg,
+    pub dlc_explain_mr: Msg,
 }
 
 pub struct QuestReward<'a> {
@@ -428,7 +435,8 @@ pub struct Weapon<'a, Param> {
     pub product: Option<&'a WeaponProductUserDataParam>,
     pub change: Option<&'a WeaponChangeUserDataParam>,
     pub process: Option<&'a WeaponProcessUserDataParam>,
-    pub overwear: Option<&'a OverwearWeaponProductUserDataParam>,
+    pub overwear: Option<&'a OverwearWeaponBaseUserDataParam>,
+    pub overwear_product: Option<&'a OverwearWeaponProductUserDataParam>,
     pub name: &'a MsgEntry,
     pub explain: Option<&'a MsgEntry>,
     pub children: Vec<WeaponId>,
@@ -553,6 +561,13 @@ pub struct BbqData<'a> {
     pub table: Option<&'a RewardIdLotTableUserDataParam>,
 }
 
+pub struct Dlc<'a> {
+    pub data: &'a DlcData,
+    pub add: Option<&'a AddDataInfo>,
+    pub name: Option<&'a MsgEntry>,
+    pub explain: Option<&'a MsgEntry>,
+}
+
 pub struct PediaEx<'a> {
     pub monsters: BTreeMap<EmTypes, MonsterEx<'a>>,
     pub sizes: HashMap<EmTypes, &'a SizeInfo>,
@@ -602,4 +617,6 @@ pub struct PediaEx<'a> {
     pub buff_cage: BTreeMap<LvBuffCageId, BuffCage<'a>>,
     pub item_shop_lot: Vec<ItemShopLot<'a>>,
     pub bbq: Vec<BbqData<'a>>,
+
+    pub dlc: BTreeMap<i32, Dlc<'a>>,
 }

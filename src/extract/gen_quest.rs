@@ -1780,7 +1780,7 @@ fn gen_npc_mission(
                         tags.push(html!(<span class="tag">"Rampage layered"</span>));
                     }
 
-                    if w.overwear
+                    if w.overwear_product
                         .and_then(|p| pedia_ex.progress.get(&p.progress_flag))
                         .map(|p| p.talk_flag)
                         == Some(mission.param.end_flag)
