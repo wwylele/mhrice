@@ -295,6 +295,7 @@ pub struct Pedia {
 
     pub dlc: DlcListUserData,
     pub dlc_add: DlcAddUserData,
+    pub item_pack: ItemPackUserData,
     pub dlc_name: Msg,
     pub dlc_name_mr: Msg,
     pub dlc_explain: Msg,
@@ -564,6 +565,7 @@ pub struct BbqData<'a> {
 pub struct Dlc<'a> {
     pub data: &'a DlcData,
     pub add: Option<&'a AddDataInfo>,
+    pub item_pack: Option<&'a ItemPackParam>,
     pub name: Option<&'a MsgEntry>,
     pub explain: Option<&'a MsgEntry>,
 }

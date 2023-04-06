@@ -1087,6 +1087,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
 
         dlc: get_singleton(pak)?,
         dlc_add: get_singleton(pak)?,
+        item_pack: get_singleton(pak)?,
         dlc_name,
         dlc_name_mr,
         dlc_explain,
@@ -3879,6 +3880,8 @@ pub fn prepare_dlc(pedia: &'_ Pedia) -> Result<BTreeMap<i32, Dlc<'_>>> {
         true, // crapcom: there seems to be duplicated identical stuff...
     )?;
 
+    let mut item_pack = hash_map_unique(&pedia.item_pack.param, |p| (p.dlc_id, p), false)?;
+
     let names = pedia.dlc_name.get_name_map();
     let names_mr = pedia.dlc_name_mr.get_name_map();
     let explains = pedia.dlc_explain.get_name_map();
@@ -3886,6 +3889,7 @@ pub fn prepare_dlc(pedia: &'_ Pedia) -> Result<BTreeMap<i32, Dlc<'_>>> {
 
     for dlc in &pedia.dlc.data_list {
         let add = dlc_adds.remove(&dlc.dlc_id);
+        let item_pack = item_pack.remove(&dlc.dlc_id);
         let name = names
             .get(&dlc.title_msg_id)
             .or_else(|| names_mr.get(&dlc.title_msg_id))
@@ -3897,6 +3901,7 @@ pub fn prepare_dlc(pedia: &'_ Pedia) -> Result<BTreeMap<i32, Dlc<'_>>> {
         let entry = Dlc {
             data: dlc,
             add,
+            item_pack,
             name,
             explain,
         };
@@ -3907,6 +3912,10 @@ pub fn prepare_dlc(pedia: &'_ Pedia) -> Result<BTreeMap<i32, Dlc<'_>>> {
 
     if !dlc_adds.is_empty() {
         bail!("Leftover dlc add: {:?}", dlc_adds)
+    }
+
+    if !item_pack.is_empty() {
+        bail!("Left over item pack: {:?}", item_pack)
     }
 
     Ok(result)

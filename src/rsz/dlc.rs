@@ -169,3 +169,44 @@ rsz_struct! {
         pub data_list: Vec<DlcData>,
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.DlcManager.ItemPackUserData.ItemInfo",
+        0x8D56A4DE = 14_00_00,
+        0x0B7069A1 = 13_00_00,
+        0xA2FF70C0 = 12_00_00,
+        0xE44931A7 = 11_00_01,
+        0x7875C3C9 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ItemInfo {
+        pub item: ItemId,
+        pub num: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.DlcManager.ItemPackUserData.ItemPackParam",
+        0x8D0F6E7C = 14_00_00,
+        0xBA783C3B = 13_00_00,
+        0xACA1457A = 12_00_00,
+        0x747B32CB = 11_00_01,
+        0xA9FBAC72 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ItemPackParam {
+        pub dlc_id: i32, // snow.DlcDef.DlcId
+        pub item_info: Vec<ItemInfo>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.DlcManager.ItemPackUserData",
+        path = "data/Define/DLC/ItemPackUserData.user",
+        0x4BA9584C = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ItemPackUserData {
+        pub param: Vec<ItemPackParam>,
+    }
+}

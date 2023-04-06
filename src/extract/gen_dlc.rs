@@ -1,5 +1,6 @@
 use super::gen_armor::*;
 use super::gen_common::*;
+use super::gen_item::*;
 use super::gen_otomo::*;
 use super::gen_skill::*;
 use super::gen_weapon::*;
@@ -223,6 +224,25 @@ fn gen_dlc(
                     </section>)
             })
         }
+    }
+
+    if let Some(item_pack) = dlc.item_pack {
+        sections.push(Section {
+            title: "Item".to_owned(),
+            content: html!(
+                <section id="s-item">
+                <h2 >"Item"</h2>
+                <ul class="mh-item-list">
+                {item_pack.item_info.iter().map(|item| {
+                    html!(<li>
+                        {text!("{}x ", item.num)}
+                        <div class="il">{gen_item_label_from_id(item.item, pedia_ex)}</div>
+                    </li>)
+                })}
+                </ul>
+                </section>
+            ),
+        })
     }
 
     let plain_title = format!("DLC {:03}", dlc.data.dlc_id);
