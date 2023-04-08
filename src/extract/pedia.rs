@@ -296,6 +296,7 @@ pub struct Pedia {
     pub dlc: DlcListUserData,
     pub dlc_add: DlcAddUserData,
     pub item_pack: ItemPackUserData,
+    pub slc_item_pack: ItemPackSaveLinkUserData,
     pub dlc_name: Msg,
     pub dlc_name_mr: Msg,
     pub dlc_explain: Msg,
@@ -570,6 +571,12 @@ pub struct Dlc<'a> {
     pub explain: Option<&'a MsgEntry>,
 }
 
+#[derive(Default)]
+pub struct Slc<'a> {
+    pub add: Option<&'a AddDataInfo>,
+    pub item_pack: Option<&'a SlcItemPackParam>,
+}
+
 pub struct PediaEx<'a> {
     pub monsters: BTreeMap<EmTypes, MonsterEx<'a>>,
     pub sizes: HashMap<EmTypes, &'a SizeInfo>,
@@ -621,4 +628,5 @@ pub struct PediaEx<'a> {
     pub bbq: Vec<BbqData<'a>>,
 
     pub dlc: BTreeMap<i32, Dlc<'a>>,
+    pub slc: BTreeMap<SaveLinkContents, Slc<'a>>,
 }

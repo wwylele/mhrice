@@ -1047,7 +1047,10 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         DlcListUserData,
         ItemInfo,
         ItemPackParam,
-        ItemPackUserData
+        ItemPackUserData,
+        SlcItemInfo,
+        SlcItemPackParam,
+        ItemPackSaveLinkUserData,
     );
 
     m

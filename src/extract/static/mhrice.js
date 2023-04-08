@@ -546,6 +546,8 @@ function doSearch() {
             tag = "Weapon";
         } else if (result.path.includes("otomo")) {
             tag = "Buddy";
+        } else if (result.path.includes("dlc")) {
+            tag = "DLC";
         }
 
         const li = document.createElement("li");

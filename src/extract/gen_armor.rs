@@ -542,32 +542,41 @@ fn gen_armor(
         });
     }
 
-    let dlc: Vec<(&Dlc, bool, bool)> = pedia_ex
+    let dlc_add = pedia_ex
         .dlc
         .values()
-        .filter_map(|dlc| {
-            if let Some(add) = dlc.add {
-                let is_normal = add.pl_armor_list.iter().any(|&id| {
-                    series
-                        .pieces
-                        .iter()
-                        .flatten()
-                        .any(|a| a.data.pl_armor_id == id)
-                });
+        .filter_map(|dlc| dlc.add.map(|add| (gen_dlc_label(dlc), add)));
 
-                let is_layered = add.pl_overwear_id_list.iter().any(|&id| {
-                    series
-                        .pieces
-                        .iter()
-                        .flatten()
-                        .any(|a| a.overwear.map(|ow| ow.id) == Some(id))
-                });
+    let slc_add = pedia_ex
+        .slc
+        .iter()
+        .filter_map(|(id, slc)| slc.add.map(|add| (gen_slc_label(id), add)));
 
-                if is_normal || is_layered {
-                    Some((dlc, is_normal, is_layered))
-                } else {
-                    None
-                }
+    let dlc: Vec<Box<li<String>>> = dlc_add
+        .chain(slc_add)
+        .filter_map(|(label, add)| {
+            let is_normal = add.pl_armor_list.iter().any(|&id| {
+                series
+                    .pieces
+                    .iter()
+                    .flatten()
+                    .any(|a| a.data.pl_armor_id == id)
+            });
+
+            let is_layered = add.pl_overwear_id_list.iter().any(|&id| {
+                series
+                    .pieces
+                    .iter()
+                    .flatten()
+                    .any(|a| a.overwear.map(|ow| ow.id) == Some(id))
+            });
+
+            if is_normal || is_layered {
+                Some(html!(<li>
+                    {label}
+                    {is_normal.then(||html!(<span class="tag">"Normal"</span>))}
+                    {is_layered.then(||html!(<span class="tag">"Layered"</span>))}
+                </li>))
             } else {
                 None
             }
@@ -580,11 +589,7 @@ fn gen_armor(
             content: html!(<section id="s-dlc">
             <h2 >"DLC"</h2>
             <ul class="mh-item-list">
-            {dlc.into_iter().map(|(dlc, is_normal, is_layered)| html!(<li>
-                {gen_dlc_label(dlc)}
-                {is_normal.then(||html!(<span class="tag">"Normal"</span>))}
-                {is_layered.then(||html!(<span class="tag">"Layered"</span>))}
-            </li>))}
+            {dlc}
             </ul>
             </section>),
         })

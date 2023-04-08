@@ -1088,6 +1088,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         dlc: get_singleton(pak)?,
         dlc_add: get_singleton(pak)?,
         item_pack: get_singleton(pak)?,
+        slc_item_pack: get_singleton(pak)?,
         dlc_name,
         dlc_name_mr,
         dlc_explain,
@@ -3921,6 +3922,40 @@ pub fn prepare_dlc(pedia: &'_ Pedia) -> Result<BTreeMap<i32, Dlc<'_>>> {
     Ok(result)
 }
 
+pub fn prepare_slc(pedia: &'_ Pedia) -> Result<BTreeMap<SaveLinkContents, Slc<'_>>> {
+    let mut result = BTreeMap::new();
+
+    for add in pedia
+        .dlc_add
+        .add_data_info_list
+        .iter()
+        .filter(|add| add.slc_id != SaveLinkContents::Invalid)
+    {
+        if result
+            .insert(
+                add.slc_id,
+                Slc {
+                    add: Some(add),
+                    item_pack: None,
+                },
+            )
+            .is_some()
+        {
+            bail!("Duplicate SLC add for {:?}", add.slc_id)
+        }
+    }
+
+    for item_pack in &pedia.slc_item_pack.param {
+        let entry = result.entry(item_pack.save_link_id).or_default();
+        if entry.item_pack.is_some() {
+            bail!("Duplicate SLC item pack for {:?}", item_pack.save_link_id);
+        }
+        entry.item_pack = Some(item_pack);
+    }
+
+    Ok(result)
+}
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     let monster_order = pedia
         .monster_list
@@ -4026,5 +4061,6 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
         bbq: prepare_bbq(pedia, &reward_lot)?,
 
         dlc: prepare_dlc(pedia)?,
+        slc: prepare_slc(pedia)?,
     })
 }

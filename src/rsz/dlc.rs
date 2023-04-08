@@ -79,7 +79,7 @@ rsz_struct! {
 // snow.DlcManager.SaveLinkContents
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize, PartialEq, Eq, Copy, Clone)]
+    #[derive(Debug, Serialize, PartialEq, Eq, Copy, Clone, PartialOrd, Ord)]
     pub enum SaveLinkContents {
         TrialSnow = 0,
         TrialRush = 1,
@@ -88,6 +88,20 @@ rsz_enum! {
         RushMr = 4,
         Num = 5,
         Invalid = 6,
+    }
+}
+
+impl SaveLinkContents {
+    pub fn display(self) -> &'static str {
+        match self {
+            SaveLinkContents::TrialSnow => "Demo",
+            SaveLinkContents::TrialRush => "MHStories2 demo",
+            SaveLinkContents::Rush => "MHStories2",
+            SaveLinkContents::TrialKohaku => "Sunbreak demo",
+            SaveLinkContents::RushMr => "Sunbreak + MHStories2",
+            SaveLinkContents::Num => "[Num]",
+            SaveLinkContents::Invalid => "[Invalid]",
+        }
     }
 }
 
@@ -208,5 +222,42 @@ rsz_struct! {
     #[derive(Debug, Serialize)]
     pub struct ItemPackUserData {
         pub param: Vec<ItemPackParam>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.DlcManager.ItemPackSaveLinkUserData.ItemInfo",
+        0xD240F7EF = 14_00_00,
+        0x0CB93AE0 = 13_00_00,
+        0xCE9BD1D0 = 12_00_00,
+        0x6DBD0B98 = 11_00_01,
+        0x4D9BDA14 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct SlcItemInfo {
+        pub item: ItemId,
+        pub num: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.DlcManager.ItemPackSaveLinkUserData.ItemPackParam",
+        0xA70BC6A0 = 10_00_02
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct SlcItemPackParam {
+        pub save_link_id: SaveLinkContents,
+        pub item_info: Vec<SlcItemInfo>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.DlcManager.ItemPackSaveLinkUserData",
+        path = "data/Define/DLC/ItemPackSaveLinkUserData.user",
+        0x10273178 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct ItemPackSaveLinkUserData {
+        pub param: Vec<SlcItemPackParam>,
     }
 }

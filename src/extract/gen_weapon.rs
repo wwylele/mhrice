@@ -583,28 +583,37 @@ where
         })
     };
 
-    let dlc: Vec<(&Dlc, bool, bool)> = pedia_ex
+    let dlc_add = pedia_ex
         .dlc
         .values()
-        .filter_map(|dlc| {
-            if let Some(add) = dlc.add {
-                let is_normal = add.pl_weapon_list.contains(&main.id);
+        .filter_map(|dlc| dlc.add.map(|add| (gen_dlc_label(dlc), add)));
 
-                let is_layered = if let Some(ow) = weapon.overwear {
-                    add.pl_overwear_weapon_id_list
-                        .0
-                        .as_deref()
-                        .unwrap_or_default()
-                        .contains(&ow.id)
-                } else {
-                    false
-                };
+    let slc_add = pedia_ex
+        .slc
+        .iter()
+        .filter_map(|(id, slc)| slc.add.map(|add| (gen_slc_label(id), add)));
 
-                if is_normal || is_layered {
-                    Some((dlc, is_normal, is_layered))
-                } else {
-                    None
-                }
+    let dlc: Vec<Box<li<String>>> = dlc_add
+        .chain(slc_add)
+        .filter_map(|(label, add)| {
+            let is_normal = add.pl_weapon_list.contains(&main.id);
+
+            let is_layered = if let Some(ow) = weapon.overwear {
+                add.pl_overwear_weapon_id_list
+                    .0
+                    .as_deref()
+                    .unwrap_or_default()
+                    .contains(&ow.id)
+            } else {
+                false
+            };
+
+            if is_normal || is_layered {
+                Some(html!(<li>
+                    {label}
+                    {is_normal.then(||html!(<span class="tag">"Normal"</span>))}
+                    {is_layered.then(||html!(<span class="tag">"Layered"</span>))}
+                </li>))
             } else {
                 None
             }
@@ -617,11 +626,7 @@ where
             content: html!(<section id="s-dlc">
             <h2 >"DLC"</h2>
             <ul class="mh-item-list">
-            {dlc.into_iter().map(|(dlc, is_normal, is_layered)| html!(<li>
-                {gen_dlc_label(dlc)}
-                {is_normal.then(||html!(<span class="tag">"Normal"</span>))}
-                {is_layered.then(||html!(<span class="tag">"Layered"</span>))}
-            </li>))}
+            {dlc}
             </ul>
             </section>),
         })
