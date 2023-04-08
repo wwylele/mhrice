@@ -255,7 +255,7 @@ for (i, t) in types():
                 paramType = typeHandle[param["ti"]]
             else:
                 paramType = PointerDataType(typeHandle[param["ti"]], 8, typeManager)
-            if (param["via.clr.ParamModifier"] & 1) != 0:
+            if param["via.clr.ParamModifier"] != 0:
                 paramType = PointerDataType(paramType, 8, typeManager)
             params.append(ParameterImpl(param["name"], paramType, currentProgram))
 
