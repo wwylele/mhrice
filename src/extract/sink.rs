@@ -1,10 +1,9 @@
 use super::hash_store::*;
 use anyhow::{anyhow, Context, Result};
-use aws_sdk_s3 as s3;
+use aws_sdk_s3::{primitives::*, types::*};
 use bytes::Bytes;
 use futures::{StreamExt, TryStreamExt};
 use md5::{Digest, Md5};
-use s3::types::ByteStream;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::fs;
@@ -278,7 +277,7 @@ impl S3SinkInner {
 
             let result = rt.block_on(async move {
                 let config = aws_config::load_from_env().await;
-                let client = s3::Client::new(&config);
+                let client = aws_sdk_s3::Client::new(&config);
 
                 let mut existing_objects = HashMap::new();
                 let mut continuation_token = None;
@@ -381,15 +380,11 @@ impl S3SinkInner {
                 let mut objects = existing_objects.into_keys();
 
                 loop {
-                    let mut delete = s3::model::Delete::builder().quiet(true);
+                    let mut delete = Delete::builder().quiet(true);
                     let mut more = false;
                     for key in objects.by_ref().take(1000) {
                         eprintln!("Deleting {key}...");
-                        delete = delete.objects(
-                            aws_sdk_s3::model::ObjectIdentifier::builder()
-                                .key(key)
-                                .build(),
-                        );
+                        delete = delete.objects(ObjectIdentifier::builder().key(key).build());
                         more = true;
                     }
                     if !more {
