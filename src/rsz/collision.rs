@@ -234,6 +234,16 @@ rsz_enum! {
     }
 }
 
+impl GuardableType {
+    pub fn display(self) -> &'static str {
+        match self {
+            GuardableType::Guardable => "Yes",
+            GuardableType::SkillGuardable => "Needs Guard Up",
+            GuardableType::NoGuardable => "No",
+        }
+    }
+}
+
 // snow.hit.DamageType
 rsz_enum! {
     #[rsz(i32)]
@@ -280,6 +290,60 @@ rsz_enum! {
         ButtobiHm = 0x00000026,
         NoMediationCatchAttackWithSmash = 0x00000027,
         PlFreeze = 0x00000028,
+    }
+}
+
+impl DamageType {
+    pub fn display(self, value: i16) -> String {
+        // "[...]" are types not found in data and unverified
+        let mut result = match self {
+            DamageType::Invalid => "Invalid",
+            DamageType::None => "None",
+            DamageType::KnockBack => "Knockbacks",
+            DamageType::FallDown => "Tripping",
+            DamageType::Buttobi => "Flying away",
+            DamageType::ButtobiNoDown => "Quick recovery flying",
+            DamageType::ButtobiSp => "Special flying",
+            DamageType::ButtobiNoEscape => "Wirefall disabled flying",
+            DamageType::Upper => "Flying up",
+            DamageType::ButtobiSlamDown => "Slam down",
+            DamageType::WindS => "Minor wind pressure",
+            DamageType::WindM => "Major wind pressure",
+            DamageType::WindL => "Dragon wind pressure",
+            DamageType::QuakeS => "Minor tremor",
+            DamageType::QuakeL => "Major tremor",
+            DamageType::EarS => "Weak roar",
+            DamageType::EarL => "Strong roar",
+            DamageType::EarLL => "Powerful roar",
+            DamageType::CatchAttack => "Catch",
+            DamageType::CatchingAttack => "Catching attack",
+            DamageType::MarionetteAttack => "[Wyvern ride]",
+            DamageType::GrappleAttack => "Grapple",
+            DamageType::OtomoConstrain => "[Buddy]",
+            DamageType::BuffAttack => "[Buff attack]",
+            DamageType::BuffDefence => "[Buff defence]",
+            DamageType::BuffStamina => "[Buff stamina]",
+            DamageType::HitCheck => "[HitCheck]",
+            DamageType::Deodorant => "[Deodorant]",
+            DamageType::BuffInk => "[BuffInk]",
+            DamageType::Flash => "Flash",
+            DamageType::Sound => "[Sound]",
+            DamageType::Tornado => "Tornado",
+            DamageType::TornadoAttack => "Tornado attack",
+            DamageType::RecoverableUpper => "Flying up recoverable",
+            DamageType::NoMediationCatchAttack => "Force catch",
+            DamageType::PositionRise => "[PositionRise]",
+            DamageType::Beto => "Webbing",
+            DamageType::QuakeIndirect => "[QuakeIndirect]",
+            DamageType::ButtobiHm => "[ButtobiHm]",
+            DamageType::NoMediationCatchAttackWithSmash => "[NoMediationCatchAttackWithSmash]",
+            DamageType::PlFreeze => "Freeze",
+        }
+        .to_owned();
+        if value != 0 {
+            result = format!("{result} {value}")
+        }
+        result
     }
 }
 

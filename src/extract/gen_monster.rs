@@ -1761,10 +1761,9 @@ pub fn gen_monster(
                 <th>"Internal name"</th>
                 <th>"Damage"</th>
                 <th>"Status"</th>
-                <th>"Guarding"</th>
+                <th>"Guardable"</th>
                 <th>"Power"</th>
                 <th>"Type"</th>
-                <th>"Type value"</th>
                 <th>"To object"</th>
                 <th>"To other monster"</th>
                 <th>"Flags"</th>
@@ -1961,10 +1960,9 @@ pub fn gen_monster(
                         <td lang="ja">{text!("{}", atk.data.name)}</td>
                         <td><ul class="mh-damages">{damages}</ul></td>
                         <td><ul class="mh-damages">{statuss}</ul></td>
-                        <td>{text!("{:?}", atk.data.guardable_type)}</td>
+                        <td>{text!("{}", atk.data.guardable_type.display())}</td>
                         <td>{text!("{}", atk.data.power)}</td>
-                        <td>{text!("{:?}", atk.data.damage_type)}</td>
-                        <td>{text!("{}", atk.data.damage_type_value)}</td>
+                        <td>{text!("{}", atk.data.damage_type.display(atk.data.damage_type_value))}</td>
                         <td>{text!("{:?}", atk.data.object_break_type)}</td>
                         <td>{text!("{:?}", atk.data.base_em2em_damage_type)}</td>
                         <td>{flags}</td>
