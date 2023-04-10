@@ -628,8 +628,19 @@ pub fn gen_lot(
         return None;
     };
 
+    // TODO: find how to use other pop parameter
+    let main_body_tag = monster
+        .pop_parameter
+        .system_pop_parameters
+        .iter()
+        .find(|p| p.pop_id == 0)
+        .map_or_else(
+            || "Main body".to_string(),
+            |p| format!("Main body (x{})", p.base_max_hagi_count),
+        );
+
     let mut drop_dictionary = HashMap::new();
-    drop_dictionary.insert(EnemyRewardPopTypes::MainBody, vec!["Main body".to_string()]);
+    drop_dictionary.insert(EnemyRewardPopTypes::MainBody, vec![main_body_tag]);
     drop_dictionary.insert(
         EnemyRewardPopTypes::PartsLoss1,
         vec!["Severed part A".to_string()],

@@ -227,3 +227,54 @@ rsz_struct! {
         pub params: Vec<PartsTypeInfo>
     }
 }
+
+// snow.enemy.EnemyDef.PopType
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Copy, Clone, PartialEq, Eq, Hash)]
+    pub enum PopType {
+        MarionetteStart = 0,
+        EnemyReward = 1,
+    }
+}
+
+// snow.access.EnemyRewardPopBehavior.MotionTypes
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Copy, Clone, PartialEq, Eq, Hash)]
+    pub enum MotionTypes {
+        HagiSlow = 0,
+        HagiFast = 1,
+        Gathering = 2,
+        CarryEggGathering = 3,
+        Mining = 4,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.HagiPopParameter",
+        0x851831A2 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct HagiPopParameter {
+        // snow.enemy.PopParameterBase
+        pub pop_type: PopType,
+        pub pop_id: u32,
+
+        pub motion_type: MotionTypes,
+        pub base_max_hagi_count: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.EnemyPopParameterData",
+        0xE8DDA9D5 = 10_00_02,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EnemyPopParameterData {
+        // The conanical type of the elements are snow.enemy.PopParameterBase
+        // But data all have the subtype
+        pub system_pop_parameters: Vec<HagiPopParameter>,
+        pub unique_pop_parameters: Vec<HagiPopParameter>,
+    }
+}

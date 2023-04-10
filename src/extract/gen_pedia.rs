@@ -377,6 +377,8 @@ pub fn gen_monsters(
                 }
             }
 
+            let pop_parameter = sub_file(pak, &main_pfb).context("pop_parameter")?;
+
             monsters.push(Monster {
                 id,
                 sub_id,
@@ -393,6 +395,7 @@ pub fn gen_monsters(
                 drop_item,
                 parts_break_reward,
                 atk_colliders,
+                pop_parameter,
             })
         }
     }
