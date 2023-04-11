@@ -1773,7 +1773,7 @@ pub fn gen_monster(
                 monster.atk_colliders.iter().map(|atk| {
                     let mut damages = vec![];
                     if atk.data.base_damage != 0 {
-                        damages.push(html!(<li>{text!("Raw {}", atk.data.base_damage)}</li>))
+                        damages.push(html!(<li>{text!("Physical {}", atk.data.base_damage)}</li>))
                     }
                     if atk.data.base_attack_element_value != 0 || atk.data.base_attack_element != AttackElement::None {
                         let image = match atk.data.base_attack_element {
@@ -1790,6 +1790,7 @@ pub fn gen_monster(
                             html!(<img src={path.as_str()} class="mh-small-icon" alt={alt}/>)
                         });
                         damages.push(html!(<li>{image}
+                            {(atk.data.base_attack_element == AttackElement::None).then(||text!("Null-elem "))}
                             {text!("{}", atk.data.base_attack_element_value)}</li>))
                     }
 
