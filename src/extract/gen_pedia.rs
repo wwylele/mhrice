@@ -298,6 +298,7 @@ pub fn gen_monsters(
             let condition_damage_data =
                 sub_file(pak, &main_pfb).context("condition_damage_data")?;
             let anger_data = sub_file(pak, &main_pfb).context("anger_data")?;
+            let stamina_data = sub_file(pak, &main_pfb).context("stamina_data")?;
             let parts_break_data = sub_file(pak, &main_pfb).context("parts_break_data")?;
 
             let boss_init_set_data = if let Some(path) = boss_init_path_gen(id, sub_id) {
@@ -389,6 +390,7 @@ pub fn gen_monsters(
                 meat_data,
                 condition_damage_data,
                 anger_data,
+                stamina_data,
                 parts_break_data,
                 boss_init_set_data,
                 collider_mapping,

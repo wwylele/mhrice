@@ -582,7 +582,16 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
 
     r!(EnemyDataBase);
 
-    r!(EnemyAngerSeparateData, EnemyAngerData);
+    r!(
+        EnemyAngerSeparateData,
+        EnemyAngerData,
+        EnemyStaminaPointData,
+        EnemyStaminaSeparateData,
+        NikuEatInfo,
+        SetMeatInfo,
+        PredatorData,
+        EnemyStaminaData
+    );
 
     r!(
         PartsLockParam,

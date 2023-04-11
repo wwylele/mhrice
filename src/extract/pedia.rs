@@ -29,6 +29,7 @@ pub struct Monster {
     pub meat_data: EnemyMeatData,
     pub condition_damage_data: EnemyConditionDamageData,
     pub anger_data: EnemyAngerData,
+    pub stamina_data: EnemyStaminaData,
     pub parts_break_data: EnemyPartsBreakData,
     pub boss_init_set_data: Option<EnemyBossInitSetData>,
     pub collider_mapping: ColliderMapping,
