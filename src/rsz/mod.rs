@@ -213,12 +213,16 @@ impl Rsz {
                     &buffer[0..read]
                 )
             })?;
-            let version = *type_info.versions.get(&crc).with_context(|| {
-                format!(
-                    "Unknown type CRC {:08X} for type {:08X} ({}) at {:08X}",
-                    crc, hash, type_info.symbol, pos
-                )
-            })?;
+            let version = if type_info.versions.is_empty() {
+                0
+            } else {
+                *type_info.versions.get(&crc).with_context(|| {
+                    format!(
+                        "Unknown type CRC {:08X} for type {:08X} ({}) at {:08X}",
+                        crc, hash, type_info.symbol, pos
+                    )
+                })?
+            };
             let mut rsz_deserializer = RszDeserializer {
                 node_buf: &mut node_buf,
                 cursor: &mut cursor,
