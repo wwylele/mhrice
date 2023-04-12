@@ -126,6 +126,9 @@ enum Mhrice {
         /// Path to the PAK file
         #[clap(short, long)]
         pak: Vec<String>,
+        /// Print all gathered CRC instead of mismatched ones
+        #[clap(short, long)]
+        crc: bool,
     },
 
     /// Generate JSON file of game information from the PAK file
@@ -477,7 +480,7 @@ fn visit_tree(nodes: &mut [TreeNode], current: usize, depth: i32) {
     nodes[current].visited = true;
 }*/
 
-fn scan_rsz(pak: Vec<String>) -> Result<()> {
+fn scan_rsz(pak: Vec<String>, print_all: bool) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
 
     let mut crc_mismatches = BTreeMap::new();
@@ -494,22 +497,22 @@ fn scan_rsz(pak: Vec<String>) -> Result<()> {
             User::new(Cursor::new(&content))
                 .context(format!("Failed to open USER at {index:?}"))?
                 .rsz
-                .verify_crc(&mut crc_mismatches);
+                .verify_crc(&mut crc_mismatches, print_all);
         } else if &content[0..3] == b"PFB" {
             Pfb::new(Cursor::new(&content))
                 .context(format!("Failed to open PFB at {index:?}"))?
                 .rsz
-                .verify_crc(&mut crc_mismatches);
+                .verify_crc(&mut crc_mismatches, print_all);
         } else if &content[0..3] == b"SCN" {
             Scn::new(Cursor::new(&content))
                 .context(format!("Failed to open SCN at {index:?}"))?
                 .rsz
-                .verify_crc(&mut crc_mismatches);
+                .verify_crc(&mut crc_mismatches, print_all);
         } else if &content[0..4] == b"RCOL" {
             Rcol::new(Cursor::new(&content), false)
                 .context(format!("Failed to open RCOL at {index:?}"))?
                 .rsz
-                .verify_crc(&mut crc_mismatches);
+                .verify_crc(&mut crc_mismatches, print_all);
         }
     }
 
@@ -1331,7 +1334,7 @@ fn main() -> Result<()> {
             index,
             output,
         } => dump_index(pak, version, index, output),
-        Mhrice::ScanRsz { pak } => scan_rsz(pak),
+        Mhrice::ScanRsz { pak, crc } => scan_rsz(pak, crc),
         Mhrice::GenJson { pak } => gen_json(pak),
         Mhrice::GenWebsite {
             pak,

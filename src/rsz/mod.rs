@@ -284,10 +284,10 @@ impl Rsz {
         self.roots.len()
     }
 
-    pub fn verify_crc(&self, crc_mismatches: &mut BTreeMap<&str, u32>) {
+    pub fn verify_crc(&self, crc_mismatches: &mut BTreeMap<&str, u32>, print_all: bool) {
         for td in &self.type_descriptors {
             if let Some(type_info) = RSZ_TYPE_MAP.get(&td.hash) {
-                if !type_info.versions.contains_key(&td.crc) {
+                if print_all || !type_info.versions.contains_key(&td.crc) {
                     crc_mismatches.insert(type_info.symbol, td.crc);
                 }
             }
