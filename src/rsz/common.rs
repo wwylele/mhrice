@@ -15,7 +15,7 @@ macro_rules! rsz_inner {
 
 #[macro_export]
 macro_rules! rsz_inner_trait {
-    (rsz($symbol:literal $(,path=$singleton:literal)? $(,$vhash:literal=$version:literal)*),
+    (rsz($symbol:tt $(,path=$singleton:literal)? $(,$vhash:literal=$version:literal)*),
         $struct_name:ident, $($field_name:ident : $field_type:ty,)*) => {
         impl $crate::rsz::FromRsz for $struct_name {
             const SYMBOL: &'static str = $symbol;
@@ -37,6 +37,7 @@ macro_rules! rsz_inner_trait {
 
     (rsz(), $struct_name:ident, $($field_name:ident : $field_type:ty,)*) => {
         impl $crate::rsz::FieldFromRsz for $struct_name {
+            #[allow(unused_variables)]
             fn field_from_rsz(rsz: &mut $crate::rsz::RszDeserializer) -> Result<Self> {
                 $crate::rsz_inner!(rsz, $($field_name : $field_type,)*)
             }
@@ -47,7 +48,7 @@ macro_rules! rsz_inner_trait {
 #[macro_export]
 macro_rules! rsz_struct {
     (
-        #[rsz($($symbol:literal $(,path=$singleton:literal)? $(,$vhash:literal=$version:literal)* $(,)?)?)]
+        #[rsz($($symbol:tt $(,path=$singleton:literal)? $(,$vhash:literal=$version:literal)* $(,)?)?)]
         $(#[$outer_meta:meta])*
         $outer_vis:vis struct $struct_name:ident {
             $(

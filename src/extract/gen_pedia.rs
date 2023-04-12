@@ -77,6 +77,14 @@ fn exactly_one<T>(mut iterator: impl Iterator<Item = T>) -> Result<T> {
     Ok(next)
 }
 
+fn atmost_one<T>(mut iterator: impl Iterator<Item = T>) -> Result<Option<T>> {
+    let Some(next) = iterator.next() else {return Ok(None)};
+    if iterator.next().is_some() {
+        bail!("Multiple elements found");
+    }
+    Ok(Some(next))
+}
+
 fn gen_em_collider_path(id: u32, sub_id: u32) -> String {
     format!("enemy/em{id:03}/{sub_id:02}/collision/em{id:03}_{sub_id:02}_colliders.rcol")
 }
@@ -380,6 +388,22 @@ pub fn gen_monsters(
 
             let pop_parameter = sub_file(pak, &main_pfb).context("pop_parameter")?;
 
+            let unique_mystery = if let Some((loader, path)) =
+                atmost_one(main_pfb.children.iter().filter_map(|child| {
+                    UNIQUE_MYSTERY_TYPE_MAP
+                        .get(&child.hash)
+                        .map(|loader| (loader, &child.name))
+                }))? {
+                let index = pak.find_file(path)?;
+                let data = User::new(Cursor::new(pak.read_file(index)?))?;
+                Some(loader(
+                    data.rsz.deserialize_single_any().context(path.clone())?,
+                )?)
+            } else {
+                eprintln!("Unique mystery file not found fpr {main_pfb_path}");
+                None
+            };
+
             monsters.push(Monster {
                 id,
                 sub_id,
@@ -398,6 +422,7 @@ pub fn gen_monsters(
                 parts_break_reward,
                 atk_colliders,
                 pop_parameter,
+                unique_mystery,
             })
         }
     }

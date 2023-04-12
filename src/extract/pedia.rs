@@ -37,6 +37,7 @@ pub struct Monster {
     pub parts_break_reward: Option<EnemyPartsBreakRewardData>,
     pub atk_colliders: Vec<AttackCollider>,
     pub pop_parameter: EnemyPopParameterData,
+    pub unique_mystery: Option<EnemyUniqueMysteryDataWrapper>,
 }
 
 #[derive(Debug, Serialize)]
