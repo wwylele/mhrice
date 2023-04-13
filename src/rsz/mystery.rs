@@ -136,6 +136,153 @@ rsz_struct! {
     }
 }
 
+rsz_struct! {
+    #[rsz("snow.enemy.SystemMysteryUserData.SuperNovaSpiralShellPresetData.ShellInfo")]
+    #[derive(Debug, Serialize)]
+    pub struct ShellInfo {
+        pub shell_id: i32, // snow.shell.EmCommonShellManager.EmShell320_ID
+        pub turn_dir: u8, // snow.enemy.EnemyDef.LeftRightDirection
+        pub init_ang_ofs: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemMysteryUserData.SuperNovaSpiralShellPresetData")]
+    #[derive(Debug, Serialize)]
+    pub struct SuperNovaSpiralShellPresetData {
+        pub shell_list: Vec<ShellInfo>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemMysteryUserData.TimeSecPresetData")]
+    #[derive(Debug, Serialize)]
+    pub struct TimeSecPresetData {
+        pub time_sec: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemMysteryUserData.RatePresetData")]
+    #[derive(Debug, Serialize)]
+    pub struct RatePresetData {
+        pub rate: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemMysteryUserData.PercentagePresetData")]
+    #[derive(Debug, Serialize)]
+    pub struct PercentagePresetData {
+        pub percentage: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemMysteryUserData.MaximumActivityReleaseInfoPresetData")]
+    #[derive(Debug, Serialize)]
+    pub struct MaximumActivityReleaseInfoPresetData {
+        pub maximum_activity_release_info_list: Vec<EnemyMysteryMaximumActivityReleaseInfo>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemMysteryUserData.MaximumToActivityNeedReleaseNumPresetData")]
+    #[derive(Debug, Serialize)]
+    pub struct MaximumToActivityNeedReleaseNumPresetData {
+        pub num_list: Vec<u32>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemMysteryUserData.AttackRatePresetData")]
+    #[derive(Debug, Serialize)]
+    pub struct AttackRatePresetData {
+        pub attack_rate_list: Vec<SystemMysteryUserDataAttackRate>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemMysteryUserData.MotSpeedRatePresetData")]
+    #[derive(Debug, Serialize)]
+    pub struct MotSpeedRatePresetData {
+        pub mot_speed_rate_list: Vec<SystemMysteryUserDataMotSpeedRate>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemMysteryUserData.MysteryDebuffTimeRatePresetData")]
+    #[derive(Debug, Serialize)]
+    pub struct MysteryDebuffTimeRatePresetData {
+        pub rate_list: Vec<f32>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemDamageUserData.MRConditionDamageResistData")]
+    #[derive(Debug, Serialize)]
+    pub struct MRConditionDamageResistData {
+        pub default_add_rate: f32,
+        pub attack_by_marionette_add_rate: f32,
+        pub sub_active_time_start_count: i32,
+        pub sub_active_time: f32,
+        pub min_active_time: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemMysteryUserData",
+        path = "enemy/user_data/system_mystery_data.user",
+        0x618459CD = 10_00_02,
+        0x80D85F8E = 13_00_00,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct SystemMysteryUserData {
+        pub maximum_activity_end_sign_effect_start_time_sec: f32,
+        pub anger_poind_add_rate_min: f32,
+        pub maximum_activity_block_move_disable_time_sec: f32,
+        pub mystery_core_re_pop_interval_sec: f32,
+        pub mystery_core_break_damage_ui_height_ofs: f32,
+        pub mystery_core_break_damage_ui_color: i32, // snow.gui.GuiDamageDisp.ColorType
+        pub mystery_core_dying_vital_rate: f32,
+        pub super_nova_shell_fade_out_frame: f32,
+        pub super_nova_spiral_shell_preset_list: Vec<SuperNovaSpiralShellPresetData>,
+        pub super_nova_spiral_shell_dissolve_frame: f32,
+        pub super_nova_spiral_shell_curia_model_scale: f32,
+        pub super_nova_spiral_shell_ground_slope_min: f32,
+        pub super_nova_spiral_shell_ground_slope_max: f32,
+        pub super_nova_spiral_shell_ground_slope_percent: f32,
+        pub maximum_activity_enable_damage_reaction: u64, // now.enemy.EnemyDef.IgnoreNoDamageReactionFlag
+        pub great_activity_enable_damage_reaction: u64, // now.enemy.EnemyDef.IgnoreNoDamageReactionFlag
+        pub activity_enable_damage_reaction: u64, // now.enemy.EnemyDef.IgnoreNoDamageReactionFlag
+        pub maximum_activity_enable_condition_damage: i32, // snow.enemy.EnemyDef.ConditionDamageTypeFlag
+        pub great_activity_enable_condition_damage: i32, // snow.enemy.EnemyDef.ConditionDamageTypeFlag
+        pub activity_enable_condition_damage: i32, // snow.enemy.EnemyDef.ConditionDamageTypeFlag
+        pub return_to_great_activity_time_sec_preset_data_list: Vec<TimeSecPresetData>,
+        pub maximum_activity_release_info_preset_data_list: Vec<MaximumActivityReleaseInfoPresetData>,
+        pub maximum_to_activity_need_release_num_preset_data_list: Vec<MaximumToActivityNeedReleaseNumPresetData>,
+        pub maxiimum_activity_min_continue_time_sec_preset_data_list: Vec<TimeSecPresetData>,
+        pub maxiimum_activity_failed_end_time_sec_preset_data_list: Vec<TimeSecPresetData>,
+        pub add_anger_rate_preset_data_list: Vec<RatePresetData>,
+        pub mystery_core_break_damage_rate_preset_data_list: Vec<PercentagePresetData>,
+        pub mystery_core_break_parts_damage_rate_preset_data_list: Vec<PercentagePresetData>,
+        pub attack_rate_preset_data_list: Vec<AttackRatePresetData>,
+        pub mot_speed_rate_preset_data_list: Vec<MotSpeedRatePresetData>,
+        pub mystery_debuff_time_rate_preset_data_list: Vec<MysteryDebuffTimeRatePresetData>,
+        pub flash_data: Vec<PresetFlashData>,
+        pub fall_trap_data: Vec<PresetFallTrapData>,
+        pub fall_quick_sand_data: Vec<PresetFallQuickSandData>,
+        pub fall_otomo_trap_data: Vec<PresetFallOtomoTrapData>,
+        pub shock_trap_data: Vec<PresetShockTrapData>,
+        pub shock_otomo_trap_data: Vec<PresetShockOtomoTrapData>,
+        pub camera_zoom_request_param: EnemyCameraZoomParam,
+        pub camera_zoom_enable_far: f32,
+        pub material_interpolation_frame: f32,
+        pub mystery_stun_damage_resist_data: MRConditionDamageResistData,
+        pub mystery_core_dmg_hit_vfx_wait_game_loop_timer: Versioned<u32, 13_00_00>,
+    }
+}
+
 pub mod unique_mystery {
     use super::*;
     use anyhow::{Context, Result};

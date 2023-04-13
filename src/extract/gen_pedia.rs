@@ -1123,6 +1123,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         dlc_name_mr,
         dlc_explain,
         dlc_explain_mr,
+
+        system_mystery: get_singleton(pak)?,
     })
 }
 

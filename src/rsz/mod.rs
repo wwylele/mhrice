@@ -1079,6 +1079,18 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         EnemyUniqueMysteryDataConditionDamageData,
         EnemyCameraZoomParam,
         EnemyUniqueMysteryData,
+        ShellInfo,
+        SuperNovaSpiralShellPresetData,
+        TimeSecPresetData,
+        RatePresetData,
+        PercentagePresetData,
+        MaximumActivityReleaseInfoPresetData,
+        MaximumToActivityNeedReleaseNumPresetData,
+        AttackRatePresetData,
+        MotSpeedRatePresetData,
+        MysteryDebuffTimeRatePresetData,
+        MRConditionDamageResistData,
+        SystemMysteryUserData,
     );
 
     m.extend(unique_mystery::unique_mystery_type_map());
