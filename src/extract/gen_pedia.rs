@@ -396,11 +396,13 @@ pub fn gen_monsters(
                 }))? {
                 let index = pak.find_file(path)?;
                 let data = User::new(Cursor::new(pak.read_file(index)?))?;
-                Some(loader(
-                    data.rsz.deserialize_single_any().context(path.clone())?,
-                )?)
+                let data = loader(data.rsz.deserialize_single_any().context(path.clone())?)?;
+                if data.base.condition_damage_data.len() > 1 {
+                    bail!("Multiple condition damage data for mystery {main_pfb_path}")
+                }
+                Some(data)
             } else {
-                eprintln!("Unique mystery file not found fpr {main_pfb_path}");
+                eprintln!("Unique mystery file not found for {main_pfb_path}");
                 None
             };
 
