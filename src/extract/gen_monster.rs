@@ -359,13 +359,17 @@ fn gen_condition_blast(
 }
 
 fn gen_condition_ride(
+    pedia_ex: &PediaEx,
     is_preset: bool,
     data: &MarionetteStartDamageData,
     used: ConditionDamageDataUsed,
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Ride"</td>
+            <td>
+            {pedia_ex.items.get(&ItemId::Normal(1062)).map(|item| gen_item_icon(item, true))}
+            "Ride"
+            </td>
             { gen_condition_base(&data.base) }
             <td> {text!("Non-target monster first ride limit = {}", data.nora_first_limit)} </td>
         </tr>
@@ -485,7 +489,9 @@ fn gen_condition_fall_quick_sand(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Quick sand"
+            <td>
+            {gen_colored_icon(5, "/resources/item/113", [], true)}
+            "Quicksand"
             {is_mystery.then(||html!(<img src="/resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
             </td>
             { gen_condition_base(&data.base) }
@@ -502,7 +508,9 @@ fn gen_condition_fall_otomo_trap(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Buddy pitfall trap"
+            <td>
+            {gen_colored_icon(9, "/resources/item/156", [], true)}
+            "Poison purr-ison"
             {is_mystery.then(||html!(<img src="/resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
             </td>
             { gen_condition_base(&data.base) }
@@ -539,7 +547,9 @@ fn gen_condition_shock_otomo_trap(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Buddy shock trap"
+            <td>
+            {gen_colored_icon(4, "/resources/item/156", [], true)}
+            "Shock purr-ison"
             {is_mystery.then(||html!(<img src="/resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
             </td>
             { gen_condition_base(&data.base) }
@@ -1648,13 +1658,13 @@ pub fn gen_monster(
                 {gen_condition_poison(true, monster.condition_damage_data.poison_data.or_preset(condition_preset), monster.condition_damage_data.use_poison)}
                 {gen_condition_blast(true, monster.condition_damage_data.blast_data.or_preset(condition_preset), monster.condition_damage_data.use_blast)}
 
-                {gen_condition_ride(false, &monster.condition_damage_data.marionette_data, monster.condition_damage_data.use_ride)}
+                {gen_condition_ride(pedia_ex, false, &monster.condition_damage_data.marionette_data, monster.condition_damage_data.use_ride)}
                 {
                     let marionette_data = match monster.condition_damage_data.marionette_data.use_data {
                         UseDataType::Common => &pedia.system_mario.marionette_start_damage_data.base,
                         UseDataType::Unique => &monster.condition_damage_data.marionette_data
                     };
-                    gen_condition_ride(true, marionette_data, monster.condition_damage_data.use_ride)
+                    gen_condition_ride(pedia_ex, true, marionette_data, monster.condition_damage_data.use_ride)
                 }
 
                 {gen_condition_water(false, &monster.condition_damage_data.water_data, monster.condition_damage_data.use_water)}
