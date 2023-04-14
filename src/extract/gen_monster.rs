@@ -1838,6 +1838,101 @@ pub fn gen_monster(
         });
     }
 
+    if let Some(over_mystery) = &monster.unique_over_mystery {
+        struct Combined<'a> {
+            level_data: Option<&'a StrengthLevelData>,
+            burst_data: Option<&'a OverMysteryBurstData>,
+        }
+        let mut combineds: Vec<_> = over_mystery
+            .strength_level_list
+            .iter()
+            .map(|level| Combined {
+                level_data: Some(level),
+                burst_data: None,
+            })
+            .collect();
+        let mut next = 0;
+        for burst in &over_mystery.over_mystery_burst_list {
+            loop {
+                if next == combineds.len() {
+                    combineds.push(Combined {
+                        level_data: None,
+                        burst_data: Some(burst),
+                    });
+                    next += 1;
+                } else {
+                    match combineds[next]
+                        .level_data
+                        .unwrap()
+                        .need_research_level
+                        .cmp(&burst.need_research_level)
+                    {
+                        std::cmp::Ordering::Less => {
+                            next += 1;
+                            continue;
+                        }
+                        std::cmp::Ordering::Equal => {
+                            combineds[next].burst_data = Some(burst);
+                            next += 1;
+                        }
+                        std::cmp::Ordering::Greater => {
+                            combineds.insert(
+                                next,
+                                Combined {
+                                    level_data: None,
+                                    burst_data: Some(burst),
+                                },
+                            );
+                            next += 1;
+                        }
+                    }
+                }
+                break;
+            }
+        }
+
+        sections.push(Section {
+            title: "Risen mode stats".to_owned(),
+            content: html!(<section id="s-risen">
+            <h2> "Risen mode stats" </h2>
+            <div class="mh-table"><table>
+            <thead>
+            <tr>
+                <th>"Research level"</th>
+                <th>"Level"</th>
+                <th>"Trigger health"</th>
+                <th>"Release health"</th>
+                <th>"Motion"</th>
+                <th>"Attack"</th>
+            </tr>
+            </thead>
+            {combineds.into_iter().map(|combined| html!(<tr>
+                <td> {
+                    let lva = combined.level_data.map(|d|d.need_research_level);
+                    let lvb = combined.burst_data.map(|d|d.need_research_level);
+                    if lva.is_some() && lvb.is_some() {
+                        assert!(lva == lvb)
+                    }
+                    text!("{}", lva.or(lvb).unwrap())
+                }</td>
+                <td>{combined.level_data.map(|d| match d.strength_level {
+                    OverMysteryStrengthLevel::Default => text!("Default"),
+                    OverMysteryStrengthLevel::Lv1 => text!("1"),
+                    OverMysteryStrengthLevel::Lv2 => text!("2"),
+                    OverMysteryStrengthLevel::Lv3 => text!("3"),
+                })}</td>
+                <td>{combined.burst_data.map(|d|text!("x{}", d.enable_vital_rate))}</td>
+                <td>{combined.burst_data.map(|d|text!("x{}", d.release_vital_rate))}</td>
+                <td>{combined.burst_data.map(|d|text!("x{}", d.mot_speed_rate))}</td>
+                <td>{combined.burst_data.map(|d|text!("x{}", d.attack_rate))}</td>
+            </tr>))}
+            <tbody>
+            </tbody>
+            </table></div>
+            </section>),
+        });
+    }
+
     if let Some(lot) = gen_lot(monster, monster_em_type, QuestRank::Low, pedia_ex) {
         sections.push(Section {
             title: "Low rank reward".to_owned(),

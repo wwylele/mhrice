@@ -1104,6 +1104,9 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         MysteryDebuffTimeRatePresetData,
         MRConditionDamageResistData,
         SystemMysteryUserData,
+        StrengthLevelData,
+        OverMysteryBurstData,
+        EnemyUniqueOverMysteryData,
     );
 
     m.extend(unique_mystery::unique_mystery_type_map());

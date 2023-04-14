@@ -406,6 +406,20 @@ pub fn gen_monsters(
                 None
             };
 
+            let unique_over_mystery = if let Some(child) = atmost_one(
+                main_pfb
+                    .children
+                    .iter()
+                    .filter(|child| child.hash == EnemyUniqueOverMysteryData::type_hash()),
+            )? {
+                let path = &child.name;
+                let index = pak.find_file(path)?;
+                let data = User::new(Cursor::new(pak.read_file(index)?))?;
+                Some(data.rsz.deserialize_single().context(path.clone())?)
+            } else {
+                None
+            };
+
             monsters.push(Monster {
                 id,
                 sub_id,
@@ -425,6 +439,7 @@ pub fn gen_monsters(
                 atk_colliders,
                 pop_parameter,
                 unique_mystery,
+                unique_over_mystery,
             })
         }
     }

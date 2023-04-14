@@ -1,6 +1,6 @@
 use super::common::*;
 use super::*;
-use crate::rsz_struct;
+use crate::{rsz_enum, rsz_struct};
 use nalgebra_glm::*;
 use once_cell::sync::Lazy;
 use serde::*;
@@ -283,6 +283,53 @@ rsz_struct! {
     }
 }
 
+// snow.enemy.EnemyDef.OverMysteryStrengthLevel
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq)]
+    pub enum OverMysteryStrengthLevel {
+        Default = 0,
+        Lv1 = 1,
+        Lv2 = 2,
+        Lv3 = 3,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.EnemyUniqueOverMysteryData.StrenghtLevelData")]
+    #[derive(Debug, Serialize)]
+    pub struct StrengthLevelData {
+        pub strength_level: OverMysteryStrengthLevel,
+        pub need_research_level: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.EnemyUniqueOverMysteryData.OverMysteryBurstData")]
+    #[derive(Debug, Serialize)]
+    pub struct OverMysteryBurstData {
+        pub need_research_level: u32,
+        pub enable_vital_rate: f32,
+        pub release_vital_rate: f32,
+        pub mot_speed_rate: f32,
+        pub attack_rate: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.EnemyUniqueOverMysteryData",
+        0xAE6C07A4 = 14_00_00,
+        0x4BCDD77F = 12_00_00,
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct EnemyUniqueOverMysteryData {
+        pub strength_level_list: Vec<StrengthLevelData>,
+        pub over_mystery_burst_list: Vec<OverMysteryBurstData>,
+        pub overmystery_burst_min_continue_time_use_data_type: Versioned<i32, 14_00_00>,
+        pub overmystery_burst_min_continue_time: Versioned<f32, 14_00_00>,
+    }
+}
+
 pub mod unique_mystery {
     use super::*;
     use anyhow::{Context, Result};
@@ -394,9 +441,9 @@ pub mod unique_mystery {
             pub pump_up_mystery_core_vital_rate: Versioned<f32, 13_00_00>,
         }
         Em024_00 [] {}
-        Em024_08 [] {}
+        //Em024_08 [] {}
         Em025_00 [] {}
-        Em025_08 [] {}
+        //Em025_08 [] {}
         Em027_00 [] {}
         Em032_00 [] {}
         Em037_00 [] {}
@@ -429,7 +476,7 @@ pub mod unique_mystery {
         Em082_02 [] {}
         Em082_07 [] {}
         Em086_05 [] {}
-        Em086_08 [] {}
+        //Em086_08 [] {}
         Em089_00 [] {}
         Em089_05 [] {
             pub demon_one_ready_limit: f32,
