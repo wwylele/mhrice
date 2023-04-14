@@ -1,6 +1,7 @@
 use super::condition_damage_data::*;
 use super::*;
 use crate::rsz_struct;
+use nalgebra_glm::*;
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyConditionPresetData.PresetParalyzeData",
@@ -327,4 +328,221 @@ cond! {
     (CaptureDamageData, PresetCaptureData, capture_data, 1),
     (KoyashiDamageData, PresetKoyashiData, koyashi_data, 1),
     (SteelFangData, PresetSteelFangData, steel_fang_data, 2),
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.BindWireTotalNumParam")]
+    #[derive(Debug, Serialize)]
+    pub struct BindWireTotalNumParam {
+        pub wire_index: i32,
+        pub wire_data: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.BindWireStrength")]
+    #[derive(Debug, Serialize)]
+    pub struct BindWireStrength {
+        pub wire_index: i32,
+        pub base_strength: f32,
+        pub base_length_min: f32,
+        pub base_length_max: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.BindStartPullAdjustParam")]
+    #[derive(Debug, Serialize)]
+    pub struct BindStartPullAdjustParam {
+        pub enable_frame: f32,
+        pub disable_dist: f32,
+        pub pull_dist: f32,
+
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.MarionetteWireGaugeParam")]
+    #[derive(Debug, Serialize)]
+    pub struct MarionetteWireGaugeParam {
+        pub marionette_gauge_point_max: f32,
+        pub base_spend_marionette_gauge_point_per_sec: f32,
+        pub weak_attack_hit_regain_marionette_gauge_point: f32,
+        pub strong_attack_hit_regain_marionette_gauge_point: f32,
+        pub dodge_hit_regain_marionette_gauge_point: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemMarionetteUserData.SystemMarionetteStartDamageData")]
+    #[derive(Debug, Serialize)]
+    pub struct SystemMarionetteStartDamageData {
+        #[serde(flatten)]
+        pub base: Flatten<MarionetteStartDamageData>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.HitStopInfo")]
+    #[derive(Debug, Serialize)]
+    pub struct HitStopInfo {
+        pub hit_stop_frame: i16,
+        pub border_mario_damage_l_bottom: i16,
+        pub border_mario_damage_l_top: i16,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.EnemyMarionetteAttackAdjustInfo.AdjustValueByDirection")]
+    #[derive(Debug, Serialize)]
+    pub struct AdjustValueByDirection {
+        pub front: f32,
+        pub back: f32,
+        pub left: f32,
+        pub right: f32,
+        pub neutral: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.EnemyMarionetteAttackAdjustInfo")]
+    #[derive(Debug, Serialize)]
+    pub struct EnemyMarionetteAttackAdjustInfo {
+        pub week_attack_info: AdjustValueByDirection,
+        pub strong_attack_info: AdjustValueByDirection,
+        pub final_attack_rate: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.EnemyMarionetteAttackRate")]
+    #[derive(Debug, Serialize)]
+    pub struct EnemyMarionetteAttackRate {
+        pub week: f32,
+        pub strong: f32,
+        pub final_: f32,
+        pub shoot: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.EnemyMarionetteAttackModeRate")]
+    #[derive(Debug, Serialize)]
+    pub struct EnemyMarionetteAttackModeRate {
+        pub attack_rate: EnemyMarionetteAttackRate,
+        pub parts_attack_rate: EnemyMarionetteAttackRate
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.MarionetteModePower")]
+    #[derive(Debug, Serialize)]
+    pub struct MarionetteModePower {
+        pub attack_mode_rate: EnemyMarionetteAttackModeRate
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.MarionetteModeReward")]
+    #[derive(Debug, Serialize)]
+    pub struct MarionetteModeReward {
+        pub attack_mode_rate: EnemyMarionetteAttackModeRate,
+        pub drop_item_max_num: i32,
+        pub max_wall_hit_drop_item_num: i32,
+        pub wall_hit_drop_item_max: i32,
+        pub wall_hit_drop_item_cont: Vec<i32>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.enemy.SystemMarionetteUserData",
+        path = "enemy/user_data/system_mario_data.user",
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct SystemMarionetteUserData {
+        pub bind_wire_joint_name_hash: u32,
+        pub wire_total_num_param: Vec<BindWireTotalNumParam>,
+        pub otomo_wire_total_num_param: BindWireTotalNumParam,
+        pub props_wire_total_num_param: Vec<BindWireTotalNumParam>,
+        pub wire_strength_param: Vec<BindWireStrength>,
+        pub otomo_wire_strength_param: BindWireStrength,
+        pub otomo_wire_start_pull_adjust_param: BindStartPullAdjustParam,
+        pub props_wire_strength_param: Vec<BindWireStrength>,
+        pub is_props_wire_damage_reaction: bool,
+        pub props_bind_wire_max_num: u32,
+        pub wire_gauge_recover_time_sec: f32,
+        pub marionette_wire_gauge_param: MarionetteWireGaugeParam,
+        pub zako_hit_marionette_gauge_point_add_rate: f32,
+        pub final_attack_limit_time: f32,
+        pub zako_hit_final_attack_point_add_rate: f32,
+        pub final_attack_point_add_by_target_enemy_damage_max_hp_rate: f32,
+        pub final_attack_point_add_rate_by_arround_enemy_damage_in_hyakuryu: f32,
+        pub final_attack_move_end_time: f32,
+        pub is_cancel_pre_input_on: bool,
+        pub cancel_pre_input_last_sec: f32,
+        pub free_run_target_pos_update_time_frame: f32,
+        pub free_run_dash_transition_frame: f32,
+        pub mario_damage_type_stock_value: f32,
+        pub mario_cool_time: f32,
+        pub marionette_start_damage_data: SystemMarionetteStartDamageData,
+        pub ride_on_pop_radius: f32,
+        pub start_wait_loop_sub_time_max_hp_rate: f32,
+        pub near_attack_sa_time: f32,
+        pub far_attack_sa_time: f32,
+        pub dodge_sa_time: f32,
+        pub quick_dodge_sa_time: f32,
+        pub near_attack_concel_forbidden_time: f32,
+        pub far_attack_cancel_forbidden_time: f32,
+        pub damage_cancel_forbidden_time: f32,
+        pub marionette_damage_reduce_wire_time: f32,
+        pub marionette_dodge_blocking_timer_m: f32,
+        pub marionette_dodge_blocking_timer_s: f32,
+        pub marionette_dodge_blocking_add_final_attack_gauge_point_m: i16,
+        pub marionette_dodge_blocking_add_final_attack_gauge_point_s: i16,
+        pub dodge_blocking_hit_stop_frame_m: f32,
+        pub dodge_blocking_hit_stop_frame_s: f32,
+        pub dodge_blocking_damage_rate_m: f32,
+        pub dodge_blocking_damage_rate_s: f32,
+        pub dodge_blocking_damage_mot_speed_rate_s: f32,
+        pub dodge_blocking_damage_mot_speed_rate_m: f32,
+        pub getup_invicible_time_m: f32,
+        pub getup_invicible_time_s: f32,
+        pub friendly_fire_damage_border: f32,
+        pub friendly_fire_gauge_damage: i32,
+        pub friendly_damage_rate: f32,
+        pub shoot_wall_hit_time_s: f32,
+        pub dash_shoot_wall_hit_time_s: f32,
+        pub shoot_wall_hit_damage_rate_list: Vec<f32>,
+        pub shoot_wall_hit_damage_add_rate_dash: f32,
+        pub shoot_wall_hit_damage_add_rate_good_timing: f32,
+        pub shoot_enemy_hit_damage_rate: f32,
+        pub challenge_start_use_wire_gauge_num: i32,
+        pub max_challenge_num: u32,
+        pub finish_shoot_challenge_free_run_dash_transition_frame: f32,
+        pub last_challenge_input_enable_time_frame: f32,
+        pub challgne_create_wire_num_list: Vec<u32>,
+        pub shoot_down_time_sec_list: Vec<f32>,
+        pub challenge_start_input_wait_mot_speed_list: Vec<f32>,
+        pub finish_shoot_challenge_free_camera_transition_frame: f32,
+        pub drop_item_percentage: u32,
+        pub drop_item_max_num: i32,
+        pub drop_item_model_type: i32, // snow.enemy.SystemEnemyDropItemMoveData.ModelTypes
+        pub marionette_enemy_target_continue_time_sec: f32,
+        pub marionette_enemy_target_cool_time_sec: f32,
+        pub attack_hit_stop_info: Vec<HitStopInfo>,
+        pub marionette_yarare_damage_border: i32,
+        pub marionette_gauge_damage: i32,
+        pub attack_parts_vital_adjust_rate: f32,
+        pub marionette_l_cool_time_frame: i32,
+        pub ignore_marionette_ride_on_option_damage_rate: f32,
+        pub solo_target_ofs: Vec3,
+        pub attack_adjust_info: EnemyMarionetteAttackAdjustInfo,
+        pub combo_after_mot_interpolate_add_frame: u32,
+        pub mode_power: MarionetteModePower,
+        pub mode_reward: MarionetteModeReward,
+        pub otomo_bind_wire_max_num: u32,
+        pub otomo_bind_wire_second_num: u32,
+        pub otomo_bind_wire_total_num_param_list: Vec<BindWireTotalNumParam>,
+        pub otomo_bind_wire_strength_param_list: Vec<BindWireStrength>,
+    }
 }

@@ -306,6 +306,7 @@ pub struct Pedia {
     pub dlc_explain_mr: Msg,
 
     pub system_mystery: SystemMysteryUserData,
+    pub system_mario: SystemMarionetteUserData,
 }
 
 pub struct QuestReward<'a> {

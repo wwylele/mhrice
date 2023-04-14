@@ -356,18 +356,15 @@ fn gen_condition_blast(
 }
 
 fn gen_condition_ride(
+    is_preset: bool,
     data: &MarionetteStartDamageData,
     used: ConditionDamageDataUsed,
 ) -> Box<tr<String>> {
-    let use_data = match data.use_data {
-        UseDataType::Common => "common",
-        UseDataType::Unique => "unique",
-    };
     html!(
-        <tr class={gen_disabled(used, None).as_str()}>
+        <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td>"Ride"</td>
             { gen_condition_base(&data.base) }
-            <td> {text!("{}, Nora first limit = {}", use_data, data.nora_first_limit)} </td>
+            <td> {text!("Non-target monster first ride limit = {}", data.nora_first_limit)} </td>
         </tr>
     )
 }
@@ -1639,7 +1636,14 @@ pub fn gen_monster(
                 {gen_condition_poison(true, monster.condition_damage_data.poison_data.or_preset(condition_preset), monster.condition_damage_data.use_poison)}
                 {gen_condition_blast(true, monster.condition_damage_data.blast_data.or_preset(condition_preset), monster.condition_damage_data.use_blast)}
 
-                {gen_condition_ride(&monster.condition_damage_data.marionette_data, monster.condition_damage_data.use_ride)}
+                {gen_condition_ride(false, &monster.condition_damage_data.marionette_data, monster.condition_damage_data.use_ride)}
+                {
+                    let marionette_data = match monster.condition_damage_data.marionette_data.use_data {
+                        UseDataType::Common => &pedia.system_mario.marionette_start_damage_data.base,
+                        UseDataType::Unique => &monster.condition_damage_data.marionette_data
+                    };
+                    gen_condition_ride(true, marionette_data, monster.condition_damage_data.use_ride)
+                }
 
                 {gen_condition_water(false, &monster.condition_damage_data.water_data, monster.condition_damage_data.use_water)}
                 {gen_condition_fire(false, &monster.condition_damage_data.fire_data, monster.condition_damage_data.use_fire)}

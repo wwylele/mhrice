@@ -1127,6 +1127,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         dlc_explain_mr,
 
         system_mystery: get_singleton(pak)?,
+        system_mario: get_singleton(pak)?,
     })
 }
 
