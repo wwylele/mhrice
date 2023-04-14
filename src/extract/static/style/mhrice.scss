@@ -310,6 +310,12 @@ main {
     width: 2rem;
     height: 2rem;
 
+    &.mh-small-colored-icon {
+        width: 1.5rem;
+        height: 1.5rem;
+        vertical-align: middle;
+    }
+
     >* {
         grid-column: 1 / 1;
         grid-row: 1 / 1;
@@ -317,8 +323,8 @@ main {
 
     >*:nth-child(1) {
         z-index: 2;
-        width: 2rem;
-        height: 2rem;
+        width: 100%;
+        height: 100%;
         -webkit-mask-size: contain;
         mask-size: contain;
     }
@@ -326,88 +332,88 @@ main {
     >*:nth-child(2) {
         background-color: black;
         z-index: 1;
-        width: 2rem;
-        height: 2rem;
+        width: 100%;
+        height: 100%;
         -webkit-mask-size: contain;
         mask-size: contain;
     }
 
     >*:nth-child(3) {
         z-index: 3;
-        width: 2rem;
-        height: 2rem;
+        width: 100%;
+        height: 100%;
         position: relative;
 
         >* {
-            width: 1rem;
-            height: 1rem;
+            width: 50%;
+            height: 50%;
             position: absolute;
             background-size: contain;
         }
 
         >.mh-addon-great {
-            left: -0.35rem;
-            top: -0.35rem;
+            left: -17.5%;
+            top: -17.5%;
             background-image: url('/resources/item_addon_1.png');
         }
 
         >.mh-addon-supply {
-            left: 1.3rem;
-            top: -0.2rem;
+            left: 65%;
+            top: -10%;
             background-image: url('/resources/item_addon_2.png');
         }
 
         >.mh-addon-lv1 {
-            left: -0.25rem;
-            top: -0.2rem;
+            left: -12.5%;
+            top: -10%;
             background-image: url('/resources/item_addon_3.png');
         }
 
         >.mh-addon-lv2 {
-            left: -0.25rem;
-            top: -0.2rem;
+            left: -12.5%;
+            top: -10%;
             background-image: url('/resources/item_addon_4.png');
         }
 
         >.mh-addon-lv3 {
-            left: -0.25rem;
-            top: -0.2rem;
+            left: -12.5%;
+            top: -10%;
             background-image: url('/resources/item_addon_5.png');
         }
 
         >.mh-addon-afflicted {
-            left: -0.35rem;
-            top: -0.35rem;
+            left: -17.5%;
+            top: -17.5%;
             background-image: url('/resources/afflicted.png');
         }
 
         >.mh-addon-hyakuryu {
-            width: 1.3125rem;
-            height: 1rem;
-            left: 1rem;
-            top: 0rem;
+            width: 65.625%;
+            height: 50%;
+            left: 50%;
+            top: 0%;
             background-image: url('/resources/slot_rampage.png');
         }
 
         >.mh-addon-el {
-            width: 1rem;
-            height: 1rem;
-            left: 0rem;
-            top: 1rem;
+            width: 50%;
+            height: 50%;
+            left: 0%;
+            top: 50%;
         }
 
         >.mh-addon-el1 {
-            width: 1rem;
-            height: 1rem;
-            left: 0rem;
-            top: 1rem;
+            width: 50%;
+            height: 50%;
+            left: 0%;
+            top: 50%;
         }
 
         >.mh-addon-el2 {
-            width: 1rem;
-            height: 1rem;
-            left: 1rem;
-            top: 1rem;
+            width: 50%;
+            height: 50%;
+            left: 50%;
+            top: 50%;
         }
 
         >.mh-addon-fire {

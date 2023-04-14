@@ -14,7 +14,7 @@ use typed_html::{dom::*, elements::*, html, text};
 pub fn gen_atomo_armor_label(piece: &OtArmor) -> Box<div<String>> {
     let icon = format!("/resources/equip/{:03}", piece.param.id.icon_index());
     html!(<div class="mh-icon-text">
-        { gen_rared_icon(piece.param.rare_type, &icon, []) }
+        { gen_rared_icon(piece.param.rare_type, &icon, [], false) }
         <span>{ gen_multi_lang(piece.name) }</span>
     </div>)
 }
@@ -30,7 +30,7 @@ pub fn gen_atomo_weapon_label(piece: &OtWeapon) -> Box<div<String>> {
 
     let icon = format!("/resources/equip/{icon_index:03}");
     html!(<div class="mh-icon-text">
-        { gen_rared_icon(piece.param.rare_type, &icon, []) }
+        { gen_rared_icon(piece.param.rare_type, &icon, [], false) }
         <span>{ gen_multi_lang(piece.name) }</span>
     </div>)
 }
@@ -398,7 +398,7 @@ fn gen_otomo_equip(
             <main>
             <header>
                 <div class="mh-title-icon">
-                { gen_rared_icon(rarity, icon, []) }
+                { gen_rared_icon(rarity, icon, [], false) }
                 </div>
                 <h1> {gen_multi_lang(series.name)} </h1>
             </header>

@@ -47,7 +47,7 @@ pub fn gen_weapon_icon(
         (None, None) => vec![],
     };
 
-    gen_rared_icon(rare, &icon, addons.iter().map(|s| s.as_str()))
+    gen_rared_icon(rare, &icon, addons.iter().map(|s| s.as_str()), false)
 }
 
 pub fn gen_weapon_label<Param>(weapon: &Weapon<Param>) -> Box<a<String>>

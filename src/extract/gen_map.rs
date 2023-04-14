@@ -131,7 +131,7 @@ fn gen_map(
             MapPopKind::Item { behavior, relic } => {
                 icon_inner = Box::new(|| {
                     let icon_path = format!("/resources/item/{:03}", behavior.pop_icon);
-                    gen_colored_icon(behavior.pop_icon_color, &icon_path, [])
+                    gen_colored_icon(behavior.pop_icon_color, &icon_path, [], false)
                 });
 
                 let relic_explain = relic.as_ref().map(|relic| {
@@ -242,7 +242,7 @@ fn gen_map(
                 filter = "camp";
             }
             MapPopKind::FishingPoint { behavior } => {
-                icon_inner = Box::new(|| gen_colored_icon(0, "/resources/item/046", []));
+                icon_inner = Box::new(|| gen_colored_icon(0, "/resources/item/046", [], false));
 
                 explain_inner = html!(<div class="mh-reward-tables">
                     { gen_fish_table("Low rank fish",

@@ -20,7 +20,7 @@ pub fn gen_skill_lv_label(pedia_ex: &PediaEx, skill: PlEquipSkillId, lv: i32) ->
     let name = if let Some(skill_data) = pedia_ex.skills.get(&skill) {
         html!(<div class="il"><a href={format!("/skill/{}", skill_page(skill))}
             class="mh-icon-text">
-            {gen_colored_icon(skill_data.icon_color, "/resources/skill", [])}
+            {gen_colored_icon(skill_data.icon_color, "/resources/skill", [], false)}
             {gen_multi_lang(skill_data.name)}
         </a></div>)
     } else {
@@ -110,7 +110,7 @@ pub fn gen_skill_list(
                         let filter = filter_tags.join(" ");
                         html!(<li data-filter={filter} class="mh-skill-filter-item">
                             <a href={format!("/skill/{}", skill_page(id))} class="mh-icon-text">
-                            {gen_colored_icon(skill.icon_color, "/resources/skill", [])}
+                            {gen_colored_icon(skill.icon_color, "/resources/skill", [], false)}
                             <span>{gen_multi_lang(skill.name)}</span>
                             </a>
                         </li>)
@@ -138,7 +138,7 @@ fn deco_icon_path(lv: i32) -> String {
 pub fn gen_deco_label(deco: &Deco) -> Box<div<String>> {
     let icon = deco_icon_path(deco.data.decoration_lv);
     html!(<div class="mh-icon-text">
-        { gen_colored_icon(deco.data.icon_color, &icon, []) }
+        { gen_colored_icon(deco.data.icon_color, &icon, [], false) }
         <span>{gen_multi_lang(deco.name)}</span>
     </div>)
 }
@@ -337,7 +337,7 @@ pub fn gen_skill(
                 <main>
                 <header>
                     <div class="mh-title-icon">
-                        {gen_colored_icon(skill.icon_color, "/resources/skill", [])}
+                        {gen_colored_icon(skill.icon_color, "/resources/skill", [], false)}
                     </div>
                     <h1> {gen_multi_lang(skill.name)} </h1>
                 </header>

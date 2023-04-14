@@ -503,30 +503,38 @@ pub fn gen_colored_icon<'a>(
     color: i32,
     icon: &str,
     addons: impl IntoIterator<Item = &'a str> + 'a,
+    is_small: bool,
 ) -> Box<div<String>> {
     let color_class = format!("mh-item-color-{color}");
-    gen_colored_icon_inner(&color_class, icon, addons)
+    gen_colored_icon_inner(&color_class, icon, addons, is_small)
 }
 
 pub fn gen_rared_icon<'a>(
     rarity: RareTypes,
     icon: &str,
     addons: impl IntoIterator<Item = &'a str> + 'a,
+    is_small: bool,
 ) -> Box<div<String>> {
     let color_class = format!("mh-rarity-color-{}", rarity.0);
-    gen_colored_icon_inner(&color_class, icon, addons)
+    gen_colored_icon_inner(&color_class, icon, addons, is_small)
 }
 
 fn gen_colored_icon_inner<'a>(
     color_class: &str,
     icon: &str,
     addons: impl IntoIterator<Item = &'a str> + 'a,
+    is_small: bool,
 ) -> Box<div<String>> {
     let image_r_base = format!("url('{icon}.r.png')");
     let image_a_base = format!("url('{icon}.a.png')");
     let image_r = format!("mask-image: {image_r_base}; -webkit-mask-image: {image_r_base};");
     let image_a = format!("mask-image: {image_a_base}; -webkit-mask-image: {image_a_base};");
-    html!(<div class="mh-colored-icon">
+    let class = if is_small {
+        "mh-colored-icon mh-small-colored-icon"
+    } else {
+        "mh-colored-icon"
+    };
+    html!(<div class={class}>
         <div style={image_r.as_str()} class={color_class}/>
         <div style={image_a.as_str()}/>
         <div>{ addons.into_iter().map(|addon| html!(

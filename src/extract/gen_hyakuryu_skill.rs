@@ -14,7 +14,7 @@ use typed_html::{dom::*, elements::*, html, text};
 
 pub fn gen_hyakuryu_skill_label(skill: &HyakuryuSkill) -> Box<a<String>> {
     html!(<a href={format!("/hyakuryu_skill/{}", hyakuryu_skill_page(skill.id()))} class="mh-icon-text">
-        {gen_colored_icon(skill.color(), "/resources/rskill", [])}
+        {gen_colored_icon(skill.color(), "/resources/rskill", [], false)}
         <span>{gen_multi_lang(skill.name)}</span>
         {skill.recipe.is_some().then(||html!(<span class="tag">"HR"</span>))}
         {skill.deco.is_some().then(||html!(<span class="tag">"MR"</span>))}
@@ -152,7 +152,7 @@ pub fn gen_hyakuryu_deco_label(deco: &HyakuryuDeco) -> Box<div<String>> {
     };
     let icon = format!("/resources/item/{icon_id:03}");
     html!(<div class="mh-icon-text">
-        { gen_colored_icon(deco.data.icon_color, &icon, ["mh-addon-hyakuryu"]) }
+        { gen_colored_icon(deco.data.icon_color, &icon, ["mh-addon-hyakuryu"], false) }
         <span>{gen_multi_lang(deco.name)}</span>
     </div>)
 }
@@ -259,7 +259,7 @@ pub fn gen_hyakuryu_skill(
                 <main>
                 <header>
                     <div class="mh-title-icon">
-                        {gen_colored_icon(skill.color(), "/resources/rskill", [])}
+                        {gen_colored_icon(skill.color(), "/resources/rskill", [], false)}
                     </div>
                     <h1>{gen_multi_lang(skill.name)}</h1>
                 </header>

@@ -28,7 +28,7 @@ pub fn item_page(item: ItemId) -> String {
     }
 }
 
-fn gen_item_icon(item: &Item) -> Box<div<String>> {
+pub fn gen_item_icon(item: &Item, is_small: bool) -> Box<div<String>> {
     let icon = format!("/resources/item/{:03}", item.param.icon_chara);
 
     let mut addons = vec![];
@@ -45,7 +45,7 @@ fn gen_item_icon(item: &Item) -> Box<div<String>> {
     if item.param.supply {
         addons.push("mh-addon-supply");
     }
-    gen_colored_icon(item.param.icon_color, &icon, addons)
+    gen_colored_icon(item.param.icon_color, &icon, addons, is_small)
 }
 
 pub fn gen_item_label(item: &Item) -> Box<a<String>> {
@@ -56,7 +56,7 @@ pub fn gen_item_label(item: &Item) -> Box<a<String>> {
     let link = format!("/item/{}", item_page(item.param.id));
     html!(
         <a href={link} class="mh-icon-text">
-            {gen_item_icon(item)}
+            {gen_item_icon(item, false)}
             {annotation.is_none().then(||html!(<span>{gen_multi_lang(item.name)}</span>))}
             {annotation}
         </a>
@@ -979,7 +979,7 @@ pub fn gen_item(
                 <main>
                 <header>
                     <div class="mh-title-icon">
-                        {gen_item_icon(item)}
+                        {gen_item_icon(item, false)}
                     </div>
                     <h1>{gen_multi_lang(item.name)}</h1>
                 </header>
@@ -1094,7 +1094,7 @@ pub fn gen_reward_table<'a>(
 pub fn gen_buff_cage_label(buff_cage: &BuffCage<'_>) -> Box<a<String>> {
     html!(
         <a href={"/misc/petalace.html"} class="mh-icon-text">
-            {gen_rared_icon(buff_cage.data.rarity, "/resources/equip/030", [])}
+            {gen_rared_icon(buff_cage.data.rarity, "/resources/equip/030", [], false)}
             <span>{gen_multi_lang(buff_cage.name)}</span>
         </a>
     )

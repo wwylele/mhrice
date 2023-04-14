@@ -42,7 +42,7 @@ fn gen_petalace(
                 <tbody>
                 { petalace.into_iter().map(|petalace| html!(<tr>
                     <td><div class="mh-icon-text">
-                        {gen_rared_icon(petalace.data.rarity, "/resources/equip/030", [])}
+                        {gen_rared_icon(petalace.data.rarity, "/resources/equip/030", [], false)}
                         <span>{gen_multi_lang(petalace.name)}</span>
                     </div></td>
                     <td><pre>{gen_multi_lang(petalace.explain)}</pre></td>

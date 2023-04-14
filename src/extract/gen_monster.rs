@@ -269,6 +269,7 @@ fn gen_condition_stamina(
 }
 
 fn gen_condition_flash(
+    pedia_ex: &PediaEx,
     is_preset: bool,
     is_mystery: bool,
     data: &FlashDamageData,
@@ -306,7 +307,9 @@ fn gen_condition_flash(
 
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Flash"
+            <td>
+            {pedia_ex.items.get(&ItemId::Normal(163)).map(|item| gen_item_icon(item, true))}
+            "Flash"
             {is_mystery.then(||html!(<img src="/resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
             </td>
             { gen_condition_base(&data.base) }
@@ -455,6 +458,7 @@ fn gen_condition_thunder(
 }
 
 fn gen_condition_fall_trap(
+    pedia_ex: &PediaEx,
     is_preset: bool,
     is_mystery: bool,
     data: &FallTrapDamageData,
@@ -462,7 +466,9 @@ fn gen_condition_fall_trap(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Fall trap"
+            <td>
+            {pedia_ex.items.get(&ItemId::Normal(123)).map(|item| gen_item_icon(item, true))}
+            "Pitfall trap"
             {is_mystery.then(||html!(<img src="/resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
             </td>
             { gen_condition_base(&data.base) }
@@ -496,7 +502,7 @@ fn gen_condition_fall_otomo_trap(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Buddy fall trap"
+            <td>"Buddy pitfall trap"
             {is_mystery.then(||html!(<img src="/resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
             </td>
             { gen_condition_base(&data.base) }
@@ -506,6 +512,7 @@ fn gen_condition_fall_otomo_trap(
 }
 
 fn gen_condition_shock_trap(
+    pedia_ex: &PediaEx,
     is_preset: bool,
     is_mystery: bool,
     data: &ShockTrapDamageData,
@@ -513,7 +520,9 @@ fn gen_condition_shock_trap(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Shock trap"
+            <td>
+            {pedia_ex.items.get(&ItemId::Normal(4)).map(|item| gen_item_icon(item, true))}
+            "Shock trap"
             {is_mystery.then(||html!(<img src="/resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
             </td>
             { gen_condition_base(&data.base) }
@@ -540,13 +549,16 @@ fn gen_condition_shock_otomo_trap(
 }
 
 fn gen_condition_capture(
+    pedia_ex: &PediaEx,
     is_preset: bool,
     data: &CaptureDamageData,
     used: ConditionDamageDataUsed,
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td>"Capture"</td>
+            <td>
+            {pedia_ex.items.get(&ItemId::Normal(494)).map(|item| gen_item_icon(item, true))}
+            "Capture"</td>
             { gen_condition_base(&data.base) }
             <td> </td>
         </tr>
@@ -1622,12 +1634,12 @@ pub fn gen_monster(
                 {gen_condition_stun(true, monster.condition_damage_data.stun_data.or_preset(condition_preset), monster.condition_damage_data.use_stun)}
                 {gen_condition_stamina(true, monster.condition_damage_data.stamina_data.or_preset(condition_preset), monster.condition_damage_data.use_stamina)}
 
-                {gen_condition_flash(false, false, &monster.condition_damage_data.flash_data, monster.condition_damage_data.use_flash)}
-                {gen_condition_flash(true, false, monster.condition_damage_data.flash_data.or_preset(condition_preset), monster.condition_damage_data.use_flash)}
+                {gen_condition_flash(pedia_ex, false, false, &monster.condition_damage_data.flash_data, monster.condition_damage_data.use_flash)}
+                {gen_condition_flash(pedia_ex, true, false, monster.condition_damage_data.flash_data.or_preset(condition_preset), monster.condition_damage_data.use_flash)}
                 {monster.unique_mystery.as_ref().into_iter().flat_map(|m| &m.base.condition_damage_data).map(|c| {
                     let value = usize::try_from(c.flash_damage_use_preset_type).ok().and_then(|v|pedia.system_mystery.flash_data.get(v))
                         .map(|v|&v.base.0).unwrap_or(&c.flash_damage_data);
-                    gen_condition_flash(true, true, value, monster.condition_damage_data.use_flash)
+                    gen_condition_flash(pedia_ex, true, true, value, monster.condition_damage_data.use_flash)
                 })}
 
                 {gen_condition_poison(false, &monster.condition_damage_data.poison_data, monster.condition_damage_data.use_poison)}
@@ -1649,12 +1661,12 @@ pub fn gen_monster(
                 {gen_condition_fire(false, &monster.condition_damage_data.fire_data, monster.condition_damage_data.use_fire)}
                 {gen_condition_ice(false, &monster.condition_damage_data.ice_data, monster.condition_damage_data.use_ice)}
                 {gen_condition_thunder(false, &monster.condition_damage_data.thunder_data, monster.condition_damage_data.use_thunder)}
-                {gen_condition_fall_trap(false, false, &monster.condition_damage_data.fall_trap_data, monster.condition_damage_data.use_fall_trap)}
+                {gen_condition_fall_trap(pedia_ex, false, false, &monster.condition_damage_data.fall_trap_data, monster.condition_damage_data.use_fall_trap)}
                 {gen_condition_fall_quick_sand(false, false, &monster.condition_damage_data.fall_quick_sand_data, monster.condition_damage_data.use_fall_quick_sand)}
                 {gen_condition_fall_otomo_trap(false, false, &monster.condition_damage_data.fall_otomo_trap_data, monster.condition_damage_data.use_fall_otomo_trap)}
-                {gen_condition_shock_trap(false, false, &monster.condition_damage_data.shock_trap_data, monster.condition_damage_data.use_shock_trap)}
+                {gen_condition_shock_trap(pedia_ex, false, false, &monster.condition_damage_data.shock_trap_data, monster.condition_damage_data.use_shock_trap)}
                 {gen_condition_shock_otomo_trap(false, false, &monster.condition_damage_data.shock_otomo_trap_data, monster.condition_damage_data.use_shock_otomo_trap)}
-                {gen_condition_capture(false, &monster.condition_damage_data.capture_data, monster.condition_damage_data.use_capture)}
+                {gen_condition_capture(pedia_ex, false, &monster.condition_damage_data.capture_data, monster.condition_damage_data.use_capture)}
                 {gen_condition_dung(false, &monster.condition_damage_data.koyashi_data, monster.condition_damage_data.use_dung)}
                 {gen_condition_steel_fang(false, &monster.condition_damage_data.steel_fang_data, monster.condition_damage_data.use_steel_fang)}
 
@@ -1662,15 +1674,15 @@ pub fn gen_monster(
                 {gen_condition_fire(true, monster.condition_damage_data.fire_data.or_preset(condition_preset), monster.condition_damage_data.use_fire)}
                 {gen_condition_ice(true, monster.condition_damage_data.ice_data.or_preset(condition_preset), monster.condition_damage_data.use_ice)}
                 {gen_condition_thunder(true, monster.condition_damage_data.thunder_data.or_preset(condition_preset), monster.condition_damage_data.use_thunder)}
-                {gen_condition_fall_trap(true, false, monster.condition_damage_data.fall_trap_data.or_preset(condition_preset), monster.condition_damage_data.use_fall_trap)}
+                {gen_condition_fall_trap(pedia_ex, true, false, monster.condition_damage_data.fall_trap_data.or_preset(condition_preset), monster.condition_damage_data.use_fall_trap)}
                 {gen_condition_fall_quick_sand(true, false, monster.condition_damage_data.fall_quick_sand_data.or_preset(condition_preset), monster.condition_damage_data.use_fall_quick_sand)}
                 {gen_condition_fall_otomo_trap(true, false, monster.condition_damage_data.fall_otomo_trap_data.or_preset(condition_preset), monster.condition_damage_data.use_fall_otomo_trap)}
-                {gen_condition_shock_trap(true, false, <ShockTrapDamageData as ConditionDamage<PresetShockTrapData>>::or_preset(&monster.condition_damage_data.shock_trap_data, condition_preset), monster.condition_damage_data.use_shock_trap)}
+                {gen_condition_shock_trap(pedia_ex, true, false, <ShockTrapDamageData as ConditionDamage<PresetShockTrapData>>::or_preset(&monster.condition_damage_data.shock_trap_data, condition_preset), monster.condition_damage_data.use_shock_trap)}
                 {gen_condition_shock_otomo_trap(true, false, <ShockTrapDamageData as ConditionDamage<PresetShockOtomoTrapData>>::or_preset(&monster.condition_damage_data.shock_trap_data, condition_preset), monster.condition_damage_data.use_shock_otomo_trap)}
                 {monster.unique_mystery.as_ref().into_iter().flat_map(|m| &m.base.condition_damage_data).flat_map(|c| {
                     let value = usize::try_from(c.fall_trap_use_preset_type).ok().and_then(|v|pedia.system_mystery.fall_trap_data.get(v))
                         .map(|v|&v.base.0).unwrap_or(&c.fall_trap_data);
-                    let fall_trap = gen_condition_fall_trap(true, true, value, monster.condition_damage_data.use_fall_trap);
+                    let fall_trap = gen_condition_fall_trap(pedia_ex, true, true, value, monster.condition_damage_data.use_fall_trap);
                     let value = usize::try_from(c.fall_quick_sand_use_preset_type).ok().and_then(|v|pedia.system_mystery.fall_quick_sand_data.get(v))
                         .map(|v|&v.base.0).unwrap_or(&c.fall_quick_sand_data);
                     let fall_quick_sand = gen_condition_fall_quick_sand(true, true, value, monster.condition_damage_data.use_fall_quick_sand);
@@ -1679,14 +1691,14 @@ pub fn gen_monster(
                     let fall_otomo_trap = gen_condition_fall_otomo_trap(true, true, value, monster.condition_damage_data.use_fall_otomo_trap);
                     let value = usize::try_from(c.shock_trap_use_preset_type).ok().and_then(|v|pedia.system_mystery.shock_trap_data.get(v))
                         .map(|v|&v.base.0).unwrap_or(&c.shock_trap_data);
-                    let shock_trap = gen_condition_shock_trap(true, true, value, monster.condition_damage_data.use_shock_trap);
+                    let shock_trap = gen_condition_shock_trap(pedia_ex, true, true, value, monster.condition_damage_data.use_shock_trap);
                     let value = usize::try_from(c.shock_otomo_trap_use_preset_type).ok().and_then(|v|pedia.system_mystery.shock_otomo_trap_data.get(v))
                         .map(|v|&v.base.0).unwrap_or(&c.shock_otomo_trap_data);
-                    let shock_otomo_trap = gen_condition_shock_trap(true, true, value, monster.condition_damage_data.use_shock_otomo_trap);
+                    let shock_otomo_trap = gen_condition_shock_otomo_trap(true, true, value, monster.condition_damage_data.use_shock_otomo_trap);
 
                     [fall_trap, fall_quick_sand, fall_otomo_trap, shock_trap, shock_otomo_trap]
                 })}
-                {gen_condition_capture(true, monster.condition_damage_data.capture_data.or_preset(condition_preset), monster.condition_damage_data.use_capture)}
+                {gen_condition_capture(pedia_ex, true, monster.condition_damage_data.capture_data.or_preset(condition_preset), monster.condition_damage_data.use_capture)}
                 {gen_condition_dung(true, monster.condition_damage_data.koyashi_data.or_preset(condition_preset), monster.condition_damage_data.use_dung)}
                 {gen_condition_steel_fang(true, monster.condition_damage_data.steel_fang_data.or_preset(condition_preset), monster.condition_damage_data.use_steel_fang)}
             </tbody>
