@@ -1119,29 +1119,29 @@ pub fn gen_monster(
                 monster.anger_data.data_info[2].val,
                 monster.anger_data.data_info[3].val)}</span>
         </p>
-        <p class="mh-kv"><span>"Enrage timer"</span>
-            <span>{text!("{}", monster.anger_data.timer)}</span>
+        <p class="mh-kv"><span>"State time"</span>
+            <span>{text!("(enraged) {}sec / (tired) {}sec", monster.anger_data.timer, monster.stamina_data.tired_sec)}</span>
         </p>
-        <p class="mh-kv"><span>"Rampage enrage timer"</span>
-            <span>{text!("{}", monster.anger_data.hyakuryu_cool_timer)}</span>
+        <p class="mh-kv"><span>"State time (rampage)"</span>
+            <span>{text!("(enraged) {}sec / (tired) {}sec", monster.anger_data.hyakuryu_cool_timer, monster.stamina_data.hyakuryu_tired_sec)}</span>
         </p>
-        <p class="mh-kv"><span>"Enrage motion multiplier"</span>
-            <span>{text!("{}", monster.anger_data.mot_rate)}</span>
+        <p class="mh-kv"><span>"Motion"</span>
+            <span>{text!("(enraged) x{} / (tired) x{}", monster.anger_data.mot_rate, monster.stamina_data.mot_rate)}</span>
         </p>
-        <p class="mh-kv"><span>"Enrage attack multiplier"</span>
-            <span>{text!("{}", monster.anger_data.atk_rate)}</span>
+        <p class="mh-kv"><span>"Attack"</span>
+            <span>{text!("(enraged) x{}", monster.anger_data.atk_rate)}</span>
         </p>
-        <p class="mh-kv"><span>"Enrage defense multiplier"</span>
-            <span>{text!("{}", monster.anger_data.def_rate)}</span>
+        <p class="mh-kv"><span>"Defense"</span>
+            <span>{text!("(enraged) x{}", monster.anger_data.def_rate)}</span>
         </p>
-        <p class="mh-kv"><span>"Enrage compensation rate"</span>
-            <span>{text!("{:?}", monster.anger_data.compensation_rate)}</span>
-        </p>
-        <p class="mh-kv"><span>"Enrage compensation rate (rampage)"</span>
-            <span>{text!("{:?}", monster.anger_data.hyakuryu_compensation_rate)}</span>
-        </p>
+        // <p class="mh-kv"><span>"Enrage compensation rate"</span>
+        //     <span>{text!("{:?}", monster.anger_data.compensation_rate)}</span>
+        // </p>
+        // <p class="mh-kv"><span>"Enrage compensation rate (rampage)"</span>
+        //     <span>{text!("{:?}", monster.anger_data.hyakuryu_compensation_rate)}</span>
+        // </p>
         <p class="mh-kv"><span>"Enrage add staying time"</span>
-            <span>{text!("{}", monster.anger_data.anger_stay_add_sec)}</span>
+            <span>{text!("{}sec", monster.anger_data.anger_stay_add_sec)}</span>
         </p>
         <p class="mh-kv"><span>"life_area_timer_rate"</span>
             <span>{text!("{}", monster.anger_data.life_area_timer_rate)}</span>
