@@ -152,7 +152,7 @@ rsz_struct! {
 // snow.enemy.EnemyDef.UseDataType
 rsz_enum! {
     #[rsz(u32)]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, PartialEq, Eq)]
     pub enum UseDataType {
         Common = 0,
         Unique = 1,

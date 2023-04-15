@@ -889,13 +889,13 @@ pub fn gen_multipart<'a>(
     {
         multipart.into_iter().map(|(is_system, i, m)| html!(<tr>
             <td> {
-                let explain = match (is_system, i) {
-                    (true, 0) => " (Apex knockdown?)",
-                    (true, 1) => " (Riding initiate?)",
-                    (true, 2) => " (Apex related?)",
-                    _ => "",
-                };
-                text!("{}{}{}", if is_system {"System"} else {"Unique"}, i, explain)
+                match (is_system, i) {
+                    (true, 0) => text!("Apex shutdown (rampage)"),
+                    (true, 1) => text!("Hellfire knockdown"),
+                    (true, 2) => text!("Apex shutdown (normal quest)"),
+                    (true, _) => unreachable!(),
+                    (false, i) => text!("Unique{}", i),
+                }
             } </td>
             <td>
             {
@@ -1597,6 +1597,7 @@ pub fn gen_monster(
             <section id="s-multipart">
             <h2>"Multi-part vital"</h2>
             {
+                // TODO: "Common" data should be overridden by system preset. This however only appears for 89_00/05
                 let system = monster.data_tune.enemy_multi_parts_vital_system_data
                     .iter().enumerate().map(|(i, m)|(true, i, &m.base.0));
                 let additional = monster.data_tune.enemy_multi_parts_vital_data_list
