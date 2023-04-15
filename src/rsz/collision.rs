@@ -318,7 +318,7 @@ impl DamageType {
             DamageType::CatchAttack => "Catch",
             DamageType::CatchingAttack => "Catching attack",
             DamageType::MarionetteAttack => "[Wyvern ride]",
-            DamageType::GrappleAttack => "Grapple",
+            DamageType::GrappleAttack => "Turf war",
             DamageType::OtomoConstrain => "[Buddy]",
             DamageType::BuffAttack => "[Buff attack]",
             DamageType::BuffDefence => "[Buff defence]",
