@@ -192,7 +192,7 @@ impl Rsz {
         })
     }
 
-    pub fn deserialize(&self) -> Result<Vec<AnyRsz>> {
+    pub fn deserialize(&self, version_hint: Option<u32>) -> Result<Vec<AnyRsz>> {
         let mut node_buf: Vec<Option<AnyRsz>> = vec![None];
         let mut cursor = Cursor::new(&self.data);
         for (i, &TypeDescriptor { hash, crc }) in self.type_descriptors.iter().enumerate().skip(1) {
@@ -216,7 +216,7 @@ impl Rsz {
                 )
             })?;
             let version = if type_info.versions.is_empty() {
-                0
+                version_hint.unwrap_or(0)
             } else {
                 *type_info.versions.get(&crc).with_context(|| {
                     format!(
@@ -269,16 +269,16 @@ impl Rsz {
         Ok(result)
     }
 
-    pub fn deserialize_single_any(&self) -> Result<AnyRsz> {
-        let mut result = self.deserialize()?;
+    pub fn deserialize_single_any(&self, version_hint: Option<u32>) -> Result<AnyRsz> {
+        let mut result = self.deserialize(version_hint)?;
         if result.len() != 1 {
             bail!("Not a single-valued RSZ");
         }
         Ok(result.pop().unwrap())
     }
 
-    pub fn deserialize_single<T: 'static>(&self) -> Result<T> {
-        let mut result = self.deserialize()?;
+    pub fn deserialize_single<T: 'static>(&self, version_hint: Option<u32>) -> Result<T> {
+        let mut result = self.deserialize(version_hint)?;
         if result.len() != 1 {
             bail!("Not a single-valued RSZ");
         }
@@ -473,13 +473,14 @@ impl<T: 'static> ExternUser<T> {
     pub fn load<'a>(
         &'a mut self,
         pak: &'_ mut crate::pak::PakReader<impl Read + Seek>,
+        version_hint: Option<u32>,
     ) -> Result<&'a mut T> {
         match self {
             ExternUser::Path(path) => {
                 let index = pak.find_file(&path.0)?;
                 let file = pak.read_file(index)?;
                 let user = crate::user::User::new(Cursor::new(file))?;
-                *self = ExternUser::Loaded(user.rsz.deserialize_single()?);
+                *self = ExternUser::Loaded(user.rsz.deserialize_single(version_hint)?);
                 if let ExternUser::Loaded(t) = self {
                     Ok(t)
                 } else {
@@ -1032,7 +1033,8 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         RandomMysteryLotEnemyData,
         ReleaseDataParam,
         ReleaseData,
-        RandomMysteryMonsterRankReleaseData
+        RandomMysteryMonsterRankReleaseData,
+        SpecialMysteryQuestData
     );
 
     r!(

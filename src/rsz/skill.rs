@@ -34,6 +34,7 @@ impl PlEquipSkillId {
 
 rsz_struct! {
     #[rsz("snow.data.PlEquipSkillBaseUserData.Param",
+        0xBCDBC248 = 15_00_00,
         0x19FEE250 = 13_00_00,
         0xac747724 = 10_00_02,
         0xCCCC00F1 = 11_00_01
@@ -43,7 +44,10 @@ rsz_struct! {
         pub id: PlEquipSkillId,
         pub max_level: i32, // snow.data.PlSkillData.SkillLvTypes, 0 = level 1
         pub icon_color: i32, // snow.gui.SnowGuiCommonUtility.Icon.ItemIconColor
-        pub worth_point_list: u32,
+        pub worth_point_list: Versioned<u32, 0, 14_99_99>,
+        pub category_id_1: Versioned<u16, 15_00_00>, // snow.data.DataDef.PlEquipSkillCategoryId
+        pub category_id_2: Versioned<u16, 15_00_00>,
+        pub category_id_3: Versioned<u16, 15_00_00>
     }
 }
 
@@ -379,6 +383,7 @@ rsz_newtype! {
 
 rsz_struct! {
     #[rsz("snow.data.PlHyakuryuSkillBaseUserData.Param",
+        0x4557B275 = 15_00_00,
         0xc72df418 = 10_00_02,
         0xD599D6B2 = 12_00_00
     )]
@@ -436,6 +441,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.PlHyakuryuSkillRecipeUserData.Param",
+        0xB623309B = 15_00_00,
         0x50C9DF1D = 14_00_00,
         0x8FEFA1E4 = 13_00_00,
         0xa10bbbc4 = 10_00_02,
@@ -470,7 +476,7 @@ rsz_enum! {
     pub enum DecorationsId {
         None = 0,
         Deco(u32) = 1..=108,
-        MrDeco(u32) = 109..=255,
+        MrDeco(u32) = 109..=1000,
     }
 }
 
@@ -486,6 +492,7 @@ impl DecorationsId {
 
 rsz_struct! {
     #[rsz("snow.data.DecorationsBaseUserData.Param",
+        0x5298A390 = 15_00_00,
         0x18C397F2 = 14_00_00,
         0xE302DF49 = 13_00_00,
         0x041e623d = 10_00_02,
@@ -517,6 +524,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.DecorationsProductUserData.Param",
+        0x0884DACE = 15_00_00,
         0x8A090F5C = 14_00_00,
         0x8B4D41E5 = 13_00_00,
         0x1B205AA6 = 10_00_02,
@@ -557,6 +565,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.HyakuryuDecoBaseUserData.Param",
+        0x6C079912 = 15_00_00,
         0x6790376E = 14_00_00,
         0xd431117c = 10_00_02,
         0x68E28EFF = 11_00_01,
@@ -589,6 +598,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.HyakuryuDecoProductUserData.Param",
+        0x62B6332B = 15_00_00,
         0xECBBA797 = 14_00_00,
         0x7FED1C2D = 13_00_00,
         0x4788eebf = 10_00_02,

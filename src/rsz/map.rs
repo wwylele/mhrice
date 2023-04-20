@@ -218,6 +218,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.stage.pop.CampFindCheck",
+        0xF9AAD01D = 15_00_00,
         0x8F5C6E20 = 14_00_00,
         0x5588A2F2 = 10_00_02,
         0xA0F8501B = 11_00_01,
@@ -396,6 +397,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.ItemPopLotTableUserData.Param",
+        0xEF9B637A = 15_00_00,
         0xFD1D44F1 = 14_00_00,
         0x47242315 = 13_00_00,
         0xa1800433 = 10_00_02,
@@ -838,6 +840,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.stage.StageDemoCameraSceneRequeter.RequestData",
+        0xD381EC25 = 15_00_00,
         0xf64754ac = 10_00_02
     )]
     #[derive(Debug, Serialize)]
@@ -849,6 +852,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.stage.StageDemoCameraSceneRequeter",
+        0x8461F441 = 15_00_00,
         0x109e1f98 = 10_00_02
     )]
     #[derive(Debug, Serialize)]

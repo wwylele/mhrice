@@ -57,6 +57,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.MonsterLotTableUserData.Param",
+        0x5CD699D5 = 15_00_00,
         0x7B3D579C = 14_00_00,
         0xF4AB0924 = 13_00_00,
         0xbdcef7e9 = 10_00_02,
@@ -192,6 +193,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.PartsTypeTextUserData.TextInfo",
+        0x064C963B = 15_00_00,
         0xA8057F49 = 14_00_00,
         0x745031D8 = 13_00_00,
         0x62EF585F = 10_00_02,

@@ -67,6 +67,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.RandomMysteryDifficultyRateKindData",
+        0xF436E0EE = 15_00_00,
         0xE9DE3A6F = 14_00_00,
         0x81573281 = 11_00_01,
     )]
@@ -147,6 +148,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.RandomMysteryLotEnemyData.NGAppearanceData",
+        0xAB8FD59A = 15_00_00,
         0x0405560B = 14_00_00,
         0xCE7A98B5 = 13_00_00,
         0xe609a59a = 11_00_01,
@@ -161,7 +163,17 @@ rsz_struct! {
 }
 
 rsz_struct! {
+    #[rsz("snow.quest.RandomMysteryLotEnemyData.SpecialMysteryQuestData")]
+    #[derive(Debug, Serialize)]
+    pub struct SpecialMysteryQuestData {
+        pub mystery_boss_scale_tbl: i32, // snow.enemy.EnemyDef.BossScaleTblType
+        pub normal_boss_scale_tbl: i32, // snow.enemy.EnemyDef.BossScaleTblType
+    }
+}
+
+rsz_struct! {
     #[rsz("snow.quest.RandomMysteryLotEnemyData.LotEnemyData",
+        0x8EB6D943 = 15_00_00,
         0x4DD6D4AF = 14_00_00,
         0x9D4D71DE = 13_00_00,
         0xBA8468A5 = 11_00_01,
@@ -181,6 +193,8 @@ rsz_struct! {
         pub is_intrusion: bool,
         pub difficulty_table_type: i32,
         pub difficulty_table_type_extra: i32,
+        pub step_scale_table_type: Versioned<i32, 15_00_00>, // snow.enemy.EnemyDef.BossScaleTblType
+        pub special_mystery_data: Versioned<SpecialMysteryQuestData, 15_00_00>,
         pub shell_scale_data_list: Vec<ShellScaleData>,
         pub ng_data_list: Vec<NGAppearanceData>,
     }

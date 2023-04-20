@@ -118,6 +118,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.OtArmorProductUserData.Param",
+        0xE17B50FB = 15_00_00,
         0x2AA99684 = 14_00_00,
         0x667506DD = 13_00_00,
         0xda1d7c07 = 10_00_02,
@@ -163,6 +164,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.OtWeaponProductUserData.Param",
+        0x2F14F017 = 15_00_00,
         0x8462A4AE = 14_00_00,
         0xE1EF11B7 = 13_00_00,
         0x097c7cce = 10_00_02,
@@ -285,6 +287,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.OtEquipSeriesUserData.Param",
+        0xBE1A4079 = 15_00_00,
         0x03777F24 = 14_00_00,
         0x4942552E = 13_00_00,
         0x64399daa = 10_00_02,
@@ -359,6 +362,7 @@ rsz_with_singleton! {
 
 rsz_struct! {
     #[rsz("snow.equip.OtOverwearRecipeUserData.Param",
+        0xFCABE972 = 15_00_00,
         0xFED893C8 = 14_00_00,
         0x015973AA = 13_00_00,
         0xDBA438DD = 12_00_00,

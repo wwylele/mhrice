@@ -264,12 +264,14 @@ pub fn gen_monsters(
     atk_collider_path_gen: fn(u32, u32) -> String,
     shell_collider_path_gen: fn(u32, u32) -> Vec<String>,
     is_large: bool,
+    version_hint: Option<u32>,
 ) -> Result<Vec<Monster>> {
     let mut monsters = vec![];
 
     fn sub_file<T: FromRsz + 'static>(
         pak: &mut PakReader<impl Read + Seek>,
         pfb: &Pfb,
+        version_hint: Option<u32>,
     ) -> Result<T> {
         let path = &exactly_one(
             pfb.children
@@ -279,7 +281,9 @@ pub fn gen_monsters(
         .name;
         let index = pak.find_file(path)?;
         let data = User::new(Cursor::new(pak.read_file(index)?))?;
-        data.rsz.deserialize_single().context(path.clone())
+        data.rsz
+            .deserialize_single(version_hint)
+            .context(path.clone())
     }
 
     for id in 0..1000 {
@@ -292,29 +296,30 @@ pub fn gen_monsters(
             };
             let main_pfb = Pfb::new(Cursor::new(pak.read_file(main_pfb_index)?))?;
 
-            let data_base = sub_file(pak, &main_pfb).context("data_base")?;
+            let data_base = sub_file(pak, &main_pfb, version_hint).context("data_base")?;
             let data_tune = {
                 // not using sub_file here because some pfb also somehow reference the variantion file
                 let path = data_tune_path_gen(id, sub_id);
                 let index = pak.find_file(&path)?;
                 User::new(Cursor::new(pak.read_file(index)?))?
                     .rsz
-                    .deserialize_single()
+                    .deserialize_single(version_hint)
                     .context("data_tune")?
             };
-            let meat_data = sub_file(pak, &main_pfb).context("meat_data")?;
+            let meat_data = sub_file(pak, &main_pfb, version_hint).context("meat_data")?;
             let condition_damage_data =
-                sub_file(pak, &main_pfb).context("condition_damage_data")?;
-            let anger_data = sub_file(pak, &main_pfb).context("anger_data")?;
-            let stamina_data = sub_file(pak, &main_pfb).context("stamina_data")?;
-            let parts_break_data = sub_file(pak, &main_pfb).context("parts_break_data")?;
+                sub_file(pak, &main_pfb, version_hint).context("condition_damage_data")?;
+            let anger_data = sub_file(pak, &main_pfb, version_hint).context("anger_data")?;
+            let stamina_data = sub_file(pak, &main_pfb, version_hint).context("stamina_data")?;
+            let parts_break_data =
+                sub_file(pak, &main_pfb, version_hint).context("parts_break_data")?;
 
             let boss_init_set_data = if let Some(path) = boss_init_path_gen(id, sub_id) {
                 if let Ok(index) = pak.find_file(&path) {
                     let data = User::new(Cursor::new(pak.read_file(index)?))?;
                     Some(
                         data.rsz
-                            .deserialize_single()
+                            .deserialize_single(version_hint)
                             .context("boss_init_set_data")?,
                     )
                 } else {
@@ -335,9 +340,9 @@ pub fn gen_monsters(
                 Rcol::new(Cursor::new(pak.read_file(rcol_index)?), true).context(rcol_path)?;
             let collider_mapping = gen_collider_mapping(rcol)?;
 
-            let drop_item = sub_file(pak, &main_pfb).context("drop_item")?;
+            let drop_item = sub_file(pak, &main_pfb, version_hint).context("drop_item")?;
             let parts_break_reward = is_large
-                .then(|| sub_file(pak, &main_pfb).context("parts_break_reward"))
+                .then(|| sub_file(pak, &main_pfb, version_hint).context("parts_break_reward"))
                 .transpose()?;
 
             let em_type = if is_large { EmTypes::Em } else { EmTypes::Ems }(id | (sub_id << 8));
@@ -386,7 +391,7 @@ pub fn gen_monsters(
                 }
             }
 
-            let pop_parameter = sub_file(pak, &main_pfb).context("pop_parameter")?;
+            let pop_parameter = sub_file(pak, &main_pfb, version_hint).context("pop_parameter")?;
 
             let unique_mystery = if let Some((loader, path)) =
                 atmost_one(main_pfb.children.iter().filter_map(|child| {
@@ -396,7 +401,11 @@ pub fn gen_monsters(
                 }))? {
                 let index = pak.find_file(path)?;
                 let data = User::new(Cursor::new(pak.read_file(index)?))?;
-                let data = loader(data.rsz.deserialize_single_any().context(path.clone())?)?;
+                let data = loader(
+                    data.rsz
+                        .deserialize_single_any(version_hint)
+                        .context(path.clone())?,
+                )?;
                 if data.base.condition_damage_data.len() > 1 {
                     bail!("Multiple condition damage data for mystery {main_pfb_path}")
                 }
@@ -415,7 +424,11 @@ pub fn gen_monsters(
                 let path = &child.name;
                 let index = pak.find_file(path)?;
                 let data = User::new(Cursor::new(pak.read_file(index)?))?;
-                Some(data.rsz.deserialize_single().context(path.clone())?)
+                Some(
+                    data.rsz
+                        .deserialize_single(version_hint)
+                        .context(path.clone())?,
+                )
             } else {
                 None
             };
@@ -452,17 +465,22 @@ fn get_msg(pak: &mut PakReader<impl Read + Seek>, path: &str) -> Result<Msg> {
     Msg::new(Cursor::new(pak.read_file(index)?))
 }
 
-fn get_user<T: 'static>(pak: &mut PakReader<impl Read + Seek>, path: &str) -> Result<T> {
+fn get_user<T: 'static>(
+    pak: &mut PakReader<impl Read + Seek>,
+    path: &str,
+    version_hint: Option<u32>,
+) -> Result<T> {
     let index = pak.find_file(path)?;
     User::new(Cursor::new(pak.read_file(index)?))?
         .rsz
-        .deserialize_single()
+        .deserialize_single(version_hint)
         .with_context(|| path.to_string())
 }
 
 fn get_user_opt<T: 'static>(
     pak: &mut PakReader<impl Read + Seek>,
     path: &str,
+    version_hint: Option<u32>,
 ) -> Result<Option<T>> {
     let index = if let Ok(index) = pak.find_file(path) {
         index
@@ -472,19 +490,23 @@ fn get_user_opt<T: 'static>(
 
     let user = User::new(Cursor::new(pak.read_file(index)?))?
         .rsz
-        .deserialize_single()
+        .deserialize_single(version_hint)
         .with_context(|| path.to_string())?;
     Ok(Some(user))
 }
 
-fn get_singleton<T: 'static + SingletonUser>(pak: &mut PakReader<impl Read + Seek>) -> Result<T> {
-    Ok(T::from_rsz(get_user(pak, T::PATH)?))
+fn get_singleton<T: 'static + SingletonUser>(
+    pak: &mut PakReader<impl Read + Seek>,
+    version_hint: Option<u32>,
+) -> Result<T> {
+    Ok(T::from_rsz(get_user(pak, T::PATH, version_hint)?))
 }
 
 fn get_singleton_opt<T: 'static + SingletonUser>(
     pak: &mut PakReader<impl Read + Seek>,
+    version_hint: Option<u32>,
 ) -> Result<Option<T>> {
-    if let Some(user) = get_user_opt(pak, T::PATH)? {
+    if let Some(user) = get_user_opt(pak, T::PATH, version_hint)? {
         Ok(Some(T::from_rsz(user)))
     } else {
         Ok(None)
@@ -494,39 +516,47 @@ fn get_singleton_opt<T: 'static + SingletonUser>(
 fn get_weapon_list<BaseData: 'static>(
     pak: &mut PakReader<impl Read + Seek>,
     weapon_class: &str,
+    version_hint: Option<u32>,
 ) -> Result<WeaponList<BaseData>> {
     Ok(WeaponList {
         base_data: get_user(
             pak,
             &format!("data/Define/Player/Weapon/{weapon_class}/{weapon_class}BaseData.user"),
+            version_hint,
         )?,
         product: get_user(
             pak,
             &format!("data/Define/Player/Weapon/{weapon_class}/{weapon_class}ProductData.user"),
+            version_hint,
         )?,
         change: get_user(
             pak,
             &format!("data/Define/Player/Weapon/{weapon_class}/{weapon_class}ChangeData.user"),
+            version_hint,
         )?,
         process: get_user(
             pak,
             &format!("data/Define/Player/Weapon/{weapon_class}/{weapon_class}ProcessData.user"),
+            version_hint,
         )?,
         tree: get_user(
             pak,
             &format!("data/Define/Player/Weapon/{weapon_class}/{weapon_class}UpdateTreeData.user"),
+            version_hint,
         )?,
         overwear: get_user_opt(
             pak,
             &format!(
                 "data/Define/Player/Weapon/{weapon_class}/{weapon_class}OverwearBaseData.user"
             ),
+            version_hint,
         )?,
         overwear_product: get_user_opt(
             pak,
             &format!(
                 "data/Define/Player/Weapon/{weapon_class}/{weapon_class}OverwearProductData.user"
             ),
+            version_hint,
         )?,
         name: get_msg(
             pak,
@@ -547,7 +577,28 @@ fn get_weapon_list<BaseData: 'static>(
     })
 }
 
+fn get_version_hint<T: 'static + SingletonUser, U: FromRsz>(
+    pak: &mut PakReader<impl Read + Seek>,
+) -> Result<u32> {
+    let index = pak.find_file(T::PATH)?;
+    let user = User::new(Cursor::new(pak.read_file(index)?))?;
+    for td in &user.rsz.type_descriptors {
+        if td.hash == U::type_hash() {
+            return Ok(U::VERSIONS
+                .iter()
+                .find(|&&(crc, _)| crc == td.crc)
+                .context("Type hint CRC not found")?
+                .1);
+        }
+    }
+    bail!("Type not found for version hint")
+}
+
 pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
+    let version_hint = Some(get_version_hint::<MonsterListBossData, BossMonsterData>(
+        pak,
+    )?);
+
     fn boss_init_set_path(id: u32, sub_id: u32) -> Option<String> {
         if id == 99 && sub_id == 5 {
             // wow
@@ -571,6 +622,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         gen_em_atk_collider_path,
         gen_em_shell_collider_path,
         true,
+        version_hint,
     )
     .context("Generating large monsters")?;
 
@@ -585,6 +637,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         gen_ems_atk_collider_path,
         gen_ems_shell_collider_path,
         false,
+        version_hint,
     )
     .context("Generating small monsters")?;
 
@@ -596,7 +649,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let monster_aliases_mr = get_msg(pak, "Message/Tag_MR/Tag_EM_Name_Alias_MR.msg")?;
     let monster_explains_mr = get_msg(pak, "Message/HunterNote_MR/HN_MonsterListMsg_MR.msg")?;
 
-    let condition_preset: EnemyConditionPresetData = get_singleton(pak)?;
+    let condition_preset: EnemyConditionPresetData = get_singleton(pak, version_hint)?;
     condition_preset.verify()?;
 
     let hunter_note_msg = get_msg(pak, "Message/HunterNote/HN_Hunternote_Menu.msg")?;
@@ -728,20 +781,20 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         "data/System/ContentsIdSystem/Common/ItemCategoryType_Name_MR.msg",
     )?;
 
-    let great_sword = get_weapon_list(pak, "GreatSword")?;
-    let short_sword = get_weapon_list(pak, "ShortSword")?;
-    let hammer = get_weapon_list(pak, "Hammer")?;
-    let lance = get_weapon_list(pak, "Lance")?;
-    let long_sword = get_weapon_list(pak, "LongSword")?;
-    let slash_axe = get_weapon_list(pak, "SlashAxe")?;
-    let gun_lance = get_weapon_list(pak, "GunLance")?;
-    let dual_blades = get_weapon_list(pak, "DualBlades")?;
-    let horn = get_weapon_list(pak, "Horn")?;
-    let insect_glaive = get_weapon_list(pak, "InsectGlaive")?;
-    let charge_axe = get_weapon_list(pak, "ChargeAxe")?;
-    let light_bowgun = get_weapon_list(pak, "LightBowgun")?;
-    let heavy_bowgun = get_weapon_list(pak, "HeavyBowgun")?;
-    let bow = get_weapon_list(pak, "Bow")?;
+    let great_sword = get_weapon_list(pak, "GreatSword", version_hint)?;
+    let short_sword = get_weapon_list(pak, "ShortSword", version_hint)?;
+    let hammer = get_weapon_list(pak, "Hammer", version_hint)?;
+    let lance = get_weapon_list(pak, "Lance", version_hint)?;
+    let long_sword = get_weapon_list(pak, "LongSword", version_hint)?;
+    let slash_axe = get_weapon_list(pak, "SlashAxe", version_hint)?;
+    let gun_lance = get_weapon_list(pak, "GunLance", version_hint)?;
+    let dual_blades = get_weapon_list(pak, "DualBlades", version_hint)?;
+    let horn = get_weapon_list(pak, "Horn", version_hint)?;
+    let insect_glaive = get_weapon_list(pak, "InsectGlaive", version_hint)?;
+    let charge_axe = get_weapon_list(pak, "ChargeAxe", version_hint)?;
+    let light_bowgun = get_weapon_list(pak, "LightBowgun", version_hint)?;
+    let heavy_bowgun = get_weapon_list(pak, "HeavyBowgun", version_hint)?;
+    let bow = get_weapon_list(pak, "Bow", version_hint)?;
 
     let horn_melody = get_msg(pak, "data/Define/Player/Weapon/Horn/Horn_UniqueParam.msg")?;
     let horn_melody_mr = get_msg(
@@ -872,12 +925,12 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let servant_profile = get_msg(pak, "Message/Servant/ServantProfile_MR.msg")?;
 
     let mut random_mystery_difficulty: Option<RandomMysteryDifficultyRateListData> =
-        get_singleton_opt(pak)?;
+        get_singleton_opt(pak, version_hint)?;
 
     if let Some(rmd) = &mut random_mystery_difficulty {
         for nand_data in &mut rmd.nand_data {
             for nand_kinds_data in &mut nand_data.nand_kinds_data {
-                nand_kinds_data.nando_ref_table.load(pak)?;
+                nand_kinds_data.nando_ref_table.load(pak, version_hint)?;
             }
         }
     }
@@ -921,42 +974,42 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         monster_aliases_mr,
         monster_explains_mr,
         condition_preset,
-        monster_list: get_singleton(pak)?,
+        monster_list: get_singleton(pak, version_hint)?,
         hunter_note_msg,
         hunter_note_msg_mr,
         material_category_msg_mr,
-        monster_lot: get_singleton(pak)?,
-        monster_lot_mr: get_singleton(pak)?,
-        parts_type: get_singleton(pak)?,
-        normal_quest_data: get_singleton(pak)?,
-        normal_quest_data_mr: get_singleton(pak)?,
-        normal_quest_data_for_enemy: get_singleton(pak)?,
-        normal_quest_data_for_enemy_mr: get_singleton(pak)?,
-        dl_quest_data: get_singleton(pak)?,
-        dl_quest_data_for_enemy: get_singleton(pak)?,
-        dl_quest_data_mr: get_singleton_opt(pak)?,
-        dl_quest_data_for_enemy_mr: get_singleton_opt(pak)?,
-        difficulty_rate: get_singleton(pak)?,
-        difficulty_rate_anomaly: get_singleton_opt(pak)?,
-        random_scale: get_singleton(pak)?,
-        size_list: get_singleton(pak)?,
-        discover_em_set_data: get_singleton(pak)?,
-        quest_data_for_reward: get_singleton(pak)?,
-        quest_data_for_reward_mr: get_singleton(pak)?,
-        reward_id_lot_table: get_singleton(pak)?,
-        reward_id_lot_table_mr: get_singleton(pak)?,
-        main_target_reward_lot_num: get_singleton(pak)?,
-        fixed_hyakuryu_quest: get_singleton(pak)?,
-        mystery_reward_item: get_singleton(pak)?,
-        quest_servant: get_singleton(pak)?,
-        supply_data: get_singleton(pak)?,
-        supply_data_mr: get_singleton(pak)?,
-        arena_quest: get_singleton(pak)?,
-        quest_unlock: get_singleton(pak)?,
-        time_attack_reward: get_singleton(pak)?,
-        talk_condition_quest_list: get_singleton(pak)?,
-        npc_mission: get_singleton(pak)?,
-        npc_mission_mr: get_singleton(pak)?,
+        monster_lot: get_singleton(pak, version_hint)?,
+        monster_lot_mr: get_singleton(pak, version_hint)?,
+        parts_type: get_singleton(pak, version_hint)?,
+        normal_quest_data: get_singleton(pak, version_hint)?,
+        normal_quest_data_mr: get_singleton(pak, version_hint)?,
+        normal_quest_data_for_enemy: get_singleton(pak, version_hint)?,
+        normal_quest_data_for_enemy_mr: get_singleton(pak, version_hint)?,
+        dl_quest_data: get_singleton(pak, version_hint)?,
+        dl_quest_data_for_enemy: get_singleton(pak, version_hint)?,
+        dl_quest_data_mr: get_singleton_opt(pak, version_hint)?,
+        dl_quest_data_for_enemy_mr: get_singleton_opt(pak, version_hint)?,
+        difficulty_rate: get_singleton(pak, version_hint)?,
+        difficulty_rate_anomaly: get_singleton_opt(pak, version_hint)?,
+        random_scale: get_singleton(pak, version_hint)?,
+        size_list: get_singleton(pak, version_hint)?,
+        discover_em_set_data: get_singleton(pak, version_hint)?,
+        quest_data_for_reward: get_singleton(pak, version_hint)?,
+        quest_data_for_reward_mr: get_singleton(pak, version_hint)?,
+        reward_id_lot_table: get_singleton(pak, version_hint)?,
+        reward_id_lot_table_mr: get_singleton(pak, version_hint)?,
+        main_target_reward_lot_num: get_singleton(pak, version_hint)?,
+        fixed_hyakuryu_quest: get_singleton(pak, version_hint)?,
+        mystery_reward_item: get_singleton(pak, version_hint)?,
+        quest_servant: get_singleton(pak, version_hint)?,
+        supply_data: get_singleton(pak, version_hint)?,
+        supply_data_mr: get_singleton(pak, version_hint)?,
+        arena_quest: get_singleton(pak, version_hint)?,
+        quest_unlock: get_singleton(pak, version_hint)?,
+        time_attack_reward: get_singleton(pak, version_hint)?,
+        talk_condition_quest_list: get_singleton(pak, version_hint)?,
+        npc_mission: get_singleton(pak, version_hint)?,
+        npc_mission_mr: get_singleton(pak, version_hint)?,
         quest_hall_msg,
         quest_hall_msg_mr,
         quest_hall_msg_mr2,
@@ -967,13 +1020,13 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         quest_dlc_msg,
         npc_mission_msg,
         npc_mission_msg_mr,
-        armor: get_singleton(pak)?,
-        armor_series: get_singleton(pak)?,
-        armor_product: get_singleton(pak)?,
-        overwear: get_singleton(pak)?,
-        overwear_product: get_singleton(pak)?,
-        armor_buildup: get_singleton(pak)?,
-        armor_pair: get_singleton(pak)?,
+        armor: get_singleton(pak, version_hint)?,
+        armor_series: get_singleton(pak, version_hint)?,
+        armor_product: get_singleton(pak, version_hint)?,
+        overwear: get_singleton(pak, version_hint)?,
+        overwear_product: get_singleton(pak, version_hint)?,
+        armor_buildup: get_singleton(pak, version_hint)?,
+        armor_pair: get_singleton(pak, version_hint)?,
         armor_head_name_msg,
         armor_chest_name_msg,
         armor_arm_name_msg,
@@ -996,35 +1049,35 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         armor_waist_explain_msg_mr,
         armor_leg_explain_msg_mr,
         armor_series_name_msg_mr,
-        equip_skill: get_singleton(pak)?,
+        equip_skill: get_singleton(pak, version_hint)?,
         player_skill_detail_msg,
         player_skill_explain_msg,
         player_skill_name_msg,
         player_skill_detail_msg_mr,
         player_skill_explain_msg_mr,
         player_skill_name_msg_mr,
-        hyakuryu_skill: get_singleton(pak)?,
-        hyakuryu_skill_recipe: get_singleton(pak)?,
+        hyakuryu_skill: get_singleton(pak, version_hint)?,
+        hyakuryu_skill_recipe: get_singleton(pak, version_hint)?,
         hyakuryu_skill_name_msg,
         hyakuryu_skill_explain_msg,
         hyakuryu_skill_name_msg_mr,
         hyakuryu_skill_explain_msg_mr,
-        decorations: get_singleton(pak)?,
-        decorations_product: get_singleton(pak)?,
+        decorations: get_singleton(pak, version_hint)?,
+        decorations_product: get_singleton(pak, version_hint)?,
         decorations_name_msg,
         decorations_name_msg_mr,
-        hyakuryu_decos: get_singleton(pak)?,
-        hyakuryu_decos_product: get_singleton(pak)?,
+        hyakuryu_decos: get_singleton(pak, version_hint)?,
+        hyakuryu_decos_product: get_singleton(pak, version_hint)?,
         hyakuryu_decos_name_msg,
-        //alchemy_pattern: get_singleton(pak)?,
-        alchemy_pl_skill: get_singleton(pak)?,
-        /*alchemy_grade_worth: get_singleton(pak)?,
-        alchemy_rare_type: get_singleton(pak)?,
-        alchemy_second_skill_lot: get_singleton(pak)?,
-        alchemy_skill_grade_lot: get_singleton(pak)?,
-        alchemy_slot_num: get_singleton(pak)?,
-        alchemy_slot_worth: get_singleton(pak)?,*/
-        items: get_singleton(pak)?,
+        //alchemy_pattern: get_singleton(pak,version_hint)?,
+        alchemy_pl_skill: get_singleton(pak, version_hint)?,
+        /*alchemy_grade_worth: get_singleton(pak,version_hint)?,
+        alchemy_rare_type: get_singleton(pak,version_hint)?,
+        alchemy_second_skill_lot: get_singleton(pak,version_hint)?,
+        alchemy_skill_grade_lot: get_singleton(pak,version_hint)?,
+        alchemy_slot_num: get_singleton(pak,version_hint)?,
+        alchemy_slot_worth: get_singleton(pak,version_hint)?,*/
+        items: get_singleton(pak, version_hint)?,
         items_name_msg,
         items_explain_msg,
         items_name_msg_mr,
@@ -1046,26 +1099,26 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         bow,
         horn_melody,
         horn_melody_mr,
-        hyakuryu_weapon_buildup: get_singleton(pak)?,
-        weapon_chaos_critical: get_singleton_opt(pak)?,
+        hyakuryu_weapon_buildup: get_singleton(pak, version_hint)?,
+        weapon_chaos_critical: get_singleton_opt(pak, version_hint)?,
         weapon_series,
         weapon_series_mr,
         maps,
         map_name,
         map_name_mr,
-        item_pop_lot: get_singleton(pak)?,
-        airou_armor: get_singleton(pak)?,
-        airou_armor_product: get_singleton(pak)?,
-        dog_armor: get_singleton(pak)?,
-        dog_armor_product: get_singleton(pak)?,
-        airou_weapon: get_singleton(pak)?,
-        airou_weapon_product: get_singleton(pak)?,
-        dog_weapon: get_singleton(pak)?,
-        dog_weapon_product: get_singleton(pak)?,
-        ot_equip_series: get_singleton(pak)?,
-        airou_overwear: get_singleton(pak)?,
-        dog_overwear: get_singleton(pak)?,
-        ot_overwear_recipe: get_singleton(pak)?,
+        item_pop_lot: get_singleton(pak, version_hint)?,
+        airou_armor: get_singleton(pak, version_hint)?,
+        airou_armor_product: get_singleton(pak, version_hint)?,
+        dog_armor: get_singleton(pak, version_hint)?,
+        dog_armor_product: get_singleton(pak, version_hint)?,
+        airou_weapon: get_singleton(pak, version_hint)?,
+        airou_weapon_product: get_singleton(pak, version_hint)?,
+        dog_weapon: get_singleton(pak, version_hint)?,
+        dog_weapon_product: get_singleton(pak, version_hint)?,
+        ot_equip_series: get_singleton(pak, version_hint)?,
+        airou_overwear: get_singleton(pak, version_hint)?,
+        dog_overwear: get_singleton(pak, version_hint)?,
+        ot_overwear_recipe: get_singleton(pak, version_hint)?,
         airou_armor_head_name,
         airou_armor_head_explain,
         airou_armor_chest_name,
@@ -1095,54 +1148,54 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         airou_series_name_mr,
         dog_series_name_mr,
         servant_profile,
-        custom_buildup_base: get_singleton_opt(pak)?,
-        custom_buildup_armor_open: get_singleton_opt(pak)?,
-        custom_buildup_weapon_open: get_singleton_opt(pak)?,
-        custom_buildup_armor_material: get_singleton_opt(pak)?,
-        custom_buildup_weapon_material: get_singleton_opt(pak)?,
-        custom_buildup_armor_lot: get_singleton_opt(pak)?,
-        custom_buildup_armor_category_lot: get_singleton_opt(pak)?,
-        custom_buildup_equip_skill_detail: get_singleton_opt(pak)?,
-        custom_buildup_wep_table: get_singleton_opt(pak)?,
-        custom_buildup_slot_bonus: get_singleton_opt(pak)?,
+        custom_buildup_base: get_singleton_opt(pak, version_hint)?,
+        custom_buildup_armor_open: get_singleton_opt(pak, version_hint)?,
+        custom_buildup_weapon_open: get_singleton_opt(pak, version_hint)?,
+        custom_buildup_armor_material: get_singleton_opt(pak, version_hint)?,
+        custom_buildup_weapon_material: get_singleton_opt(pak, version_hint)?,
+        custom_buildup_armor_lot: get_singleton_opt(pak, version_hint)?,
+        custom_buildup_armor_category_lot: get_singleton_opt(pak, version_hint)?,
+        custom_buildup_equip_skill_detail: get_singleton_opt(pak, version_hint)?,
+        custom_buildup_wep_table: get_singleton_opt(pak, version_hint)?,
+        custom_buildup_slot_bonus: get_singleton_opt(pak, version_hint)?,
         random_mystery_difficulty,
-        random_mystery_enemy: get_singleton_opt(pak)?,
-        random_mystery_rank_release: get_singleton_opt(pak)?,
-        progress: get_singleton(pak)?,
-        enemy_rank: get_singleton(pak)?,
-        species: get_singleton(pak)?,
+        random_mystery_enemy: get_singleton_opt(pak, version_hint)?,
+        random_mystery_rank_release: get_singleton_opt(pak, version_hint)?,
+        progress: get_singleton(pak, version_hint)?,
+        enemy_rank: get_singleton(pak, version_hint)?,
+        species: get_singleton(pak, version_hint)?,
         switch_action_name,
         switch_action_name_mr,
         weapon_control,
         weapon_control_mr,
-        buff_cage: get_singleton(pak)?,
+        buff_cage: get_singleton(pak, version_hint)?,
         buff_cage_name,
         buff_cage_explain,
-        item_shop: get_singleton(pak)?,
-        item_shop_lot: get_singleton(pak)?,
-        fukudama: get_singleton(pak)?,
-        mystery_labo_trade_item: get_singleton_opt(pak)?,
-        item_mix: get_singleton(pak)?,
-        bbq: get_singleton(pak)?,
-        exchange_item: get_singleton(pak)?,
-        trade_dust: get_singleton(pak)?,
-        trade_feature: get_singleton(pak)?,
-        trade_rare: get_singleton(pak)?,
-        trade: get_singleton(pak)?,
-        spy: get_singleton(pak)?,
-        offcut_convert: get_singleton(pak)?,
+        item_shop: get_singleton(pak, version_hint)?,
+        item_shop_lot: get_singleton(pak, version_hint)?,
+        fukudama: get_singleton(pak, version_hint)?,
+        mystery_labo_trade_item: get_singleton_opt(pak, version_hint)?,
+        item_mix: get_singleton(pak, version_hint)?,
+        bbq: get_singleton(pak, version_hint)?,
+        exchange_item: get_singleton(pak, version_hint)?,
+        trade_dust: get_singleton(pak, version_hint)?,
+        trade_feature: get_singleton(pak, version_hint)?,
+        trade_rare: get_singleton(pak, version_hint)?,
+        trade: get_singleton(pak, version_hint)?,
+        spy: get_singleton(pak, version_hint)?,
+        offcut_convert: get_singleton(pak, version_hint)?,
 
-        dlc: get_singleton(pak)?,
-        dlc_add: get_singleton(pak)?,
-        item_pack: get_singleton(pak)?,
-        slc_item_pack: get_singleton(pak)?,
+        dlc: get_singleton(pak, version_hint)?,
+        dlc_add: get_singleton(pak, version_hint)?,
+        item_pack: get_singleton(pak, version_hint)?,
+        slc_item_pack: get_singleton(pak, version_hint)?,
         dlc_name,
         dlc_name_mr,
         dlc_explain,
         dlc_explain_mr,
 
-        system_mystery: get_singleton(pak)?,
-        system_mario: get_singleton(pak)?,
+        system_mystery: get_singleton(pak, version_hint)?,
+        system_mario: get_singleton(pak, version_hint)?,
     })
 }
 
@@ -2546,9 +2599,13 @@ fn prepare_armors(pedia: &Pedia) -> Result<BTreeMap<PlArmorSeriesTypes, ArmorSer
             PlOverwearId::Waist(_) => 3,
             PlOverwearId::Leg(_) => 4,
         };
-        let armor = series.pieces[slot]
-            .as_mut()
-            .with_context(|| format!("No armor slot for for overwear {:?}", overwear.id))?;
+        let Some(armor) = series.pieces[slot]
+            .as_mut() else {
+                // Crapcom TU 5
+                eprintln!("No armor slot for for overwear {:?}", overwear.id);
+                continue;
+            };
+
         if armor.data.pl_armor_id != overwear.relative_id {
             bail!("Mismatch armor ID for overwear {:?}", overwear.id);
         }
@@ -3441,6 +3498,7 @@ fn prepare_monsters<'a>(
             .push(MysteryReward {
                 lv_lower_limit: mystery_reward.lv_lower_limit,
                 lv_upper_limit: mystery_reward.lv_upper_limit,
+                is_special: mystery_reward.is_special_mystery.0 == Some(true),
                 hagibui_probability: mystery_reward.hagibui_probability,
                 reward_item: mystery_reward.reward_item,
                 item_num: mystery_reward.item_num,

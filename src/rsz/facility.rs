@@ -5,6 +5,7 @@ use serde::*;
 
 rsz_struct! {
     #[rsz("snow.data.ItemShopDisplayUserData.Param",
+        0x6EACEE0E = 15_00_00,
         0xB22B10DF = 14_00_00,
         0x7A76147D = 13_00_00,
         0x314B7EEA = 12_00_00,
@@ -69,6 +70,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.facility.itemShop.ShopFukudamaUserData.Param",
+        0xD5BEB420 = 15_00_00,
         0x7D4782AE = 14_00_00,
         0x3FC2B801 = 10_00_02,
         0x2F3791A4 = 11_00_01,
@@ -137,6 +139,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.facility.mysteryLabo.MysteryLaboTradeItemUserData.Param",
+        0xBA7ED270 = 15_00_00,
         0xC5DE7C0B = 14_00_00,
         0x6B818975 = 13_00_00,
         0x920575DD = 12_00_00,
@@ -173,6 +176,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.ItemMixRecipeUserData.Param",
+        0x621839B3 = 15_00_00,
         0xC559BA8D = 14_00_00,
         0x10A910AE = 13_00_00,
         0xD4D26A8B = 12_00_00,
@@ -206,6 +210,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.facility.kitchen.BbqConvertUserData.Param",
+        0xCF62F94A = 15_00_00,
         0x5D844F0B = 14_00_00,
         0x3C4D8DE4 = 13_00_00,
         0xD42FF9ED = 12_00_00,
@@ -253,6 +258,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.facility.tradeCenter.ExchangeItemUserData.Param",
+        0x6755A8B3 = 15_00_00,
         0x38075A13 = 14_00_00,
         0xBE9B9979 = 13_00_00,
         0x77FA345F = 12_00_00,
@@ -290,6 +296,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.facility.tradeCenter.TradeDustUserData.Param",
+        0x598D33B3 = 15_00_00,
         0xBBC1A617 = 14_00_00,
         0x1A7475C4 = 13_00_00,
         0x933588FC = 12_00_00,
@@ -319,6 +326,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.facility.tradeCenter.TradeFeatureUserData.Param",
+        0xEF4A0466 = 15_00_00,
         0x9B0A0BB3 = 14_00_00,
         0x9D884127 = 13_00_00,
         0xE17EBDE3 = 12_00_00,
@@ -349,6 +357,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.facility.tradeCenter.TradeRareUserData.Param",
+        0xC096923F = 15_00_00,
         0xF5981CE8 = 14_00_00,
         0xE30F6088 = 13_00_00,
         0x9C10FFDA = 12_00_00,
@@ -380,6 +389,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.facility.tradeCenter.TradeUserData.Param",
+        0x0D1D13FF = 15_00_00,
         0xE718A57E = 14_00_00,
         0x43C85A56 = 13_00_00,
         0x0B976739 = 12_00_00,
@@ -428,6 +438,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.OtomoSpyUnitGridUserData.Param",
+        0x06954A1D = 15_00_00,
         0xDBC63D9D = 14_00_00,
         0xB95F8A6B = 10_00_02,
         0x8F614474 = 11_00_01,
@@ -464,6 +475,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.OffcutsItemConvertTable.Param",
+        0x1A24C554 = 15_00_00,
         0x21AE25FA = 14_00_00,
         0x5D6924F0 = 10_00_02,
         0x3F6FDC44 = 11_00_01,

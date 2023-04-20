@@ -239,6 +239,7 @@ macro_rules! melee {
 
 rsz_struct! {
     #[rsz("snow.equip.GreatSwordBaseUserData.Param",
+        0xE1132DD3 = 15_00_00,
         0x358FB8CB = 14_00_00,
         0xf17703d9 = 10_00_02,
         0x9B59CD38 = 11_00_01,
@@ -267,6 +268,7 @@ params!(GreatSwordBaseUserData, GreatSwordBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.ShortSwordBaseUserData.Param",
+        0x273ADE5F = 15_00_00,
         0x0B378F62 = 14_00_00,
         0xf71c3203 = 10_00_02,
         0x27D5F4E3 = 11_00_01,
@@ -295,6 +297,7 @@ params!(ShortSwordBaseUserData, ShortSwordBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.HammerBaseUserData.Param",
+        0x0C2B8EEE = 15_00_00,
         0x133C11C0 = 14_00_00,
         0x7c10448c = 10_00_02,
         0x97061C3A = 11_00_01,
@@ -323,6 +326,7 @@ params!(HammerBaseUserData, HammerBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.LanceBaseUserData.Param",
+        0x1ED77653 = 15_00_00,
         0x9CB21C57 = 14_00_00,
         0xfe640a21 = 10_00_02,
         0x2265A48B = 11_00_01,
@@ -351,6 +355,7 @@ params!(LanceBaseUserData, LanceBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.LongSwordBaseUserData.Param",
+        0xB1223ADF = 15_00_00,
         0x0DB7A395 = 14_00_00,
         0x37c07dd2 = 10_00_02,
         0x4B3F304F = 11_00_01,
@@ -379,6 +384,7 @@ params!(LongSwordBaseUserData, LongSwordBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.SlashAxeBaseUserData.Param",
+        0xC7A80047 = 15_00_00,
         0x20249D23 = 14_00_00,
         0xcd4494da = 10_00_02,
         0x08FAAB11 = 11_00_01,
@@ -409,6 +415,7 @@ params!(SlashAxeBaseUserData, SlashAxeBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.GunLanceBaseUserData.Param",
+        0x75361D36 = 15_00_00,
         0xACDC8033 = 14_00_00,
         0x45ba4e4d = 10_00_02,
         0xC8EC34BA = 11_00_01,
@@ -439,6 +446,7 @@ params!(GunLanceBaseUserData, GunLanceBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.DualBladesBaseUserData.Param",
+        0x2DE3DADB = 15_00_00,
         0xA28BFA6D = 14_00_00,
         0xc45eb4a1 = 10_00_02,
         0xF1C26C8C = 11_00_01,
@@ -468,6 +476,7 @@ params!(DualBladesBaseUserData, DualBladesBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.HornBaseUserData.Param",
+        0x81A1A012 = 15_00_00,
         0xA535F8A0 = 14_00_00,
         0x09da93b1 = 10_00_02,
         0xC0D8A3C4 = 11_00_01,
@@ -497,6 +506,7 @@ params!(HornBaseUserData, HornBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.InsectGlaiveBaseUserData.Param",
+        0x316CDD53 = 15_00_00,
         0x9A9C1384 = 14_00_00,
         0x68846de6 = 10_00_02,
         0xE746A91F = 11_00_01,
@@ -526,6 +536,7 @@ params!(InsectGlaiveBaseUserData, InsectGlaiveBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.ChargeAxeBaseUserData.Param",
+        0x84CAE3C4 = 15_00_00,
         0xC34EF1B9 = 14_00_00,
         0x64c2b751 = 10_00_02,
         0xFB1BB20B = 11_00_01,
@@ -728,6 +739,7 @@ impl_base!(BulletWeaponBaseUserDataParam, MainWeaponBaseData);
 
 rsz_struct! {
     #[rsz("snow.equip.LightBowgunBaseUserData.Param",
+        0xE71A20C2 = 15_00_00,
         0xE3374BA7 = 14_00_00,
         0x1d6c8de0 = 10_00_02,
         0x00A5BA0D = 11_00_01,
@@ -764,6 +776,7 @@ params!(LightBowgunBaseUserData, LightBowgunBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.HeavyBowgunBaseUserData.Param",
+        0x4B6831DF = 15_00_00,
         0x7774FBAF = 14_00_00,
         0xcc0cbbf5 = 10_00_02,
         0x1637B3CF = 11_00_01,
@@ -799,6 +812,7 @@ params!(HeavyBowgunBaseUserData, HeavyBowgunBaseUserDataParam);
 
 rsz_struct! {
     #[rsz("snow.equip.BowBaseUserData.Param",
+        0xA63CC9AC = 15_00_00,
         0x3D842715 = 14_00_00,
         0x4d471e21 = 10_00_02,
         0x7D7323A3 = 11_00_01,
@@ -852,6 +866,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.WeaponProcessUserData.Param",
+        0x61DE6B26 = 15_00_00,
         0x1C22A45A = 14_00_00,
         0xE89FAC6B = 13_00_00,
         0xfc3932c0 = 10_00_02,
@@ -881,6 +896,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.WeaponProductUserData.Param",
+        0x7631F43F = 15_00_00,
         0xA4A781E9 = 14_00_00,
         0x015A23F5 = 13_00_00,
         0xcd1faa31 = 10_00_02,
@@ -907,6 +923,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.WeaponChangeUserData.Param",
+        0xF415D0DB = 15_00_00,
         0x973DE171 = 14_00_00,
         0x398E7E9C = 13_00_00,
         0x342cb994 = 10_00_02,
@@ -1033,6 +1050,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.HyakuryuWeaponHyakuryuBuildupUserData.Param",
+        0x2634ECA7 = 15_00_00,
         0x4AE9A798 = 14_00_00,
         0x7BA03F20 = 10_00_02,
         0xF1DE3243 = 11_00_01,
@@ -1084,6 +1102,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.equip.OverwearWeaponProductUserData.Param",
+        0xC9B5598D = 15_00_00,
         0x84442698 = 14_00_00,
         0xDB849A6F = 13_00_00,
         0x9075D1D6 = 12_00_00

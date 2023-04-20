@@ -1958,6 +1958,8 @@ pub fn gen_monster(
     for (index, reward) in monster_ex.mystery_reward.iter().enumerate() {
         let title = if reward.lv_lower_limit == 0 && reward.lv_upper_limit == 0 {
             "Anomaly quest reward".to_owned()
+        } else if reward.is_special {
+            "Special anomaly investigation reward".to_owned()
         } else {
             format!(
                 "Anomaly investigation reward (lv{} ~ lv{})",

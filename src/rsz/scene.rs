@@ -72,6 +72,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.wwise.WwiseMediaLoader",
+        0x432472D1 = 15_00_00,
         0x1b22997a = 10_00_02
     )]
     #[derive(Debug, Serialize)]

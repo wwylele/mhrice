@@ -449,7 +449,11 @@ impl Rcol {
         // followed by string table
 
         if deserialize_user_data {
-            let mut roots: Vec<_> = rsz.deserialize()?.into_iter().map(Option::Some).collect();
+            let mut roots: Vec<_> = rsz
+                .deserialize(None)?
+                .into_iter()
+                .map(Option::Some)
+                .collect();
             for group_attachment in &mut group_attachments {
                 group_attachment.user_data.accept(&mut roots)?;
             }

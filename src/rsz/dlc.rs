@@ -6,6 +6,7 @@ use serde::*;
 
 rsz_struct! {
     #[rsz("snow.data.EquipmentInventoryData.CustomBuildupResult",
+        0xAB818101 = 15_00_00,
         0x694F7865 = 13_00_00,
         0x6766A8A7 = 11_00_01,
     )]
@@ -44,6 +45,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.EquipmentInventoryData",
+        0xF36A2348 = 15_00_00,
         0x7D64033A = 14_00_00,
         0x64D86CBB = 13_00_00,
         0x52ACFD89 = 12_00_00,
@@ -107,6 +109,7 @@ impl SaveLinkContents {
 
 rsz_struct! {
     #[rsz("snow.data.Dlc.DlcAddUserData.AddDataInfo",
+        0x341A606F = 15_00_00,
         0x3F93B141 = 14_00_00,
         0x9B59BC74 = 13_00_00,
         0x377D23C5 = 12_00_00,
@@ -152,6 +155,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.DlcData",
+        0xD2195BEC = 15_00_00,
         0xEE923A9A = 14_00_00,
         0x6883ECE4 = 13_00_00,
         0x0305CBA9 = 12_00_00,
@@ -186,6 +190,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.DlcManager.ItemPackUserData.ItemInfo",
+        0xC78C535C = 15_00_00,
         0x8D56A4DE = 14_00_00,
         0x0B7069A1 = 13_00_00,
         0xA2FF70C0 = 12_00_00,
@@ -201,6 +206,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.DlcManager.ItemPackUserData.ItemPackParam",
+        0xA62FA8E7 = 15_00_00,
         0x8D0F6E7C = 14_00_00,
         0xBA783C3B = 13_00_00,
         0xACA1457A = 12_00_00,
@@ -227,6 +233,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.DlcManager.ItemPackSaveLinkUserData.ItemInfo",
+        0xF9AEFC1F = 15_00_00,
         0xD240F7EF = 14_00_00,
         0x0CB93AE0 = 13_00_00,
         0xCE9BD1D0 = 12_00_00,

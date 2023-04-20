@@ -237,7 +237,7 @@ impl Scn {
         println!();
 
         println!("RSZ:");
-        match self.rsz.deserialize() {
+        match self.rsz.deserialize(None) {
             Ok(objects) => {
                 for (i, o) in objects.into_iter().enumerate() {
                     println!("== {i} ==");
@@ -342,7 +342,7 @@ impl Scene {
         let content = pak.read_file(index)?;
         let scn = Scn::new(Cursor::new(content))?;
         let mut data: Vec<Option<rsz::AnyRsz>> =
-            scn.rsz.deserialize()?.into_iter().map(Some).collect();
+            scn.rsz.deserialize(None)?.into_iter().map(Some).collect();
         let prefabs: Vec<Rc<String>> = scn.prefab_paths.into_iter().map(Rc::new).collect();
 
         let mut orphans: HashMap<Option<u32>, Vec<GameObject>> = HashMap::new();

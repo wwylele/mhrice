@@ -56,6 +56,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.monsterList.BossMonsterData",
+        0x0671091B = 15_00_00,
         0x4C446EFD = 14_00_00,
         0x4BC19206 = 13_00_00,
         0xf03fc40b = 10_00_02,
@@ -86,6 +87,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyRankData.RankInfo",
+        0xB8938B08 = 15_00_00,
         0x31838C1A = 14_00_00,
         0x4D959590 = 13_00_00,
         0x1A624800 = 10_00_02,
@@ -140,6 +142,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.enemy.SystemEnemyDragonSpeciesData.EmSpeciesData",
+        0x1EFFF543 = 15_00_00,
         0x5DE3E218 = 14_00_00,
         0x65A4BA42 = 13_00_00,
         0x657FF9F2 = 10_00_02,

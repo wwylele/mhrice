@@ -53,6 +53,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.ArmorBaseUserData.Param",
+        0x1614384F = 15_00_00,
         0x4011DB92 = 14_00_00,
         0x724AEAA9 = 13_00_00,
         0x68d0776c = 10_00_02,
@@ -113,6 +114,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.ArmorSeriesUserData.Param",
+        0xF8205544 = 15_00_00,
         0xCEB3742B = 14_00_00,
         0x2E0B99AA = 13_00_00,
         0xbf2780d1 = 10_00_02,
@@ -143,6 +145,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.ArmorProductUserData.Param",
+        0x56FE7817 = 15_00_00,
         0x8E39EA57 = 14_00_00,
         0x30B17847 = 13_00_00,
         0x112ceb90 = 10_00_02,
@@ -190,6 +193,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.equip.PlOverwearBaseUserData.Param",
+        0x70C821F9 = 15_00_00,
         0x86E6754E = 14_00_00,
         0x990FCBC9 = 13_00_00,
         0x8be3d1fc = 10_00_02,
@@ -225,6 +229,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.equip.PlOverwearProductUserData.Param",
+        0xF5C373D5 = 15_00_00,
         0xE3228566 = 14_00_00,
         0xBBF5D1A0 = 13_00_00,
         0x2b8f5c1e = 10_00_02,
@@ -331,6 +336,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.ArmorSeriesPairUserData.Param",
+        0xCCA2EA46 = 15_00_00,
         0xC4A0783A = 14_00_00,
         0x725E8A86 = 10_00_02,
         0xD5808B86 = 11_00_01,

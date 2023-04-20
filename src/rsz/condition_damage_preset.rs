@@ -544,5 +544,10 @@ rsz_struct! {
         pub otomo_bind_wire_second_num: u32,
         pub otomo_bind_wire_total_num_param_list: Vec<BindWireTotalNumParam>,
         pub otomo_bind_wire_strength_param_list: Vec<BindWireStrength>,
+        pub twin_marionette_start_wait_time: Versioned<f32, 15_00_00>,
+        pub twin_marionette_finak_attack_point_add_rate: Versioned<f32, 15_00_00>,
+        pub twin_marionette_gauge_point_sub_rate: Versioned<f32, 15_00_00>,
+        pub delay_sarvant_twin_marionette_sec: Versioned<f32, 15_00_00>,
+        pub twin_marionette_final_attack_guide_delay_sec: Versioned<f32, 15_00_00>,
     }
 }

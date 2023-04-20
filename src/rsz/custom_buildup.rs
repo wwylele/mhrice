@@ -34,6 +34,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.CustomBuildupOpenUserData.Param",
+        0x2BAF9A2D = 15_00_00,
         0xEB068B0B = 14_00_00,
         0x0D31BF18 = 13_00_00,
         0xC0A94CBE = 11_00_01,
@@ -70,6 +71,7 @@ rsz_with_singleton! {
 
 rsz_struct! {
     #[rsz("snow.data.CustomBuildupArmorMaterialUserData.Param",
+        0xEAC8D444 = 15_00_00,
         0x0BCFEB73 = 13_00_00,
         0x124AD7CC = 11_00_01
     )]
@@ -145,6 +147,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.CustomBuildupEquipSkillDetailUserData.Param",
+        0x0A122CB2 = 15_00_00,
         0xC4A94C25 = 13_00_00,
         0x1A65FAFD = 11_00_01
     )]
@@ -168,6 +171,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.CustomBuildupWeaponMaterialUserData.Param",
+        0x30F7AB33 = 15_00_00,
         0xDC72D8EA = 14_00_00,
         0x17BE58F6 = 13_00_00,
         0x2A2ABE7B = 11_00_01,

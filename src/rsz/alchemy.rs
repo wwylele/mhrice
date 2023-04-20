@@ -32,11 +32,14 @@ rsz_enum! {
         AlchemyShinki = 7,
         AlchemyTensei = 8,
         AlchemyKyokkou = 9,
+        AlchemyHaki = 10,
+        AlchemyEnkan = 11,
     }
 }
 
 rsz_struct! {
     #[rsz("snow.data.AlchemyPatturnUserData.Param",
+        0x2A7C3B8F = 15_00_00,
         0x8F4D1882 = 14_00_00,
         0xF023B4E2 = 13_00_00,
         0x41f213e8 = 0
@@ -51,7 +54,7 @@ rsz_struct! {
         pub require_talisman_num: u32,
         pub output_min_num: u32,
         pub output_max_num: u32,
-        pub cheat_check_priority: Versioned<u32, 13_00_00>,
+        pub cheat_check_priority: Versioned<u32, 13_00_00>, // this is turned into i32 in 15_00_00 but I am not bother changing it
     }
 }
 
@@ -80,6 +83,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.AlchemyPlSkillTableUserData.Param",
+        0x6BA8C9A7 = 15_00_00,
         0x7CB91C71 = 13_00_00,
         0x6C87D64B = 10_00_02,
         0xEE208F08 = 11_00_01,
@@ -91,9 +95,12 @@ rsz_struct! {
         pub grade: GradeTypes,
         pub patturn: AlchemyPatturnTypes,
         pub pick_rate: u32,
+        pub grade_pick_rate: Versioned<Vec<u32>, 15_00_00>,
         pub skill1_rate_list: Vec<u32>,
         pub miss_rate_list: Vec<u32>,
         pub skill2_rate_list: Vec<u32>,
+        pub skill1_mystery_worth: Versioned<Vec<u32>, 15_00_00>,
+        pub skill2_mystery_worth: Versioned<Vec<u32>, 15_00_00>,
     }
 }
 
@@ -176,6 +183,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.alchemy.SkillGradeLotRateTableUserData.Param",
+        0x60AA7E6F = 15_00_00,
         0x8FEBC6B1 = 14_00_00,
         0xed421f20 = 0
     )]

@@ -173,7 +173,7 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
     let scale = pak.find_file(files.scale_file)?;
     let scale = User::new(Cursor::new(pak.read_file(scale)?))?
         .rsz
-        .deserialize_single_any()?;
+        .deserialize_single_any(None)?;
 
     let scale: rsz::GuiMapScaleDefineData = if scale.symbol() == rsz::GuiMapScaleDefineData::SYMBOL
     {
@@ -235,7 +235,7 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
 
             let position = transform.position.xzy();
             let mut behavior = behavior.clone();
-            behavior.fish_spawn_data.load(pak)?;
+            behavior.fish_spawn_data.load(pak, None)?;
 
             let kind = MapPopKind::FishingPoint { behavior };
 

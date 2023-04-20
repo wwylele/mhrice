@@ -154,6 +154,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.hit.userdata.EmHitAttackShapeData",
+        0x4A74B073 = 15_00_00,
         0xb8f622d3 = 10_00_02
     )]
     #[derive(Debug, Serialize)]
@@ -290,6 +291,7 @@ rsz_enum! {
         ButtobiHm = 0x00000026,
         NoMediationCatchAttackWithSmash = 0x00000027,
         PlFreeze = 0x00000028,
+        ExFly = 0x00000029,
     }
 }
 
@@ -338,6 +340,7 @@ impl DamageType {
             DamageType::ButtobiHm => "[ButtobiHm]",
             DamageType::NoMediationCatchAttackWithSmash => "[NoMediationCatchAttackWithSmash]",
             DamageType::PlFreeze => "Freeze",
+            DamageType::ExFly => "High fly up",
         }
         .to_owned();
         if value != 0 {
@@ -481,6 +484,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.hit.userdata.EmHitAttackRSData",
+        0x14A06E60 = 15_00_00,
         0xFB4BC1AC = 14_00_00,
         0x54158991 = 10_00_02,
         0xC510FF49 = 12_00_00, // what changed in this?
@@ -494,6 +498,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.hit.userdata.EmShellHitAttackRSData",
+        0x6A120158 = 15_00_00,
         0x206C4FE7 = 14_00_00,
         0x7cfb2121 = 10_00_02,
         0x6FB5D79D = 12_00_00, // what changed in this?

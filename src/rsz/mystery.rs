@@ -100,6 +100,9 @@ rsz_struct! {
         pub mystery_core_parts_data: Vec<EnemyMysteryCorePartsData>,
         pub maximum_activity_release_last_attack_parts: u16, // snow.enemy.EnemyDef.PartsGroup
         pub shell_scale_list_max: i32,
+        pub special_mystery_quest_attack_rate: Versioned<f32, 15_00_00>,
+        pub special_mystery_quest_mot_speed_rate: Versioned<f32, 15_00_00>,
+        pub special_mystery_quest_hp_tbl_no: Versioned<i32, 15_00_00>,
         pub return_to_great_activity_time_use_data_type: i32,
         pub return_to_great_activity_time_sec: f32,
         pub maximum_activity_release_info_use_data_type: i32,
@@ -318,6 +321,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyUniqueOverMysteryData",
+        0x8E698E94 = 15_00_00,
         0xAE6C07A4 = 14_00_00,
         0x4BCDD77F = 12_00_00,
     )]
@@ -327,6 +331,9 @@ rsz_struct! {
         pub over_mystery_burst_list: Vec<OverMysteryBurstData>,
         pub overmystery_burst_min_continue_time_use_data_type: Versioned<i32, 14_00_00>,
         pub overmystery_burst_min_continue_time: Versioned<f32, 14_00_00>,
+        pub special_mystery_quest_attack_rate: Versioned<f32, 15_00_00>,
+        pub special_mystery_quest_mot_speed_rate: Versioned<f32, 15_00_00>,
+        pub special_mystery_quest_hp_tbl_no: Versioned<i32, 15_00_00>,
     }
 }
 
@@ -413,13 +420,13 @@ pub mod unique_mystery {
     }
     def_unique_mystery! {
         Em001_00 [] {}
-        Em001_02 [0x09F99CEE = 11_00_01, 0xB48B2175 = 12_00_00, 0x7E40EC28 = 13_00_00] {
+        Em001_02 [] {
             pub extend_time_sec: Versioned<f32, 13_00_00>,
             pub recover_rate_by_max_hp: Versioned<f32, 13_00_00>,
         }
         Em001_07 [] {}
         Em002_00 [] {}
-        Em002_02 [0x14B4271E = 11_00_01, 0x2C1FE57C = 12_00_00, 0x223A2314 = 13_00_00] {
+        Em002_02 [] {
             pub extend_time_sec: Versioned<f32, 13_00_00>,
             pub recover_rate_by_max_hp: Versioned<f32, 13_00_00>,
         }
@@ -430,12 +437,12 @@ pub mod unique_mystery {
         Em007_07 [] {}
         Em019_00 [] {}
         Em020_00 [] {}
-        Em023_00 [0x9271138B = 10_00_02, 0xC5916624 = 11_00_01, 0x94A0B8D1 = 12_00_00] {
+        Em023_00 [] {
             pub extend_time_sec: f32,
             pub recover_rate_by_max_hp: f32,
             pub pump_up_mystery_core_vital_rate: Versioned<f32, 12_00_00>,
         }
-        Em023_05 [0xEF633848 = 10_00_02, 0x28DDDFC3 = 11_00_01, 0x47FD2BD7 = 12_00_00, 0x02000E1A = 13_00_00] {
+        Em023_05 [] {
             pub extend_time_sec: f32,
             pub recover_rate_by_max_hp: f32,
             pub pump_up_mystery_core_vital_rate: Versioned<f32, 13_00_00>,
@@ -463,7 +470,7 @@ pub mod unique_mystery {
             pub extend_maxiimum_activity_time: f32,
             pub recovery_maxiimum_activity_hp: f32,
         }
-        Em071_05 [0x7929AF5B = 13_00_00, 0x235101DE = 14_00_00] {
+        Em071_05 [] {
             pub maximum_activity_release_last_attack_unique: Versioned<Vec<u16>, 14_00_00>, // snow.enemy.EnemyDef.PartsGroup
             pub extend_maxiimum_activity_time: Versioned<f32, 14_00_00>,
             pub recovery_maxiimum_activity_hp: Versioned<f32, 14_00_00>,

@@ -488,6 +488,7 @@ pub struct OtEquipSeries<'a> {
 pub struct MysteryReward<'a> {
     pub lv_lower_limit: u32,
     pub lv_upper_limit: u32,
+    pub is_special: bool,
     pub hagibui_probability: u32,
     pub reward_item: ItemId,
     pub item_num: u32,
