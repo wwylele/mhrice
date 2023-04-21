@@ -274,6 +274,14 @@ pub fn gen_skill(
             }</ul>)
         }
 
+        fn display_worth(rate: &[u32]) -> Box<ul<String>> {
+            html!(<ul class="mh-custom-lot">{
+                rate.iter().enumerate().filter(|&(_, &r)| r != 0).map(|(i, r)|
+                    html!(<li>{text!("Level{}: {}", i + 1, r)}</li>)
+                )
+            }</ul>)
+        }
+
         sections.push(Section {
             title: "Melding".to_owned(),
             content: html!(
@@ -283,10 +291,13 @@ pub fn gen_skill(
                 <div class="mh-table"><table>
                 <thead><tr>
                     <th>"Melding type"</th>
-                    <th>"First skill level"</th>
-                    <th>"Second skill level"</th>
-                    <th>"Target skill Pick rate"</th>
-                    <th>"Skill level if missed target"</th>
+                    <th>"1st skill level"</th>
+                    <th>"2nd skill level"</th>
+                    <th>"1st skill pick rate"</th>
+                    <th>"2nd skill level if missed target"</th>
+                    <th>"Qurious rate"</th>
+                    <th>"Qurious 1st skill point"</th>
+                    <th>"Qurious 2nd skill point"</th>
                 </tr></thead>
                 <tbody>{
                     skill.alchemy.iter().map(|(pattern, data)| {
@@ -308,6 +319,12 @@ pub fn gen_skill(
                             <td>{display_rate(&data.skill2_rate_list)}</td>
                             <td>{text!("{}%", data.pick_rate)}</td>
                             <td>{display_rate(&data.miss_rate_list)}</td>
+                            <td>{data.grade_pick_rate.0.iter().filter_map(|v| (v != &[0, 0]).then(||html!(<ul class="mh-custom-lot">
+                                <li>{text!("First: {}", v[0])}</li>
+                                <li>{text!("Second: {}", v[1])}</li>
+                            </ul>)))}</td>
+                            <td>{data.skill1_mystery_worth.0.as_ref().map(|v|display_worth(v))}</td>
+                            <td>{data.skill2_mystery_worth.0.as_ref().map(|v|display_worth(v))}</td>
                         </tr>)
                     })
                 }</tbody>

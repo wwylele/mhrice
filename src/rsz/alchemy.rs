@@ -95,7 +95,7 @@ rsz_struct! {
         pub grade: GradeTypes,
         pub patturn: AlchemyPatturnTypes,
         pub pick_rate: u32,
-        pub grade_pick_rate: Versioned<Vec<u32>, 15_00_00>,
+        pub grade_pick_rate: Versioned<[u32; 2], 15_00_00>,
         pub skill1_rate_list: Vec<u32>,
         pub miss_rate_list: Vec<u32>,
         pub skill2_rate_list: Vec<u32>,
