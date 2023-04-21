@@ -1834,6 +1834,21 @@ pub fn gen_monster(
                     text!("{}", display.join(" / "))
                 }</span>
                 </p>
+                {base.special_mystery_quest_hp_tbl_no.0
+                    .zip(base.special_mystery_quest_attack_rate.0)
+                    .zip(base.special_mystery_quest_mot_speed_rate.0)
+                    .zip(pedia.difficulty_rate_anomaly.as_ref()).map(|(((hp, attack), speed), dr)| {
+                    let hp = if hp == -1 {
+                        "Default".to_owned()
+                    } else {
+                        dr.vital_rate_table_list
+                        .get(hp as usize)
+                        .map_or_else(|| format!("~ {hp}"), |r| format!("x{}", r.vital_rate))
+                    };
+                    html!(<p class="mh-kv"><span>"Special anomaly investigation"</span>
+                    <span>{text!("(HP) {} / (attack) x{} / (motion) x{}", hp, attack, speed)}</span>
+                    </p>)
+                })}
                 </div>
             </section>),
         });
@@ -1930,6 +1945,23 @@ pub fn gen_monster(
             <tbody>
             </tbody>
             </table></div>
+            <div class="mh-kvlist mh-wide">
+            {over_mystery.special_mystery_quest_hp_tbl_no.0
+                .zip(over_mystery.special_mystery_quest_attack_rate.0)
+                .zip(over_mystery.special_mystery_quest_mot_speed_rate.0)
+                .zip(pedia.difficulty_rate_anomaly.as_ref()).map(|(((hp, attack), speed), dr)| {
+                let hp = if hp == -1 {
+                    "Default".to_owned()
+                } else {
+                    dr.vital_rate_table_list
+                    .get(hp as usize)
+                    .map_or_else(|| format!("~ {hp}"), |r| format!("x{}", r.vital_rate))
+                };
+                html!(<p class="mh-kv"><span>"Special anomaly investigation"</span>
+                <span>{text!("(HP) {} / (attack) x{} / (motion) x{}", hp, attack, speed)}</span>
+                </p>)
+            })}
+            </div>
             </section>),
         });
     }
