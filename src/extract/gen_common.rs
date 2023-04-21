@@ -145,7 +145,7 @@ pub fn right_aside() -> Box<aside<String>> {
     </p>
     <ul class="menu-list">
     <li><a class="navbar-item" href="/about.html">
-        "About MHRise"
+        "About MHRice"
     </a></li>
     </ul>
 
