@@ -2,6 +2,7 @@ use super::prepare_map::*;
 use crate::msg::*;
 use crate::rsz::*;
 use serde::*;
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
@@ -413,7 +414,8 @@ impl<'a> HyakuryuSkill<'a> {
 pub struct Armor<'a> {
     pub name: &'a MsgEntry,
     pub explain: &'a MsgEntry,
-    pub data: &'a ArmorBaseUserDataParam,
+    pub data: Cow<'a, ArmorBaseUserDataParam>,
+    pub fake_data: bool,
     pub product: Option<&'a ArmorProductUserDataParam>,
     pub overwear: Option<&'a PlOverwearBaseUserDataParam>,
     pub overwear_product: Option<&'a PlOverwearProductUserDataParam>,

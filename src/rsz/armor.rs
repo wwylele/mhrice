@@ -60,7 +60,7 @@ rsz_struct! {
         0x66F1403B = 11_00_01,
         0x0AA30869 = 12_00_00,
     )]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct ArmorBaseUserDataParam {
         pub pl_armor_id: PlArmorId,
         pub is_valid: bool,

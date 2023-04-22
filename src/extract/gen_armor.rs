@@ -204,11 +204,15 @@ fn gen_armor(
             </tr></thead>
             <tbody> {
                 pieces.iter().map(|piece| {
+                    let invalid = ||html!(<tr><td colspan="10">"-"</td></tr>);
                     let piece = if let Some(piece) = piece {
                         piece
                     } else {
-                        return html!(<tr><td colspan="10">"-"</td></tr>)
+                        return invalid()
                     };
+                    if piece.fake_data {
+                        return invalid()
+                    }
 
                     let slots = gen_slot(&piece.data.decorations_num_list, false);
 
@@ -238,6 +242,9 @@ fn gen_armor(
     let gen_buildup = |pieces: &[Option<Armor<'_>>]| {
         let mut buildup_tables: Vec<(i32, Vec<&Armor>)> = vec![];
         'outer: for piece in pieces.iter().flatten() {
+            if piece.fake_data {
+                continue;
+            }
             for table in &mut buildup_tables {
                 if table.0 == piece.data.buildup_table {
                     table.1.push(piece);
@@ -305,7 +312,7 @@ fn gen_armor(
     let gen_custom_buildup = |pieces: &[Option<Armor<'_>>]| {
         let mut buildup_tables: Vec<(CbDedupKey, Vec<&Armor>)> = vec![];
         'outer: for piece in pieces.iter().flatten() {
-            if piece.data.custom_table_no == 0 {
+            if piece.fake_data || piece.data.custom_table_no == 0 {
                 continue;
             }
             let key = CbDedupKey {
