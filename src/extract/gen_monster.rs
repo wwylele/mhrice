@@ -63,7 +63,7 @@ pub fn gen_mystery_tag(mystery_type: Option<EnemyIndividualType>) -> Option<Box<
             Some(html!(<span class="tag is-danger">"Risen"</span>))
         }
         Some(EnemyIndividualType::OverMysteryStrengthLv1) => {
-            Some(html!(<span class="tag is-danger">"Risen lv1"</span>))
+            Some(html!(<span class="tag is-danger">"Risen (hard)"</span>))
         }
         Some(EnemyIndividualType::OverMysteryStrengthLv2) => {
             Some(html!(<span class="tag is-danger">"Risen lv2"</span>))
@@ -1937,10 +1937,10 @@ pub fn gen_monster(
                     text!("{}", lva.or(lvb).unwrap())
                 }</td>
                 <td>{combined.level_data.map(|d| match d.strength_level {
-                    OverMysteryStrengthLevel::Default => text!("Default"),
-                    OverMysteryStrengthLevel::Lv1 => text!("1"),
-                    OverMysteryStrengthLevel::Lv2 => text!("2"),
-                    OverMysteryStrengthLevel::Lv3 => text!("3"),
+                    OverMysteryStrengthLevel::Default => text!("Normal"),
+                    OverMysteryStrengthLevel::Lv1 => text!("Hard"),
+                    OverMysteryStrengthLevel::Lv2 => text!("lv2"),
+                    OverMysteryStrengthLevel::Lv3 => text!("lv3"),
                 })}</td>
                 <td>{combined.burst_data.map(|d|text!("x{}", d.enable_vital_rate))}</td>
                 <td>{combined.burst_data.map(|d|text!("x{}", d.release_vital_rate))}</td>
