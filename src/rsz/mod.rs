@@ -1034,7 +1034,11 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         ReleaseDataParam,
         ReleaseData,
         RandomMysteryMonsterRankReleaseData,
-        SpecialMysteryQuestData
+        SpecialMysteryQuestData,
+        RandomMysteryRewardBaseParam,
+        RandomMysteryRewardBase,
+        RandomMysteryRewardSubTargetParam,
+        RandomMysteryRewardSubTarget,
     );
 
     r!(

@@ -267,6 +267,8 @@ pub struct Pedia {
     pub random_mystery_difficulty: Option<RandomMysteryDifficultyRateListData>,
     pub random_mystery_enemy: Option<RandomMysteryLotEnemyData>,
     pub random_mystery_rank_release: Option<RandomMysteryMonsterRankReleaseData>,
+    pub random_mystery_reward_base: Option<RandomMysteryRewardBase>,
+    pub random_mystery_reward_subtarget: Option<RandomMysteryRewardSubTarget>,
 
     pub progress: ProgressCheckerUserData,
 
@@ -509,6 +511,8 @@ pub struct MonsterEx<'a> {
     pub explain2: Option<&'a MsgEntry>,
     pub mystery_reward: Vec<MysteryReward<'a>>,
     pub random_quest: Option<&'a LotEnemyData>,
+    pub random_mystery_reward: Vec<&'a RandomMysteryRewardBaseParam>,
+    pub random_mystery_subtarget_reward: Option<&'a RandomMysteryRewardSubTargetParam>,
     pub discovery: Option<&'a DiscoverEmSetDataParam>,
     pub rank: Option<u8>,
     pub species: Option<&'a EmSpeciesData>,

@@ -1162,6 +1162,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         random_mystery_difficulty,
         random_mystery_enemy: get_singleton_opt(pak, version_hint)?,
         random_mystery_rank_release: get_singleton_opt(pak, version_hint)?,
+        random_mystery_reward_base: get_singleton_opt(pak, version_hint)?,
+        random_mystery_reward_subtarget: get_singleton_opt(pak, version_hint)?,
         progress: get_singleton(pak, version_hint)?,
         enemy_rank: get_singleton(pak, version_hint)?,
         species: get_singleton(pak, version_hint)?,
@@ -3445,6 +3447,26 @@ fn prepare_monsters<'a>(
         false,
     )?;
 
+    let mut random_mystery_reward: HashMap<EmTypes, Vec<&RandomMysteryRewardBaseParam>> =
+        HashMap::new();
+
+    for p in pedia
+        .random_mystery_reward_base
+        .iter()
+        .flat_map(|p| &p.param_data)
+    {
+        random_mystery_reward.entry(p.em_type).or_default().push(p)
+    }
+
+    let random_mystery_subtarget = hash_map_unique(
+        pedia
+            .random_mystery_reward_subtarget
+            .iter()
+            .flat_map(|p| &p.param_data),
+        |p| (p.em_type, p),
+        false,
+    )?;
+
     let discoveries: HashMap<EmTypes, &DiscoverEmSetDataParam> = hash_map_unique(
         pedia
             .discover_em_set_data
@@ -3573,6 +3595,11 @@ fn prepare_monsters<'a>(
         let mut mystery_reward = mystery_rewards.remove(&monster.em_type).unwrap_or_default();
         mystery_reward.sort_by_key(|m| m.lv_lower_limit);
         let random_quest = random_quests.get(&monster.em_type).copied();
+        let random_mystery_reward = random_mystery_reward
+            .remove(&monster.em_type)
+            .unwrap_or_default();
+        let random_mystery_subtarget_reward =
+            random_mystery_subtarget.get(&monster.em_type).copied();
         let discovery = discoveries.get(&monster.em_type).copied();
         let rank = ranks.get(&monster.em_type).copied();
         let species = speciess.get(&monster.em_type).copied();
@@ -3625,6 +3652,8 @@ fn prepare_monsters<'a>(
                 explain2,
                 mystery_reward,
                 random_quest,
+                random_mystery_reward,
+                random_mystery_subtarget_reward,
                 discovery,
                 rank,
                 species,
@@ -3639,6 +3668,8 @@ fn prepare_monsters<'a>(
                 explain2: None,
                 mystery_reward,
                 random_quest,
+                random_mystery_reward,
+                random_mystery_subtarget_reward,
                 discovery,
                 rank,
                 species,

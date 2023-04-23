@@ -242,3 +242,42 @@ rsz_struct! {
         pub release_level_data: [ReleaseData; 2],
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.data.RandomMysteryRewardBase.Param")]
+    #[derive(Debug, Serialize)]
+    pub struct RandomMysteryRewardBaseParam {
+        pub em_type: EmTypes,
+        pub rank: i32, // snow.quest.MysteryQuestRank
+        pub base: i32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.RandomMysteryRewardBase",
+        path = "Quest/RandomMystery/RandomMysteryRewardBase.user",
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RandomMysteryRewardBase {
+        pub param_data: Vec<RandomMysteryRewardBaseParam>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.RandomMysteryRewardSubTarget.Param")]
+    #[derive(Debug, Serialize)]
+    pub struct RandomMysteryRewardSubTargetParam {
+        pub em_type: EmTypes,
+        pub adjust: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.RandomMysteryRewardSubTarget",
+        path = "Quest/RandomMystery/RandomMysteryRewardSubTarget.user",
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct RandomMysteryRewardSubTarget {
+        pub param_data: Vec<RandomMysteryRewardSubTargetParam>
+    }
+}

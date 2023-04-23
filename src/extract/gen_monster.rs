@@ -1313,6 +1313,19 @@ pub fn gen_monster(
                 <span><a href={extra_diff_table.as_str()}>{
                 text!("Table {}", random_quest.difficulty_table_type_extra)}</a></span>
             </p>
+            <p class="mh-kv"><span>"Base research point"</span>
+                <span>{
+                    let s: Vec<_> = monster_ex.random_mystery_reward.iter().map(|p|format!("(A{}) {}", p.rank, p.base)).collect();
+                    text!("{}", s.join(" / "))
+                }</span>
+            </p>
+            <p class="mh-kv"><span>"Subtarget research point adjust"</span>
+            { if let Some(p) = monster_ex.random_mystery_subtarget_reward {
+                html!(<span>{text!("x{}", p.adjust)}</span>)
+            } else {
+                html!(<span>"-"</span>)
+            }}
+            </p>
             </div>
 
             <div class="mh-anomaly-maps"> <h3>"Allowed map"</h3>
