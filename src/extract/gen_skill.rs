@@ -293,8 +293,8 @@ pub fn gen_skill(
                     <th>"Melding type"</th>
                     <th>"1st skill level"</th>
                     <th>"2nd skill level"</th>
-                    <th>"1st skill pick rate"</th>
-                    <th>"2nd skill level if missed target"</th>
+                    <th>"Target pick rate"</th>
+                    <th>"Skill level if target missed"</th>
                     <th>"Qurious rate"</th>
                     <th>"Qurious 1st skill point"</th>
                     <th>"Qurious 2nd skill point"</th>
@@ -317,7 +317,7 @@ pub fn gen_skill(
                             <td>{text!("{}", pattern)}</td>
                             <td>{display_rate(&data.skill1_rate_list)}</td>
                             <td>{display_rate(&data.skill2_rate_list)}</td>
-                            <td>{text!("{}%", data.pick_rate)}</td>
+                            <td>{(data.pick_rate != 0).then(||text!("{}%", data.pick_rate))}</td>
                             <td>{display_rate(&data.miss_rate_list)}</td>
                             <td>{data.grade_pick_rate.0.iter().filter_map(|v| (v != &[0, 0]).then(||html!(<ul class="mh-custom-lot">
                                 <li>{text!("First: {}", v[0])}</li>
