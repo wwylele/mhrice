@@ -38,7 +38,7 @@ minidump = "0.16"
 quick-xml = "0.28"
 md-5 = "0.10"
 aws-config = "0.55"
-aws-sdk-s3 = "0.25"
+aws-sdk-s3 = "0.26"
 
 [build-dependencies]
 built = { version = "0.6", features = ["git2"] }
