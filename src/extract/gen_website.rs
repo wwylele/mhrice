@@ -220,6 +220,7 @@ pub fn navbar() -> Box<nav<String>> {
                     <a class="navbar-item" href="/misc/meowcenaries.html">"Meowcenaries"</a>
                     <a class="navbar-item" href="/misc/scraps.html">"Trade for scraps"</a>
                     <a class="navbar-item" href="/dlc.html">"DLC"</a>
+                    <a class="navbar-item" href="/misc/award.html">"Awards"</a>
                 </div>
                 </div>
             </div>

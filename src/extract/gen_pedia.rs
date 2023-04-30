@@ -965,6 +965,11 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let dlc_explain = get_msg(pak, "Message/DLC/DLC_Explain.msg")?;
     let dlc_explain_mr = get_msg(pak, "Message/DLC/DLC_Explain_MR.msg")?;
 
+    let award_name = get_msg(pak, "Message/GuildCard/GC_Award_Name.msg")?;
+    let award_name_mr = get_msg(pak, "Message/GuildCard/GC_Award_Name_MR.msg")?;
+    let award_explain = get_msg(pak, "Message/GuildCard/GC_Award_Explain.msg")?;
+    let award_explain_mr = get_msg(pak, "Message/GuildCard/GC_Award_Explain_MR.msg")?;
+
     Ok(Pedia {
         monsters,
         small_monsters,
@@ -1199,6 +1204,12 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
 
         system_mystery: get_singleton(pak, version_hint)?,
         system_mario: get_singleton(pak, version_hint)?,
+
+        award: get_singleton(pak, version_hint)?,
+        award_name,
+        award_name_mr,
+        award_explain,
+        award_explain_mr,
     })
 }
 
@@ -1619,6 +1630,26 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
     common
         .sub_image_f(spriter.p0, spriter.p1)?
         .save_png(output.create("slot_rampage.png")?)?;
+
+    let award_file = [
+        "gui/70_UVSequence/Award_Icon.uvs",
+        "gui/70_UVSequence/Award_Icon_MR.uvs",
+    ];
+    let mut award_i = 0;
+    for file in award_file {
+        let award = pak.find_file(file)?;
+        let award = Uvs::new(Cursor::new(pak.read_file(award)?))?;
+        if award.textures.len() != 1 || award.spriter_groups.len() != 1 {
+            bail!("Broken {}", file);
+        }
+        let tex = pak.find_file(&award.textures[0].path)?;
+        let tex = Tex::new(Cursor::new(pak.read_file(tex)?))?.to_rgba(0, 0)?;
+        for spriter in &award.spriter_groups[0].spriters {
+            tex.sub_image_f(spriter.p0, spriter.p1)?
+                .save_png(output.create(&format!("award_{award_i}.png"))?)?;
+            award_i += 1;
+        }
+    }
 
     let item_colors_path = output.create("item_color.css")?;
     gen_item_colors(pak, item_colors_path)?;

@@ -311,6 +311,12 @@ pub struct Pedia {
 
     pub system_mystery: SystemMysteryUserData,
     pub system_mario: SystemMarionetteUserData,
+
+    pub award: AwardUserData,
+    pub award_name: Msg,
+    pub award_name_mr: Msg,
+    pub award_explain: Msg,
+    pub award_explain_mr: Msg,
 }
 
 pub struct QuestReward<'a> {

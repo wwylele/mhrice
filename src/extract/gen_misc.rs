@@ -803,6 +803,49 @@ fn gen_scraps(
     Ok(())
 }
 
+fn gen_award(hash_store: &HashStore, pedia: &Pedia, mut output: impl Write) -> Result<()> {
+    let name_map = pedia.award_name.get_name_map();
+    let name_map_mr = pedia.award_name_mr.get_name_map();
+    let explain_map = pedia.award_explain.get_name_map();
+    let explain_map_mr = pedia.award_explain_mr.get_name_map();
+    let doc: DOMTree<String> = html!(
+        <html lang="en">
+            <head itemscope=true>
+                <title>{text!("Awards - MHRice")}</title>
+                { head_common(hash_store) }
+            </head>
+            <body>
+                { navbar() }
+                <main>
+                <header><h1>"Awards"</h1></header>
+                <div class="mh-table"><table>
+                <tbody>{
+                pedia.award.param.iter().enumerate().map(|(i, award)| {
+                    let img_name = format!("Award {i}");
+                    let url = format!("/resources/award_{i}.png");
+                    let name_tag = format!("GC_Award_{}", award.name);
+                    let explain_tag = format!("GC_Award_{}", award.explain);
+                    let name = name_map.get(&name_tag).or_else(||name_map_mr.get(&name_tag));
+                    let explain = explain_map.get(&explain_tag).or_else(||explain_map_mr.get(&explain_tag));
+                    html!(<tr>
+                        <td><img alt={img_name} src={url.as_str()} class="mh-award"/></td>
+                        <td>
+                            {name.map(|name| gen_multi_lang(name))}
+                            <pre>{explain.map(|explain|gen_multi_lang(explain))}</pre>
+                        </td>
+                    </tr>)
+                })
+                }</tbody>
+                </table></div>
+                </main>
+                { right_aside() }
+            </body>
+        </html>
+    );
+    output.write_all(doc.to_string().as_bytes())?;
+    Ok(())
+}
+
 fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html lang="en">
@@ -824,6 +867,7 @@ fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
                 <a href="/misc/meowcenaries.html">"Meowcenaries"</a>
                 <a href="/misc/scraps.html">"Trade for scraps"</a>
                 <a href="/dlc.html">"DLC"</a>
+                <a href="/misc/award.html">"Awards"</a>
                 </div>
                 </main>
                 { right_aside() }
@@ -866,6 +910,9 @@ pub fn gen_misc(
 
     let path = folder.create_html("scraps.html")?;
     gen_scraps(hash_store, pedia, pedia_ex, path)?;
+
+    let path = folder.create_html("award.html")?;
+    gen_award(hash_store, pedia, path)?;
 
     gen_misc_page(hash_store, output.create_html("misc.html")?)?;
 
