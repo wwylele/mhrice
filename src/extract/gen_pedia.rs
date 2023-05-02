@@ -970,6 +970,11 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let award_explain = get_msg(pak, "Message/GuildCard/GC_Award_Explain.msg")?;
     let award_explain_mr = get_msg(pak, "Message/GuildCard/GC_Award_Explain_MR.msg")?;
 
+    let achievement_name = get_msg(pak, "Message/GuildCard/GC_Achievement_Name.msg")?;
+    let achievement_name_mr = get_msg(pak, "Message/GuildCard/GC_Achievement_Name_MR.msg")?;
+    let achievement_explain = get_msg(pak, "Message/GuildCard/GC_Achievement_Explain.msg")?;
+    let achievement_explain_mr = get_msg(pak, "Message/GuildCard/GC_Achievement_Explain_MR.msg")?;
+
     Ok(Pedia {
         monsters,
         small_monsters,
@@ -1210,6 +1215,12 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         award_name_mr,
         award_explain,
         award_explain_mr,
+
+        achievement: get_singleton(pak, version_hint)?,
+        achievement_name,
+        achievement_name_mr,
+        achievement_explain,
+        achievement_explain_mr,
     })
 }
 

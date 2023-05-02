@@ -317,6 +317,11 @@ pub struct Pedia {
     pub award_name_mr: Msg,
     pub award_explain: Msg,
     pub award_explain_mr: Msg,
+    pub achievement: AchievementUserData,
+    pub achievement_name: Msg,
+    pub achievement_name_mr: Msg,
+    pub achievement_explain: Msg,
+    pub achievement_explain_mr: Msg,
 }
 
 pub struct QuestReward<'a> {

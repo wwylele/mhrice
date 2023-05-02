@@ -7,6 +7,7 @@ use super::gen_website::*;
 use super::hash_store::*;
 use super::pedia::*;
 use super::sink::*;
+use crate::msg::*;
 use crate::rsz::*;
 use anyhow::Result;
 use std::io::Write;
@@ -846,6 +847,90 @@ fn gen_award(hash_store: &HashStore, pedia: &Pedia, mut output: impl Write) -> R
     Ok(())
 }
 
+fn gen_achievement(
+    hash_store: &HashStore,
+    pedia: &Pedia,
+    pedia_ex: &PediaEx,
+    mut output: impl Write,
+) -> Result<()> {
+    let name_map = &pedia.achievement_name.get_name_map();
+    let name_map_mr = &pedia.achievement_name_mr.get_name_map();
+    let explain_map = pedia.achievement_explain.get_name_map();
+    let explain_map_mr = pedia.achievement_explain_mr.get_name_map();
+
+    let mut sorted: Vec<_> = pedia.achievement.param.iter().collect();
+    sorted.sort_by_key(|a| a.sort_id);
+    let mut grouped: Vec<(Option<&MsgEntry>, Vec<&AchievementUserDataParam>)> = vec![];
+    for achievement in sorted {
+        let explain_tag = format!("GC_Achievement_{}", achievement.explain);
+        let explain = explain_map
+            .get(&explain_tag)
+            .or_else(|| explain_map_mr.get(&explain_tag))
+            .copied();
+
+        if let Some(last) = grouped.last_mut() {
+            if last.0.as_ref().map(|msg| &msg.content) == explain.as_ref().map(|msg| &msg.content)
+                && last.1.first().unwrap().condition_eq(achievement)
+            {
+                last.1.push(achievement);
+                continue;
+            }
+        }
+        grouped.push((explain, vec![achievement]))
+    }
+
+    let doc: DOMTree<String> = html!(
+        <html lang="en">
+            <head itemscope=true>
+                <title>{text!("Guild card titles - MHRice")}</title>
+                { head_common(hash_store) }
+            </head>
+            <body>
+                { navbar() }
+                <main>
+                <header><h1>"Guild card titles"</h1></header>
+                <div class="mh-table"><table>
+                <thead><tr>
+                <th>"Titles"</th>
+                <th>"Condition"</th>
+                <th>"Related page"</th>
+                </tr></thead>
+                <tbody>{
+                grouped.into_iter().map(|(explain, achievements)| {
+                    let first = *achievements.first().unwrap();
+                    html!(<tr>
+                        <td><ul class="mh-achievements">{
+                            achievements.into_iter().map(move |achievement| {
+                                let name_tag = format!("GC_Achievement_{}", achievement.name);
+                                let name = name_map.get(&name_tag).or_else(||name_map_mr.get(&name_tag));
+                                let name = name.map(|name| gen_multi_lang(name)).unwrap_or_else(||html!(<span>{text!("Unknown {}", name_tag)}</span>));
+                                html!(<li>{name}</li>)
+                            })
+                        }</ul></td>
+                        <td>
+                            {explain.map(gen_multi_lang)}
+                        </td>
+                        <td>
+                        {(first.enemy_type != EmTypes::Em(0)).then(||gen_monster_tag(pedia_ex, first.enemy_type, false, true, None, None))}
+                        {(first.quest_no != 0).then(||{
+                            pedia_ex.quests.get(&first.quest_no).map(|quest| gen_quest_tag(quest, false, false, None, None))
+                        }).flatten()}
+                        </td>
+                    </tr>)
+
+
+                })
+                }</tbody>
+                </table></div>
+                </main>
+                { right_aside() }
+            </body>
+        </html>
+    );
+    output.write_all(doc.to_string().as_bytes())?;
+    Ok(())
+}
+
 fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html lang="en">
@@ -868,6 +953,7 @@ fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
                 <a href="/misc/scraps.html">"Trade for scraps"</a>
                 <a href="/dlc.html">"DLC"</a>
                 <a href="/misc/award.html">"Awards"</a>
+                <a href="/misc/achievement.html">"Guild card titles"</a>
                 </div>
                 </main>
                 { right_aside() }
@@ -913,6 +999,9 @@ pub fn gen_misc(
 
     let path = folder.create_html("award.html")?;
     gen_award(hash_store, pedia, path)?;
+
+    let path = folder.create_html("achievement.html")?;
+    gen_achievement(hash_store, pedia, pedia_ex, path)?;
 
     gen_misc_page(hash_store, output.create_html("misc.html")?)?;
 

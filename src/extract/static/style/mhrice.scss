@@ -1231,3 +1231,14 @@ ul.mh-buddy-gear-stat {
 .mh-award {
     width: 8rem;
 }
+
+ul.mh-achievements {
+    >li {
+        display: inline-block;
+        break-inside: avoid;
+
+        &::before {
+            content: "▸"
+        }
+    }
+}

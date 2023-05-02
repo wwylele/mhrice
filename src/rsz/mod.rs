@@ -1117,7 +1117,12 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         EnemyUniqueOverMysteryData,
     );
 
-    r!(AwardUserDataParam, AwardUserData,);
+    r!(
+        AwardUserDataParam,
+        AwardUserData,
+        AchievementUserDataParam,
+        AchievementUserData
+    );
 
     m.extend(unique_mystery::unique_mystery_type_map());
 

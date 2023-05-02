@@ -960,7 +960,7 @@ rsz_enum! {
 // snow.progress.VillageProgress
 rsz_enum! {
     #[rsz(i32)]
-    #[derive(Debug, Serialize, Clone, Copy)]
+    #[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq)]
     pub enum VillageProgress {
         None = 0,
         VillageProgress(i32) = 1..=7
