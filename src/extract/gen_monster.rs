@@ -1357,7 +1357,7 @@ pub fn gen_monster(
             <section id="s-hitzone">
             <h2 >"Hitzone data"</h2>
             <div class="mh-color-diagram">
-                <img id="mh-hitzone-img" alt="Monster hitzone diagram" src=meat_figure />
+                <img id="mh-hitzone-img" class="mh-color-diagram-img" alt="Monster hitzone diagram" src=meat_figure />
                 <canvas id="mh-hitzone-canvas" width=1 height=1 />
             </div>
             <div>
@@ -1489,7 +1489,7 @@ pub fn gen_monster(
             "Parts"
         </h2>
         <div class="mh-color-diagram">
-            <img id="mh-part-img" alt="Monster parts diagram" src=parts_group_figure />
+            <img id="mh-part-img" class="mh-color-diagram-img" alt="Monster parts diagram" src=parts_group_figure />
             <canvas id="mh-part-canvas" width=1 height=1 />
         </div>
         <div>

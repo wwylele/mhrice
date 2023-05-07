@@ -19,12 +19,23 @@ let g_toc = null;
 let g_map_pos = { top: 0, left: 0, x: 0, y: 0, container: null };
 
 let g_diagram_current = new Map();
+let g_diagram_template = new Map();
 
 let g_weapon_masonry = null;
 
 document.addEventListener('DOMContentLoaded', function () {
     delete_all_cookie();
     addEventListensers();
+
+    for (const element of document.getElementsByClassName("mh-color-diagram-img")) {
+        imgOnLoad(element, (img) => {
+            const canvas = new OffscreenCanvas(img.naturalWidth, img.naturalHeight);
+            const context = canvas.getContext('2d');
+            context.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            g_diagram_template.set(img.id, imageData);
+        })
+    }
 
     for (const element of document.getElementsByClassName("mh-lang-menu")) {
         g_supported_mh_lang.push(removePrefix(element.id, "mh-lang-menu-"));
@@ -57,6 +68,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     initWeaponTreeMasonry();
 });
+
+function imgOnLoad(img, callback) {
+    const callbackWrapper = () => { callback(img) }
+    img.addEventListener("load", callbackWrapper, false);
+    if (img.complete) {
+        callbackWrapper();
+        img.removeEventListener("load", callbackWrapper, false);
+    }
+}
 
 function initWeaponTreeMasonry() {
     if (document.getElementById("mh-weapon-tree") !== null) {
@@ -661,11 +681,13 @@ function onChangeDiagramColor(e) {
     const diagram_name = colorButton.getAttribute("data-diagram");
     const img = document.getElementById(diagram_name + "-img");
     const canvas = document.getElementById(diagram_name + "-canvas");
+    canvas.width = img.clientWidth;
+    canvas.height = img.clientHeight;
+    const context = canvas.getContext('2d');
 
     const previous_id = g_diagram_current.get(diagram_name);
     if (previous_id === id) {
         g_diagram_current.delete(diagram_name);
-        const context = canvas.getContext('2d');
         context.clearRect(0, 0, canvas.width, canvas.height);
         colorButton.classList.remove("mh-active");
         return;
@@ -682,12 +704,13 @@ function onChangeDiagramColor(e) {
     const r = parseInt(color.slice(1, 3), 16);
     const g = parseInt(color.slice(3, 5), 16);
     const b = parseInt(color.slice(5, 7), 16);
-    canvas.width = img.clientWidth;
-    canvas.height = img.clientHeight;
-    const context = canvas.getContext('2d');
-    context.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    const imageDataTemp = g_diagram_template.get(img.id);
+    const imageData = new ImageData(
+        new Uint8ClampedArray(imageDataTemp.data),
+        imageDataTemp.width,
+        imageDataTemp.height
+    )
     const data = imageData.data;
     for (let i = 0; i < data.length; i += 4) {
         if (data[i + 0] === 0 && data[i + 1] === 0 && data[i + 2] === 0) {
@@ -701,5 +724,8 @@ function onChangeDiagramColor(e) {
             data[i + 0] = data[i + 1] = data[i + 2] = 230;
         }
     }
-    context.putImageData(imageData, 0, 0);
+
+    createImageBitmap(imageData).then((bitmap) => {
+        context.drawImage(bitmap, 0, 0, imageData.width, imageData.height, 0, 0, canvas.width, canvas.height)
+    });
 }
