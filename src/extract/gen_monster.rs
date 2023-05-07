@@ -2370,6 +2370,8 @@ pub fn gen_monster(
                     <h1> {
                         if let Some(monster_alias) = monster_alias {
                             gen_multi_lang(monster_alias)
+                        } else if monster.id == 131 {
+                            html!(<span>"Toadversary"</span>)
                         } else {
                             html!(<span>{text!("Monster {:03}_{:02}", monster.id, monster.sub_id)}</span>)
                         }
@@ -2422,18 +2424,20 @@ pub fn gen_monsters(
                     <option value="1">"Sort by in-game order"</option>
                 </select></div>
                 <ul class="mh-list-monster" id="slist-monster">{
-                    pedia.monsters.iter().filter(|monster|monster.id != 131).map(|monster| {
+                    pedia.monsters.iter().map(|monster| {
                         let icon_path = format!("/resources/em{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
 
                         let monster_ex = &pedia_ex.monsters[&monster.em_type];
                         let name_entry = if let Some(entry) = monster_ex.name {
                             gen_multi_lang(entry)
+                        } else if monster.id == 131 {
+                            html!(<span>"Toadversary"</span>)
                         } else {
                             html!(<span>{text!("Monster {:03}_{:02}", monster.id, monster.sub_id)}</span>)
                         };
 
                         let order = pedia_ex.monster_order.get(&EmTypes::Em(monster.id | (monster.sub_id << 8)))
-                            .cloned().unwrap_or(0);
+                            .cloned().unwrap_or(i32::MAX as usize);
                         let sort_tag = format!("{},{}", monster.id << 16 | monster.sub_id, order);
                         html!{<li data-sort=sort_tag>
                             <a href={format!("/monster/{:03}_{:02}.html", monster.id, monster.sub_id)}>

@@ -1327,6 +1327,9 @@ fn save_spriter(
     output: &impl Sink,
 ) -> Result<()> {
     let spriter = group.spriters.get(index).context("Broken UV group")?;
+    if spriter.p0.x == spriter.p1.x || spriter.p0.y == spriter.p1.y {
+        return Ok(());
+    }
     tex.sub_image_f(spriter.p0, spriter.p1)?
         .save_png(output.create(path)?)?;
     Ok(())
@@ -1395,6 +1398,16 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
             )?;
         }
     }
+
+    let icon_uvs = pak.find_file("gui/70_UVSequence/boss_icon_mini.uvs")?;
+    let icon_uvs = Uvs::new(Cursor::new(pak.read_file(icon_uvs)?))?;
+    if icon_uvs.textures.is_empty() || icon_uvs.spriter_groups.is_empty() {
+        bail!("Broken boss_icon_mini.uvs");
+    }
+    let icon = pak.find_file(&icon_uvs.textures[0].path)?;
+    let icon = Tex::new(Cursor::new(pak.read_file(icon)?))?.to_rgba(0, 0)?;
+    let spriters = &icon_uvs.spriter_groups[0];
+    save_spriter(&icon, spriters, 40, "em131_00_icon.png", output)?;
 
     let path = pak.find_file("gui/80_Texture/boss_icon/em_spy_ore_IAM.tex")?;
     Tex::new(Cursor::new(pak.read_file(path)?))?.save_png(0, 0, output.create("spy0.png")?)?;
@@ -1534,7 +1547,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
 
     let icon_uvs = pak.find_file("gui/70_UVSequence/state_icon.uvs")?;
     let icon_uvs = Uvs::new(Cursor::new(pak.read_file(icon_uvs)?))?;
-    if icon_uvs.textures.is_empty() || equip_icon_uvs.spriter_groups.is_empty() {
+    if icon_uvs.textures.is_empty() || icon_uvs.spriter_groups.is_empty() {
         bail!("Broken state_icon.uvs");
     }
     let icon = pak.find_file(&icon_uvs.textures[0].path)?;
