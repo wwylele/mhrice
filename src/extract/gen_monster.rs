@@ -162,12 +162,21 @@ pub fn gen_monster_tag(
     </div>)
 }
 
-fn gen_extractive_type(extractive_type: ExtractiveType) -> Result<Box<span<String>>> {
+fn gen_extractive_type(extractive_type: ExtractiveType) -> Box<span<String>> {
     match extractive_type {
-        ExtractiveType::Red => Ok(html!(<span><span class="mh-extract-red"/>"Red"</span>)),
-        ExtractiveType::White => Ok(html!(<span><span class="mh-extract-white"/>"White"</span>)),
-        ExtractiveType::Orange => Ok(html!(<span><span class="mh-extract-orange"/>"Orange"</span>)),
-        ExtractiveType::None => Ok(html!(<span><span class="mh-extract-unknown"/>"None"</span>)),
+        ExtractiveType::Red => html!(<span><span class="mh-extract-red"/>"Red"</span>),
+        ExtractiveType::White => html!(<span><span class="mh-extract-white"/>"White"</span>),
+        ExtractiveType::Orange => html!(<span><span class="mh-extract-orange"/>"Orange"</span>),
+        ExtractiveType::None => html!(<span><span class="mh-extract-unknown"/>"None"</span>),
+    }
+}
+
+fn gen_extractive_type_tag(extractive_type: ExtractiveType) -> &'static str {
+    match extractive_type {
+        ExtractiveType::Red => "red",
+        ExtractiveType::White => "white",
+        ExtractiveType::Orange => "orange",
+        ExtractiveType::None => "none",
     }
 }
 
@@ -1507,7 +1516,7 @@ pub fn gen_monster(
                     <th>"Stagger"</th>
                     <th>"Break"</th>
                     <th>"Sever"</th>
-                    <th>"Extract"</th>
+                    <th class="mh-color-diagram-switch" id="mh-part-dt-extract" data-diagram="mh-part">"Extract"</th>
                     <th>"Anomaly cores" {
                         monster.unique_mystery.as_ref().map(|m| text!(" ({}x active)", m.base.maximum_activity_core_num))
                     } </th>
@@ -1524,9 +1533,9 @@ pub fn gen_monster(
                     let part_color = format!("mh-part-group mh-part-{index}");
 
                     let class_str = if part.extractive_type == ExtractiveType::None {
-                        "mh-invalid-part mh-color-diagram-switch"
+                        "mh-invalid-part mh-color-diagram-switch mh-extractive-color"
                     } else {
-                        "mh-color-diagram-switch"
+                        "mh-color-diagram-switch mh-extractive-color"
                     };
 
                     let index_u16 = u16::try_from(index);
@@ -1560,9 +1569,9 @@ pub fn gen_monster(
                         }).collect::<Vec<_>>().join(" , ");
 
                     let id = format!("mh-part-dt-{index}");
-
+                    let extractive_tag = gen_extractive_type_tag(part.extractive_type);
                     html!(<tr id = {id.as_str()} class=class_str data-color={ PART_COLORS[index] }
-                        data-diagram="mh-part">
+                        data-diagram="mh-part" data-extractcolor={extractive_tag}>
                         <td>
                             <span class=part_color.as_str()/>
                             { text!("[{}]", index) }

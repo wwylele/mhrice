@@ -675,6 +675,13 @@ function removePrefix(s, prefix) {
     return s.slice(prefix.length);
 }
 
+function parseColor(color) {
+    const r = parseInt(color.slice(1, 3), 16);
+    const g = parseInt(color.slice(3, 5), 16);
+    const b = parseInt(color.slice(5, 7), 16);
+    return { r, g, b };
+}
+
 function onChangeDiagramColor(e) {
     const colorButton = e.currentTarget;
     const id = colorButton.id;
@@ -700,11 +707,6 @@ function onChangeDiagramColor(e) {
     colorButton.classList.add("mh-active");
     g_diagram_current.set(diagram_name, id);
 
-    const color = colorButton.getAttribute("data-color");
-    const r = parseInt(color.slice(1, 3), 16);
-    const g = parseInt(color.slice(3, 5), 16);
-    const b = parseInt(color.slice(5, 7), 16);
-
     const imageDataTemp = g_diagram_template.get(img.id);
     const imageData = new ImageData(
         new Uint8ClampedArray(imageDataTemp.data),
@@ -712,18 +714,64 @@ function onChangeDiagramColor(e) {
         imageDataTemp.height
     )
     const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-        if (data[i + 0] === 0 && data[i + 1] === 0 && data[i + 2] === 0) {
-            continue;
+
+    if (id === "mh-part-dt-extract") {
+        const colors = [];
+        for (const colorButton of document.getElementsByClassName("mh-extractive-color")) {
+            const color = colorButton.getAttribute("data-color");
+            const { r, g, b } = parseColor(color);
+            const extract = colorButton.getAttribute("data-extractcolor");
+            colors.push({ r, g, b, extract });
         }
-        if (data[i + 0] === 255 && data[i + 1] === 255 && data[i + 2] === 255) {
-            continue;
+        for (let i = 0; i < data.length; i += 4) {
+            if (data[i + 0] === 0 && data[i + 1] === 0 && data[i + 2] === 0) {
+                continue;
+            }
+            if (data[i + 0] === 255 && data[i + 1] === 255 && data[i + 2] === 255) {
+                data[i + 0] = 0;
+                data[i + 1] = 0;
+                data[i + 2] = 0;
+                continue;
+            }
+            for (const color of colors) {
+                const { r, g, b, extract } = color;
+                const diff = Math.abs(data[i] - r) + Math.abs(data[i + 1] - g) + Math.abs(data[i + 2] - b);
+                if (diff <= 5) {
+                    if (extract === "red") {
+                        data[i + 0] = 255;
+                        data[i + 1] = 0;
+                        data[i + 2] = 0;
+                    } else if (extract === "white") {
+                        data[i + 0] = data[i + 1] = data[i + 2] = 255;
+                    } else if (extract === "orange") {
+                        data[i + 0] = 255;
+                        data[i + 1] = 165;
+                        data[i + 2] = 0;
+                    } else {
+                        data[i + 0] = data[i + 1] = data[i + 2] = 20;
+                    }
+                    break;
+                }
+            }
         }
-        const diff = Math.abs(data[i] - r) + Math.abs(data[i + 1] - g) + Math.abs(data[i + 2] - b);
-        if (diff > 5) {
-            data[i + 0] = data[i + 1] = data[i + 2] = 230;
+    } else {
+        const color = colorButton.getAttribute("data-color");
+        const { r, g, b } = parseColor(color)
+        for (let i = 0; i < data.length; i += 4) {
+            if (data[i + 0] === 0 && data[i + 1] === 0 && data[i + 2] === 0) {
+                continue;
+            }
+            if (data[i + 0] === 255 && data[i + 1] === 255 && data[i + 2] === 255) {
+                continue;
+            }
+            const diff = Math.abs(data[i] - r) + Math.abs(data[i + 1] - g) + Math.abs(data[i + 2] - b);
+            if (diff > 5) {
+                data[i + 0] = data[i + 1] = data[i + 2] = 230;
+            }
         }
     }
+
+
 
     createImageBitmap(imageData).then((bitmap) => {
         context.drawImage(bitmap, 0, 0, imageData.width, imageData.height, 0, 0, canvas.width, canvas.height)
