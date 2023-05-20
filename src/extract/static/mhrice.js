@@ -29,11 +29,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     for (const element of document.getElementsByClassName("mh-color-diagram-img")) {
         imgOnLoad(element, (img) => {
-            const canvas = new OffscreenCanvas(img.naturalWidth, img.naturalHeight);
-            const context = canvas.getContext('2d');
-            context.drawImage(img, 0, 0, canvas.width, canvas.height);
-            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-            g_diagram_template.set(img.id, imageData);
+            try {
+                const canvas = new OffscreenCanvas(img.naturalWidth, img.naturalHeight);
+                const context = canvas.getContext('2d');
+                context.drawImage(img, 0, 0, canvas.width, canvas.height);
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                g_diagram_template.set(img.id, imageData);
+            } catch (error) {
+                // Catch any potential error and continue other initialization
+                console.error(error);
+            }
         })
     }
 

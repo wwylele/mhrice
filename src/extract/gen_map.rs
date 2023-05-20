@@ -34,7 +34,7 @@ pub fn get_map_name(id: i32, pedia: &Pedia) -> Option<&MsgEntry> {
 }
 
 pub fn gen_map_label(id: i32, pedia: &Pedia) -> Box<a<String>> {
-    let link = format!("/map/{}", map_page(id));
+    let link = format!("map/{}", map_page(id));
     let name = get_map_name(id, pedia);
     if let Some(name) = name {
         html!(<a href={link}>{ gen_multi_lang(name) }</a>)
@@ -132,7 +132,7 @@ fn gen_map(
         match &pop.kind {
             MapPopKind::Item { behavior, relic } => {
                 icon_inner = Box::new(|| {
-                    let icon_path = format!("/resources/item/{:03}", behavior.pop_icon);
+                    let icon_path = format!("resources/item/{:03}", behavior.pop_icon);
                     gen_colored_icon(behavior.pop_icon_color, &icon_path, [], false)
                 });
 
@@ -214,7 +214,7 @@ fn gen_map(
                 icon_inner = Box::new(move || {
                     //let rotate = format!("transform:rotate({}rad);", angle);
                     html!(<div class="mh-icon-container">
-                        <img alt="Wirebug jump point" src="/resources/item/115.png"
+                        <img alt="Wirebug jump point" src="resources/item/115.png"
                         class="mh-wire-long-jump-icon undraggable" /*style={rotate}*/ draggable=false/></div>)
                 });
 
@@ -228,10 +228,10 @@ fn gen_map(
                 icon_inner = Box::new(|| {
                     html!(<div class="mh-icon-container"> {
                         if behavior.camp_type == rsz::CampType::BaseCamp {
-                            html!(<img alt="Main camp" src="/resources/main_camp.png"
+                            html!(<img alt="Main camp" src="resources/main_camp.png"
                                 class="mh-main-camp undraggable" draggable=false/>)
                         } else {
-                            html!(<img alt="Sub camp" src="/resources/sub_camp.png"
+                            html!(<img alt="Sub camp" src="resources/sub_camp.png"
                                 class="mh-sub-camp undraggable" draggable=false/>)
                         }
                     } </div>)
@@ -244,7 +244,7 @@ fn gen_map(
                 filter = "camp";
             }
             MapPopKind::FishingPoint { behavior } => {
-                icon_inner = Box::new(|| gen_colored_icon(0, "/resources/item/046", [], false));
+                icon_inner = Box::new(|| gen_colored_icon(0, "resources/item/046", [], false));
 
                 explain_inner = html!(<div class="mh-reward-tables">
                     { gen_fish_table("Low rank fish",
@@ -260,7 +260,7 @@ fn gen_map(
             MapPopKind::Recon { behavior } => {
                 icon_inner = Box::new(|| {
                     html!(<div class="mh-icon-container">
-                        <img alt="Recon point" src="/resources/recon.png"
+                        <img alt="Recon point" src="resources/recon.png"
                             class="mh-recon undraggable" draggable=false/>
                     </div>)
                 });
@@ -325,7 +325,7 @@ fn gen_map(
                         let html_id = format!("mh-map-layer-{j}");
                         html!(
                             <img alt="Map" class={c} id={html_id.as_str()} draggable=false
-                                src={format!("/resources/map{id:02}_{j}.png")}/>
+                                src={format!("resources/map{id:02}_{j}.png")}/>
                         )
                     })}
                     { map_icons }

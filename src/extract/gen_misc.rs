@@ -39,7 +39,7 @@ fn gen_petalace(hash_store: &HashStore, pedia_ex: &PediaEx, folder: &impl Sink) 
                 <tbody>
                 { petalace.into_iter().map(|petalace| html!(<tr>
                     <td><div class="mh-icon-text">
-                        {gen_rared_icon(petalace.data.rarity, "/resources/equip/030", [], false)}
+                        {gen_rared_icon(petalace.data.rarity, "resources/equip/030", [], false)}
                         <span>{gen_multi_lang(petalace.name)}</span>
                     </div></td>
                     <td><pre>{gen_multi_lang(petalace.explain)}</pre></td>
@@ -680,7 +680,7 @@ fn gen_meowcenaries(
                         html!(<td rowspan={sp}>{match grid.icon {
                             GridIcon::Gathering(i) | GridIcon::GatheringRare(i) => {
                                 let alt = format!("gathering {i}");
-                                let path = format!("/resources/spy{i}.png");
+                                let path = format!("resources/spy{i}.png");
                                 html!(<div class="mh-quest-monster">
 
                                 <img alt={alt.as_str()} class="mh-quest-list-monster-icon" src={path. as_str()} />
@@ -830,7 +830,7 @@ fn gen_award(hash_store: &HashStore, pedia: &Pedia, folder: &impl Sink) -> Resul
                 <tbody>{
                 pedia.award.param.iter().enumerate().map(|(i, award)| {
                     let img_name = format!("Award {i}");
-                    let url = format!("/resources/award_{i}.png");
+                    let url = format!("resources/award_{i}.png");
                     let name_tag = format!("GC_Award_{}", award.name);
                     let explain_tag = format!("GC_Award_{}", award.explain);
                     let name = name_map.get(&name_tag).or_else(||name_map_mr.get(&name_tag));
@@ -952,17 +952,17 @@ fn gen_misc_page(hash_store: &HashStore, folder: &impl Sink) -> Result<()> {
                 <main>
                 <header><h1>"Miscellaneous"</h1></header>
                 <div class="mh-misc-list">
-                <a href="/misc/petalace.html">"Petalace"</a>
-                <a href="/misc/market.html">"Market"</a>
-                <a href="/misc/lab.html">"Anomaly research lab"</a>
-                <a href="/misc/mix.html">"Item crafting"</a>
-                <a href="/misc/bbq.html">"Motley mix"</a>
-                <a href="/misc/argosy.html">"Argosy"</a>
-                <a href="/misc/meowcenaries.html">"Meowcenaries"</a>
-                <a href="/misc/scraps.html">"Trade for scraps"</a>
-                <a href="/dlc.html">"DLC"</a>
-                <a href="/misc/award.html">"Awards"</a>
-                <a href="/misc/achievement.html">"Guild card titles"</a>
+                <a href="misc/petalace.html">"Petalace"</a>
+                <a href="misc/market.html">"Market"</a>
+                <a href="misc/lab.html">"Anomaly research lab"</a>
+                <a href="misc/mix.html">"Item crafting"</a>
+                <a href="misc/bbq.html">"Motley mix"</a>
+                <a href="misc/argosy.html">"Argosy"</a>
+                <a href="misc/meowcenaries.html">"Meowcenaries"</a>
+                <a href="misc/scraps.html">"Trade for scraps"</a>
+                <a href="dlc.html">"DLC"</a>
+                <a href="misc/award.html">"Awards"</a>
+                <a href="misc/achievement.html">"Guild card titles"</a>
                 </div>
                 </main>
                 { right_aside() }

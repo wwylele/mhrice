@@ -615,7 +615,7 @@ pub fn gen_about(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
                 "MHRice data is also available in JSON format."
                 </p>
                 <p>
-                <a class="button" href="/mhrice.json" download="mhrice.json">
+                <a class="button" href="mhrice.json" download="mhrice.json">
                     <span class="icon">
                         <i class="fas fa-download"></i>
                     </span>

@@ -29,7 +29,7 @@ pub fn item_page(item: ItemId) -> String {
 }
 
 pub fn gen_item_icon(item: &Item, is_small: bool) -> Box<div<String>> {
-    let icon = format!("/resources/item/{:03}", item.param.icon_chara);
+    let icon = format!("resources/item/{:03}", item.param.icon_chara);
 
     let mut addons = vec![];
 
@@ -53,7 +53,7 @@ pub fn gen_item_label(item: &Item) -> Box<a<String>> {
         ItemId::Normal(1057) => Some(html!(<span class="mh-item-anno">"[Trinket]"</span>)),
         _ => None,
     };
-    let link = format!("/item/{}", item_page(item.param.id));
+    let link = format!("item/{}", item_page(item.param.id));
     html!(
         <a href={link} class="mh-icon-text">
             {gen_item_icon(item, false)}
@@ -312,7 +312,7 @@ fn gen_item_source_armor(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<
             if let Some(product) = piece.product {
                 if product.output_item.contains(&item_id) {
                     htmls.push(html!(<li>
-                        <a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
+                        <a href={format!("armor/{:03}.html", series.series.armor_series.0)}>
                             { gen_armor_label(Some(piece)) }
                         </a>
                     </li>))
@@ -412,7 +412,7 @@ fn gen_item_usage_armor(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<S
             }
             if found {
                 htmls.push(html!(<li>
-                    <a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
+                    <a href={format!("armor/{:03}.html", series.series.armor_series.0)}>
                         { gen_armor_label(Some(piece)) }
                     </a>
                 </li>))
@@ -436,7 +436,7 @@ fn gen_item_usage_otomo(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<S
     let mut htmls = vec![];
 
     for (id, series) in &pedia_ex.ot_equip {
-        let href = format!("/otomo/{}.html", id.to_tag());
+        let href = format!("otomo/{}.html", id.to_tag());
 
         for armor in [&series.head, &series.chest].into_iter().flatten() {
             if let piece @ OtArmor {
@@ -515,7 +515,7 @@ fn gen_item_usage_deco(item_id: ItemId, pedia_ex: &PediaEx) -> Option<Box<div<St
         for deco in &skill.decos {
             if deco.product.item_id_list.contains(&item_id) {
                 htmls.push(html!(<li>
-                    <a href={format!("/skill/{}", skill_page(id))}>
+                    <a href={format!("skill/{}", skill_page(id))}>
                     { gen_deco_label(deco) }
                     </a>
                 </li>))
@@ -542,7 +542,7 @@ fn gen_item_usage_hyakuryu_deco(item_id: ItemId, pedia_ex: &PediaEx) -> Option<B
         for deco in &skill.deco {
             if deco.product.item_id_list.contains(&item_id) {
                 htmls.push(html!(<li>
-                    <a href={format!("/hyakuryu_skill/{}", hyakuryu_skill_page(id))}>
+                    <a href={format!("hyakuryu_skill/{}", hyakuryu_skill_page(id))}>
                     { gen_hyakuryu_deco_label(deco) }
                     </a>
                 </li>))
@@ -577,7 +577,7 @@ fn gen_item_usage_mix(
 
     if !htmls.is_empty() {
         Some(html!(<div class="mh-item-in-out">
-            <h3>"For " <a href="/misc/mix.html">"item crafting"</a>": "</h3>
+            <h3>"For " <a href="misc/mix.html">"item crafting"</a>": "</h3>
             <ul class="mh-item-list">{
                 htmls
             }</ul> </div>))
@@ -601,7 +601,7 @@ fn gen_item_usage_convert(
 
     if !htmls.is_empty() {
         Some(html!(<div class="mh-item-in-out">
-            <h3>"For " <a href="/misc/scraps.html">"trading for scraps"</a>": "</h3>
+            <h3>"For " <a href="misc/scraps.html">"trading for scraps"</a>": "</h3>
             <ul class="mh-item-list">{
                 htmls
             }</ul> </div>))
@@ -617,7 +617,7 @@ fn gen_item_usage_misc(
 ) -> Option<Box<div<String>>> {
     let mut htmls = vec![];
     if pedia_ex.bbq.iter().any(|bbq| bbq.param.item_id == item_id) {
-        htmls.push(html!(<li><a href="/misc/bbq.html">"Motley mix"</a></li>));
+        htmls.push(html!(<li><a href="misc/bbq.html">"Motley mix"</a></li>));
     }
 
     if !htmls.is_empty() {
@@ -715,7 +715,7 @@ fn gen_item_source_mix(
 
     if !htmls.is_empty() {
         Some(html!(<div class="mh-item-in-out">
-            <h3>"From " <a href="/misc/mix.html">"item crafting"</a>": "</h3>
+            <h3>"From " <a href="misc/mix.html">"item crafting"</a>": "</h3>
             <ul class="mh-item-list">{
                 htmls
             }</ul> </div>))
@@ -739,7 +739,7 @@ fn gen_item_source_convert(
 
     if !htmls.is_empty() {
         Some(html!(<div class="mh-item-in-out">
-            <h3>"From " <a href="/misc/scraps.html">"trading for scraps"</a>": "</h3>
+            <h3>"From " <a href="misc/scraps.html">"trading for scraps"</a>": "</h3>
             <ul class="mh-item-list">{
                 htmls
             }</ul> </div>))
@@ -756,7 +756,7 @@ fn gen_item_source_misc(
     let mut htmls = vec![];
 
     if pedia.item_shop.param.iter().any(|item| item.id == item_id) {
-        htmls.push(html!(<li><a href="/misc/market.html#s-item">"Market"</a></li>));
+        htmls.push(html!(<li><a href="misc/market.html#s-item">"Market"</a></li>));
     }
 
     if pedia_ex.item_shop_lot.iter().any(|lot| {
@@ -764,7 +764,7 @@ fn gen_item_source_misc(
             .iter()
             .any(|table| table.item_id_list.iter().any(|item| *item == item_id))
     }) {
-        htmls.push(html!(<li><a href="/misc/market.html#s-lottery">"Market lottery"</a></li>));
+        htmls.push(html!(<li><a href="misc/market.html#s-lottery">"Market lottery"</a></li>));
     }
 
     if pedia
@@ -774,7 +774,7 @@ fn gen_item_source_misc(
         .chain(&pedia.fukudama.no_count_stop_param)
         .any(|p| p.item_id == item_id)
     {
-        htmls.push(html!(<li><a href="/misc/market.html#s-lucky">"Market lucky prize"</a></li>));
+        htmls.push(html!(<li><a href="misc/market.html#s-lucky">"Market lucky prize"</a></li>));
     }
 
     if pedia
@@ -782,7 +782,7 @@ fn gen_item_source_misc(
         .as_ref()
         .map_or(false, |lab| lab.param.iter().any(|p| p.item_id == item_id))
     {
-        htmls.push(html!(<li><a href="/misc/lab.html">"Anomaly research lab"</a></li>));
+        htmls.push(html!(<li><a href="misc/lab.html">"Anomaly research lab"</a></li>));
     }
 
     if pedia_ex.bbq.iter().any(|bbq| {
@@ -791,7 +791,7 @@ fn gen_item_source_misc(
                 .table
                 .map_or(false, |table| table.item_id_list.contains(&item_id))
     }) {
-        htmls.push(html!(<li><a href="/misc/bbq.html">"Motley mix"</a></li>));
+        htmls.push(html!(<li><a href="misc/bbq.html">"Motley mix"</a></li>));
     }
 
     if pedia.trade.param.iter().any(|p| p.item_id == item_id)
@@ -808,11 +808,11 @@ fn gen_item_source_misc(
             .iter()
             .any(|p| p.item_id == item_id)
     {
-        htmls.push(html!(<li><a href="/misc/argosy.html">"Argosy"</a></li>));
+        htmls.push(html!(<li><a href="misc/argosy.html">"Argosy"</a></li>));
     }
 
     if pedia.spy.param.iter().any(|p| p.item_id.contains(&item_id)) {
-        htmls.push(html!(<li><a href="/misc/meowcenaries.html">"Meowcenaries"</a></li>));
+        htmls.push(html!(<li><a href="misc/meowcenaries.html">"Meowcenaries"</a></li>));
     }
 
     if !htmls.is_empty() {
@@ -1093,8 +1093,8 @@ pub fn gen_reward_table<'a>(
 
 pub fn gen_buff_cage_label(buff_cage: &BuffCage<'_>) -> Box<a<String>> {
     html!(
-        <a href={"/misc/petalace.html"} class="mh-icon-text">
-            {gen_rared_icon(buff_cage.data.rarity, "/resources/equip/030", [], false)}
+        <a href={"misc/petalace.html"} class="mh-icon-text">
+            {gen_rared_icon(buff_cage.data.rarity, "resources/equip/030", [], false)}
             <span>{gen_multi_lang(buff_cage.name)}</span>
         </a>
     )

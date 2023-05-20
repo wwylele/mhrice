@@ -14,7 +14,7 @@ use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
 
 pub fn gen_dlc_label(dlc: &Dlc) -> Box<a<String>> {
-    let link = format!("/dlc/{}.html", dlc.data.dlc_id);
+    let link = format!("dlc/{}.html", dlc.data.dlc_id);
     html!(<a href={link}>
         {if let Some(name) = dlc.name {
             gen_multi_lang(name)
@@ -25,7 +25,7 @@ pub fn gen_dlc_label(dlc: &Dlc) -> Box<a<String>> {
 }
 
 pub fn gen_slc_label(slc: &SaveLinkContents) -> Box<a<String>> {
-    let link = format!("/dlc/slc_{}.html", slc.into_raw());
+    let link = format!("dlc/slc_{}.html", slc.into_raw());
     html!(<a href={link}>
         {text!("{}", slc.display())}
     </a>)
@@ -172,7 +172,7 @@ fn gen_add(add: &AddDataInfo, pedia_ex: &PediaEx, sections: &mut Vec<Section>) {
                 {pedia_ex.armors.values().flat_map(|a|&a.pieces).flatten().filter(|p| {
                     add.pl_armor_list.contains(&p.data.pl_armor_id)
                 }).map(|p|html!(<li>
-                    <a class="il" href={format!("/armor/{:03}.html", p.data.series.0)}>
+                    <a class="il" href={format!("armor/{:03}.html", p.data.series.0)}>
                     {gen_armor_label(Some(p))}
                     </a>
                 </li>))}
@@ -184,7 +184,7 @@ fn gen_add(add: &AddDataInfo, pedia_ex: &PediaEx, sections: &mut Vec<Section>) {
                         false
                     }
                 }).map(|p|html!(<li>
-                    <a class="il" href={format!("/armor/{:03}.html", p.data.series.0)}>
+                    <a class="il" href={format!("armor/{:03}.html", p.data.series.0)}>
                     {gen_armor_label(Some(p))}
                     </a>
                     <span class="tag">"Layered"</span>
@@ -197,7 +197,7 @@ fn gen_add(add: &AddDataInfo, pedia_ex: &PediaEx, sections: &mut Vec<Section>) {
                         false
                     }
                 }).map(|p|html!(<li>
-                    <a class="il" href={format!("/otomo/{}.html", p.param.series_id.to_tag())}>
+                    <a class="il" href={format!("otomo/{}.html", p.param.series_id.to_tag())}>
                     {gen_atomo_armor_label(p)}
                     </a>
                     <span class="tag">"Layered"</span>

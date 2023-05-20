@@ -141,14 +141,14 @@ pub fn gen_monster_tag(
     });
 
     let icon_path = format!(
-        "/resources/{}{:03}_{:02}_icon.png",
+        "resources/{}{:03}_{:02}_icon.png",
         if is_large { "em" } else { "ems" },
         id & 0xFF,
         id >> 8
     );
 
     html!(<div class="mh-quest-monster">
-        <a href={format!("/{}/{:03}_{:02}.html",
+        <a href={format!("{}/{:03}_{:02}.html",
             if is_large { "monster" } else { "small-monster" }, id & 0xFF, id >> 8)}>
             <img alt="Monster icon" class="mh-quest-list-monster-icon" src=icon_path />
             <span>
@@ -233,7 +233,7 @@ fn gen_condition_paralyze(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td><img src="/resources/para.png" alt="Paralyze" class="mh-small-icon"/>"Paralyze"</td>
+            <td><img src="resources/para.png" alt="Paralyze" class="mh-small-icon"/>"Paralyze"</td>
             { gen_condition_base(&data.base) }
             <td>  </td>
         </tr>
@@ -247,7 +247,7 @@ fn gen_condition_sleep(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td><img src="/resources/sleep.png" alt="Sleep" class="mh-small-icon"/>"Sleep"</td>
+            <td><img src="resources/sleep.png" alt="Sleep" class="mh-small-icon"/>"Sleep"</td>
             { gen_condition_base(&data.base) }
             <td>  </td>
         </tr>
@@ -261,7 +261,7 @@ fn gen_condition_stun(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td><img src="/resources/stun.png" alt="Stun" class="mh-small-icon"/>"Stun"</td>
+            <td><img src="resources/stun.png" alt="Stun" class="mh-small-icon"/>"Stun"</td>
             { gen_condition_base(&data.base) }
             <td>  </td>
         </tr>
@@ -275,7 +275,7 @@ fn gen_condition_stamina(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td><img src="/resources/exhaust.png" alt="Exhaust" class="mh-small-icon"/>"Exhaust"</td>
+            <td><img src="resources/exhaust.png" alt="Exhaust" class="mh-small-icon"/>"Exhaust"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Stamina reduction = {}", data.sub_stamina)} </td>
         </tr>
@@ -324,7 +324,7 @@ fn gen_condition_flash(
             <td>
             {pedia_ex.items.get(&ItemId::Normal(163)).map(|item| gen_item_icon(item, true))}
             "Flash"
-            {is_mystery.then(||html!(<img src="/resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
+            {is_mystery.then(||html!(<img src="resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
             </td>
             { gen_condition_base(&data.base) }
             <td>
@@ -351,7 +351,7 @@ fn gen_condition_poison(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td><img src="/resources/poison.png" alt="Poison" class="mh-small-icon"/>"Poison"</td>
+            <td><img src="resources/poison.png" alt="Poison" class="mh-small-icon"/>"Poison"</td>
             { gen_condition_base(&data.base) }
             <td>  </td>
         </tr>
@@ -365,7 +365,7 @@ fn gen_condition_blast(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td><img src="/resources/blast.png" alt="Blast" class="mh-small-icon"/>"Blast"</td>
+            <td><img src="resources/blast.png" alt="Blast" class="mh-small-icon"/>"Blast"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Blast damage = {}", data.blast_damage)} </td>
         </tr>
@@ -397,7 +397,7 @@ fn gen_condition_water(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td><img src="/resources/water.png" alt="Water" class="mh-small-icon"/>"Water"</td>
+            <td><img src="resources/water.png" alt="Water" class="mh-small-icon"/>"Water"</td>
             { gen_condition_base(&data.base) }
             <td>
             {text!("Melee hzv adjust: hard = {}, soft = {}, judge = {}",
@@ -424,7 +424,7 @@ fn gen_condition_fire(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td><img src="/resources/fire.png" alt="Fire" class="mh-small-icon"/>"Fire"</td>
+            <td><img src="resources/fire.png" alt="Fire" class="mh-small-icon"/>"Fire"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Hit-damage rate = {}", data.hit_damage_rate)} </td>
         </tr>
@@ -438,7 +438,7 @@ fn gen_condition_ice(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td><img src="/resources/ice.png" alt="Ice" class="mh-small-icon"/>"Ice"</td>
+            <td><img src="resources/ice.png" alt="Ice" class="mh-small-icon"/>"Ice"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Motion speed rate = {}", data.motion_speed_rate)} </td>
         </tr>
@@ -452,7 +452,7 @@ fn gen_condition_thunder(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td><img src="/resources/thunder.png" alt="Thunder" class="mh-small-icon"/>"Thunder"</td>
+            <td><img src="resources/thunder.png" alt="Thunder" class="mh-small-icon"/>"Thunder"</td>
             { gen_condition_base(&data.base) }
             <td>
             {text!("Stun hzv adjust: rate = {}, min = {}, max = {}, default = {}",
@@ -487,7 +487,7 @@ fn gen_condition_fall_trap(
             <td>
             {pedia_ex.items.get(&ItemId::Normal(123)).map(|item| gen_item_icon(item, true))}
             "Pitfall trap"
-            {is_mystery.then(||html!(<img src="/resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
+            {is_mystery.then(||html!(<img src="resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
             </td>
             { gen_condition_base(&data.base) }
             <td> </td>
@@ -504,9 +504,9 @@ fn gen_condition_fall_quick_sand(
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td>
-            {gen_colored_icon(5, "/resources/item/113", [], true)}
+            {gen_colored_icon(5, "resources/item/113", [], true)}
             "Quicksand"
-            {is_mystery.then(||html!(<img src="/resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
+            {is_mystery.then(||html!(<img src="resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
             </td>
             { gen_condition_base(&data.base) }
             <td> </td>
@@ -523,9 +523,9 @@ fn gen_condition_fall_otomo_trap(
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td>
-            {gen_colored_icon(9, "/resources/item/156", [], true)}
+            {gen_colored_icon(9, "resources/item/156", [], true)}
             "Poison purr-ison"
-            {is_mystery.then(||html!(<img src="/resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
+            {is_mystery.then(||html!(<img src="resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
             </td>
             { gen_condition_base(&data.base) }
             <td> {text!("Poison stacking = {}", data.already_poison_stock_value)} </td>
@@ -545,7 +545,7 @@ fn gen_condition_shock_trap(
             <td>
             {pedia_ex.items.get(&ItemId::Normal(4)).map(|item| gen_item_icon(item, true))}
             "Shock trap"
-            {is_mystery.then(||html!(<img src="/resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
+            {is_mystery.then(||html!(<img src="resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
             </td>
             { gen_condition_base(&data.base) }
             <td> </td>
@@ -562,9 +562,9 @@ fn gen_condition_shock_otomo_trap(
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
             <td>
-            {gen_colored_icon(4, "/resources/item/156", [], true)}
+            {gen_colored_icon(4, "resources/item/156", [], true)}
             "Shock purr-ison"
-            {is_mystery.then(||html!(<img src="/resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
+            {is_mystery.then(||html!(<img src="resources/afflicted.png" alt="Afflicted" class="mh-small-icon"/>))}
             </td>
             { gen_condition_base(&data.base) }
             <td></td>
@@ -596,7 +596,7 @@ fn gen_condition_dung(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td><img src="/resources/dung.png" alt="Dung" class="mh-small-icon"/>"Dung"</td>
+            <td><img src="resources/dung.png" alt="Dung" class="mh-small-icon"/>"Dung"</td>
             { gen_condition_base(&data.base) }
             <td></td>
         </tr>
@@ -610,7 +610,7 @@ fn gen_condition_steel_fang(
 ) -> Box<tr<String>> {
     html!(
         <tr class={gen_disabled(used, Some(is_preset)).as_str()}>
-            <td><img src="/resources/steelfang.png" alt="Steel fang" class="mh-small-icon"/>"Steel fang"</td>
+            <td><img src="resources/steelfang.png" alt="Steel fang" class="mh-small-icon"/>"Steel fang"</td>
             { gen_condition_base(&data.base) }
             <td> {text!("Active limit = {}, Unique target param = {}",
                 data.active_limit_count, data.is_unique_target_param)}
@@ -970,19 +970,19 @@ pub fn gen_monster(
     let enemy_parts_break_data_list = &monster.data_tune.enemy_parts_break_data_list;
     let enemy_parts_loss_data_list = &monster.data_tune.enemy_parts_loss_data_list;
     let meat_figure = format!(
-        "/resources/{}{:03}_{:02}_meat.png",
+        "resources/{}{:03}_{:02}_meat.png",
         if is_large { "em" } else { "ems" },
         monster.id,
         monster.sub_id,
     );
     let parts_group_figure = format!(
-        "/resources/{}{:03}_{:02}_parts_group.png",
+        "resources/{}{:03}_{:02}_parts_group.png",
         if is_large { "em" } else { "ems" },
         monster.id,
         monster.sub_id,
     );
     let icon = format!(
-        "/resources/{}{:03}_{:02}_icon.png",
+        "resources/{}{:03}_{:02}_icon.png",
         if is_large { "em" } else { "ems" },
         monster.id,
         monster.sub_id,
@@ -1046,11 +1046,11 @@ pub fn gen_monster(
                 {text!("{}", size_range.base_size)}
                 {(!size_range.no_size_scale).then(||html!(<span>
                     " ("
-                    <img class="mh-crown-icon" alt="Small crown" src="/resources/small_crown.png" />
+                    <img class="mh-crown-icon" alt="Small crown" src="resources/small_crown.png" />
                     {text!("{}, ", size_range.base_size * size_range.small_boarder)}
-                    <img class="mh-crown-icon" alt="Silver large crown" src="/resources/large_crown.png" />
+                    <img class="mh-crown-icon" alt="Silver large crown" src="resources/large_crown.png" />
                     {text!("{}, ", size_range.base_size * size_range.big_boarder)}
-                    <img class="mh-crown-icon" alt="Large crown" src="/resources/king_crown.png" />
+                    <img class="mh-crown-icon" alt="Large crown" src="resources/king_crown.png" />
                     {text!("{})", size_range.base_size * size_range.king_boarder)}
                 </span>))}
             </span>
@@ -1261,11 +1261,11 @@ pub fn gen_monster(
         (monster_ex.random_quest, &pedia.random_mystery_rank_release)
     {
         let diff_table = format!(
-            "/quest/anomaly_difficulty_0_{}.html",
+            "quest/anomaly_difficulty_0_{}.html",
             random_quest.difficulty_table_type
         );
         let extra_diff_table = format!(
-            "/quest/anomaly_difficulty_1_{}.html",
+            "quest/anomaly_difficulty_1_{}.html",
             random_quest.difficulty_table_type_extra
         );
         sections.push(Section {
@@ -1386,12 +1386,12 @@ pub fn gen_monster(
                     <th>"Slash"</th>
                     <th>"Impact"</th>
                     <th>"Shot"</th>
-                    <th><img src="/resources/fire.png" alt="Fire" class="mh-small-icon"/>"Fire"</th>
-                    <th><img src="/resources/water.png" alt="Water" class="mh-small-icon"/>"Water"</th>
-                    <th><img src="/resources/ice.png" alt="Ice" class="mh-small-icon"/>"Ice"</th>
-                    <th><img src="/resources/thunder.png" alt="Thunder" class="mh-small-icon"/>"Thunder"</th>
-                    <th><img src="/resources/dragon.png" alt="Dragon" class="mh-small-icon"/>"Dragon"</th>
-                    <th><img src="/resources/stun.png" alt="Stun" class="mh-small-icon"/>"Dizzy"</th>
+                    <th><img src="resources/fire.png" alt="Fire" class="mh-small-icon"/>"Fire"</th>
+                    <th><img src="resources/water.png" alt="Water" class="mh-small-icon"/>"Water"</th>
+                    <th><img src="resources/ice.png" alt="Ice" class="mh-small-icon"/>"Ice"</th>
+                    <th><img src="resources/thunder.png" alt="Thunder" class="mh-small-icon"/>"Thunder"</th>
+                    <th><img src="resources/dragon.png" alt="Dragon" class="mh-small-icon"/>"Dragon"</th>
+                    <th><img src="resources/stun.png" alt="Stun" class="mh-small-icon"/>"Dizzy"</th>
                 </tr>
                 </thead>
                 {
@@ -2158,7 +2158,7 @@ pub fn gen_monster(
                             AttackElement::Heal => Some(("heal", "Heal")),
                         };
                         let image = image.map(|(file, alt)| {
-                            let path = format!("/resources/{file}.png");
+                            let path = format!("resources/{file}.png");
                             html!(<img src={path.as_str()} class="mh-small-icon" alt={alt}/>)
                         });
                         damages.push(html!(<li>{image}
@@ -2170,7 +2170,7 @@ pub fn gen_monster(
 
                     if atk.data.base_piyo_value != 0 {
                         statuss.push(html!(<li>
-                            <img src="/resources/stun.png" class="mh-small-icon" alt="Stun"/>
+                            <img src="resources/stun.png" class="mh-small-icon" alt="Stun"/>
                             {text!("{}", atk.data.base_piyo_value)}</li>))
                     }
 
@@ -2206,7 +2206,7 @@ pub fn gen_monster(
 
                             statuss.push(html!(<li>
                                 { image.iter().map(|&(file, alt)| {
-                                    let path = format!("/resources/{file}.png");
+                                    let path = format!("resources/{file}.png");
                                     html!(<img src={path.as_str()} class="mh-small-icon" alt={alt}/>)
                                 }) }
                                 { text!("{}", text) }
@@ -2222,7 +2222,7 @@ pub fn gen_monster(
 
                     if atk.data.is_mystery_debuff {
                         statuss.push(html!(<li>
-                            <img src="/resources/blood.png" class="mh-small-icon" alt="BloodBlight"/>
+                            <img src="resources/blood.png" class="mh-small-icon" alt="BloodBlight"/>
                             {text!("{}sec", atk.data.mystery_debuff_sec)}</li>))
                     }
 
@@ -2434,7 +2434,7 @@ pub fn gen_monsters(
                 </select></div>
                 <ul class="mh-list-monster" id="slist-monster">{
                     pedia.monsters.iter().map(|monster| {
-                        let icon_path = format!("/resources/em{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
+                        let icon_path = format!("resources/em{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
 
                         let monster_ex = &pedia_ex.monsters[&monster.em_type];
                         let name_entry = if let Some(entry) = monster_ex.name {
@@ -2449,7 +2449,7 @@ pub fn gen_monsters(
                             .cloned().unwrap_or(i32::MAX as usize);
                         let sort_tag = format!("{},{}", monster.id << 16 | monster.sub_id, order);
                         html!{<li data-sort=sort_tag>
-                            <a href={format!("/monster/{:03}_{:02}.html", monster.id, monster.sub_id)}>
+                            <a href={format!("monster/{:03}_{:02}.html", monster.id, monster.sub_id)}>
                                 <img alt="Monster icon" class="mh-list-monster-icon" src=icon_path />
                                 <div>{name_entry}</div>
                             </a>
@@ -2462,7 +2462,7 @@ pub fn gen_monsters(
                 <ul class="mh-list-monster">{
                     pedia.small_monsters.iter().filter(|monster|monster.sub_id == 0) // sub small monsters are b0rked
                     .map(|monster| {
-                        let icon_path = format!("/resources/ems{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
+                        let icon_path = format!("resources/ems{0:03}_{1:02}_icon.png", monster.id, monster.sub_id);
 
                         let monster_ex = &pedia_ex.monsters[&monster.em_type];
                         let name = if let Some(entry) = monster_ex.name {
@@ -2472,7 +2472,7 @@ pub fn gen_monsters(
                         };
 
                         html!{<li>
-                            <a href={format!("/small-monster/{:03}_{:02}.html", monster.id, monster.sub_id)}>
+                            <a href={format!("small-monster/{:03}_{:02}.html", monster.id, monster.sub_id)}>
                                 <img alt="Monster icon" class="mh-list-monster-icon" src=icon_path />
                                 <div>{ name }</div>
                             </a>

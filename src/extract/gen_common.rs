@@ -34,8 +34,8 @@ pub fn open_graph(
     if description.is_empty() {
         description = " ".to_owned(); // avoid empty meta attribute
     }
-    let image = image.unwrap_or("/favicon.png");
-    let image = origin.clone() + image;
+    let image = image.unwrap_or("favicon.png");
+    let image = origin.clone() + "/" + image;
     let url = origin.clone() + "/" + path;
     vec![
         html!(<meta property="og:type" content="website" />),
@@ -144,7 +144,7 @@ pub fn right_aside() -> Box<aside<String>> {
         "Website info"
     </p>
     <ul class="menu-list">
-    <li><a class="navbar-item" href="/about.html">
+    <li><a class="navbar-item" href="about.html">
         "About MHRice"
     </a></li>
     </ul>
@@ -179,9 +179,9 @@ pub fn gen_slot(decorations_num_list: &[u32], is_rampage_slot: bool) -> Box<span
             html!(
                 <span class="mh-slot-outer">
                     <img alt={alt.as_str()}
-                        src={format!("/resources/slot_{s}.png").as_str()} class={class} />
+                        src={format!("resources/slot_{s}.png").as_str()} class={class} />
                     { is_rampage_slot.then(||html!(<img alt="Rampage slot" class="mh-slot-rampage"
-                        src="/resources/slot_rampage.png" />)) }
+                        src="resources/slot_rampage.png" />)) }
                 </span>
             )
         })}

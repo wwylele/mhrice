@@ -19,7 +19,7 @@ pub fn gen_weapon_icon(
     element: PlWeaponElementTypes,
     element2: PlWeaponElementTypes,
 ) -> Box<div<String>> {
-    let icon = format!("/resources/equip/{:03}", weapon.id.icon_index());
+    let icon = format!("resources/equip/{:03}", weapon.id.icon_index());
     let rare = if white {
         RareTypes(1)
     } else {
@@ -65,7 +65,7 @@ where
     let icon_element2 = db
         .map(|e| e.sub_element_type)
         .unwrap_or(PlWeaponElementTypes::None);
-    let link = format!("/weapon/{}.html", main.id.to_tag());
+    let link = format!("weapon/{}.html", main.id.to_tag());
     html!(
         <a href={link} class="mh-icon-text">
             {gen_weapon_icon(main, false, icon_element, icon_element2)}
@@ -404,7 +404,7 @@ where
             PlWeaponElementTypes::Paralyze => ("para", "Paralyze"),
             PlWeaponElementTypes::Bomb => ("blast", "Blast"),
         };
-        let img = format!("/resources/{img}.png");
+        let img = format!("resources/{img}.png");
         html!(<span>
             <img alt={text} src={img.as_str()} class="mh-small-icon"/>
             {text!("{} {}", text, element_val)}
@@ -960,10 +960,7 @@ where
         + MaybeToBase<DualBladesBaseUserDataParam>,
 {
     let mut list_path = weapon_path.create_html(&format!("{tag}.html"))?;
-    let masonry_js = format!(
-        "/masonry.pkgd.min.js?h={}",
-        hash_store.get(FileTag::Masonry)
-    );
+    let masonry_js = format!("masonry.pkgd.min.js?h={}", hash_store.get(FileTag::Masonry));
 
     let cols = weapon_tree
         .weapons
@@ -988,7 +985,7 @@ where
                 <main>
                 <header><h1> {text!("{}", name)} </h1></header>
                 <div>
-                    <a href="/weapon.html"><span class="icon-text">
+                    <a href="weapon.html"><span class="icon-text">
                     <span class="icon">
                     <i class="fas fa-arrow-right"></i>
                     </span>
@@ -1108,7 +1105,7 @@ pub fn gen_weapons(
             bow:$bow:ident,
             special:$special:expr
         ) => {{
-            let entry_link = format!("/weapon/{}.html", stringify!($label));
+            let entry_link = format!("weapon/{}.html", stringify!($label));
             entry_label.push(html!(<li>
                 <a href={entry_link.as_str()} class="mh-icon-text">
                     {

@@ -18,9 +18,9 @@ pub fn skill_page(id: PlEquipSkillId) -> String {
 
 pub fn gen_skill_lv_label(pedia_ex: &PediaEx, skill: PlEquipSkillId, lv: i32) -> Box<li<String>> {
     let name = if let Some(skill_data) = pedia_ex.skills.get(&skill) {
-        html!(<div class="il"><a href={format!("/skill/{}", skill_page(skill))}
+        html!(<div class="il"><a href={format!("skill/{}", skill_page(skill))}
             class="mh-icon-text">
-            {gen_colored_icon(skill_data.icon_color, "/resources/skill", [], false)}
+            {gen_colored_icon(skill_data.icon_color, "resources/skill", [], false)}
             {gen_multi_lang(skill_data.name)}
         </a></div>)
     } else {
@@ -50,7 +50,7 @@ pub fn gen_skill_list(
                 <header><h1>"Armor skills"</h1></header>
 
                 <div>
-                    <a href="/hyakuryu_skill.html"><span class="icon-text">
+                    <a href="hyakuryu_skill.html"><span class="icon-text">
                     <span class="icon">
                     <i class="fas fa-arrow-right"></i>
                     </span>
@@ -109,8 +109,8 @@ pub fn gen_skill_list(
                         }
                         let filter = filter_tags.join(" ");
                         html!(<li data-filter={filter} class="mh-skill-filter-item">
-                            <a href={format!("/skill/{}", skill_page(id))} class="mh-icon-text">
-                            {gen_colored_icon(skill.icon_color, "/resources/skill", [], false)}
+                            <a href={format!("skill/{}", skill_page(id))} class="mh-icon-text">
+                            {gen_colored_icon(skill.icon_color, "resources/skill", [], false)}
                             <span>{gen_multi_lang(skill.name)}</span>
                             </a>
                         </li>)
@@ -132,7 +132,7 @@ pub fn gen_skill_list(
 
 fn deco_icon_path(lv: i32) -> String {
     let icon_id = if lv == 4 { 200 } else { 63 + lv };
-    format!("/resources/item/{icon_id:03}")
+    format!("resources/item/{icon_id:03}")
 }
 
 pub fn gen_deco_label(deco: &Deco) -> Box<div<String>> {
@@ -150,7 +150,7 @@ fn gen_skill_source_gear(id: PlEquipSkillId, pedia_ex: &PediaEx) -> Option<Box<s
         for piece in series.pieces.iter().flatten() {
             if piece.data.skill_list.contains(&id) {
                 htmls.push(html!(<li>
-                    <a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
+                    <a href={format!("armor/{:03}.html", series.series.armor_series.0)}>
                         { gen_armor_label(Some(piece)) }
                     </a>
                 </li>))
@@ -358,7 +358,7 @@ pub fn gen_skill(
                 <main>
                 <header>
                     <div class="mh-title-icon">
-                        {gen_colored_icon(skill.icon_color, "/resources/skill", [], false)}
+                        {gen_colored_icon(skill.icon_color, "resources/skill", [], false)}
                     </div>
                     <h1> {gen_multi_lang(skill.name)} </h1>
                 </header>

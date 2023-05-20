@@ -51,11 +51,11 @@ pub fn gen_quest_tag(
     sub_type_tag: Option<Box<span<String>>>,
 ) -> Box<div<String>> {
     let img = format!(
-        "/resources/questtype_{}.png",
+        "resources/questtype_{}.png",
         quest.param.quest_type.icon_index()
     );
     html!(<div>
-        <a href={format!("/quest/{:06}.html", quest.param.quest_no)} class="mh-icon-text">
+        <a href={format!("quest/{:06}.html", quest.param.quest_no)} class="mh-icon-text">
         <img alt="Quest icon" src={img} class="mh-quest-icon"/>
         {
             tag_level.then(
@@ -189,7 +189,7 @@ pub fn gen_quest_list(
                 <main>
                 <header><h1>"Quests"</h1></header>
                 <div>
-                    <a href="/villager_request.html"><span class="icon-text">
+                    <a href="villager_request.html"><span class="icon-text">
                     <span class="icon">
                     <i class="fas fa-arrow-right"></i>
                     </span>
@@ -245,14 +245,14 @@ pub fn gen_quest_monster_data(
 
                 let small = (small_chance != 0).then(|| {
                     html!(<span class="mh-crown">
-                    <img class="mh-crown-icon" alt="Small crown" src="/resources/small_crown.png" />
+                    <img class="mh-crown-icon" alt="Small crown" src="resources/small_crown.png" />
                     {text!("{}%", small_chance)}
                 </span>)
                 });
 
                 let large = (large_chance != 0).then(|| {
                     html!(<span class="mh-crown">
-                    <img class="mh-crown-icon" alt="Large crown" src="/resources/king_crown.png" />
+                    <img class="mh-crown-icon" alt="Large crown" src="resources/king_crown.png" />
                     {text!("{}%", large_chance)}
                 </span>)
                 });
@@ -477,7 +477,7 @@ fn gen_quest(
         .iter()
         .any(|&em_type| em_type != EmTypes::Em(0));
     let img = format!(
-        "/resources/questtype_{}.png",
+        "resources/questtype_{}.png",
         quest.param.quest_type.icon_index()
     );
 
@@ -1135,7 +1135,7 @@ fn gen_quest(
                             for deco in &skill.decos {
                                 if deco.data.id == id {
                                     return html!(<li>
-                                        <a href={format!("/skill/{}", skill_page(skill_id))}>
+                                        <a href={format!("skill/{}", skill_page(skill_id))}>
                                         { gen_deco_label(deco) }
                                         </a>
                                     </li>)
@@ -1150,7 +1150,7 @@ fn gen_quest(
                         for series in pedia_ex.armors.values() {
                             for piece in series.pieces.iter().flatten() {
                                 if piece.data.pl_armor_id == id {
-                                    return html!(<td><a href={format!("/armor/{:03}.html", series.series.armor_series.0)}>
+                                    return html!(<td><a href={format!("armor/{:03}.html", series.series.armor_series.0)}>
                                         {gen_armor_label(Some(piece))}
                                     </a></td>)
                                 }
@@ -1610,7 +1610,7 @@ pub fn gen_quests(
 
 pub fn gen_npc_mission_tag(mission: &NpcMission) -> Box<div<String>> {
     html!(<div>
-        <a href={format!("/villager_request/{:03}.html", mission.param.id)}>
+        <a href={format!("villager_request/{:03}.html", mission.param.id)}>
         {gen_multi_lang(mission.name)}
         </a>
     </div>)
@@ -1632,7 +1632,7 @@ pub fn gen_npc_mission_list(
                 <main>
                 <header><h1>"Villager requests"</h1></header>
                 <div>
-                    <a href="/quest.html"><span class="icon-text">
+                    <a href="quest.html"><span class="icon-text">
                     <span class="icon">
                     <i class="fas fa-arrow-right"></i>
                     </span>
@@ -1843,7 +1843,7 @@ fn gen_npc_mission(
                     Some((p, tags))
                 }
             }).map(|(p, tags)|html!(<li>
-                <a class="il" href={format!("/armor/{:03}.html", p.data.series.0)}>
+                <a class="il" href={format!("armor/{:03}.html", p.data.series.0)}>
                 {gen_armor_label(Some(p))}
                 </a>
             {tags}</li>))}
@@ -1851,7 +1851,7 @@ fn gen_npc_mission(
             {pedia_ex.ot_equip.values().filter(|ot|pedia_ex.progress.get(&ot.series.unlock_progress).map(|p|p.talk_flag)
                 == Some(mission.param.end_flag)).flat_map(|ot| {
                     let mut items = vec![];
-                    let href = format!("/otomo/{}.html", ot.series.id.to_tag());
+                    let href = format!("otomo/{}.html", ot.series.id.to_tag());
                     if let Some(weapon) = &ot.weapon {
                         items.push(html!(<li><a href={&href}>{gen_atomo_weapon_label(weapon)}</a></li>))
                     }
