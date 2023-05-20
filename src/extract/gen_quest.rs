@@ -175,15 +175,17 @@ pub fn gen_quest_list(
         });
     }
 
+    let file_name = "quest.html";
+
     let doc: DOMTree<String> = html!(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Quests - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, output) }
             </head>
             <body>
                 { navbar() }
-                { gen_menu(&sections) }
+                { gen_menu(&sections, &(output.toc_path() + file_name)) }
                 <main>
                 <header><h1>"Quests"</h1></header>
                 <div>
@@ -202,7 +204,7 @@ pub fn gen_quest_list(
     );
 
     output
-        .create_html("quest.html")?
+        .create_html(file_name)?
         .write_all(doc.to_string().as_bytes())?;
 
     Ok(())
@@ -459,9 +461,12 @@ fn gen_quest(
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
     config: &WebsiteConfig,
-    mut output: impl Write,
-    mut toc_sink: TocSink<'_>,
+    quest_path: &impl Sink,
+    toc: &mut Toc,
 ) -> Result<()> {
+    let (mut output, mut toc_sink) =
+        quest_path.create_html_with_toc(&format!("{:06}.html", quest.param.quest_no), toc)?;
+
     if let Some(title) = quest.name {
         toc_sink.add(title);
     }
@@ -1414,14 +1419,14 @@ fn gen_quest(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("{}", plain_title)}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, quest_path) }
                 { quest.name.iter().flat_map(|&name|title_multi_lang(name)) }
                 { open_graph(quest.name, &plain_title,
                     quest.target, "", Some(&img), toc_sink.path(), config) }
             </head>
             <body>
                 { navbar() }
-                { gen_menu(&sections) }
+                { gen_menu(&sections, toc_sink.path()) }
                 <main>
                 <header class="mh-quest-header">
                     <div class="mh-title-icon">
@@ -1476,8 +1481,11 @@ pub fn gen_random_mystery_difficulty(
     category: usize,
     kind: usize,
     table: &RandomMysteryDifficultyRateKindData,
-    mut output: impl Write,
+    quest_path: &impl Sink,
 ) -> Result<()> {
+    let mut output =
+        quest_path.create_html(&format!("anomaly_difficulty_{category}_{kind}.html"))?;
+
     let difficulty_rate_anomaly =
         if let Some(difficulty_rate_anomaly) = &pedia.difficulty_rate_anomaly {
             difficulty_rate_anomaly
@@ -1488,7 +1496,7 @@ pub fn gen_random_mystery_difficulty(
         <html lang="en">
         <head itemscope=true>
             <title>{text!("Anomaly investigation stat table")}</title>
-            { head_common(hash_store) }
+            { head_common(hash_store, quest_path) }
         </head>
         <body>
             { navbar() }
@@ -1578,16 +1586,12 @@ pub fn gen_quests(
 ) -> Result<()> {
     let quest_path = output.sub_sink("quest")?;
     for quest in pedia_ex.quests.values() {
-        let (path, toc_sink) =
-            quest_path.create_html_with_toc(&format!("{:06}.html", quest.param.quest_no), toc)?;
-        gen_quest(hash_store, quest, pedia, pedia_ex, config, path, toc_sink)?;
+        gen_quest(hash_store, quest, pedia, pedia_ex, config, &quest_path, toc)?;
     }
 
     if let Some(table) = &pedia.random_mystery_difficulty {
         for (category, t) in table.nand_data.iter().enumerate() {
             for (kind, t) in t.nand_kinds_data.iter().enumerate() {
-                let output = quest_path
-                    .create_html(&format!("anomaly_difficulty_{category}_{kind}.html"))?;
                 gen_random_mystery_difficulty(
                     hash_store,
                     pedia,
@@ -1595,7 +1599,7 @@ pub fn gen_quests(
                     category,
                     kind,
                     t.nando_ref_table.unwrap(),
-                    output,
+                    &quest_path,
                 )?
             }
         }
@@ -1621,7 +1625,7 @@ pub fn gen_npc_mission_list(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Villager requests - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, output) }
             </head>
             <body>
                 { navbar() }
@@ -1667,9 +1671,12 @@ fn gen_npc_mission(
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
     config: &WebsiteConfig,
-    mut output: impl Write,
-    mut toc_sink: TocSink<'_>,
+    mission_path: &impl Sink,
+    toc: &mut Toc,
 ) -> Result<()> {
+    let (mut output, mut toc_sink) =
+        mission_path.create_html_with_toc(&format!("{:03}.html", mission.param.id), toc)?;
+
     toc_sink.add(mission.name);
 
     let mut sections = vec![];
@@ -1867,14 +1874,14 @@ fn gen_npc_mission(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("{}", plain_title)}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, mission_path) }
                 { title_multi_lang(mission.name)}
                 { open_graph(Some(mission.name), &plain_title,
                     Some(mission.detail), "", None, toc_sink.path(), config) }
             </head>
             <body>
                 { navbar() }
-                { gen_menu(&sections) }
+                { gen_menu(&sections, toc_sink.path()) }
                 <main>
                 <header class="mh-quest-header">
                     <h1> { gen_multi_lang(mission.name) } </h1>
@@ -1902,9 +1909,15 @@ pub fn gen_npc_missions(
 ) -> Result<()> {
     let mission_path = output.sub_sink("villager_request")?;
     for mission in pedia_ex.npc_missions.values() {
-        let (path, toc_sink) =
-            mission_path.create_html_with_toc(&format!("{:03}.html", mission.param.id), toc)?;
-        gen_npc_mission(hash_store, mission, pedia, pedia_ex, config, path, toc_sink)?;
+        gen_npc_mission(
+            hash_store,
+            mission,
+            pedia,
+            pedia_ex,
+            config,
+            &mission_path,
+            toc,
+        )?;
     }
 
     Ok(())

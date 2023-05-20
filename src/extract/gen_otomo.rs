@@ -40,9 +40,12 @@ fn gen_otomo_equip(
     series: &OtEquipSeries,
     pedia_ex: &PediaEx,
     config: &WebsiteConfig,
-    mut output: impl Write,
-    mut toc_sink: TocSink<'_>,
+    otomo_path: &impl Sink,
+    toc: &mut Toc,
 ) -> Result<()> {
+    let (mut output, mut toc_sink) =
+        otomo_path.create_html_with_toc(&format!("{}.html", series.series.id.to_tag()), toc)?;
+
     toc_sink.add(series.name);
     let mut rarity = RareTypes(1);
     if let Some(head) = &series.head {
@@ -387,14 +390,14 @@ fn gen_otomo_equip(
     let doc: DOMTree<String> = html!(<html lang="en">
         <head itemscope=true>
             <title>{text!("Buddy equipment")}</title>
-            { head_common(hash_store) }
+            { head_common(hash_store, otomo_path) }
             { title_multi_lang(series.name) }
             { open_graph(Some(series.name), "",
                 None, "", None, toc_sink.path(), config) }
         </head>
         <body>
             { navbar() }
-            { gen_menu(&sections) }
+            { gen_menu(&sections, toc_sink.path()) }
             <main>
             <header>
                 <div class="mh-title-icon">
@@ -423,10 +426,8 @@ pub fn gen_otomo_equips(
     toc: &mut Toc,
 ) -> Result<()> {
     let otomo_path = output.sub_sink("otomo")?;
-    for (id, series) in &pedia_ex.ot_equip {
-        let (output, toc_sink) =
-            otomo_path.create_html_with_toc(&format!("{}.html", id.to_tag()), toc)?;
-        gen_otomo_equip(hash_store, series, pedia_ex, config, output, toc_sink)?
+    for series in pedia_ex.ot_equip.values() {
+        gen_otomo_equip(hash_store, series, pedia_ex, config, &otomo_path, toc)?
     }
     Ok(())
 }
@@ -449,7 +450,7 @@ pub fn gen_otomo_equip_list(
             <html lang="en">
                 <head itemscope=true>
                     <title>{text!("{} - MHRice", title)}</title>
-                    { head_common(hash_store) }
+                    { head_common(hash_store, output) }
                     <style id="mh-armor-list-style">""</style>
                 </head>
                 <body>

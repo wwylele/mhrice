@@ -73,7 +73,7 @@ pub fn gen_armor_list(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Armors - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, output) }
                 <style id="mh-armor-list-style">""</style>
             </head>
             <body>
@@ -155,9 +155,12 @@ fn gen_armor(
     pedia: &Pedia,
     pedia_ex: &PediaEx,
     config: &WebsiteConfig,
-    mut output: impl Write,
-    mut toc_sink: TocSink<'_>,
+    path: &impl Sink,
+    toc: &mut Toc,
 ) -> Result<()> {
+    let (mut output, mut toc_sink) =
+        path.create_html_with_toc(&format!("{:03}.html", series.series.armor_series.0), toc)?;
+
     toc_sink.add(series.name);
 
     for piece in &series.pieces {
@@ -729,14 +732,14 @@ fn gen_armor(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Armor {:03}", series.series.armor_series.0)}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, path) }
                 { title_multi_lang(series.name) }
                 { open_graph(Some(series.name), "",
                     None, "", None, toc_sink.path(), config) }
             </head>
             <body>
                 { navbar() }
-                { gen_menu(&sections) }
+                { gen_menu(&sections, toc_sink.path()) }
                 <main>
                 <header class="mh-armor-header">
                     <div class="mh-title-icon"> {
@@ -771,10 +774,14 @@ pub fn gen_armors(
 ) -> Result<()> {
     let armor_path = output.sub_sink("armor")?;
     for series in pedia_ex.armors.values() {
-        let (output, toc_sink) = armor_path
-            .create_html_with_toc(&format!("{:03}.html", series.series.armor_series.0), toc)?;
         gen_armor(
-            hash_store, series, pedia, pedia_ex, config, output, toc_sink,
+            hash_store,
+            series,
+            pedia,
+            pedia_ex,
+            config,
+            &armor_path,
+            toc,
         )?
     }
     Ok(())

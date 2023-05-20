@@ -36,7 +36,7 @@ pub fn open_graph(
     }
     let image = image.unwrap_or("/favicon.png");
     let image = origin.clone() + image;
-    let url = origin.clone() + path;
+    let url = origin.clone() + "/" + path;
     vec![
         html!(<meta property="og:type" content="website" />),
         html!(<meta property="og:title" content={title} />),
@@ -53,7 +53,7 @@ pub struct Section {
     pub content: Box<section<String>>,
 }
 
-pub fn gen_menu(sections: &[Section]) -> Box<aside<String>> {
+pub fn gen_menu(sections: &[Section], path: &str) -> Box<aside<String>> {
     html!(<aside id="left-aside">
     <div class="aside-button" id="left-aside-button"/>
     <div class="side-menu">
@@ -62,7 +62,7 @@ pub fn gen_menu(sections: &[Section]) -> Box<aside<String>> {
     </p>
     <ul class="menu-list">
         {sections.iter().map(|s| {
-            let href = format!("#{}", s.content.attrs.id.as_ref().unwrap());
+            let href = format!("{}#{}", path, s.content.attrs.id.as_ref().unwrap());
             html!(<li><a href={href.as_str()} class="left-aside-item">
                 {text!("{}", s.title)}
             </a></li>)

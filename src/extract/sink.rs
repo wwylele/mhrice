@@ -184,6 +184,16 @@ pub trait Sink: Sync {
 
     fn finalize(self) -> Result<()>;
     fn toc_path(&self) -> String;
+
+    fn depth(&self) -> usize;
+
+    fn home_path(&self) -> String {
+        let depth = self.depth();
+        if depth == 0 {
+            return "./".to_owned();
+        }
+        (0..depth).map(|_| "../").collect()
+    }
 }
 
 pub struct NullSink;
@@ -209,17 +219,22 @@ impl Sink for NullSink {
     fn toc_path(&self) -> String {
         "".to_string()
     }
+
+    fn depth(&self) -> usize {
+        0
+    }
 }
 
 pub struct DiskSink {
     root: PathBuf,
     toc_path: String,
+    depth: usize,
 }
 
 impl DiskSink {
     pub fn init(root: &Path) -> Result<Self> {
         let root = PathBuf::from(root);
-        let toc_path = "/".to_string();
+        let toc_path = "".to_string();
         if root.exists() {
             eprintln!(
                 "Warning: output folder {} already exists",
@@ -228,7 +243,11 @@ impl DiskSink {
         } else {
             fs::create_dir(&root)?;
         }
-        Ok(DiskSink { root, toc_path })
+        Ok(DiskSink {
+            root,
+            toc_path,
+            depth: 0,
+        })
     }
 }
 
@@ -251,6 +270,7 @@ impl Sink for DiskSink {
         Ok(DiskSink {
             root: path,
             toc_path,
+            depth: self.depth + 1,
         })
     }
 
@@ -260,6 +280,10 @@ impl Sink for DiskSink {
 
     fn toc_path(&self) -> String {
         self.toc_path.clone()
+    }
+
+    fn depth(&self) -> usize {
+        self.depth
     }
 }
 
@@ -436,6 +460,7 @@ pub struct S3Sink {
     path: String,
     inner: Arc<S3SinkInner>,
     error: Arc<Mutex<Option<anyhow::Error>>>,
+    depth: usize,
 }
 
 pub struct S3File {
@@ -458,6 +483,7 @@ impl S3Sink {
             inner,
             path: String::new(),
             error,
+            depth: 0,
         })
     }
 }
@@ -492,6 +518,7 @@ impl Sink for S3Sink {
             path,
             inner,
             error: self.error.clone(),
+            depth: self.depth + 1,
         })
     }
 
@@ -514,7 +541,11 @@ impl Sink for S3Sink {
     }
 
     fn toc_path(&self) -> String {
-        "/".to_string() + &self.path
+        self.path.clone()
+    }
+
+    fn depth(&self) -> usize {
+        self.depth
     }
 }
 

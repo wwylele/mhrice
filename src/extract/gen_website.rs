@@ -60,31 +60,35 @@ pub const LANGUAGE_MAP: [Option<(&str, &str)>; 32] = [
     None,
 ];
 
-pub fn head_common(hash_store: &HashStore) -> Vec<Box<dyn MetadataContent<String>>> {
-    let main_css = format!("/mhrice.css?h={}", hash_store.get(FileTag::MainCss));
-    let main_js = format!("/mhrice.js?h={}", hash_store.get(FileTag::MainJs));
+pub fn head_common(
+    hash_store: &HashStore,
+    parent: &impl Sink,
+) -> Vec<Box<dyn MetadataContent<String>>> {
+    let main_css = format!("mhrice.css?h={}", hash_store.get(FileTag::MainCss));
+    let main_js = format!("mhrice.js?h={}", hash_store.get(FileTag::MainJs));
     let fa = format!(
-        "/fontawesome/fontawesome.min.js?h={}",
+        "fontawesome/fontawesome.min.js?h={}",
         hash_store.get(FileTag::Fa)
     );
     let fa_brand = format!(
-        "/fontawesome/brands.js?h={}",
+        "fontawesome/brands.js?h={}",
         hash_store.get(FileTag::FaBrand)
     );
     let fa_solid = format!(
-        "/fontawesome/solid.js?h={}",
+        "fontawesome/solid.js?h={}",
         hash_store.get(FileTag::FaSolid)
     );
-    let part_color = format!("/part_color.css?h={}", hash_store.get(FileTag::PartColor));
+    let part_color = format!("part_color.css?h={}", hash_store.get(FileTag::PartColor));
     vec![
         html!(<meta charset="UTF-8" />),
+        html!(<base href={parent.home_path().as_str()}/>),
         html!(<meta name="viewport" content="width=device-width, initial-scale=1" />),
         html!(<meta name="keywords" content="Monster Hunter,Monster Hunter Rise,MHR,MHRise,Database,Guide,Hitzone,HZV"/>),
-        html!(<link rel="icon" type="image/png" href="/favicon.png" />),
+        html!(<link rel="icon" type="image/png" href="favicon.png" />),
         html!(<link rel="stylesheet" href={main_css} />),
         html!(<link rel="stylesheet" href={part_color} />),
-        html!(<link rel="stylesheet" href="/resources/item_color.css" />),
-        html!(<link rel="stylesheet" href="/resources/rarity_color.css" />),
+        html!(<link rel="stylesheet" href="resources/item_color.css" />),
+        html!(<link rel="stylesheet" href="resources/rarity_color.css" />),
         html!(<script src={main_js}/>),
         html!(<script defer=true src={fa_brand}/>),
         html!(<script defer=true src={fa_solid}/>),
@@ -96,8 +100,8 @@ pub fn head_common(hash_store: &HashStore) -> Vec<Box<dyn MetadataContent<String
 pub fn navbar() -> Box<nav<String>> {
     html!(<nav><div>
         <div class="navbar-brand">
-            <a class="navbar-item" href="/index.html">
-                <img alt="Logo" src="/favicon.png"/>
+            <a class="navbar-item" href="index.html">
+                <img alt="Logo" src="favicon.png"/>
                 <div id="mh-logo-text">"MHRice "</div>
             </a>
 
@@ -119,109 +123,109 @@ pub fn navbar() -> Box<nav<String>> {
 
         <div id="navbarMenu" class="navbar-menu">
             <div class="navbar-start">
-                <a class="navbar-item" href="/monster.html">
+                <a class="navbar-item" href="monster.html">
                     "Monsters"
                 </a>
 
-                <a class="navbar-item navbar-folded" href="/quest.html">
+                <a class="navbar-item navbar-folded" href="quest.html">
                     "Quests"
                 </a>
                 <div class="navbar-item has-dropdown is-hoverable navbar-expanded">
-                <a class="navbar-link" href="/quest.html">
+                <a class="navbar-link" href="quest.html">
                     "Quests"
                 </a>
                 <div class="navbar-dropdown">
-                    <a class="navbar-item" href="/quest.html">"Main quests"</a>
-                    <a class="navbar-item" href="/villager_request.html">"Villager requests"</a>
+                    <a class="navbar-item" href="quest.html">"Main quests"</a>
+                    <a class="navbar-item" href="villager_request.html">"Villager requests"</a>
                 </div>
                 </div>
 
-                <a class="navbar-item navbar-folded" href="/skill.html">
+                <a class="navbar-item navbar-folded" href="skill.html">
                     "Skills"
                 </a>
                 <div class="navbar-item has-dropdown is-hoverable navbar-expanded">
-                <a class="navbar-link" href="/skill.html">
+                <a class="navbar-link" href="skill.html">
                     "Skills"
                 </a>
                 <div class="navbar-dropdown">
-                    <a class="navbar-item" href="/skill.html">
+                    <a class="navbar-item" href="skill.html">
                         "Armor skills"
                     </a>
-                    <a class="navbar-item" href="/hyakuryu_skill.html">
+                    <a class="navbar-item" href="hyakuryu_skill.html">
                         "Rampage skills"
                     </a>
                 </div>
                 </div>
 
-                <a class="navbar-item" href="/armor.html">
+                <a class="navbar-item" href="armor.html">
                     "Armors"
                 </a>
 
-                <a class="navbar-item navbar-folded" href="/weapon.html">
+                <a class="navbar-item navbar-folded" href="weapon.html">
                     "Weapons"
                 </a>
                 <div class="navbar-item has-dropdown is-hoverable navbar-expanded">
-                <a class="navbar-link" href="/weapon.html">
+                <a class="navbar-link" href="weapon.html">
                     "Weapons"
                 </a>
                 <div class="navbar-dropdown">
-                    <a class="navbar-item" href="/weapon/great_sword.html">"Great sword"</a>
-                    <a class="navbar-item" href="/weapon/long_sword.html">"Long sword"</a>
-                    <a class="navbar-item" href="/weapon/short_sword.html">"Sword & shield"</a>
-                    <a class="navbar-item" href="/weapon/dual_blades.html">"Dual blades"</a>
-                    <a class="navbar-item" href="/weapon/hammer.html">"Hammer"</a>
-                    <a class="navbar-item" href="/weapon/horn.html">"Hunting horn"</a>
-                    <a class="navbar-item" href="/weapon/lance.html">"Lance"</a>
-                    <a class="navbar-item" href="/weapon/gun_lance.html">"Gunlance"</a>
-                    <a class="navbar-item" href="/weapon/slash_axe.html">"Switch axe"</a>
-                    <a class="navbar-item" href="/weapon/charge_axe.html">"Charge blade"</a>
-                    <a class="navbar-item" href="/weapon/insect_glaive.html">"Insect glaive"</a>
-                    <a class="navbar-item" href="/weapon/light_bowgun.html">"Light bowgun"</a>
-                    <a class="navbar-item" href="/weapon/heavy_bowgun.html">"Heavy bowgun"</a>
-                    <a class="navbar-item" href="/weapon/bow.html">"Bow"</a>
+                    <a class="navbar-item" href="weapon/great_sword.html">"Great sword"</a>
+                    <a class="navbar-item" href="weapon/long_sword.html">"Long sword"</a>
+                    <a class="navbar-item" href="weapon/short_sword.html">"Sword & shield"</a>
+                    <a class="navbar-item" href="weapon/dual_blades.html">"Dual blades"</a>
+                    <a class="navbar-item" href="weapon/hammer.html">"Hammer"</a>
+                    <a class="navbar-item" href="weapon/horn.html">"Hunting horn"</a>
+                    <a class="navbar-item" href="weapon/lance.html">"Lance"</a>
+                    <a class="navbar-item" href="weapon/gun_lance.html">"Gunlance"</a>
+                    <a class="navbar-item" href="weapon/slash_axe.html">"Switch axe"</a>
+                    <a class="navbar-item" href="weapon/charge_axe.html">"Charge blade"</a>
+                    <a class="navbar-item" href="weapon/insect_glaive.html">"Insect glaive"</a>
+                    <a class="navbar-item" href="weapon/light_bowgun.html">"Light bowgun"</a>
+                    <a class="navbar-item" href="weapon/heavy_bowgun.html">"Heavy bowgun"</a>
+                    <a class="navbar-item" href="weapon/bow.html">"Bow"</a>
                 </div>
                 </div>
 
-                <a class="navbar-item navbar-folded" href="/airou.html">
+                <a class="navbar-item navbar-folded" href="airou.html">
                     "Buddy"
                 </a>
                 <div class="navbar-item has-dropdown is-hoverable navbar-expanded">
-                <a class="navbar-link" href="/airou.html">
+                <a class="navbar-link" href="airou.html">
                     "Buddy"
                 </a>
                 <div class="navbar-dropdown">
-                    <a class="navbar-item" href="/airou.html">"Palico equipment"</a>
-                    <a class="navbar-item" href="/dog.html">"Palamute equipment"</a>
+                    <a class="navbar-item" href="airou.html">"Palico equipment"</a>
+                    <a class="navbar-item" href="dog.html">"Palamute equipment"</a>
                 </div>
                 </div>
 
-                <a class="navbar-item" href="/map.html">
+                <a class="navbar-item" href="map.html">
                     "Maps"
                 </a>
 
-                <a class="navbar-item" href="/item.html">
+                <a class="navbar-item" href="item.html">
                    "Items"
                 </a>
 
-                <a class="navbar-item navbar-folded" href="/misc.html">
+                <a class="navbar-item navbar-folded" href="misc.html">
                     "Misc."
                 </a>
                 <div class="navbar-item has-dropdown is-hoverable navbar-expanded">
-                <a class="navbar-link" href="/misc.html">
+                <a class="navbar-link" href="misc.html">
                     "Misc."
                 </a>
                 <div class="navbar-dropdown">
-                    <a class="navbar-item" href="/misc/petalace.html">"Petalace"</a>
-                    <a class="navbar-item" href="/misc/market.html">"Market"</a>
-                    <a class="navbar-item" href="/misc/lab.html">"Anomaly research lab"</a>
-                    <a class="navbar-item" href="/misc/mix.html">"Item crafting"</a>
-                    <a class="navbar-item" href="/misc/bbq.html">"Motley mix"</a>
-                    <a class="navbar-item" href="/misc/argosy.html">"Argosy"</a>
-                    <a class="navbar-item" href="/misc/meowcenaries.html">"Meowcenaries"</a>
-                    <a class="navbar-item" href="/misc/scraps.html">"Trade for scraps"</a>
-                    <a class="navbar-item" href="/dlc.html">"DLC"</a>
-                    <a class="navbar-item" href="/misc/award.html">"Awards"</a>
-                    <a class="navbar-item" href="/misc/achievement.html">"Guild card titles"</a>
+                    <a class="navbar-item" href="misc/petalace.html">"Petalace"</a>
+                    <a class="navbar-item" href="misc/market.html">"Market"</a>
+                    <a class="navbar-item" href="misc/lab.html">"Anomaly research lab"</a>
+                    <a class="navbar-item" href="misc/mix.html">"Item crafting"</a>
+                    <a class="navbar-item" href="misc/bbq.html">"Motley mix"</a>
+                    <a class="navbar-item" href="misc/argosy.html">"Argosy"</a>
+                    <a class="navbar-item" href="misc/meowcenaries.html">"Meowcenaries"</a>
+                    <a class="navbar-item" href="misc/scraps.html">"Trade for scraps"</a>
+                    <a class="navbar-item" href="dlc.html">"DLC"</a>
+                    <a class="navbar-item" href="misc/award.html">"Awards"</a>
+                    <a class="navbar-item" href="misc/achievement.html">"Guild card titles"</a>
                 </div>
                 </div>
             </div>
@@ -550,7 +554,7 @@ pub fn gen_search(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("MHRice - Monster Hunter Rise Database")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, output) }
                 <meta name="description" content="Monster Hunter Rise Database" />
             </head>
             <body>
@@ -583,7 +587,7 @@ pub fn gen_about(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Monsters - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, output) }
             </head>
             <body>
                 { navbar() }

@@ -13,19 +13,15 @@ use anyhow::Result;
 use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
 
-fn gen_petalace(
-    hash_store: &HashStore,
-    pedia_ex: &PediaEx,
-    mut output: impl Write,
-    mut _toc_sink: TocSink<'_>,
-) -> Result<()> {
+fn gen_petalace(hash_store: &HashStore, pedia_ex: &PediaEx, folder: &impl Sink) -> Result<()> {
+    let mut output = folder.create_html("petalace.html")?;
     let mut petalace: Vec<_> = pedia_ex.buff_cage.values().collect();
     petalace.sort_unstable_by_key(|p| (p.data.sort_index, p.data.id));
     let doc: DOMTree<String> = html!(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Petalace - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, folder) }
             </head>
             <body>
                 { navbar() }
@@ -68,8 +64,10 @@ fn gen_market(
     hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
-    mut output: impl Write,
+    folder: &impl Sink,
 ) -> Result<()> {
+    let file_name = "market.html";
+    let mut output = folder.create_html(file_name)?;
     let mut sections = vec![];
 
     let mut item_shop: Vec<_> = pedia.item_shop.param.iter().collect();
@@ -196,11 +194,11 @@ fn gen_market(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Market - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, folder) }
             </head>
             <body>
                 { navbar() }
-                { gen_menu(&sections) }
+                { gen_menu(&sections, &(folder.toc_path() + file_name)) }
                 <main>
                 <header><h1>"Market"</h1></header>
                 { sections.into_iter().map(|s|s.content) }
@@ -217,8 +215,9 @@ fn gen_lab(
     hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
-    mut output: impl Write,
+    folder: &impl Sink,
 ) -> Result<()> {
+    let mut output = folder.create_html("lab.html")?;
     let gen_em = |em| {
         (em != EmTypes::Em(0))
             .then(|| html!(<li>{gen_monster_tag(pedia_ex, em, false, true, None, None)}</li>))
@@ -273,7 +272,7 @@ fn gen_lab(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Anomaly research lab - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, folder) }
             </head>
             <body>
                 { navbar() }
@@ -293,8 +292,9 @@ fn gen_mix(
     hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
-    mut output: impl Write,
+    folder: &impl Sink,
 ) -> Result<()> {
+    let mut output = folder.create_html("mix.html")?;
     let content = html!(<div class="mh-table"><table>
         <thead><tr>
             <th>"Item"</th>
@@ -326,7 +326,7 @@ fn gen_mix(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Item crafting - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, folder) }
             </head>
             <body>
                 { navbar() }
@@ -342,7 +342,8 @@ fn gen_mix(
     Ok(())
 }
 
-fn gen_bbq(hash_store: &HashStore, pedia_ex: &PediaEx, mut output: impl Write) -> Result<()> {
+fn gen_bbq(hash_store: &HashStore, pedia_ex: &PediaEx, folder: &impl Sink) -> Result<()> {
+    let mut output = folder.create_html("bbq.html")?;
     let content = html!(<div class="mh-table"><table>
         <thead><tr>
             <th>"Item"</th>
@@ -397,7 +398,7 @@ fn gen_bbq(hash_store: &HashStore, pedia_ex: &PediaEx, mut output: impl Write) -
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Motley mix - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, folder) }
             </head>
             <body>
                 { navbar() }
@@ -417,8 +418,10 @@ fn gen_argosy(
     hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
-    mut output: impl Write,
+    folder: &impl Sink,
 ) -> Result<()> {
+    let file_name = "argosy.html";
+    let mut output = folder.create_html(file_name)?;
     let mut sections = vec![];
 
     let mut trade: Vec<_> = pedia.trade.param.iter().collect();
@@ -593,11 +596,11 @@ fn gen_argosy(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Argosy - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, folder) }
             </head>
             <body>
                 { navbar() }
-                { gen_menu(&sections) }
+                { gen_menu(&sections, &(folder.toc_path() + file_name)) }
                 <main>
                 <header><h1>"Argosy"</h1></header>
                 { sections.into_iter().map(|s|s.content) }
@@ -614,8 +617,10 @@ fn gen_meowcenaries(
     hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
-    mut output: impl Write,
+    folder: &impl Sink,
 ) -> Result<()> {
+    let file_name = "meowcenaries.html";
+    let mut output = folder.create_html(file_name)?;
     let mut sections = vec![];
     let mut grid: Vec<_> = pedia.spy.param.iter().collect();
     grid.sort_by_key(|g| (g.map_name, g.rank));
@@ -715,11 +720,11 @@ fn gen_meowcenaries(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Meowcenaries - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, folder) }
             </head>
             <body>
                 { navbar() }
-                { gen_menu(&sections) }
+                { gen_menu(&sections, &(folder.toc_path() + file_name)) }
                 <main>
                 <header><h1>"Meowcenaries"</h1></header>
                 { sections.into_iter().map(|s|s.content) }
@@ -737,8 +742,9 @@ fn gen_scraps(
     hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
-    mut output: impl Write,
+    folder: &impl Sink,
 ) -> Result<()> {
+    let mut output = folder.create_html("scraps.html")?;
     let mut records: Vec<_> = pedia.offcut_convert.param.iter().collect();
     records.sort_by_cached_key(|r| {
         (
@@ -779,7 +785,7 @@ fn gen_scraps(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Trade for scraps - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, folder) }
             </head>
             <body>
                 { navbar() }
@@ -804,7 +810,8 @@ fn gen_scraps(
     Ok(())
 }
 
-fn gen_award(hash_store: &HashStore, pedia: &Pedia, mut output: impl Write) -> Result<()> {
+fn gen_award(hash_store: &HashStore, pedia: &Pedia, folder: &impl Sink) -> Result<()> {
+    let mut output = folder.create_html("award.html")?;
     let name_map = pedia.award_name.get_name_map();
     let name_map_mr = pedia.award_name_mr.get_name_map();
     let explain_map = pedia.award_explain.get_name_map();
@@ -813,7 +820,7 @@ fn gen_award(hash_store: &HashStore, pedia: &Pedia, mut output: impl Write) -> R
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Awards - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, folder) }
             </head>
             <body>
                 { navbar() }
@@ -851,8 +858,9 @@ fn gen_achievement(
     hash_store: &HashStore,
     pedia: &Pedia,
     pedia_ex: &PediaEx,
-    mut output: impl Write,
+    folder: &impl Sink,
 ) -> Result<()> {
+    let mut output = folder.create_html("achievement.html")?;
     let name_map = &pedia.achievement_name.get_name_map();
     let name_map_mr = &pedia.achievement_name_mr.get_name_map();
     let explain_map = pedia.achievement_explain.get_name_map();
@@ -883,7 +891,7 @@ fn gen_achievement(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Guild card titles - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, folder) }
             </head>
             <body>
                 { navbar() }
@@ -931,12 +939,13 @@ fn gen_achievement(
     Ok(())
 }
 
-fn gen_misc_page(hash_store: &HashStore, mut output: impl Write) -> Result<()> {
+fn gen_misc_page(hash_store: &HashStore, folder: &impl Sink) -> Result<()> {
+    let mut output = folder.create_html("misc.html")?;
     let doc: DOMTree<String> = html!(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Misc - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, folder) }
             </head>
             <body>
                 { navbar() }
@@ -970,40 +979,20 @@ pub fn gen_misc(
     pedia: &Pedia,
     pedia_ex: &PediaEx,
     output: &impl Sink,
-    toc: &mut Toc,
+    _toc: &mut Toc,
 ) -> Result<()> {
     let folder = output.sub_sink("misc")?;
-    let (path, toc_sink) = folder.create_html_with_toc("petalace.html", toc)?;
-    gen_petalace(hash_store, pedia_ex, path, toc_sink)?;
-
-    let path = folder.create_html("market.html")?;
-    gen_market(hash_store, pedia, pedia_ex, path)?;
-
-    let path = folder.create_html("lab.html")?;
-    gen_lab(hash_store, pedia, pedia_ex, path)?;
-
-    let path = folder.create_html("mix.html")?;
-    gen_mix(hash_store, pedia, pedia_ex, path)?;
-
-    let path = folder.create_html("bbq.html")?;
-    gen_bbq(hash_store, pedia_ex, path)?;
-
-    let path = folder.create_html("argosy.html")?;
-    gen_argosy(hash_store, pedia, pedia_ex, path)?;
-
-    let path = folder.create_html("meowcenaries.html")?;
-    gen_meowcenaries(hash_store, pedia, pedia_ex, path)?;
-
-    let path = folder.create_html("scraps.html")?;
-    gen_scraps(hash_store, pedia, pedia_ex, path)?;
-
-    let path = folder.create_html("award.html")?;
-    gen_award(hash_store, pedia, path)?;
-
-    let path = folder.create_html("achievement.html")?;
-    gen_achievement(hash_store, pedia, pedia_ex, path)?;
-
-    gen_misc_page(hash_store, output.create_html("misc.html")?)?;
+    gen_petalace(hash_store, pedia_ex, &folder)?;
+    gen_market(hash_store, pedia, pedia_ex, &folder)?;
+    gen_lab(hash_store, pedia, pedia_ex, &folder)?;
+    gen_mix(hash_store, pedia, pedia_ex, &folder)?;
+    gen_bbq(hash_store, pedia_ex, &folder)?;
+    gen_argosy(hash_store, pedia, pedia_ex, &folder)?;
+    gen_meowcenaries(hash_store, pedia, pedia_ex, &folder)?;
+    gen_scraps(hash_store, pedia, pedia_ex, &folder)?;
+    gen_award(hash_store, pedia, &folder)?;
+    gen_achievement(hash_store, pedia, pedia_ex, &folder)?;
+    gen_misc_page(hash_store, output)?;
 
     Ok(())
 }

@@ -37,7 +37,7 @@ pub fn gen_hyakuryu_skill_list(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Rampage skills - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, output) }
                 <style id="mh-skill-list-style">""</style>
             </head>
             <body>
@@ -162,9 +162,12 @@ pub fn gen_hyakuryu_skill(
     skill: &HyakuryuSkill,
     pedia_ex: &PediaEx,
     config: &WebsiteConfig,
-    mut output: impl Write,
-    mut toc_sink: TocSink<'_>,
+    skill_path: &impl Sink,
+    toc: &mut Toc,
 ) -> Result<()> {
+    let (mut output, mut toc_sink) =
+        skill_path.create_html_with_toc(&hyakuryu_skill_page(skill.id()), toc)?;
+
     toc_sink.add(skill.name);
 
     let mut sections = vec![];
@@ -248,14 +251,14 @@ pub fn gen_hyakuryu_skill(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Rampage skill - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, skill_path) }
                 { title_multi_lang(skill.name) }
                 { open_graph(Some(skill.name), "",
                     Some(skill.explain), "", None, toc_sink.path(), config) }
             </head>
             <body>
                 { navbar() }
-                { gen_menu(&sections) }
+                { gen_menu(&sections, toc_sink.path()) }
                 <main>
                 <header>
                     <div class="mh-title-icon">
@@ -285,9 +288,8 @@ pub fn gen_hyakuryu_skills(
     toc: &mut Toc,
 ) -> Result<()> {
     let skill_path = output.sub_sink("hyakuryu_skill")?;
-    for (&id, skill) in &pedia_ex.hyakuryu_skills {
-        let (output, toc_sink) = skill_path.create_html_with_toc(&hyakuryu_skill_page(id), toc)?;
-        gen_hyakuryu_skill(hash_store, skill, pedia_ex, config, output, toc_sink)?
+    for skill in pedia_ex.hyakuryu_skills.values() {
+        gen_hyakuryu_skill(hash_store, skill, pedia_ex, config, &skill_path, toc)?
     }
     Ok(())
 }

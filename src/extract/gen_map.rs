@@ -81,9 +81,11 @@ fn gen_map(
     pedia: &Pedia,
     pedia_ex: &PediaEx,
     config: &WebsiteConfig,
-    mut output: impl Write,
-    mut toc_sink: TocSink<'_>,
+    path: &impl Sink,
+    toc: &mut Toc,
 ) -> Result<()> {
+    let (mut output, mut toc_sink) = path.create_html_with_toc(&map_page(id), toc)?;
+
     let gen_fish_table = |tag: &str, fishes: &[rsz::FishSpawnGroupInfo]| -> Box<div<String>> {
         html!(<div class="mh-reward-box"><div class="mh-table"><table>
         <thead><tr>
@@ -390,7 +392,7 @@ fn gen_map(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Map {:02}", id)}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, path) }
                 { open_graph(name, "",
                     None, "", None, toc_sink.path(), config) }
                 { name.iter().flat_map(|&name|title_multi_lang(name)) }
@@ -398,7 +400,7 @@ fn gen_map(
             </head>
             <body>
             { navbar() }
-            { gen_menu(&sections) }
+            { gen_menu(&sections, toc_sink.path()) }
             <main>
 
             <header><h1>{title}</h1></header>
@@ -426,8 +428,7 @@ pub fn gen_maps(
 ) -> Result<()> {
     let map_path = output.sub_sink("map")?;
     for (&id, map) in &pedia.maps {
-        let (path, toc_sink) = map_path.create_html_with_toc(&map_page(id), toc)?;
-        gen_map(hash_store, id, map, pedia, pedia_ex, config, path, toc_sink)?
+        gen_map(hash_store, id, map, pedia, pedia_ex, config, &map_path, toc)?
     }
     Ok(())
 }
@@ -437,7 +438,7 @@ pub fn gen_map_list(hash_store: &HashStore, pedia: &Pedia, output: &impl Sink) -
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Maps - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, output) }
             </head>
             <body>
                 { navbar() }

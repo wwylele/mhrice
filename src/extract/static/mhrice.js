@@ -481,7 +481,7 @@ function changeFilter(e, category) {
         }
     }
 
-    history.replaceState(null, null, hash);
+    history.replaceState(null, null, location.pathname + hash);
 
     const filter_button_prefix = `mh-${category}-filter-button-`;
     const prev = document.getElementById(filter_button_prefix + g_filter);
@@ -599,7 +599,7 @@ function search(e) {
 
 function loadTocAndDoSearch() {
     if (g_toc === null) {
-        fetch(`/tocv2/${g_language_code}.json`)
+        fetch(`tocv2/${g_language_code}.json`)
             .then(response => response.json())
             .then(json => {
                 g_toc = json;
@@ -617,7 +617,7 @@ function goSearch(e) {
 
     const text = document.getElementById("nav-search").value.trim();
 
-    window.location.assign(`/index.html?search=${encodeURIComponent(text)}`)
+    window.location.assign(`index.html?search=${encodeURIComponent(text)}`)
 }
 
 

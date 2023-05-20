@@ -963,7 +963,7 @@ pub fn gen_monster(
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
     config: &WebsiteConfig,
-    output: &impl Sink,
+    folder: &impl Sink,
     toc: &mut Toc,
 ) -> Result<()> {
     let collider_mapping = &monster.collider_mapping;
@@ -2356,7 +2356,7 @@ pub fn gen_monster(
 
     let plain_title = format!("Monster {:03}_{:02} - MHRice", monster.id, monster.sub_id);
 
-    let (mut output, mut toc_sink) = output.create_html_with_toc(
+    let (mut output, mut toc_sink) = folder.create_html_with_toc(
         &format!("{:03}_{:02}.html", monster.id, monster.sub_id),
         toc,
     )?;
@@ -2365,14 +2365,14 @@ pub fn gen_monster(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("{}", plain_title)}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, folder) }
                 { monster_alias.iter().flat_map(|&alias|title_multi_lang(alias)) }
                 { open_graph(monster_alias, &plain_title,
                     monster_ex.explain1, "", Some(&icon), toc_sink.path(), config) }
             </head>
             <body>
                 { navbar() }
-                { gen_menu(&sections) }
+                { gen_menu(&sections, toc_sink.path()) }
                 <main>
                 <header class="mh-monster-header">
                     <img alt="Monster icon" src=icon />
@@ -2418,7 +2418,7 @@ pub fn gen_monsters(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Monsters - MHRice - Monster Hunter Rise Database")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, output) }
                 <meta name="description" content="List of monsters. Monster Hunter Rise Database" />
             </head>
             <body>

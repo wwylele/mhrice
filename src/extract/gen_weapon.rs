@@ -223,8 +223,8 @@ fn gen_weapon<Param>(
     pedia: &Pedia,
     pedia_ex: &PediaEx,
     config: &WebsiteConfig,
-    mut output: impl Write,
-    mut toc_sink: TocSink<'_>,
+    path: &impl Sink,
+    toc: &mut Toc,
     has_element: fn(&Param) -> Option<&ElementWeaponBaseData>,
     has_second_element: fn(&Param) -> Option<&DualBladesBaseUserDataParam>,
     has_close_range: fn(&Param) -> Option<&CloseRangeWeaponBaseData>,
@@ -239,10 +239,13 @@ where
         + MaybeToBase<ElementWeaponBaseData>
         + MaybeToBase<DualBladesBaseUserDataParam>,
 {
-    toc_sink.add(weapon.name);
-
     let param = weapon.param;
     let main = param.to_base();
+
+    let (mut output, mut toc_sink) =
+        path.create_html_with_toc(&format!("{}.html", main.base.id.to_tag()), toc)?;
+
+    toc_sink.add(weapon.name);
     let first_element = has_element(param);
     let second_element = has_second_element(param);
     let close_range = has_close_range(param);
@@ -835,14 +838,14 @@ where
         <html lang="en">
             <head itemscope=true>
                 <title>"Weapon - MHRice"</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, path) }
                 { title_multi_lang(weapon.name) }
                 { open_graph(Some(weapon.name), "",
                     weapon.explain, "", None, toc_sink.path(), config) }
             </head>
             <body>
                 { navbar() }
-                { gen_menu(&sections) }
+                { gen_menu(&sections, toc_sink.path()) }
                 <main>
                 <header>
                     <div class="mh-title-icon">
@@ -976,7 +979,7 @@ where
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("{} - MHRice", name)}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, weapon_path) }
                 <script src={masonry_js}/>
                 <style id="mh-main-list-style">""</style>
             </head>
@@ -1117,9 +1120,7 @@ pub fn gen_weapons(
                 </a>
             </li>));
             gen_tree(pedia, hash_store, &pedia_ex.$label, &path, stringify!($label), $name)?;
-            for (weapon_id, weapon) in &pedia_ex.$label.weapons {
-                let (file_path, toc_sink) =
-                    path.create_html_with_toc(&format!("{}.html", weapon_id.to_tag()), toc)?;
+            for weapon in pedia_ex.$label.weapons.values() {
                 gen_weapon(
                     hash_store,
                     weapon,
@@ -1127,8 +1128,8 @@ pub fn gen_weapons(
                     pedia,
                     pedia_ex,
                     config,
-                    file_path,
-                    toc_sink,
+                    &path,
+                    toc,
                     $element,
                     $second_element,
                     $close_range,
@@ -1315,7 +1316,7 @@ pub fn gen_weapons(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Weapons - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, output) }
             </head>
             <body>
                 { navbar() }

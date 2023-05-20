@@ -850,9 +850,10 @@ pub fn gen_item(
     pedia: &Pedia,
     pedia_ex: &PediaEx<'_>,
     config: &WebsiteConfig,
-    mut output: impl Write,
-    mut toc_sink: TocSink<'_>,
+    path: &impl Sink,
+    toc: &mut Toc,
 ) -> Result<()> {
+    let (mut output, mut toc_sink) = path.create_html_with_toc(&item_page(item.param.id), toc)?;
     let material_categories = item.param.material_category.iter().filter_map(|&category| {
         if category == MaterialCategory::None {
             return None;
@@ -968,14 +969,14 @@ pub fn gen_item(
         <html lang="en">
             <head itemscope=true>
                 <title>"Item - MHRice"</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, path) }
                 { title_multi_lang(item.name) }
                 { open_graph(Some(item.name), "",
                     Some(item.explain), "", None, toc_sink.path(), config) }
             </head>
             <body>
                 { navbar() }
-                { gen_menu(&sections) }
+                { gen_menu(&sections, toc_sink.path()) }
                 <main>
                 <header>
                     <div class="mh-title-icon">
@@ -1005,7 +1006,7 @@ pub fn gen_item_list(
         <html lang="en">
             <head itemscope=true>
                 <title>{text!("Items - MHRice")}</title>
-                { head_common(hash_store) }
+                { head_common(hash_store, output) }
                 <style id="mh-item-list-style">""</style>
             </head>
             <body>
@@ -1065,9 +1066,8 @@ pub fn gen_items(
     toc: &mut Toc,
 ) -> Result<()> {
     let item_path = output.sub_sink("item")?;
-    for (&id, item) in &pedia_ex.items {
-        let (path, toc_sink) = item_path.create_html_with_toc(&item_page(id), toc)?;
-        gen_item(hash_store, item, pedia, pedia_ex, config, path, toc_sink)?
+    for item in pedia_ex.items.values() {
+        gen_item(hash_store, item, pedia, pedia_ex, config, &item_path, toc)?
     }
     Ok(())
 }
