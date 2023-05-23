@@ -85,9 +85,9 @@ pub fn right_aside() -> Box<aside<String>> {
         let dot = version.find('.').unwrap();
         let (major, minor) = version.split_at(dot);
         let url = if latest {
-            "".to_owned()
+            "/".to_owned()
         } else {
-            "-".to_owned() + &version.replace('.', "-")
+            format!("/version/{version}/")
         };
         if version_tree.last().map(|v| v.0) == Some(major) {
             version_tree
@@ -126,12 +126,11 @@ pub fn right_aside() -> Box<aside<String>> {
             html!(<li class="mh-version-block">
                 <span class="mh-major">{text!("{}", major)}</span>
                 {minors.into_iter().map(|(minor, url, latest)| {
-                    let href = format!("https://mhrise{url}.mhrice.info");
                     let mut class = "mh-version-menu".to_owned();
                     if latest {
                         class += " mh-version-menu-latest";
                     }
-                    html!(<a class={class.as_str()} href={href.as_str()}>
+                    html!(<a class={class.as_str()} href={url.as_str()}>
                         {text!("{}", minor)}
                     </a>)
                 })}

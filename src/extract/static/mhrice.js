@@ -201,14 +201,18 @@ function delete_all_cookie() {
 
 
 function adjustVersionMenu() {
+    const reg = /^(\/(version\/[^/]*\/)?)(.*)$/;
+    const current_path = window.location.pathname.match(reg);
+    const current_version = current_path[1];
+    const current_loc = current_path[3];
+
     for (const item of document.getElementsByClassName("mh-version-menu")) {
-        let href = item.getAttribute("href");
-        let hostname = window.location.hostname;
-        let current = `https://${hostname}`;
-        if (href === current) {
+        const href = item.getAttribute("href");
+        const href_version = href.match(reg)[1];
+        if (href_version === current_version) {
             item.classList.add("has-text-weight-bold");
         }
-        item.setAttribute("href", href + window.location.pathname
+        item.setAttribute("href", href_version + current_loc
             + window.location.search
             + window.location.hash);
     }
@@ -487,6 +491,7 @@ function changeFilter(e, category) {
     }
 
     history.replaceState(null, null, location.pathname + hash);
+    adjustVersionMenu();
 
     const filter_button_prefix = `mh-${category}-filter-button-`;
     const prev = document.getElementById(filter_button_prefix + g_filter);
