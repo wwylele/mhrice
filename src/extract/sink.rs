@@ -298,6 +298,7 @@ impl S3SinkInner {
         prefix: String,
         error: Arc<Mutex<Option<anyhow::Error>>>,
     ) -> Result<S3SinkInner> {
+        let carved_prefix = prefix.clone() + "version/";
         let (sender, reciver) = futures::channel::mpsc::channel(10);
         let uploader = Some(spawn(move || {
             use tokio::runtime::Runtime;
@@ -319,13 +320,18 @@ impl S3SinkInner {
                         .send()
                         .await?;
 
-                    existing_objects.extend(result.contents().into_iter().flatten().flat_map(
-                        |o| {
-                            o.key()
-                                .map(|s| s.to_owned())
-                                .zip(o.e_tag().map(|s| s.to_owned()))
-                        },
-                    ));
+                    existing_objects.extend(
+                        result
+                            .contents()
+                            .into_iter()
+                            .flatten()
+                            .flat_map(|o| {
+                                o.key()
+                                    .map(|s| s.to_owned())
+                                    .zip(o.e_tag().map(|s| s.to_owned()))
+                            })
+                            .filter(|object| !object.0.starts_with(&carved_prefix)),
+                    );
 
                     if result.is_truncated() {
                         continuation_token = result.next_continuation_token;
