@@ -553,8 +553,13 @@ fn gen_website_to_sink(
 
 fn gen_website(pak: Vec<String>, output: String, origin: Option<String>) -> Result<()> {
     let config = extract::WebsiteConfig { origin };
-    if let Some(bucket) = output.strip_prefix("S3://") {
-        let sink = S3Sink::init(bucket.to_string())?;
+    if let Some(bucket_and_prefix) = output.strip_prefix("S3://") {
+        let (bucket, prefix) = if let Some((bucket, prefix)) = bucket_and_prefix.split_once('/') {
+            (bucket, prefix)
+        } else {
+            (bucket_and_prefix, "")
+        };
+        let sink = S3Sink::init(bucket.to_string(), prefix.to_string())?;
         gen_website_to_sink(pak, sink, config)?;
     } else if output == "null://" {
         let sink = NullSink;

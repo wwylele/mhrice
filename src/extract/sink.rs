@@ -293,7 +293,11 @@ struct S3SinkInner {
 }
 
 impl S3SinkInner {
-    fn init(bucket: String, error: Arc<Mutex<Option<anyhow::Error>>>) -> Result<S3SinkInner> {
+    fn init(
+        bucket: String,
+        prefix: String,
+        error: Arc<Mutex<Option<anyhow::Error>>>,
+    ) -> Result<S3SinkInner> {
         let (sender, reciver) = futures::channel::mpsc::channel(10);
         let uploader = Some(spawn(move || {
             use tokio::runtime::Runtime;
@@ -310,6 +314,7 @@ impl S3SinkInner {
                     let result = client
                         .list_objects_v2()
                         .bucket(bucket.clone())
+                        .prefix(prefix.clone())
                         .set_continuation_token(continuation_token.take())
                         .send()
                         .await?;
@@ -338,6 +343,7 @@ impl S3SinkInner {
                         } else {
                             unreachable!()
                         };
+                        let name = prefix.clone() + &name;
 
                         if let Some(etag) = existing_objects.remove(&name) {
                             let md5: [u8; 16] = Md5::digest(&data).try_into().unwrap();
@@ -476,9 +482,9 @@ enum Message {
 }
 
 impl S3Sink {
-    pub fn init(bucket: String) -> Result<S3Sink> {
+    pub fn init(bucket: String, prefix: String) -> Result<S3Sink> {
         let error = Arc::new(Mutex::new(None));
-        let inner = Arc::new(S3SinkInner::init(bucket, error.clone())?);
+        let inner = Arc::new(S3SinkInner::init(bucket, prefix, error.clone())?);
         Ok(S3Sink {
             inner,
             path: String::new(),
