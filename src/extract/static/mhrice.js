@@ -30,7 +30,16 @@ document.addEventListener('DOMContentLoaded', function () {
     for (const element of document.getElementsByClassName("mh-color-diagram-img")) {
         imgOnLoad(element, (img) => {
             try {
-                const canvas = new OffscreenCanvas(img.naturalWidth, img.naturalHeight);
+                let canvas;
+                try {
+                    canvas = new OffscreenCanvas(img.naturalWidth, img.naturalHeight);
+                } catch (e) {
+                    console.warn(e);
+                    console.warn("Falling back to legacy canvas");
+                    canvas = document.createElement('canvas');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                }
                 const context = canvas.getContext('2d');
                 context.drawImage(img, 0, 0, canvas.width, canvas.height);
                 const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
