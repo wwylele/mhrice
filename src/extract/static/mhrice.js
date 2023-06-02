@@ -1,5 +1,7 @@
 "use strict";
 
+/* global Masonry */
+
 let g_supported_mh_lang = [];
 let g_language_code = "en";
 
