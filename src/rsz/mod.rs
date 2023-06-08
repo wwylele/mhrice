@@ -295,7 +295,7 @@ impl Rsz {
     pub fn verify_crc(&self, crc_mismatches: &mut BTreeMap<&str, u32>, print_all: bool) {
         for td in &self.type_descriptors {
             if let Some(type_info) = RSZ_TYPE_MAP.get(&td.hash) {
-                if print_all || !type_info.versions.contains_key(&td.crc) {
+                if print_all || (!type_info.versions.contains_key(&td.crc) && !type_info.versions.is_empty())  {
                     crc_mismatches.insert(type_info.symbol, td.crc);
                 }
             }
