@@ -103,9 +103,15 @@ pub fn gen_sub_type_tag(em_type: EmTypes, sub_type: Option<u8>) -> Option<Box<sp
 
         (EmTypes::Em(124), Some(1)) => Some("High level".to_owned()),
 
-        (EmTypes::Em(132), Some(1)) => Some("vs allmother".to_owned()),
+        (EmTypes::Em(132) | EmTypes::Em(1412 /*132_05*/), Some(1)) => {
+            Some("vs allmother".to_owned())
+        }
+
+        (EmTypes::Em(1412 /*132_05*/), Some(2)) => Some("Emergency".to_owned()),
+        (EmTypes::Em(1412 /*132_05*/), Some(3)) => Some("High level".to_owned()),
 
         (EmTypes::Em(133), Some(1)) => Some("Half afflicted".to_owned()),
+        (EmTypes::Em(133), Some(2)) => Some("High level".to_owned()),
 
         (EmTypes::Em(134), Some(1)) => Some("QuickGoApe".to_owned()), // what
 
