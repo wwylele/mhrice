@@ -216,8 +216,8 @@ function adjustVersionMenu() {
     const current_path = window.location.pathname.match(reg);
     const current_version = current_path[1];
     let current_loc = current_path[3];
-    if (current_loc === "/") {
-        current_loc = "/monster.html";
+    if (current_loc === "") {
+        current_loc = "monster.html";
     }
 
     for (const item of document.getElementsByClassName("mh-version-menu")) {

@@ -448,7 +448,7 @@ fn gen_armor(
                             }
                             if let Some(num) = m.material_category_num_slot.0 {
                                 entries.push(html!(<tr>
-                                    <td>"Augment (Slot?)"</td>
+                                    <td>"Augment (Slots+)"</td>
                                     <td>{text!("{}z", m.price)}</td>
                                     {gen_category(pedia_ex, m.material_category, num)}
                                     <td></td>
