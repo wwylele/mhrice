@@ -287,6 +287,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.data.OtEquipSeriesUserData.Param",
+        0x983236D6 = 16_00_00,
         0xBE1A4079 = 15_00_00,
         0x03777F24 = 14_00_00,
         0x4942552E = 13_00_00,
@@ -362,6 +363,7 @@ rsz_with_singleton! {
 
 rsz_struct! {
     #[rsz("snow.equip.OtOverwearRecipeUserData.Param",
+        0xBBB2071B = 16_00_00,
         0xFCABE972 = 15_00_00,
         0xFED893C8 = 14_00_00,
         0x015973AA = 13_00_00,

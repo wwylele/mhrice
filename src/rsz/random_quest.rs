@@ -148,6 +148,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.RandomMysteryLotEnemyData.NGAppearanceData",
+        0x5B615FA8 = 16_00_00,
         0xAB8FD59A = 15_00_00,
         0x0405560B = 14_00_00,
         0xCE7A98B5 = 13_00_00,
@@ -173,6 +174,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.quest.RandomMysteryLotEnemyData.LotEnemyData",
+        0x391D8DE5 = 16_00_00,
         0x8EB6D943 = 15_00_00,
         0x4DD6D4AF = 14_00_00,
         0x9D4D71DE = 13_00_00,

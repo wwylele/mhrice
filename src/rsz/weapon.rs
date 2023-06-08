@@ -866,6 +866,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.WeaponProcessUserData.Param",
+        0xB2CBAE17 = 16_00_00,
         0x61DE6B26 = 15_00_00,
         0x1C22A45A = 14_00_00,
         0xE89FAC6B = 13_00_00,
@@ -896,6 +897,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.WeaponProductUserData.Param",
+        0x68C085C4 = 16_00_00,
         0x7631F43F = 15_00_00,
         0xA4A781E9 = 14_00_00,
         0x015A23F5 = 13_00_00,
@@ -923,6 +925,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.WeaponChangeUserData.Param",
+        0x37D1ECC6 = 16_00_00,
         0xF415D0DB = 15_00_00,
         0x973DE171 = 14_00_00,
         0x398E7E9C = 13_00_00,
@@ -1102,6 +1105,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.equip.OverwearWeaponProductUserData.Param",
+        0x7F26A930 = 16_00_00,
         0xC9B5598D = 15_00_00,
         0x84442698 = 14_00_00,
         0xDB849A6F = 13_00_00,

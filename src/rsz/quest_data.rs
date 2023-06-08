@@ -272,6 +272,7 @@ rsz_enum! {
         C06 = 6,
         C07 = 7,
         Sp01 = 8,
+        Sp02 = 9,
     }
 }
 
@@ -318,6 +319,7 @@ impl Ord for EmTypes {
 
 rsz_struct! {
     #[rsz("snow.quest.NormalQuestData.Param",
+        0x92F4BE2D = 16_00_00,
         0x3CE9A177 = 15_00_00,
         0xA5344203 = 14_00_00,
         0x04AAB3CD = 13_00_00,
@@ -760,6 +762,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.enemy.SystemEnemySizeListData.SizeInfo",
+        0xBA8ABC2C = 16_00_00,
         0x360A1DE6 = 15_00_00,
         0xEE952AF3 = 14_00_00,
         0xE6D33804 = 13_00_00,
@@ -794,6 +797,7 @@ pub const DISCOVER_MAP_LIST: [i32; 7] = [1, 4, 2, 3, 5, 12, 13];
 
 rsz_struct! {
     #[rsz("snow.quest.DiscoverEmSetData.Param",
+        0x185CA52D = 16_00_00,
         0x62A65B0C = 15_00_00,
         0xF1533F35 = 14_00_00,
         0xFEDEF6E7 = 13_00_00,
@@ -947,6 +951,7 @@ rsz_with_singleton! {
 
 rsz_struct! {
     #[rsz("snow.quest.HyakuryuQuestData.WaveData",
+        0x3BA5E192 = 16_00_00,
         0xC2723DE8 = 15_00_00,
         0x743D1792 = 14_00_00,
         0xC19E2A63 = 13_00_00,
@@ -1032,6 +1037,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.MysteryRewardItemUserData.Param",
+        0x0E0867EE = 16_00_00,
         0x3F3B3205 = 15_00_00,
         0x1F3C6123 = 14_00_00,
         0xE158B503 = 13_00_00,
@@ -1599,6 +1605,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.quest.NPCMissionData",
+        0xF25FAF77 = 16_00_00,
         0x8FF4F56E = 15_00_00,
         0xB1000D1F = 10_00_02,
         0xEA502473 = 11_00_01,

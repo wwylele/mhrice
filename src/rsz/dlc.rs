@@ -109,6 +109,7 @@ impl SaveLinkContents {
 
 rsz_struct! {
     #[rsz("snow.data.Dlc.DlcAddUserData.AddDataInfo",
+        0xBCDA8578 = 16_00_00,
         0x341A606F = 15_00_00,
         0x3F93B141 = 14_00_00,
         0x9B59BC74 = 13_00_00,
@@ -155,6 +156,7 @@ rsz_enum! {
 
 rsz_struct! {
     #[rsz("snow.DlcData",
+        0xA0873F7A = 16_00_00,
         0xD2195BEC = 15_00_00,
         0xEE923A9A = 14_00_00,
         0x6883ECE4 = 13_00_00,
@@ -206,6 +208,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.DlcManager.ItemPackUserData.ItemPackParam",
+        0x99145B94 = 16_00_00,
         0xA62FA8E7 = 15_00_00,
         0x8D0F6E7C = 14_00_00,
         0xBA783C3B = 13_00_00,

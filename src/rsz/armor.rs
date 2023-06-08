@@ -145,6 +145,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.ArmorProductUserData.Param",
+        0x270CA02D = 16_00_00,
         0x56FE7817 = 15_00_00,
         0x8E39EA57 = 14_00_00,
         0x30B17847 = 13_00_00,
@@ -229,6 +230,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.equip.PlOverwearProductUserData.Param",
+        0x6FA4A8EA = 16_00_00,
         0xF5C373D5 = 15_00_00,
         0xE3228566 = 14_00_00,
         0xBBF5D1A0 = 13_00_00,

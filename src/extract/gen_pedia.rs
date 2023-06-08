@@ -2634,7 +2634,8 @@ fn prepare_armors(pedia: &Pedia) -> Result<BTreeMap<PlArmorSeriesTypes, ArmorSer
             .insert(overwear_product.id, overwear_product)
             .is_some()
         {
-            bail!(
+            // Crapcom: v16 chest 197??
+            eprintln!(
                 "Multiple definition for overwear product for {:?}",
                 overwear_product.id
             );

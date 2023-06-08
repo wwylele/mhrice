@@ -524,6 +524,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.DecorationsProductUserData.Param",
+        0x56AF86EF = 16_00_00,
         0x0884DACE = 15_00_00,
         0x8A090F5C = 14_00_00,
         0x8B4D41E5 = 13_00_00,
@@ -598,6 +599,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.data.HyakuryuDecoProductUserData.Param",
+        0x7AAD8317 = 16_00_00,
         0x62B6332B = 15_00_00,
         0xECBBA797 = 14_00_00,
         0x7FED1C2D = 13_00_00,

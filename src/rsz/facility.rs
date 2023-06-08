@@ -139,6 +139,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.facility.mysteryLabo.MysteryLaboTradeItemUserData.Param",
+        0x1C96CB47 = 16_00_00,
         0xBA7ED270 = 15_00_00,
         0xC5DE7C0B = 14_00_00,
         0x6B818975 = 13_00_00,

@@ -81,6 +81,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.enemy.EnemyStaminaData.PredatorData",
+        0x451278F1 = 16_00_00,
         0xAFC977D5 = 15_00_00,
         0xC3A498B9 = 14_00_00,
         0x7BB6F24A = 13_00_00,
