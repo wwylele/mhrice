@@ -34,11 +34,11 @@ compress = "0.2"
 astc-decode = "0.3"
 num-bigint = "0.4"
 base64 = "0.21"
-minidump = "0.16"
+minidump = "0.17"
 quick-xml = "0.28"
 md-5 = "0.10"
 aws-config = "0.55"
-aws-sdk-s3 = "0.26"
+aws-sdk-s3 = "0.28"
 
 [build-dependencies]
 built = { version = "0.6", features = ["git2"] }
