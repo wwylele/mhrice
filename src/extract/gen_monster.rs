@@ -1320,11 +1320,11 @@ pub fn gen_monster(
             <p class="mh-kv"><span>"Intrusion"</span>
                 <span>{text!("{}", random_quest.is_intrusion)}</span>
             </p>
-            <p class="mh-kv"><span>"Stats table as target"</span>
+            <p class="mh-kv"><span>"Stats table as afflicted"</span>
                 <span><a href={diff_table.as_str()}>{
                 text!("Table {}", random_quest.difficulty_table_type)}</a></span>
             </p>
-            <p class="mh-kv"><span>"Stats table as extra"</span>
+            <p class="mh-kv"><span>"Stats table as non-afflicted"</span>
                 <span><a href={extra_diff_table.as_str()}>{
                 text!("Table {}", random_quest.difficulty_table_type_extra)}</a></span>
             </p>

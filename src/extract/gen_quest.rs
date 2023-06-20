@@ -1503,8 +1503,8 @@ pub fn gen_random_mystery_difficulty(
             <main>
             <header><h1>{
                 let category = match category {
-                    0 => "main target",
-                    1 => "sub target",
+                    0 => "afflicted monster",
+                    1 => "non-afflicted monster",
                     _ => "?",
                 };
                 text!("Anomaly investigation stats table {} for {}", kind, category)
