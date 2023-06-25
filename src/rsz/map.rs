@@ -1079,7 +1079,7 @@ rsz_struct! {
         pub enabled: bool,
         pub effect_container_owner: i32, // snow.stage.StageObjectEffectController.EffectContainerOwner
         pub object_effect_manager_owner: Guid,
-        pub data: ExternUser<()>, // snow.stage.StageObjectEffectUserData,
+        pub data: Option<ExternUser<()>>, // snow.stage.StageObjectEffectUserData,
         pub follow_targets: Vec<EffectFollowTarget>,
         pub auto_request_keys: Vec<EffectKeyHash>,
     }
@@ -1111,3 +1111,1026 @@ rsz_struct! {
         pub enabled: bool,
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.camera.PhotoSubject")]
+    #[derive(Debug, Serialize)]
+    pub struct PhotoSubject {
+        pub enabled: bool,
+        pub set_type: i32, // snow.camera.PhotoSubject.PhotoSubjectType
+        pub set_em_type: EmTypes,
+        pub set_env_creature_type: i32, // snow.envCreature.EnvironmentCreatureType
+        pub set_npc_id: i32, // snow.NpcDefine.NpcID
+        pub set_joint_name: Option<String>,
+        pub check_pos_ofs_y: f32,
+        pub check_position_offset: Vec3,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EnvironmentCreatureItem")]
+    #[derive(Debug, Serialize)]
+    pub struct EnvironmentCreatureItem {
+        pub enabled: bool,
+        pub env_creature_item_id: ItemId,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EcPopBehavior")]
+    #[derive(Debug, Serialize)]
+    pub struct EcPopBehavior {
+        pub enabled: bool,
+        pub action_target_point_offset: Vec3,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EnvironmentCreatureDrop")]
+    #[derive(Debug, Serialize)]
+    pub struct EnvironmentCreatureDrop {
+        pub enabled: bool,
+        pub drop_ec_item: Prefab,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.sequence.EcMotionSequenceCtrl")]
+    #[derive(Debug, Serialize)]
+    pub struct EcMotionSequenceCtrl {
+        pub enabled: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EnvironmentCreatureFindFlagSetter")]
+    #[derive(Debug, Serialize)]
+    pub struct EnvironmentCreatureFindFlagSetter {
+        pub trigger_type: i32, // snow.envCreature.EnvironmentCreatureFindFlagSetter.FindTriggerType
+        pub find_distance: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EnvironmentCreatureBase.HyakuryuArea")]
+    #[derive(Debug, Serialize)]
+    pub struct HyakuryuArea {
+        pub start_area_no: i32,
+        pub end_area_no: i32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.RSCController")]
+    #[derive(Debug, Serialize)]
+    pub struct RSCController {
+        pub enabled: bool,
+        pub damage_resource_index: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.DamageReceiver")]
+    #[derive(Debug, Serialize)]
+    pub struct DamageReceiver {
+        pub enabled: bool,
+        pub enable_cycle_hit: bool,
+        pub history_size: i32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EnvironmentCreatureBase")]
+    #[derive(Debug, Serialize)]
+    pub struct EnvironmentCreatureBase {
+        // snow.CharacterBase
+        pub enabled: bool,
+        pub unique_id: u32,
+        pub type_: i32, // snow.envCreature.EnvironmentCreatureType
+        pub ec_rim_color_data: Option<ExternUser<()>>, // snow.envCreature.EcRimColorData
+        pub sub_type: u32,
+        pub move_area_size: Vec3,
+        pub move_area_angle: Vec3,
+        pub move_area_offset: Vec3,
+        pub culling_distance: f32,
+        pub repop_wait_time: f32,
+        pub move_radius: f32,
+        pub map_floor_type: i32, // snow.stage.StageDef.MapFloorType
+        pub hyakuryu_area_no_list: Vec<HyakuryuArea>,
+        pub find_flag_setter: EnvironmentCreatureFindFlagSetter,
+        pub is_ignore_valid_check: bool,
+        pub auto_register_map_icon: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec024.MaterialData")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec024MaterialData {
+        pub min_value: f32,
+        pub max_value: f32,
+        pub dist: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EcMaterialCurveController")]
+    #[derive(Debug, Serialize)]
+    pub struct EcMaterialCurveController {
+        pub enabled: bool,
+        pub material_curve_data: ExternUser<()>, // snow.envCreature.EcMaterialCurveList
+        pub inter_time: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.wwise.WwiseEc025")]
+    #[derive(Debug, Serialize)]
+    pub struct WwiseEc025 {
+        pub enabled: bool,
+        pub enemy_hit_trigger: u32,
+        pub terrain_hit_trigger: u32,
+        pub shot_sign_set_trigger: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec009PartsCtrl")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec009PartsCtrl {
+        pub enabled: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EnvironmentCreatureLvBuff")]
+    #[derive(Debug, Serialize)]
+    pub struct EnvironmentCreatureLvBuff {
+        pub enabled: bool,
+        pub lv_buff_data: ExternUser<()>, // snow.envCreature.LvBuffUserData
+        pub auto_dist: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EcMaterialControllerBase.EcMaterialData")]
+    #[derive(Debug, Serialize)]
+    pub struct EcMaterialData {
+        pub min_value: f32,
+        pub max_value: f32,
+        pub property_name: String,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec009MaterialContoller.Ec009MaterialData")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec009MaterialData {
+        pub intensity_dist: f32,
+        pub rate: f32,
+        pub rate_length: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec009MaterialContoller")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec009MaterialContoller {
+        pub enabled: bool,
+        pub material_data_list: Vec<EcMaterialData>,
+        pub min_dist: f32,
+        pub max_dist: f32,
+        pub min_max_dist: f32,
+        pub ec009_material_data_list: Vec<Ec009MaterialData>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EcLinearMaterialController.EcLinearMaterialData")]
+    #[derive(Debug, Serialize)]
+    pub struct EcLinearMaterialData {
+        pub target_intensity: f32,
+        pub timer: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EcLinearMaterialController")]
+    #[derive(Debug, Serialize)]
+    pub struct EcLinearMaterialController {
+        pub enabled: bool,
+        pub material_data_list: Vec<EcMaterialData>,
+        pub ec_linear_material_data_list: Vec<EcLinearMaterialData>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EnvironmentCreatureBuff")]
+    #[derive(Debug, Serialize)]
+    pub struct EnvironmentCreatureBuff {
+        pub enabled: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec006PartsCtrl")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec006PartsCtrl {
+        pub enabled: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec021PartsCtrl")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec021PartsCtrl {
+        pub enabled: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec001PartsCtrl")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec001PartsCtrl {
+        pub enabled: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EnvironmentCreatureWireBuff")]
+    #[derive(Debug, Serialize)]
+    pub struct EnvironmentCreatureWireBuff {
+        pub enabled: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.KakeriWingPartsFlap")]
+    #[derive(Debug, Serialize)]
+    pub struct KakeriWingPartsFlap {
+        pub enabled: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EnvironmentCreatureTrap")]
+    #[derive(Debug, Serialize)]
+    pub struct EnvironmentCreatureTrap {
+        pub enabled: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec037PartsCtrl")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec037PartsCtrl {
+        pub enabled: bool,
+    }
+}
+
+// Not a real type. Extracted from snow.envCreature.EcPhotoBase
+rsz_struct! {
+    #[rsz()]
+    #[derive(Debug, Serialize)]
+    pub struct EcPhotoBaseExtra {
+        pub player_search_dist: f32,
+        pub player_search_angle: f32,
+        pub look_at_offset_y: f32,
+        pub reaction_frame_data: ExternUser<()>, // snow.envCreature.EcPhotoBase.EcPhotoReactionFrameSettingData
+    }
+}
+
+// snow.stage.StageTimeChange.StageTime
+rsz_struct! {
+    #[rsz()]
+    #[derive(Debug, Serialize)]
+    pub struct StageTime {
+        pub hour: u32,
+        pub minute: u32,
+        pub seconds: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EnvironmentCreaturePhoto")]
+    #[derive(Debug, Serialize)]
+    pub struct EnvironmentCreaturePhoto {
+        pub enabled: bool,
+        pub start_time: StageTime,
+        pub end_time: StageTime,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EcMovePathList")]
+    #[derive(Debug, Serialize)]
+    pub struct EcMovePathList {
+        pub enabled: bool,
+        pub move_data: ExternUser<()>, // snow.envCreature.EcMovePathData
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EnvironmentCreatureLongWire")]
+    #[derive(Debug, Serialize)]
+    pub struct EnvironmentCreatureLongWire {
+        pub enabled: bool,
+        pub view_wire_long_jump_path: bool,
+        pub route_viewer_length: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec019Ref")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec019Ref {
+        pub enabled: bool,
+        pub ref_root: Guid,
+        pub ref_top: Guid,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.access.JumpTypeBehavior")]
+    #[derive(Debug, Serialize)]
+    pub struct JumpTypeBehavior {
+        pub enabled: bool,
+        pub jump_type: i32, // snow.access.JumpTypeBehavior.WireLongJumpType
+        pub disable_wall_check: bool,
+        pub wall_through_frame: f32,
+        pub disable_pl_input: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec019Trajectory")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec019Trajectory {
+        pub enabled: bool,
+        pub setting: ExternUser<()>, // snow.envCreature.Ec019TrajectorySetting
+        pub player_common_data: ExternUser<()>, // snow.player.PlayerUserDataCommon
+        pub check_terrain_interval: i32,
+        pub check_terrain_time_max: i32,
+        pub ec019: Guid,
+        pub top: Guid,
+        pub collision_filter: String, // via.physics.CollisionFilterResourceHolder
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.StageObjectZoneController.FollowTarget")]
+    #[derive(Debug, Serialize)]
+    pub struct FollowTarget {
+        pub key: String,
+        pub key_hash: u32,
+        pub game_object: Guid,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.StageObjectZoneController")]
+    #[derive(Debug, Serialize)]
+    pub struct StageObjectZoneController {
+        pub enabled: bool,
+        pub check_zako_enemy_count_in_frame: i32,
+        pub data: ExternUser<()>, // snow.stage.StageObjectZoneUserData
+        pub follow_targets: Vec<FollowTarget>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec055Manager")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec055Manager {
+        pub enabled: bool,
+        pub table: ExternUser<()>, // snow.envCreature.Ec055ElementTable
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec055Group")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec055Group {
+        pub enabled: bool,
+        pub setting: ExternUser<()>, // snow.envCreature.Ec055GroupSetting
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EnvironmentCreatureActionController`1<snow.envCreature.Ec054.Action>")]
+    #[derive(Debug, Serialize)]
+    pub struct EnvironmentCreatureActionControllerEc054Action {
+        pub action_data: ExternUser<()>, // snow.envCreature.EnvironmentCreatureActionUserData`1<snow.envCreature.Ec054.Action>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EnvironmentCreatureActionController`1<snow.envCreature.Ec055.Action>")]
+    #[derive(Debug, Serialize)]
+    pub struct EnvironmentCreatureActionControllerEc055Action {
+        pub action_data: ExternUser<()>, // snow.envCreature.EnvironmentCreatureActionUserData`1<snow.envCreature.Ec055.Action>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec055.JointOffset")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec055JointOffset {
+        pub position: Vec3,
+        pub rotation: Quat,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec055CollisionInfoRegister")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec055CollisionInfoRegister {
+        pub enabled: bool,
+        pub boundary_coord: Mat4x4,
+        pub boundary_extend: Vec3,
+        pub collision_filter: String, // via.physics.CollisionFilterResourceHolder
+        pub required_collision_material_attribute_names: Vec<String>,
+        pub exclude_collosion_material_attribute_names: Vec<String>,
+        pub check_ray_length: f32,
+        pub auto_register: bool,
+    }
+}
+
+// Untested
+rsz_struct! {
+    #[rsz("snow.envCreature.EcMaterialCurve")]
+    #[derive(Debug, Serialize)]
+    pub struct EcMaterialCurve {
+        pub curve: AnimationCurve,
+        pub curve_3d: AnimationCurve3d,
+        pub curve_w: AnimationCurve,
+        pub material_type: i32, // snow.envCreature.EcMaterialCurve.MaterialParamType
+        pub float_flag: bool,
+        pub float4_flag: bool,
+        pub material_name: Option<String>,
+        pub property_name: Option<String>,
+        pub start_up: bool,
+        pub loop_on: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EcMaterialCurveList")]
+    #[derive(Debug, Serialize)]
+    pub struct EcMaterialCurveList {
+        pub curve_list: Vec<EcMaterialCurve>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.StageObjectMaterialController")]
+    #[derive(Debug, Serialize)]
+    pub struct StageObjectMaterialController {
+        pub enabled: bool,
+        pub setting: ExternUser<()>, // snow.stage.StageObjectMaterialUserData
+        pub targets: Vec<Guid>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EnvironmentCreatureRemoteSync")]
+    #[derive(Debug, Serialize)]
+    pub struct EnvironmentCreatureRemoteSync {
+        pub enabled: bool,
+        pub own_sync_targets: u32, // snow.stage.StageObjectRemoteSync.OwnSyncTarget
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.StageGuideMessageRequester.GuideMessageInfoBase")]
+    #[derive(Debug, Serialize)]
+    pub struct GuideMessageInfoBase {
+        pub has_condition: bool,
+        pub condition: Option<ExternUser<()>>, // snow.stage.StageGuideMessgaeConditionData
+        pub condition_type: i32, // snow.stage.StageGuideMessageRequester.GuideMessageInfoBase.ConditionType
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.StageGuideMessageRequester.NpcGuideChatInfo")]
+    #[derive(Debug, Serialize)]
+    pub struct NpcGuideChatInfo {
+        #[serde(flatten)]
+        pub base: Flatten<GuideMessageInfoBase>,
+        pub request_npc_guide_type: i32, // snow.gui.NpcGuideChatManager.NpcGuideChatType
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.StageGuideMessageRequester.HunterNoteInfo")]
+    #[derive(Debug, Serialize)]
+    pub struct HunterNoteInfo {
+        #[serde(flatten)]
+        pub base: Flatten<GuideMessageInfoBase>,
+        pub note_id: i32, // snow.data.HunterNoteSystem.NoteID
+    }
+}
+
+rsz_sumtype! {
+    #[derive(Debug, Serialize)]
+    pub enum GuideMessageInfo {
+        NpcGuideChatInfo(NpcGuideChatInfo),
+        HunterNoteInfo(HunterNoteInfo),
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.StageGuideMessageRequester")]
+    #[derive(Debug, Serialize)]
+    pub struct StageGuideMessageRequester {
+        pub enabled: bool,
+        pub guide_message_infos: Vec<GuideMessageInfo>,
+        pub map_layer: i32, // snow.stage.StageGuideMessageRequester.MapLayerType
+        pub map_zone: i32, // snow.stage.StageGuideMessageRequester.MapZoneType
+        pub enable_only_draw: bool,
+        pub request_condition: Option<ExternUser<()>>, // snow.stage.StageGuideMessgaeConditionData
+        pub look_at_target: Guid,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.camera.TargetCamera_Target")]
+    #[derive(Debug, Serialize)]
+    pub struct TargetCameraTarget {
+        pub enabled: bool,
+        pub lock_on_param_config: bool,
+        pub lock_on_far_limit: f32,
+        pub lock_on_far_limit_y: f32,
+        pub yield_target: bool,
+        pub yield_target_first: bool,
+        pub limited_zone: bool,
+        pub zone_ray_length: f32,
+        pub use_fixed_zone_block_no: bool,
+        pub fixed_zone_block_no: i32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EnvironmentCreatureSwitchMarionetteModeType")]
+    #[derive(Debug, Serialize)]
+    pub struct EnvironmentCreatureSwitchMarionetteModeType {
+        pub enabled: bool,
+        pub marionette_mode_type: u8, // snow.player.PlayerDefine.MarionetteModeType
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.wwise.WwiseEc056")]
+    #[derive(Debug, Serialize)]
+    pub struct WwiseEc056 {
+        pub enabled: bool,
+        pub data: ExternUser<()>, // snow.wwise.WwiseEc056.Ec056EffectSoundListData
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.FieldZone")]
+    #[derive(Debug, Serialize)]
+    pub struct FieldZone {
+        pub enabled: bool
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EcQuestSwitch")]
+    #[derive(Debug, Serialize)]
+    pub struct EcQuestSwitch {
+        pub enabled: bool,
+        pub appearable_quest_no_list: Vec<i32>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec052SearchZone")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec052SearchZone {
+        pub enabled: bool,
+        pub setting_data: ExternUser<()>, // snow.envCreature.Ec052SearchZoneSettingData
+        pub collision_enable_area_no: i32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.StageObjectTimerHolder")]
+    #[derive(Debug, Serialize)]
+    pub struct StageObjectTimerHolder {
+        pub enabled: bool,
+        pub time_count: i32,
+        pub data: ExternUser<()>, // snow.stage.StageObjectTimerUserData
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec053Manager")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec053Manager {
+        pub enabled: bool,
+        pub manager_setting_data: ExternUser<()>, // snow.envCreature.Ec053ManagerSettingData
+        pub collision_enable_area_no: i32,
+        pub jump_splash_effect_key: String,
+        pub landing_splash_effect_key: String,
+        pub enemy_hith_effect_key: String,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.StageObjectPathMoveController")]
+    #[derive(Debug, Serialize)]
+    pub struct StageObjectPathMoveController {
+        pub enabled: bool,
+        pub data: ExternUser<()>, // snow.stage.StageObjectPathMoveUserData
+        pub path_holder_object: Guid,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.wwise.WwiseEc053")]
+    #[derive(Debug, Serialize)]
+    pub struct WwiseEc053 {
+        pub enabled: bool,
+        pub play_distance: f32,
+        pub trigger: u32,
+        pub player_hit_trigger: u32,
+        pub enemy_hit_trigger: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.StageObjectPathHolder.PathData")]
+    #[derive(Debug, Serialize)]
+    pub struct StageObjectPathHolderPathData {
+        pub key: String,
+        pub key_hash: u32,
+        pub point_div: u32,
+        pub bazier_angle: f32,
+        pub bazier_controll_angle: f32,
+        pub point_objects: Vec<Guid>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.StageObjectPathHolder")]
+    #[derive(Debug, Serialize)]
+    pub struct StageObjectPathHolder {
+        pub enabled: bool,
+        pub path_list: Vec<StageObjectPathHolderPathData>
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.wwise.WwiseEc050")]
+    #[derive(Debug, Serialize)]
+    pub struct WwiseEc050 {
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec054Manager")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec054Manager {
+        pub enabled: bool,
+        pub setting: ExternUser<()>, // snow.envCreature.Ec054ManagerSetting
+        pub surface_collision_attribute_name: String
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.EnvironmentCreatureWalkController")]
+    #[derive(Debug, Serialize)]
+    pub struct EnvironmentCreatureWalkController {
+        pub enabled: bool,
+        pub setting: ExternUser<()>, // snow.envCreature.EnvironmentCreatureWalkSetting
+        pub default_up_vector_type: i32, // snow.envCreature.EnvironmentCreatureWalkController.UpVectorType
+        pub collision_filter: String, // via.physics.CollisionFilterResourceHolder
+        pub target_position: Vec3,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec054DetectZone")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec054DetectZone {
+        pub enabled: bool,
+        pub setting: ExternUser<()>, //snow.envCreature.Ec054DetectZoneSetting
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.wwise.WwiseEc054")]
+    #[derive(Debug, Serialize)]
+    pub struct WwiseEc054 {
+        pub enabled: bool,
+        pub un_stick_trigger: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.envCreature.Ec051CirclePathContoroller")]
+    #[derive(Debug, Serialize)]
+    pub struct Ec051CirclePathContoroller {
+        pub enabled: bool,
+        pub enter_point: Guid,
+        pub exit_point: Guid,
+        pub is_use_x_dir_positive_result: bool,
+        pub radius: f32,
+        pub move_speed: f32,
+    }
+}
+
+pub mod ec {
+    use super::*;
+    use anyhow::{Context, Result};
+    macro_rules! def_ec {
+        ($($name:ident [$($vhash:literal=$version:literal),*] {
+            $(
+                $(#[$inner_meta:meta])*
+                $inner_vis:vis $field_name:ident : $field_type:ty
+            ),*$(,)?
+        })*) => {
+            pub mod extra {
+                use super::*;
+                $(rsz_struct! {
+                    #[rsz()]
+                    #[derive(Debug, Serialize)]
+                    pub struct $name {
+                        $(
+                            $(#[$inner_meta])* #[allow(dead_code)]
+                            $inner_vis $field_name : $field_type,
+                        )*
+                    }
+                })*
+            }
+
+            $(rsz_struct! {
+                #[rsz({concat!("snow.envCreature.", stringify!($name))}
+                    $(,$vhash = $version)*
+                )]
+                #[derive(Debug, Serialize)]
+                pub struct $name {
+                    #[serde(flatten)]
+                    pub base: Flatten<EnvironmentCreatureBase>,
+                    #[serde(flatten)]
+                    pub extra: extra::$name
+                }
+            })*
+
+            #[derive(Debug, Serialize)]
+            pub enum Extra {
+                $($name(extra::$name),)*
+            }
+
+            #[derive(Debug, Serialize)]
+            pub struct EnvironmentCreatureWrapper {
+                #[serde(flatten)]
+                pub base: EnvironmentCreatureBase,
+                pub extra: Extra,
+            }
+
+            pub fn ec_type_map() -> HashMap<u32, RszTypeInfo> {
+                let mut m = HashMap::new();
+                $(register::<$name>(&mut m);)*
+                m
+            }
+
+            pub mod loader {
+                use std::rc::*;
+                use anyhow::{anyhow, Context, Result};
+                use super::FromRsz;
+                $(
+                    #[allow(non_snake_case)]
+                    pub fn $name(rsz: super::AnyRsz) -> Result<super::EnvironmentCreatureWrapper> {
+                        let downcasted = rsz.downcast::<super::$name>()
+                            .with_context(||format!("Unexpected type for {}", <super::$name>::SYMBOL))?;
+                        let value = Rc::try_unwrap(downcasted)
+                            .map_err(|_|anyhow!("Shared node for {}", <super::$name>::SYMBOL))?;
+                        Ok(super::EnvironmentCreatureWrapper {
+                            base: value.base.0,
+                            extra: super::Extra::$name(value.extra)
+                        })
+                    }
+                )*
+            }
+
+            pub static EC_TYPE_MAP: Lazy<HashMap<u32, fn(AnyRsz) -> Result<EnvironmentCreatureWrapper>>> = Lazy::new(|| {
+                HashMap::from_iter([
+                    $((<$name>::type_hash(), loader::$name as fn(AnyRsz) -> Result<EnvironmentCreatureWrapper>),)*
+                ])
+            });
+        };
+    }
+
+    def_ec! {
+        Ec001 [] {}
+        Ec002 [] {}
+        Ec004 [] {
+            pub threat_dist: f32,
+        }
+        Ec005 [] {}
+        Ec006 [] {}
+        Ec007 [] {}
+        Ec008 [] {
+            pub move_interval: f32,
+            pub move_interval_low: f32,
+        }
+        Ec009 [] {}
+        Ec010 [] {
+            pub height_limit: f32,
+            pub front_ground_length: f32,
+
+        }
+        Ec011 [] {}
+        Ec012 [] {
+            pub height_limit: f32,
+            pub front_wall_length: f32,
+            pub front_ground_length: f32,
+            pub muteki_time: i32,
+            pub max_life: i32,
+            pub dash_interval_time_inflate: f32,
+            pub dash_interval_time_shake: f32,
+            pub wait_time_inflate: f32,
+            pub wait_time_shake: f32,
+            pub random_move_radius: f32,
+        }
+        Ec014 [] {}
+        Ec015 [] {}
+        Ec017 [] {}
+        Ec018 [] {}
+        Ec019 [] {
+            pub wire_long_jump_id: i32, // snow.stage.StageDef.WireLongJumpId
+            pub is_relay: bool,
+            pub move_interval: f32,
+            pub move_interval_low: f32,
+            pub speed: f32,
+            pub attenuate_speed_rate: f32,
+            pub move_distance: f32,
+            pub scale: f32,
+            pub offset_y: f32,
+            pub offset_y_rate: f32,
+            pub air_wait_time: f32,
+            pub air_wait_timer: f32,
+            pub now_offset_y: f32,
+            pub starting_flag: bool,
+        }
+        Ec021 [] {}
+        Ec022 [] {
+            pub move_interval: f32,
+            pub adjust_rage: f32,
+            pub move_speed: f32,
+            pub random_scale: f32,
+        }
+        Ec023 [] {
+            pub gravity: f32,
+            pub reach_time: f32,
+            pub add_radian_cog: f32,
+            pub add_radian_tail: f32,
+            pub random_rot_rate: u32,
+            pub rot_length: f32,
+            pub rot_length_y: f32,
+            pub rot_rate: f32,
+            pub rot_rate_use: bool,
+            pub force_vertical_jump_dist: f32,
+        }
+        Ec024 [] {
+            pub is_leader: bool,
+            pub speed: f32,
+            pub handring: f32,
+            pub air_handring: f32,
+            pub jump_interval: f32,
+            pub last_jump_interval: f32,
+            pub jump_interval_shake: i32,
+            pub jump_power: f32,
+            pub gravity: f32,
+            pub jump_vec_limit: f32,
+            pub follow_offset: Vec3,
+            pub follow_handring: f32,
+            pub follow_target_rate: f32,
+            pub ink_cool_time: f32,
+            pub init_round_index: i32,
+            pub ink_range: f32,
+            pub target_min_dist: f32,
+            pub target_max_dist: f32,
+            pub speed_max_rate: f32,
+            pub speed_min_rate: f32,
+            pub add_speed_rate: f32,
+            pub material_data: Ec024MaterialData,
+        }
+        Ec025 [] {
+            pub active_time: f32,
+            pub shot_span_time: f32,
+            pub first_shot_span_time: f32,
+            pub target_adjust_rate: f32,
+            pub chain_delay_time: f32,
+            pub cool_time: f32,
+            pub aim_id: i32,
+            pub chain_list: Vec<Guid>,
+            pub search_dist: f32,
+            pub wait_max_angle: f32,
+            pub not_found_enemy_target_pos: Vec3,
+            pub ref_material_curve: Option<EcMaterialCurveController>,
+            pub ref_wwise: Option<WwiseEc025>,
+        }
+        Ec026 [] {
+            pub adjust_rate: f32,
+            pub move_speed: f32,
+            pub aim_id: i32,
+            pub search_dist: f32,
+            pub vigilance_down_offset: Vec3,
+            pub attack_offset_y: f32,
+            pub trans_scale_curve_x: ExternUser<()>, // snow.envCreature.Ec026TransScaleCurve
+            pub trans_scale_curve_y: ExternUser<()>, // snow.envCreature.Ec026TransScaleCurve
+            pub trans_scale_curve_z: ExternUser<()>, // snow.envCreature.Ec026TransScaleCurve
+        }
+        Ec027 [] {
+            pub photo: EcPhotoBaseExtra
+        }
+        Ec028 [] {
+            pub photo: EcPhotoBaseExtra
+        }
+        Ec029 [] {
+            pub photo: EcPhotoBaseExtra,
+            pub reaction_point_index_list: Vec<i32>,
+        }
+        Ec030 [] {
+            pub photo: EcPhotoBaseExtra
+        }
+        Ec031 [] {
+            pub photo: EcPhotoBaseExtra,
+            pub location_type: i32, // snow.envCreature.Ec031.LocationType
+            pub lava_timer: f32,
+        }
+        Ec032 [] {}
+        Ec033 [] {}
+        Ec034 [] {}
+        Ec035 [] {}
+        Ec036 [] {
+            pub active_time: f32,
+            pub attract_time: f32,
+            pub blink_curve: ExternUser<()>, // snow.envCreature.Ec036BlinkData
+            pub ref_material_curve: Option<EcMaterialCurveController>
+        }
+        Ec037 [] {
+            pub ref_material_curve: Option<EcMaterialCurveController>
+        }
+        Ec038 [] {}
+        Ec050 [] {
+            pub photo: EcPhotoBaseExtra,
+            pub shortcut_setting_data: ExternUser<()>, // snow.envCreature.Ec050.Ec050OrbitShortcutSettingData
+            pub path_holder_object: Guid,
+            pub dissolve_check_camera_dist: f32,
+            pub near_camera_dissolve_time: f32,
+
+        }
+        Ec051 [] {
+            pub photo: EcPhotoBaseExtra,
+            pub action_start_distance: f32,
+            pub zone_data: ExternUser<()>, // snow.envCreature.Ec051.Ec051ReactionZoneData
+        }
+        Ec052 [] {
+            pub setting_data: ExternUser<()>, // snow.envCreature.Ec052SettingData
+            pub wait_material_set_key: String,
+            pub active_material_set_key: String,
+            pub shot_sign_key: String,
+            pub in_shot_material_key: String,
+            pub reset_shot_material_key: String,
+            pub cool_time_material_set_key: String,
+            pub shot_effect_key: String,
+            pub gun_joint_name: String,
+            pub gun_tip_joint_name: String,
+            pub shot_sign_state_name: String,
+            pub cool_down_state_name: String,
+        }
+        Ec053 [] {
+            pub setting_data: ExternUser<()>, // snow.envCreature.Ec053SettingData
+            pub path_key: String,
+            pub ref_path_holder_object: Guid,
+        }
+        Ec054 [] {
+            pub setting_data: ExternUser<()>, // snow.envCreature.Ec054SettingData
+            pub action_controller: EnvironmentCreatureActionControllerEc054Action,
+            pub const_props: Guid,
+        }
+        Ec055 [] {
+            pub setting: ExternUser<()>, // snow.envCreature.Ec055Setting,
+            pub default_element_lottery_ratio: i32, // snow.envCreature.Ec055Group.LotteryRatio
+            pub action_controller: EnvironmentCreatureActionControllerEc055Action,
+            pub joint_offsets: Vec<Ec055JointOffset>,
+            pub camera_target_object: Guid,
+        }
+        Ec056 [] {
+            pub setting: ExternUser<()>, // snow.envCreature.Ec056Setting
+            pub guide_message_object: Guid,
+        }
+        Ec057 [] {}
+        Ec058 [] {
+            pub body_effect_key: String,
+            pub get_effect_key: String,
+        }
+    }
+}
+
+pub use ec::{EnvironmentCreatureWrapper, EC_TYPE_MAP};

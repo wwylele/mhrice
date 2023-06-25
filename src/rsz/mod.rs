@@ -235,8 +235,8 @@ impl Rsz {
             let node =
                 (type_info.deserializer)(&mut rsz_deserializer, type_info).with_context(|| {
                     format!(
-                        "Error deserializing for type {} at {:08X}",
-                        type_info.symbol, pos
+                        "Error deserializing for type {} at {:08X}, index {}",
+                        type_info.symbol, pos, i
                     )
                 })?;
             node_buf.push(Some(node));
@@ -295,7 +295,9 @@ impl Rsz {
     pub fn verify_crc(&self, crc_mismatches: &mut BTreeMap<&str, u32>, print_all: bool) {
         for td in &self.type_descriptors {
             if let Some(type_info) = RSZ_TYPE_MAP.get(&td.hash) {
-                if print_all || (!type_info.versions.contains_key(&td.crc) && !type_info.versions.is_empty())  {
+                if print_all
+                    || (!type_info.versions.contains_key(&td.crc) && !type_info.versions.is_empty())
+                {
                     crc_mismatches.insert(type_info.symbol, td.crc);
                 }
             }
@@ -902,6 +904,42 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         Motion,
         CoreHandle,
         BehaviorTree,
+        MotionFsm2Layer,
+        MotionFsm2,
+        CullingInfo,
+        WwiseCullingTarget,
+        SoundMotionSequencet,
+        VolumeOccludee,
+        TriggerData,
+        WwiseEcTrigger,
+        EnvironmentCreatureFindFlagSetter,
+        HyakuryuArea,
+        EnvironmentCreatureBase,
+        CharacterController,
+        ChainWind,
+        Chain,
+        JointParam,
+        EyeJointParam,
+        IkLookAt2,
+        WwiseScreenTarget,
+        AnimationCurve,
+        AnimationCurve3d,
+        StageObjectMaterialController,
+        EnvironmentCreatureRemoteSync,
+        GuideMessageInfoBase,
+        NpcGuideChatInfo,
+        HunterNoteInfo,
+        StageGuideMessageRequester,
+        TargetCameraTarget,
+        EnvironmentCreatureSwitchMarionetteModeType,
+        WwiseEc056,
+        Primitive,
+        WwiseEc050,
+        Ec054Manager,
+        EnvironmentCreatureWalkController,
+        Ec054DetectZone,
+        WwiseEc054,
+        Ec051CirclePathContoroller,
     );
 
     r!(
@@ -979,6 +1017,56 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         StageObjectEffectController,
         WwiseContainerApp,
         MysteryItemPopIgnore,
+        PhotoSubject,
+        EnvironmentCreatureItem,
+        EcPopBehavior,
+        EnvironmentCreatureDrop,
+        EcMotionSequenceCtrl,
+        Ec024MaterialData,
+        EcMaterialCurveController,
+        WwiseEc025,
+        RSCController,
+        DamageReceiver,
+        Ec009PartsCtrl,
+        EnvironmentCreatureLvBuff,
+        EcMaterialData,
+        Ec009MaterialData,
+        Ec009MaterialContoller,
+        EcLinearMaterialData,
+        EcLinearMaterialController,
+        EnvironmentCreatureBuff,
+        Ec006PartsCtrl,
+        Ec021PartsCtrl,
+        Ec001PartsCtrl,
+        EnvironmentCreatureWireBuff,
+        KakeriWingPartsFlap,
+        EnvironmentCreatureTrap,
+        Ec037PartsCtrl,
+        EnvironmentCreaturePhoto,
+        EcMovePathList,
+        EnvironmentCreatureLongWire,
+        Ec019Ref,
+        JumpTypeBehavior,
+        Ec019Trajectory,
+        FollowTarget,
+        StageObjectZoneController,
+        EnvironmentCreatureActionControllerEc054Action,
+        Ec055Manager,
+        Ec055Group,
+        EnvironmentCreatureActionControllerEc055Action,
+        Ec055JointOffset,
+        Ec055CollisionInfoRegister,
+        EcMaterialCurve,
+        EcMaterialCurveList,
+        FieldZone,
+        EcQuestSwitch,
+        Ec052SearchZone,
+        StageObjectTimerHolder,
+        Ec053Manager,
+        StageObjectPathMoveController,
+        WwiseEc053,
+        StageObjectPathHolderPathData,
+        StageObjectPathHolder,
     );
 
     r!(
@@ -1125,6 +1213,7 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
     );
 
     m.extend(unique_mystery::unique_mystery_type_map());
+    m.extend(ec::ec_type_map());
 
     m
 });

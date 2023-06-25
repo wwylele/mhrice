@@ -584,3 +584,332 @@ rsz_struct! {
         pub v8: Zero, // A child to something
     }
 }
+
+rsz_struct! {
+    #[rsz("via.motion.MotionFsm2Layer")]
+    #[derive(Debug, Serialize)]
+    pub struct MotionFsm2Layer {
+        #[serde(flatten)]
+        pub base: Flatten<CoreHandle>,
+
+        pub v7: Option<String>,
+        pub v8: u32,
+        pub v9: u32,
+        pub v10: u8,
+        pub v11: u32,
+        pub v12: u8,
+        pub v13: u32,
+        pub v14: u8,
+        pub v15: u32,
+        pub v16: u8,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.motion.MotionFsm2")]
+    #[derive(Debug, Serialize)]
+    pub struct MotionFsm2 {
+        #[serde(flatten)]
+        pub base: Flatten<BehaviorTree>,
+        pub v9: u8,
+        pub v10: u8,
+        pub v11: Vec<MotionFsm2Layer>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.wwise.WwiseCullingManager.CullingInfo")]
+    #[derive(Debug, Serialize)]
+    pub struct CullingInfo {
+        pub weight: u32,
+        pub anger_weight: u32,
+        pub distance: f32,
+        pub check_target: bool,
+        pub is_anger: bool,
+        pub is_sleep: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.wwise.WwiseCullingTarget")]
+    #[derive(Debug, Serialize)]
+    pub struct WwiseCullingTarget {
+        pub enabled: bool,
+        pub culling_info: CullingInfo,
+        pub wwise_culling_target_settings_data: ExternUser<()>, // snow.WwiseCullingTargetSettingsData
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.wwise.SoundMotionSequence")]
+    #[derive(Debug, Serialize)]
+    pub struct SoundMotionSequencet {
+        pub enabled: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.render.VolumeOccludee")]
+    #[derive(Debug, Serialize)]
+    pub struct VolumeOccludee {
+        pub v0: u8,
+        pub v1: u8,
+        pub v2: u8,
+        // via.OBB
+        pub obb0_coord: Mat4x4,
+        pub obb0_extend: Vec3,
+        pub obb1_coord: Mat4x4,
+        pub obb1_extend: Vec3,
+        pub v5: u8,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.wwise.WwiseEcTrigger.TriggerData")]
+    #[derive(Debug, Serialize)]
+    pub struct TriggerData {
+        pub type_: i32, // snow.wwise.WwiseEcTrigger.TriggerType
+        pub trigger: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.wwise.WwiseEcTrigger")]
+    #[derive(Debug, Serialize)]
+    pub struct WwiseEcTrigger {
+        pub enabled: bool,
+        pub trigger_data: Vec<TriggerData>
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.physics.CharacterController")]
+    #[derive(Debug, Serialize)]
+    pub struct CharacterController {
+        // via.physics.CollidableBase
+        pub enabled: bool,
+        pub v1: u8,
+        pub v2: u32,
+        pub v3: Option<String>,
+
+        pub v4: Vec4,
+        pub v5: u32,
+        pub v6: u8,
+        pub v7: u8,
+        pub v8: u8,
+        pub v9: u8,
+        pub v10: u32,
+        pub v11: u32,
+        pub v12: u8,
+        pub v13: Vec4,
+        pub v14: u32,
+        pub v15: u32,
+        pub v16: u32,
+        pub v17: u32,
+        pub v18: u32,
+        pub v19: u32,
+        pub v20: u8,
+        pub v21: u8,
+        pub v22: u8,
+        pub v23: Option<String>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.motion.ChainWind")]
+    #[derive(Debug, Serialize)]
+    pub struct ChainWind {
+        pub v0: Option<String>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.motion.Chain")]
+    #[derive(Debug, Serialize)]
+    pub struct Chain {
+        // via.motion.SecondaryAnimation
+        pub v0: u8,
+        pub v1: u8,
+        pub v2: u32,
+        pub v3: u32,
+
+        pub v4: Option<String>,
+        pub v5: u32,
+        pub v6: u8,
+        pub v7: u32,
+        pub v8: u32,
+        pub v9: u32,
+        pub v10: ChainWind,
+        pub v11: u32,
+        pub v12: u32,
+        pub v13: u32,
+        pub v14: u8,
+        pub v15: u8,
+        pub v16: u32,
+        pub v17: u32,
+        pub v18: u8,
+        pub v19: u8,
+        pub v20: u8,
+        pub v21: u8,
+        pub v22: u8,
+        pub v23: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.motion.IkLookAt2.JointParam")]
+    #[derive(Debug, Serialize)]
+    pub struct JointParam {
+        pub v0: u32,
+        pub v1: u32,
+        pub v2: u32,
+    }
+}
+
+// Untested
+rsz_struct! {
+    #[rsz("via.motion.IkLookAt.EyeJointParam")]
+    #[derive(Debug, Serialize)]
+    pub struct EyeJointParam {
+        pub v0: Option<String>,
+        pub v1: u32,
+        pub v2: u32,
+        pub v3: u32,
+        pub v4: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.motion.IkLookAt2")]
+    #[derive(Debug, Serialize)]
+    pub struct IkLookAt2 {
+        // via.motion.SecondaryAnimation
+        pub v0: u8,
+        pub v1: u8,
+        pub v2: u32,
+        pub v3: u32,
+
+        pub v4: Option<String>,
+        pub v5: u8,
+        pub v6: u8,
+        pub v7: Option<String>,
+        pub v8: Option<String>,
+        pub v9: Option<String>,
+        pub v10: Vec<JointParam>,
+        pub v11: u32,
+        pub v12: u32,
+        pub v13: u32,
+        pub v14: u32,
+        pub v15: u32,
+        pub v16: u32,
+        pub v17: u32,
+        pub v18: u32,
+        pub v19: u32,
+        pub v20: u32,
+        pub v21: u32,
+        pub v22: u32,
+        pub v23: u32,
+        pub v24: u32,
+        pub v25: u32,
+        pub v26: u32,
+        pub v27: u32,
+        pub v28: u32,
+        pub v29: u32,
+        pub v30: u32,
+        pub v31: u32,
+        pub v32: u32,
+        pub v33: u32,
+        pub v34: u8,
+        pub v35: u8,
+        pub v36: u8,
+        pub v37: u8,
+        pub v38: u8,
+        pub v39: u8,
+        pub v40: u8,
+        pub v41: u8,
+        pub v42: u32,
+        pub v43: u32,
+        pub v44: u32,
+        pub v45: u8,
+        pub v46: u32,
+        pub v47: Vec<EyeJointParam>,
+        pub v48: u8,
+        pub v49: u8,
+        pub v50: u8,
+        pub v51: u8,
+        pub v52: u8,
+        pub v53: u8,
+        pub v54: u8,
+        pub v55: u8,
+        pub v56: u8,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.wwise.WwiseScreenTarget")]
+    #[derive(Debug, Serialize)]
+    pub struct WwiseScreenTarget {
+        pub enabled: bool,
+    }
+}
+
+// untested
+rsz_struct! {
+    #[rsz("via.AnimationCurve")]
+    #[derive(Debug, Serialize)]
+    pub struct AnimationCurve {
+        pub v0: Vec<Vec4>,
+        pub v1: u32,
+        pub v2: u32,
+        pub v3: u32,
+        pub v4: u32,
+        pub v5: u32,
+        pub v6: u32,
+    }
+}
+
+// untested
+rsz_struct! {
+    #[rsz("via.AnimationCurve3D")]
+    #[derive(Debug, Serialize)]
+    pub struct AnimationCurve3d {
+        pub v0: Vec<Vec4>,
+        pub v1: Vec<Vec4>,
+        pub v2: Vec<Vec4>,
+        pub v3: u32,
+        pub v4: u32,
+        pub v5: u32,
+        pub v6: u32,
+        pub v7: u32,
+        pub v8: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.render.Primitive")]
+    #[derive(Debug, Serialize)]
+    pub struct Primitive {
+        // via.render.RenderEntity
+        pub v0: u32,
+        pub v1: u8,
+        pub v2: u8,
+        pub v3: u8,
+        pub v4: u8,
+        pub v5: u8,
+        pub v6: u8,
+        pub v7: u8,
+        pub v8: u8,
+        pub v9: u8,
+        pub v10: u8,
+
+        pub v11: u32,
+        pub v12: u8,
+        pub v13: u32,
+        pub v14: u32,
+        pub v15: u32,
+        pub v16: u32,
+        pub v17: u32,
+        pub v18: u32,
+        pub v19: u32,
+    }
+}
