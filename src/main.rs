@@ -1264,6 +1264,12 @@ fn scene_print_folder(folder: &Folder, level: usize) {
     let data = &folder.folder;
     println!("{padding:next_ident$}data = {data:?}");
 
+    println!("{padding:next_ident$}Subfolders = {{");
+    for subfolder in &folder.subfolders {
+        scene_print_folder(subfolder, next_level + 1)
+    }
+    println!("{padding:next_ident$}}}");
+
     println!("{padding:next_ident$}Children = {{");
     for child in &folder.children {
         scene_print_object(child, next_level + 1);
