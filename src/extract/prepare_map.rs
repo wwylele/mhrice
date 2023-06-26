@@ -129,6 +129,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
     }),
 ];
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Serialize)]
 pub enum MapPopKind {
     Item {
@@ -147,6 +148,9 @@ pub enum MapPopKind {
     },
     Recon {
         behavior: rsz::OtomoReconSpot,
+    },
+    Ec {
+        behavior: rsz::EnvironmentCreatureWrapper,
     },
 }
 
@@ -250,6 +254,17 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
                 kind: MapPopKind::Recon {
                     behavior: behavior.clone(),
                 },
+            });
+        } else if let Ok(behavior) = object
+            .filter_component(|rsz| rsz::EC_TYPE_MAP.get(&rsz.symbol()).map(|f| f(rsz).unwrap()))
+        {
+            let transform = object
+                .get_component::<rsz::Transform>()
+                .context("Lack of transform")?;
+            let position = transform.position.xzy();
+            pops.push(MapPop {
+                position,
+                kind: MapPopKind::Ec { behavior },
             });
         } else if let Ok(behavior) = object.get_component::<rsz::TentBehavior>() {
             let transform = object

@@ -525,7 +525,7 @@ pub fn gen_rared_icon<'a>(
     gen_colored_icon_inner(&color_class, icon, addons, is_small)
 }
 
-fn gen_colored_icon_inner<'a>(
+pub fn gen_colored_icon_inner<'a>(
     color_class: &str,
     icon: &str,
     addons: impl IntoIterator<Item = &'a str> + 'a,
@@ -540,8 +540,13 @@ fn gen_colored_icon_inner<'a>(
     } else {
         "mh-colored-icon"
     };
+    let (color_class, color_style) = if color_class.starts_with('#') {
+        ("", format!("background-color:{color_class};"))
+    } else {
+        (color_class, "".to_owned())
+    };
     html!(<div class={class}>
-        <div style={image_r.as_str()} class={color_class}/>
+        <div style={(image_r + &color_style).as_str()} class={color_class}/>
         <div style={image_a.as_str()}/>
         <div>{ addons.into_iter().map(|addon| html!(
             <div class=addon/>

@@ -975,6 +975,9 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let achievement_explain = get_msg(pak, "Message/GuildCard/GC_Achievement_Explain.msg")?;
     let achievement_explain_mr = get_msg(pak, "Message/GuildCard/GC_Achievement_Explain_MR.msg")?;
 
+    let ec_name = get_msg(pak, "Message/HunterNote/EnvironmentCreature_Name.msg")?;
+    let ec_name_mr = get_msg(pak, "Message/HunterNote_MR/EnvironmentCreature_Name_MR.msg")?;
+
     Ok(Pedia {
         monsters,
         small_monsters,
@@ -1221,6 +1224,9 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         achievement_name_mr,
         achievement_explain,
         achievement_explain_mr,
+
+        ec_name,
+        ec_name_mr,
     })
 }
 

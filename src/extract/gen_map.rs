@@ -1,6 +1,7 @@
 use super::gen_common::*;
 use super::gen_item::*;
 use super::gen_monster::*;
+use super::gen_pedia::ITEM_ICON_SPECIAL_COLOR;
 use super::gen_website::*;
 use super::hash_store::*;
 use super::pedia::*;
@@ -74,6 +75,104 @@ pub fn get_fish_item_id(fish_id: i32) -> Option<rsz::ItemId> {
     }
 }
 
+// class snow.gui.SnowGuiCommonUtility.Icon {
+//     snow.gui.SnowGuiCommonUtility.Icon.ItemIconPatternNo getEcIconState(snow.envCreature.EnvironmentCreatureType type);
+// }
+pub fn get_ec_icon_pattern(ec_type: i32) -> i32 {
+    match ec_type {
+        0 => 0x61,
+        1 | 2 | 3 | 4 => 0x56,
+        5 => 0x50,
+        6 => 0x51,
+        7 => 0x52,
+        8 => 0x53,
+        9 | 0x1b | 0x3e | 0x3f => 0x54,
+        10 | 0xb | 0xc | 0xd => 0x5e,
+        0xe => 0x5d,
+        0xf | 0x10 | 0x11 | 0x12 => 0x55,
+        0x13 => 0x6b,
+        0x14 | 0x15 => 0x6d,
+        0x16 => 0x6c,
+        0x17 => 0x57,
+        0x18 => 0x59,
+        0x19 | 0x40 => 0x5b,
+        0x1a => 0x58,
+        0x1c => 0x5f,
+        0x1d => 0x60,
+        0x1e | 0x1f => 0x62,
+        0x22 | 0x23 | 0x24 | 0x25 => 0x5a,
+        0x26 => 0x69,
+        0x27 => 0x6a,
+        0x2d => 0x67,
+        0x2e => 0x68,
+        0x2f => 0x5c,
+        0x30 => 0x65,
+        0x31 => 0x64,
+        0x32 => 0x63,
+        0x33 => 0x66,
+        0x39 => 0xfa,
+        0x3a => 0xfb,
+        0x3c => 0xfd,
+        _ => 35, // arbitrarily chosen, "?"
+    }
+}
+
+pub fn get_ec_icon_color(ec_type: i32) -> &'static str {
+    match ec_type {
+        0 | 8 | 9 | 0xc => "#26e196",
+        1 | 0xd | 0x10 | 0x13 => "#ffff71",
+        2 | 0x15 => "#a0cdff",
+        3 | 0x12 => "#ff7316",
+        4 => "#a540e1",
+        5 | 10 => "#ff4b0d",
+        6 => "#9b784f",
+        7 | 0x11 => "#ffffff",
+        0xb => "#ffb355",
+        0xf => "#5aaaff",
+        0x14 => "#476eff",
+        0x16 => "#ff7316",
+        0x17 => "#ffffff",
+        0x18 => "#26e196",
+        0x19 => "#ffff71",
+        0x1a => "#9b784f",
+        0x1b => "#a0cdff",
+        0x1c => "#ff4b0d",
+        0x1d | 0x1e | 0x1f => "#ffff71",
+        0x22 => "#ff4b0d",
+        0x23 => "#ffb355",
+        0x24 => "#26e196",
+        0x25 => "#ffff71",
+        0x26 => "#476eff",
+        0x27 => "#ff4b0d",
+        0x2d => "#ffb355",
+        0x2e => "#476eff",
+        0x2f => "#26e196",
+        0x30 => "#ef73b9",
+        0x31 => "#ff7316",
+        0x32 => "#ff4b0d",
+        0x33 => "#ffffff",
+        0x39 => "#ff4b0d",
+        0x3a => "#ffb355",
+        0x3c => "#476eff",
+        0x3e => "#ff4b0d",
+        0x3f => "#ffff71",
+        0x40 => "#5aaaff",
+        _ => "#ffffff", // arbitrarily chosen
+    }
+}
+
+// Another unfortunately hard-coded mapping...
+static EC_ID_MAP: &[&str] = &[
+    "001_00", "002_00", "002_01", "002_02", "002_03", "004_00", "005_00", "006_00", "007_00",
+    "008_00", "009_00", "009_01", "009_02", "009_03", "009_08", "010_00", "010_01", "010_02",
+    "010_04", "011_00", "012_00", "012_01", "012_02", "014_00", "015_00", "017_00", "018_00",
+    "019_00", "020_00", "021_00", "022_00", "022_01", "023_00", "023_01", "024_00", "024_01",
+    "024_02", "024_03", "025_00", "026_00", "027_00", "028_00", "029_00", "030_00", "031_00",
+    "032_00", "033_00", "034_00", "035_00", "036_00", "037_00", "038_00", "009_09", "009_10",
+    "009_11", "050_00", "051_00", "052_00", "053_00", "054_00", "055_00", "056_00", "056_01",
+    "056_02", "057_00",
+];
+
 fn gen_map(
     hash_store: &HashStore,
     id: i32,
@@ -119,6 +218,9 @@ fn gen_map(
             })
         } </tbody></table></div></div>)
     };
+
+    let ec_name = pedia.ec_name.get_name_map();
+    let ec_name_mr = pedia.ec_name_mr.get_name_map();
 
     let mut map_icons = vec![];
     let mut map_explains = vec![];
@@ -271,6 +373,58 @@ fn gen_map(
 
                 filter = "camp";
             }
+            MapPopKind::Ec { behavior } => {
+                icon_inner = Box::new(|| {
+                    let pattern = get_ec_icon_pattern(behavior.base.type_);
+                    if ITEM_ICON_SPECIAL_COLOR.contains(&pattern) {
+                        let icon_path = format!("resources/item/{pattern:03}.png");
+                        html!(<div class="mh-icon-container">
+                            <img alt="map icon" src={icon_path}
+                                class="mh-wire-long-jump-icon undraggable" /*style={rotate}*/ draggable=false/>
+                        </div>)
+                    } else {
+                        let icon_path = format!("resources/item/{pattern:03}",);
+                        gen_colored_icon_inner(
+                            get_ec_icon_color(behavior.base.type_),
+                            &icon_path,
+                            [],
+                            false,
+                        )
+                    }
+                });
+
+                let name = usize::try_from(behavior.base.type_)
+                    .ok()
+                    .and_then(|i| EC_ID_MAP.get(i))
+                    .and_then(|id| {
+                        let tag = format!("EC_NAME_{id}");
+                        if let Some(msg) = ec_name.get(&tag) {
+                            return Some(*msg);
+                        }
+                        let tag_mr = format!("EC_NAME_{id}_MR");
+                        if let Some(msg) = ec_name_mr.get(&tag_mr) {
+                            return Some(*msg);
+                        }
+                        None
+                    })
+                    .map_or_else(
+                        || html!(<span>{text!("Unknown {}", behavior.base.type_)}</span>),
+                        gen_multi_lang,
+                    );
+
+                explain_inner = html!(<div>
+                    <div class="mh-kvlist">
+                    <p class="mh-kv"><span>"Name"</span>
+                    <span>{name}</span>
+                    </p>
+                    <p class="mh-kv"><span>"Respawn time"</span>
+                    <span>{text!("{}", behavior.base.repop_wait_time)}</span>
+                    </p>
+                    </div>
+                </div>);
+
+                filter = "ec";
+            }
         }
         let map_icon_id = format!("mh-map-icon-{i}");
         let map_explain_id = format!("mh-map-explain-{i}");
@@ -308,6 +462,7 @@ fn gen_map(
             <li id="mh-map-filter-button-camp" class="mh-map-filter-button"><a>"Camps"</a></li>
             <li id="mh-map-filter-button-jump" class="mh-map-filter-button"><a>"Jumping points"</a></li>
             <li id="mh-map-filter-button-fish" class="mh-map-filter-button"><a>"Fishing points"</a></li>
+            <li id="mh-map-filter-button-ec" class="mh-map-filter-button"><a>"Endemic life"</a></li>
             </ul></div>
 
             <div class="columns">

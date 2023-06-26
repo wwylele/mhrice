@@ -286,6 +286,22 @@ impl GameObject {
         component.context("No component found")
     }
 
+    pub fn filter_component<'a, T: 'a>(
+        &'a self,
+        filter: impl Fn(&'a rsz::AnyRsz) -> Option<T>,
+    ) -> Result<T> {
+        let mut component: Option<T> = None;
+        for c in &self.components {
+            if let Some(c) = filter(c) {
+                if component.is_some() {
+                    bail!("Multiple components found")
+                }
+                component = Some(c)
+            }
+        }
+        component.context("No component found")
+    }
+
     pub fn for_each_child<F: FnMut(&GameObject) -> Result<bool /*scan_child*/>>(
         &self,
         f: &mut F,

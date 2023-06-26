@@ -462,7 +462,7 @@ impl FieldFromRsz for Option<String> {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct Flatten<T>(pub T);
 
 impl<T: FromRsz> FieldFromRsz for Flatten<T> {

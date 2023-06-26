@@ -322,6 +322,9 @@ pub struct Pedia {
     pub achievement_name_mr: Msg,
     pub achievement_explain: Msg,
     pub achievement_explain_mr: Msg,
+
+    pub ec_name: Msg,
+    pub ec_name_mr: Msg,
 }
 
 pub struct QuestReward<'a> {

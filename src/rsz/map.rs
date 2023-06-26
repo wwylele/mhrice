@@ -1164,7 +1164,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.envCreature.EnvironmentCreatureFindFlagSetter")]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct EnvironmentCreatureFindFlagSetter {
         pub trigger_type: i32, // snow.envCreature.EnvironmentCreatureFindFlagSetter.FindTriggerType
         pub find_distance: f32,
@@ -1173,7 +1173,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.envCreature.EnvironmentCreatureBase.HyakuryuArea")]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct HyakuryuArea {
         pub start_area_no: i32,
         pub end_area_no: i32,
@@ -1201,7 +1201,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.envCreature.EnvironmentCreatureBase")]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct EnvironmentCreatureBase {
         // snow.CharacterBase
         pub enabled: bool,
@@ -1225,7 +1225,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.envCreature.Ec024.MaterialData")]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct Ec024MaterialData {
         pub min_value: f32,
         pub max_value: f32,
@@ -1235,7 +1235,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.envCreature.EcMaterialCurveController")]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct EcMaterialCurveController {
         pub enabled: bool,
         pub material_curve_data: ExternUser<()>, // snow.envCreature.EcMaterialCurveList
@@ -1245,7 +1245,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.wwise.WwiseEc025")]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct WwiseEc025 {
         pub enabled: bool,
         pub enemy_hit_trigger: u32,
@@ -1391,7 +1391,7 @@ rsz_struct! {
 // Not a real type. Extracted from snow.envCreature.EcPhotoBase
 rsz_struct! {
     #[rsz()]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct EcPhotoBaseExtra {
         pub player_search_dist: f32,
         pub player_search_angle: f32,
@@ -1518,7 +1518,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.envCreature.EnvironmentCreatureActionController`1<snow.envCreature.Ec054.Action>")]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct EnvironmentCreatureActionControllerEc054Action {
         pub action_data: ExternUser<()>, // snow.envCreature.EnvironmentCreatureActionUserData`1<snow.envCreature.Ec054.Action>
     }
@@ -1526,7 +1526,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.envCreature.EnvironmentCreatureActionController`1<snow.envCreature.Ec055.Action>")]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct EnvironmentCreatureActionControllerEc055Action {
         pub action_data: ExternUser<()>, // snow.envCreature.EnvironmentCreatureActionUserData`1<snow.envCreature.Ec055.Action>
     }
@@ -1534,7 +1534,7 @@ rsz_struct! {
 
 rsz_struct! {
     #[rsz("snow.envCreature.Ec055.JointOffset")]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct Ec055JointOffset {
         pub position: Vec3,
         pub rotation: Quat,
@@ -1856,7 +1856,7 @@ pub mod ec {
                 use super::*;
                 $(rsz_struct! {
                     #[rsz()]
-                    #[derive(Debug, Serialize)]
+                    #[derive(Debug, Serialize, Clone)]
                     pub struct $name {
                         $(
                             $(#[$inner_meta])* #[allow(dead_code)]
@@ -1870,7 +1870,7 @@ pub mod ec {
                 #[rsz({concat!("snow.envCreature.", stringify!($name))}
                     $(,$vhash = $version)*
                 )]
-                #[derive(Debug, Serialize)]
+                #[derive(Debug, Serialize, Clone)]
                 pub struct $name {
                     #[serde(flatten)]
                     pub base: Flatten<EnvironmentCreatureBase>,
@@ -1898,27 +1898,24 @@ pub mod ec {
             }
 
             pub mod loader {
-                use std::rc::*;
-                use anyhow::{anyhow, Context, Result};
+                use anyhow::{Context, Result};
                 use super::FromRsz;
                 $(
                     #[allow(non_snake_case)]
-                    pub fn $name(rsz: super::AnyRsz) -> Result<super::EnvironmentCreatureWrapper> {
-                        let downcasted = rsz.downcast::<super::$name>()
+                    pub fn $name(rsz: &super::AnyRsz) -> Result<super::EnvironmentCreatureWrapper> {
+                        let downcasted = rsz.downcast_ref::<super::$name>()
                             .with_context(||format!("Unexpected type for {}", <super::$name>::SYMBOL))?;
-                        let value = Rc::try_unwrap(downcasted)
-                            .map_err(|_|anyhow!("Shared node for {}", <super::$name>::SYMBOL))?;
                         Ok(super::EnvironmentCreatureWrapper {
-                            base: value.base.0,
-                            extra: super::Extra::$name(value.extra)
+                            base: downcasted.base.0.clone(),
+                            extra: super::Extra::$name(downcasted.extra.clone())
                         })
                     }
                 )*
             }
 
-            pub static EC_TYPE_MAP: Lazy<HashMap<u32, fn(AnyRsz) -> Result<EnvironmentCreatureWrapper>>> = Lazy::new(|| {
+            pub static EC_TYPE_MAP: Lazy<HashMap<&'static str, fn(&AnyRsz) -> Result<EnvironmentCreatureWrapper>>> = Lazy::new(|| {
                 HashMap::from_iter([
-                    $((<$name>::type_hash(), loader::$name as fn(AnyRsz) -> Result<EnvironmentCreatureWrapper>),)*
+                    $((<$name>::SYMBOL, loader::$name as fn(&AnyRsz) -> Result<EnvironmentCreatureWrapper>),)*
                 ])
             });
         };
