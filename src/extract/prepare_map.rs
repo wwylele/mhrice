@@ -198,6 +198,11 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
         if object
             .get_component::<rsz::M31IsletArrivalChecker>()
             .is_ok()
+            || object.get_component::<rsz::Ec055Manager>().is_ok()
+            || object.get_component::<rsz::Ec055Group>().is_ok()
+            || object.get_component::<rsz::Ec052SearchZone>().is_ok()
+            || object.get_component::<rsz::Ec053Manager>().is_ok()
+            || object.get_component::<rsz::Ec054Manager>().is_ok()
         {
             return Ok(true);
         } else if let Ok(behavior) = object.get_component::<rsz::ItemPopBehavior>() {
