@@ -1319,9 +1319,9 @@ fn map(pak: Vec<String>, name: String, scale: String, tex: String, output: Strin
     let tex = Tex::new(File::open(tex)?)?;
     let mut rgba = tex.to_rgba(0, 0)?;
 
-    scene.for_each_object(&mut |object: &GameObject| {
+    scene.for_each_object(&mut |object: &GameObject, transforms| {
         if let Ok(_pop) = object.get_component::<rsz::ItemPopBehavior>() {
-            let transform = object.get_component::<rsz::Transform>()?;
+            let transform = transforms.last().context("no transform")?;
             let x = (transform.position.x + scale.map_wide_min_pos) / scale.map_scale;
             let y = (transform.position.z + scale.map_height_min_pos) / scale.map_scale;
             let x = (x * rgba.width() as f32) as i32;

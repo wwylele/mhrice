@@ -212,24 +212,11 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
 
     let mut pops = vec![];
 
-    scene.for_each_object(&mut |object: &GameObject| {
-        if object
-            .get_component::<rsz::M31IsletArrivalChecker>()
-            .is_ok()
-            || object.get_component::<rsz::Ec055Manager>().is_ok()
-            || object.get_component::<rsz::Ec055Group>().is_ok()
-            || object.get_component::<rsz::Ec052SearchZone>().is_ok()
-            || object.get_component::<rsz::Ec053Manager>().is_ok()
-            || object.get_component::<rsz::Ec054Manager>().is_ok()
-            || object.get_component::<rsz::Fg023EnemyHitCounter>().is_ok()
-        {
-            return Ok(true);
-        } else if let Ok(behavior) = object.get_component::<rsz::ItemPopBehavior>() {
-            let transform = object
-                .get_component::<rsz::Transform>()
-                .context("Lack of transform")?;
+    scene.for_each_object(&mut |object: &GameObject, transforms: &[&rsz::Transform]| {
+        // TODO: this isn't an accurate way to get the position, as it doesn't consider rotation and scaling
+        let position: Vec3 = transforms.iter().map(|t| t.position.xzy()).sum();
 
-            let position = transform.position.xzy();
+        if let Ok(behavior) = object.get_component::<rsz::ItemPopBehavior>() {
             let relic = object.get_component::<rsz::RelicNoteUnlock>().ok();
             let kind = MapPopKind::Item {
                 behavior: behavior.clone(),
@@ -238,12 +225,8 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
 
             pops.push(MapPop { position, kind });
         } else if let Ok(behavior) = object.get_component::<rsz::WireLongJumpUnlock>() {
-            let transform = object
-                .get_component::<rsz::Transform>()
-                .context("Lack of transform")?;
-
-            let position = transform.position.xzy();
-
+            // TODO: accurate way to rotate
+            let transform = transforms.last().context("Expect at least one transform")?;
             let mat = geometry::UnitQuaternion::new_normalize(Quat::from(transform.rotation))
                 .to_rotation_matrix();
             let tester = make_vec3(&[1.0, 0.0, 0.0]);
@@ -257,11 +240,6 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
 
             pops.push(MapPop { position, kind });
         } else if let Ok(behavior) = object.get_component::<rsz::FishingPoint>() {
-            let transform = object
-                .get_component::<rsz::Transform>()
-                .context("Lack of transform")?;
-
-            let position = transform.position.xzy();
             let mut behavior = behavior.clone();
             behavior.fish_spawn_data.load(pak, None)?;
 
@@ -269,10 +247,6 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
 
             pops.push(MapPop { position, kind });
         } else if let Ok(behavior) = object.get_component::<rsz::OtomoReconSpot>() {
-            let transform = object
-                .get_component::<rsz::Transform>()
-                .context("Lack of transform")?;
-            let position = transform.position.xzy();
             pops.push(MapPop {
                 position,
                 kind: MapPopKind::Recon {
@@ -282,10 +256,6 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
         } else if let Ok(behavior) = object
             .filter_component(|rsz| rsz::EC_TYPE_MAP.get(&rsz.symbol()).map(|f| f(rsz).unwrap()))
         {
-            let transform = object
-                .get_component::<rsz::Transform>()
-                .context("Lack of transform")?;
-            let position = transform.position.xzy();
             pops.push(MapPop {
                 position,
                 kind: MapPopKind::Ec { behavior },
@@ -293,46 +263,20 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
         } else if let Ok(behavior) = object
             .filter_component(|rsz| rsz::FG_TYPE_MAP.get(&rsz.symbol()).map(|f| f(rsz).unwrap()))
         {
-            let transform = object
-                .get_component::<rsz::Transform>()
-                .context("Lack of transform")?;
-            let position = transform.position.xzy();
             pops.push(MapPop {
                 position,
                 kind: MapPopKind::Fg { behavior },
             });
         } else if let Ok(behavior) = object.get_component::<rsz::TentBehavior>() {
-            let transform = object
-                .get_component::<rsz::Transform>()
-                .context("Lack of transform")?;
-            let position = transform.position.xzy();
             pops.push(MapPop {
                 position,
                 kind: MapPopKind::Camp {
                     behavior: behavior.clone(),
                 },
             });
-        } else {
-            for child in &object.children {
-                if let Ok(behavior) = child.get_component::<rsz::TentBehavior>() {
-                    let transform = object
-                        .get_component::<rsz::Transform>()
-                        .context("Lack of transform")?;
-                    let sub_transform = child
-                        .get_component::<rsz::Transform>()
-                        .context("Lack of transform")?;
-                    let position = transform.position.xzy() + sub_transform.position.xzy();
-                    pops.push(MapPop {
-                        position,
-                        kind: MapPopKind::Camp {
-                            behavior: behavior.clone(),
-                        },
-                    });
-                }
-            }
         }
 
-        Ok(false)
+        Ok(true)
     })?;
 
     let ec_data = files

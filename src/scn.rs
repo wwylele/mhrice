@@ -302,13 +302,27 @@ impl GameObject {
         component.context("No component found")
     }
 
-    pub fn for_each_child<F: FnMut(&GameObject) -> Result<bool /*scan_child*/>>(
-        &self,
+    pub fn for_each_child<
+        'a,
+        F: FnMut(&GameObject, &[&rsz::Transform]) -> Result<bool /*scan_child*/>,
+    >(
+        &'a self,
         f: &mut F,
+        transforms: &mut Vec<&'a rsz::Transform>,
     ) -> Result<()> {
         for object in &self.children {
-            if f(object)? {
-                object.for_each_child(f)?;
+            let pushed;
+            if let Ok(transform) = object.get_component::<rsz::Transform>() {
+                transforms.push(transform);
+                pushed = true;
+            } else {
+                pushed = false
+            }
+            if f(object, transforms)? {
+                object.for_each_child(f, transforms)?;
+            }
+            if pushed {
+                transforms.pop();
             }
         }
         Ok(())
@@ -324,13 +338,20 @@ pub struct Folder {
 }
 
 impl Folder {
-    pub fn for_each_object<F: FnMut(&GameObject) -> Result<bool /*scan_child*/>>(
+    pub fn for_each_object<
+        F: FnMut(&GameObject, &[&rsz::Transform]) -> Result<bool /*scan_child*/>,
+    >(
         &self,
         f: &mut F,
     ) -> Result<()> {
         for object in &self.children {
-            if f(object)? {
-                object.for_each_child(f)?;
+            let mut transforms: Vec<&rsz::Transform> = object
+                .get_component::<rsz::Transform>()
+                .ok()
+                .into_iter()
+                .collect();
+            if f(object, &transforms)? {
+                object.for_each_child(f, &mut transforms)?;
             }
         }
 
@@ -483,13 +504,20 @@ impl Scene {
         Ok(Scene { objects, folders })
     }
 
-    pub fn for_each_object<F: FnMut(&GameObject) -> Result<bool /*scan_child*/>>(
+    pub fn for_each_object<
+        F: FnMut(&GameObject, &[&rsz::Transform]) -> Result<bool /*scan_child*/>,
+    >(
         &self,
         f: &mut F,
     ) -> Result<()> {
         for object in &self.objects {
-            if f(object)? {
-                object.for_each_child(f)?;
+            let mut transforms: Vec<&rsz::Transform> = object
+                .get_component::<rsz::Transform>()
+                .ok()
+                .into_iter()
+                .collect();
+            if f(object, &transforms)? {
+                object.for_each_child(f, &mut transforms)?;
             }
         }
 
