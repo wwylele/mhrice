@@ -449,7 +449,7 @@ rsz_struct! {
     #[rsz("via.motion.TreeLayer",
         0x30136f3e = 10_00_02,
     )]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct TreeLayer {
         pub v0: u8,
         pub v1: u32,
@@ -485,7 +485,7 @@ rsz_struct! {
     #[rsz("via.motion.MotionBank",
         0xebf452c8 = 0
     )]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct MotionBank {
         v0: Option<String>,
         v1: u32,
@@ -499,7 +499,7 @@ rsz_struct! {
     #[rsz("via.motion.DynamicMotionBank",
         0xf0c2477a = 0
     )]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct DynamicMotionBank {
         v0: u32,
         v1: u8,
@@ -517,7 +517,7 @@ rsz_struct! {
     #[rsz("via.motion.Motion",
         0x18a2f773 = 10_00_02
     )]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct Motion {
         pub v0: u8,
         pub v1: u32,
@@ -911,5 +911,44 @@ rsz_struct! {
         pub v17: u32,
         pub v18: u32,
         pub v19: u32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.navigation.map.InteractionShapeOBB")]
+    #[derive(Debug, Serialize)]
+    pub struct InteractionShapeOBB {
+        pub obb_coord: Mat4x4,
+        pub obb_extend: Vec3,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.navigation.AIMapEffector")]
+    #[derive(Debug, Serialize)]
+    pub struct AIMapEffector {
+        pub enabled: bool,
+        pub v1: Option<String>,
+        pub v2: Vec<String>,
+        pub v3: Vec<()>, // ???
+        pub v4: Option<String>,
+        pub v5: u32,
+        pub v6: u32,
+        pub v7: u32,
+        pub v8: u32,
+        pub v9: InteractionShapeOBB,
+        pub v10: u8,
+        pub v11: u8,
+        pub v12: u32,
+        pub v13: u8,
+        pub v14: u8,
+    }
+}
+
+rsz_struct! {
+    #[rsz("via.wwise.WwiseSphere")]
+    #[derive(Debug, Serialize)]
+    pub struct WwiseSphere {
+        pub v0: Vec4
     }
 }

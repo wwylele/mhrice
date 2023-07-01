@@ -940,6 +940,9 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         Ec054DetectZone,
         WwiseEc054,
         Ec051CirclePathContoroller,
+        InteractionShapeOBB,
+        AIMapEffector,
+        WwiseSphere,
     );
 
     r!(
@@ -1067,6 +1070,33 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         WwiseEc053,
         StageObjectPathHolderPathData,
         StageObjectPathHolder,
+        ScrollSetting,
+        BeltScrollController,
+        FieldGimmickDelegate,
+        WwiseFieldGimmickTriggerTriggerData,
+        WwiseFieldGimmickTrigger,
+        Fg023EnemyHitCounter,
+        StageObjectCollisionController,
+        FieldGimmickRemoteSync,
+        Fg023StateMachine,
+        WwiseFg023,
+        StageObjectDelegate,
+        WwiseGimmickHitOverWriter,
+        StageEffectCullingController,
+        StuckFloorZone,
+        Fg028StateMachine,
+        Ec054BiteArea,
+        DamageStockHolder,
+        Fg027StateMachineKeyHash,
+        Fg027StateMachine,
+        WwiseFieldGimmickStateTriggerStateTrigger,
+        WwiseFieldGimmickStateTrigger,
+        SnowWwiseGenerator,
+        WwiseFg007,
+        Fg003ECData,
+        Fg003ECDataList,
+        Fg003TableData,
+        EnvironmentCreatureData
     );
 
     r!(
@@ -1214,6 +1244,7 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
 
     m.extend(unique_mystery::unique_mystery_type_map());
     m.extend(ec::ec_type_map());
+    m.extend(fg::fg_type_map());
 
     m
 });

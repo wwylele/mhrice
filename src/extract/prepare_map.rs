@@ -17,6 +17,7 @@ struct MapFiles {
     tex_files: &'static [&'static str],
     scale_file: &'static str,
     scene_file: &'static str,
+    ec_file: Option<&'static str>,
 }
 
 static MAP_FILES: [Option<MapFiles>; 16] = [
@@ -26,6 +27,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         tex_files: &["gui/80_Texture/map/map_001_IAM.tex"],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_001.user",
         scene_file: "scene/m01/normal/m01_normal.scn",
+        ec_file: Some("environmentCreature/UserData/m01_ECData.user"),
     }),
     Some(MapFiles {
         // 2
@@ -35,6 +37,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         ],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_002.user",
         scene_file: "scene/m02/normal/m02_normal.scn",
+        ec_file: Some("environmentCreature/UserData/m02_ECData.user"),
     }),
     Some(MapFiles {
         // 3
@@ -44,6 +47,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         ],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_003.user",
         scene_file: "scene/m03/normal/m03_normal.scn",
+        ec_file: Some("environmentCreature/UserData/m03_ECData.user"),
     }),
     Some(MapFiles {
         // 4
@@ -53,6 +57,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         ],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_004.user",
         scene_file: "scene/m04/normal/m04_normal.scn",
+        ec_file: Some("environmentCreature/UserData/m04_ECData.user"),
     }),
     Some(MapFiles {
         // 5
@@ -62,6 +67,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         ],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_005.user",
         scene_file: "scene/m05/normal/m05_normal.scn",
+        ec_file: Some("environmentCreature/UserData/m05_ECData.user"),
     }),
     None, // 6
     Some(MapFiles {
@@ -69,6 +75,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         tex_files: &["gui/80_Texture/map/map_007_IAM.tex"],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_007_sp.user", // special type
         scene_file: "scene/m01/hyakuryu/m01_hyakuryu_A.scn",
+        ec_file: None,
     }),
     None, // 8
     Some(MapFiles {
@@ -76,12 +83,14 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         tex_files: &["gui/80_Texture/map/map_009_IAM.tex"],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_009.user",
         scene_file: "scene/m20/normal/m20_normal.scn",
+        ec_file: Some("environmentCreature/UserData/m20_ECData.user"),
     }),
     Some(MapFiles {
         // 10
         tex_files: &["gui/80_Texture/map/map_010_IAM.tex"],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_010.user",
         scene_file: "scene/m21/normal/m21_normal.scn",
+        ec_file: Some("environmentCreature/UserData/m21_ECData.user"),
     }),
     Some(MapFiles {
         // 11
@@ -91,6 +100,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         ],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_011.user",
         scene_file: "scene/m22/normal/m22_normal.scn",
+        ec_file: Some("environmentCreature/UserData/m22_ECData.user"),
     }),
     Some(MapFiles {
         // 12
@@ -100,6 +110,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         ],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_031.user",
         scene_file: "scene/m31/normal/m31_normal.scn",
+        ec_file: Some("environmentCreature/UserData/m31_ECData.user"),
     }),
     Some(MapFiles {
         // 13
@@ -109,12 +120,14 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         ],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_032.user",
         scene_file: "scene/m32/normal/m32_normal.scn",
+        ec_file: Some("environmentCreature/UserData/m32_ECData.user"),
     }),
     Some(MapFiles {
         // 14
         tex_files: &["gui/80_Texture/map/map_041_IAM.tex"],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_041.user",
         scene_file: "scene/m41/normal/m41_normal.scn",
+        ec_file: Some("environmentCreature/UserData/m41_ECData.user"),
     }),
     Some(MapFiles {
         // 15
@@ -126,6 +139,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         // This scale doesn't look right
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_042.user",
         scene_file: "scene/m42/normal/m42_normal.scn",
+        ec_file: Some("environmentCreature/UserData/m42_ECData.user"),
     }),
 ];
 
@@ -152,6 +166,9 @@ pub enum MapPopKind {
     Ec {
         behavior: rsz::EnvironmentCreatureWrapper,
     },
+    Fg {
+        behavior: rsz::FieldGimmickWrapper,
+    },
 }
 
 #[derive(Debug, Serialize)]
@@ -167,6 +184,7 @@ pub struct GameMap {
     pub y_offset: f32,
     pub map_scale: f32,
     pub pops: Vec<MapPop>,
+    pub ec_data: Option<rsz::EnvironmentCreatureData>,
 }
 
 fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<Option<GameMap>> {
@@ -203,6 +221,7 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
             || object.get_component::<rsz::Ec052SearchZone>().is_ok()
             || object.get_component::<rsz::Ec053Manager>().is_ok()
             || object.get_component::<rsz::Ec054Manager>().is_ok()
+            || object.get_component::<rsz::Fg023EnemyHitCounter>().is_ok()
         {
             return Ok(true);
         } else if let Ok(behavior) = object.get_component::<rsz::ItemPopBehavior>() {
@@ -271,6 +290,17 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
                 position,
                 kind: MapPopKind::Ec { behavior },
             });
+        } else if let Ok(behavior) = object
+            .filter_component(|rsz| rsz::FG_TYPE_MAP.get(&rsz.symbol()).map(|f| f(rsz).unwrap()))
+        {
+            let transform = object
+                .get_component::<rsz::Transform>()
+                .context("Lack of transform")?;
+            let position = transform.position.xzy();
+            pops.push(MapPop {
+                position,
+                kind: MapPopKind::Fg { behavior },
+            });
         } else if let Ok(behavior) = object.get_component::<rsz::TentBehavior>() {
             let transform = object
                 .get_component::<rsz::Transform>()
@@ -305,12 +335,27 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
         Ok(false)
     })?;
 
+    let ec_data = files
+        .ec_file
+        .map(|ec_file| -> Result<rsz::EnvironmentCreatureData> {
+            let f = pak.find_file(ec_file)?;
+            let mut data: rsz::EnvironmentCreatureData = User::new(Cursor::new(pak.read_file(f)?))?
+                .rsz
+                .deserialize_single(None)?;
+            for table in &mut data.fg003_table_data {
+                table.ec_data.load(pak, None)?;
+            }
+            Ok(data)
+        })
+        .transpose()?;
+
     Ok(Some(GameMap {
         layer_count: files.tex_files.len(),
         x_offset: scale.map_wide_min_pos,
         y_offset: scale.map_height_min_pos,
         map_scale: scale.map_scale,
         pops,
+        ec_data,
     }))
 }
 
