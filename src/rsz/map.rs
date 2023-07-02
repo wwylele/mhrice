@@ -1853,6 +1853,17 @@ rsz_struct! {
     }
 }
 
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq)]
+    pub enum Ec055GroupLotteryRatio {
+        High = 0,
+        Normal = 1,
+        Low = 2,
+        Zero = 3,
+    }
+}
+
 pub mod ec {
     use super::*;
     use anyhow::{Context, Result};
@@ -1968,7 +1979,7 @@ pub mod ec {
         Ec015 [] {}
         Ec017 [] {}
         Ec018 [] {}
-        Ec019 [] {
+        Ec019 [] { // Great Wirebug
             pub wire_long_jump_id: i32, // snow.stage.StageDef.WireLongJumpId
             pub is_relay: bool,
             pub move_interval: f32,
@@ -1991,7 +2002,7 @@ pub mod ec {
             pub move_speed: f32,
             pub random_scale: f32,
         }
-        Ec023 [] {
+        Ec023 [] { // Giganha
             pub gravity: f32,
             pub reach_time: f32,
             pub add_radian_cog: f32,
@@ -2027,7 +2038,7 @@ pub mod ec {
             pub add_speed_rate: f32,
             pub material_data: Ec024MaterialData,
         }
-        Ec025 [] {
+        Ec025 [] { // Pincercrab
             pub active_time: f32,
             pub shot_span_time: f32,
             pub first_shot_span_time: f32,
@@ -2042,7 +2053,7 @@ pub mod ec {
             pub ref_material_curve: Option<EcMaterialCurveController>,
             pub ref_wwise: Option<WwiseEc025>,
         }
-        Ec026 [] {
+        Ec026 [] { // Echobat
             pub adjust_rate: f32,
             pub move_speed: f32,
             pub aim_id: i32,
@@ -2075,7 +2086,7 @@ pub mod ec {
         Ec033 [] {}
         Ec034 [] {}
         Ec035 [] {}
-        Ec036 [] {
+        Ec036 [] { // Tricktoad
             pub active_time: f32,
             pub attract_time: f32,
             pub blink_curve: ExternUser<()>, // snow.envCreature.Ec036BlinkData
@@ -2098,7 +2109,7 @@ pub mod ec {
             pub action_start_distance: f32,
             pub zone_data: ExternUser<()>, // snow.envCreature.Ec051.Ec051ReactionZoneData
         }
-        Ec052 [] {
+        Ec052 [] { // Slicercrab
             pub setting_data: ExternUser<()>, // snow.envCreature.Ec052SettingData
             pub wait_material_set_key: String,
             pub active_material_set_key: String,
@@ -2122,9 +2133,9 @@ pub mod ec {
             pub action_controller: EnvironmentCreatureActionControllerEc054Action,
             pub const_props: Guid,
         }
-        Ec055 [] {
+        Ec055 [] { // Starburst Bug
             pub setting: ExternUser<()>, // snow.envCreature.Ec055Setting,
-            pub default_element_lottery_ratio: i32, // snow.envCreature.Ec055Group.LotteryRatio
+            pub default_element_lottery_ratio: Ec055GroupLotteryRatio,
             pub action_controller: EnvironmentCreatureActionControllerEc055Action,
             pub joint_offsets: Vec<Ec055JointOffset>,
             pub camera_target_object: Guid,

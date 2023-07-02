@@ -410,6 +410,20 @@ fn gen_map(
                 icon_inner = Box::new(|| get_ec_icon(behavior.base.type_));
                 let name = get_ec_name(behavior.base.type_);
 
+                let extra = match &behavior.extra {
+                    rsz::ec::Extra::Ec055(extra) => vec![
+                        html!(<p class="mh-kv"><span>"Default element lottery ratio"</span>
+                        <span>{match extra.default_element_lottery_ratio {
+                            rsz::Ec055GroupLotteryRatio::High => text!("High"),
+                            rsz::Ec055GroupLotteryRatio::Normal => text!("Normal"),
+                            rsz::Ec055GroupLotteryRatio::Low => text!("Low"),
+                            rsz::Ec055GroupLotteryRatio::Zero => text!("Zero"),
+                        }}</span>
+                        </p>),
+                    ],
+                    _ => vec![],
+                };
+
                 explain_inner = html!(<div>
                     <div class="mh-kvlist">
                     <p class="mh-kv"><span>"Name"</span>
@@ -418,6 +432,10 @@ fn gen_map(
                     <p class="mh-kv"><span>"Respawn time"</span>
                     <span>{text!("{}", behavior.base.repop_wait_time)}</span>
                     </p>
+                    <p class="mh-kv"><span>"Extra"</span>
+                    <span>{text!("{:?}", behavior.extra)}</span>
+                    </p>
+                    {extra}
                     </div>
                 </div>);
 
