@@ -432,9 +432,6 @@ fn gen_map(
                     <p class="mh-kv"><span>"Respawn time"</span>
                     <span>{text!("{}", behavior.base.repop_wait_time)}</span>
                     </p>
-                    <p class="mh-kv"><span>"Extra"</span>
-                    <span>{text!("{:?}", behavior.extra)}</span>
-                    </p>
                     {extra}
                     </div>
                 </div>);
