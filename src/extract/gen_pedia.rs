@@ -1177,6 +1177,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
         random_mystery_rank_release: get_singleton_opt(pak, version_hint)?,
         random_mystery_reward_base: get_singleton_opt(pak, version_hint)?,
         random_mystery_reward_subtarget: get_singleton_opt(pak, version_hint)?,
+        random_mystery_research_point: get_singleton_opt(pak, version_hint)?,
         progress: get_singleton(pak, version_hint)?,
         enemy_rank: get_singleton(pak, version_hint)?,
         species: get_singleton(pak, version_hint)?,
@@ -3529,6 +3530,15 @@ fn prepare_monsters<'a>(
         false,
     )?;
 
+    let random_mystery_research_point = hash_map_unique(
+        pedia
+            .random_mystery_research_point
+            .iter()
+            .flat_map(|p| &p.param_data),
+        |p| (p.em_type, p),
+        false,
+    )?;
+
     let discoveries: HashMap<EmTypes, &DiscoverEmSetDataParam> = hash_map_unique(
         pedia
             .discover_em_set_data
@@ -3662,6 +3672,8 @@ fn prepare_monsters<'a>(
             .unwrap_or_default();
         let random_mystery_subtarget_reward =
             random_mystery_subtarget.get(&monster.em_type).copied();
+        let random_mystery_research_point =
+            random_mystery_research_point.get(&monster.em_type).copied();
         let discovery = discoveries.get(&monster.em_type).copied();
         let rank = ranks.get(&monster.em_type).copied();
         let species = speciess.get(&monster.em_type).copied();
@@ -3716,6 +3728,7 @@ fn prepare_monsters<'a>(
                 random_quest,
                 random_mystery_reward,
                 random_mystery_subtarget_reward,
+                random_mystery_research_point,
                 discovery,
                 rank,
                 species,
@@ -3732,6 +3745,7 @@ fn prepare_monsters<'a>(
                 random_quest,
                 random_mystery_reward,
                 random_mystery_subtarget_reward,
+                random_mystery_research_point,
                 discovery,
                 rank,
                 species,

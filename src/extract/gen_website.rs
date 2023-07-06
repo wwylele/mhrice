@@ -605,12 +605,15 @@ pub fn gen_about(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
                 <p>
                 "MHRice website is generated from the open source MHRice project."
                 </p>
-                <p>
+                <p class="buttons has-addons">
                 <a class="button" href="https://github.com/wwylele/mhrice" target="_blank" rel=["noopener", "noreferrer"]>
                     <span class="icon">
                         <i class="fab fa-github"></i>
                     </span>
                     <span>"Visit MHRice on Github"</span>
+                </a>
+                <a class="button" href="https://github.com/wwylele/mhrice/issues/new" target="_blank" rel=["noopener", "noreferrer"]>
+                    <span>"Report an issue"</span>
                 </a>
                 </p>
                 </section>

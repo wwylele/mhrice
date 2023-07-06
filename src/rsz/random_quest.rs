@@ -283,3 +283,25 @@ rsz_struct! {
         pub param_data: Vec<RandomMysteryRewardSubTargetParam>
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.data.MysteryResearchPointUserData.Param")]
+    #[derive(Debug, Serialize)]
+    pub struct MysteryResearchPointUserDataParam {
+        pub em_type: EmTypes,
+        pub quest_level: QuestLevel,
+        pub point: i32,
+        pub adjust: f32,
+        pub participation_adjust: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.MysteryResearchPointUserData",
+        path = "Quest/RandomMystery/MysteryResearchPointUserData.user",
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct MysteryResearchPointUserData {
+        pub param_data: Vec<MysteryResearchPointUserDataParam>
+    }
+}
