@@ -2268,9 +2268,11 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> 
         if !deco_dedup.insert(deco.id) {
             bail!("Duplicate deco definition for {:?}", deco.id)
         }
-        let product = deco_products
-            .remove(&deco.id)
-            .with_context(|| format!("No product for deco {:?}", deco.id))?;
+        let Some(product) = deco_products.remove(&deco.id) else {
+            // Crapcom: 16.0.1 dummy deco??
+            eprintln!("No product for deco {:?}", deco.id);
+            continue;
+        };
 
         let name_tag = format!("{}_Name", deco.id.to_msg_tag());
         let name = *deco_name_msg
