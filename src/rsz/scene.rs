@@ -952,3 +952,112 @@ rsz_struct! {
         pub v0: Vec4
     }
 }
+
+rsz_struct! {
+    #[rsz("snow.stage.props.PropsBase")]
+    #[derive(Debug, Serialize)]
+    pub struct PropsBase {
+        pub enabled: bool,
+        pub props_unique_id: u32,
+        pub block_no: i32,
+        pub separate_block_section: i32, // snow.ZoneDef.BlockSectionAttr
+        pub group_id: i32,
+        pub block_section: i32, // snow.ZoneDef.BlockSectionAttr
+        pub map_floor_type: i32, // snow.stage.StageDef.MapFloorType
+        pub register_map_icon_on_quest_start: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.props.BreakableStatus")]
+    #[derive(Debug, Serialize)]
+    pub struct BreakableStatus {
+        pub enabled: bool,
+        pub vital: f32,
+        pub reset_vital_rate: f32,
+        pub one_hit_break: bool,
+        pub no_break: bool,
+        pub breakable_deathblow_only: bool,
+        pub force_break_deathblow: bool,
+        pub enable_fake_obj_break_type_ml2deathblow: bool,
+        pub enable_fake_obj_break_type_absolutepower2l: bool,
+        pub force_break_intro_bind_voice: bool,
+        pub guts: bool,
+        pub guts_time: f32,
+        pub interlocked_breakable_obj: Guid,
+        pub sync_break: bool,
+        pub is_hit_final_wave_boss: bool,
+        pub draw_vital: bool,
+        pub vital_draw_offset: Vec3,
+        pub draw_damage_type: i32, // snow.stage.props.BreakableStatus.DamageDrawType
+        pub parts_object_list: Vec<Guid>,
+        pub ignore_hit_owner_type: Vec<i8>, // snow.hit.HitOwnerType
+        pub calc_damage_master_only: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.props.ObjectStateSettings.ObjectStateInfo")]
+    #[derive(Debug, Serialize)]
+    pub struct ObjectStateInfo {
+        pub target_object: Guid,
+        pub is_update: bool,
+        pub is_draw: bool,
+        pub is_collidable: bool,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.props.ObjectStateSettings.Param")]
+    #[derive(Debug, Serialize)]
+    pub struct ObjectStateSettingsParam {
+        pub key_name: String,
+        pub enable: bool,
+        pub info_list: Vec<ObjectStateInfo>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.props.ObjectStateSettings")]
+    #[derive(Debug, Serialize)]
+    pub struct ObjectStateSettings {
+        pub enabled: bool,
+        pub setting_list: Vec<ObjectStateSettingsParam>,
+        pub default_state_param_index: i32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.props.PropsDelegate")]
+    #[derive(Debug, Serialize)]
+    pub struct PropsDelegate {
+        pub enabled: bool,
+        pub props_type: i32, // snow.stage.StageDef.PropsType
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.stage.props.DropObjectBehavior")]
+    #[derive(Debug, Serialize)]
+    pub struct DropObjectBehavior {
+        pub enabled: bool,
+        pub env_creature_lottery_data: ExternUser<()>, // snow.stage.props.EnvCreatureLotteryData
+        pub drop_offset: Vec3,
+        pub is_need_hunter_note_check: bool,
+        pub hunter_note_unlock_distance: f32,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.wwise.WwiseBreakableObj")]
+    #[derive(Debug, Serialize)]
+    pub struct WwiseBreakableObj {
+        pub enabled: bool,
+        pub on_damaged: Vec<u32>,
+        pub on_suicide: Vec<u32>,
+        pub on_break: u32,
+        pub on_break_lost_vital: Vec<u32>,
+        pub screen_space: i32, // snow.wwise.WwiseChangeSpaceWatcher.ScreenSpace
+        pub stop_distance: f32,
+    }
+}

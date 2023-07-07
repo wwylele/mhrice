@@ -1096,7 +1096,15 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         Fg003ECData,
         Fg003ECDataList,
         Fg003TableData,
-        EnvironmentCreatureData
+        EnvironmentCreatureData,
+        PropsBase,
+        BreakableStatus,
+        ObjectStateInfo,
+        ObjectStateSettingsParam,
+        ObjectStateSettings,
+        PropsDelegate,
+        DropObjectBehavior,
+        WwiseBreakableObj,
     );
 
     r!(
