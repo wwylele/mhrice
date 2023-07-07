@@ -1533,7 +1533,12 @@ pub fn gen_random_mystery_difficulty(
             {
                 table.ref_table.ref_rate_table.iter().enumerate().map(|(level, diff)| {
                     html!(<tr>
-                        <td>{text!("{}", level + 1)}</td>
+                        <td>{
+                        if level == 300 { // this is "level 301"
+                            text!("Special investigation")
+                        } else {
+                            text!("{}", level + 1)
+                        }}</td>
                         {
                             gen_quest_monster_data(Some(diff), None, 0, difficulty_rate_anomaly, pedia_ex)
                         }
