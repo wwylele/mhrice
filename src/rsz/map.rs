@@ -2192,6 +2192,7 @@ pub mod fg {
                 }
             })*
 
+            #[allow(clippy::large_enum_variant)]
             #[derive(Debug, Serialize)]
             pub enum Extra {
                 $($name(extra::$name),)*
