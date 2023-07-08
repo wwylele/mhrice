@@ -39,6 +39,7 @@ quick-xml = "0.28"
 md-5 = "0.10"
 aws-config = "0.55"
 aws-sdk-s3 = "0.28"
+sha2 = "0.10"
 
 [build-dependencies]
 built = { version = "0.6", features = ["git2"] }

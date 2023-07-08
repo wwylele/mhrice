@@ -587,7 +587,7 @@ pub fn gen_search(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
     Ok(())
 }
 
-pub fn gen_about(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
+pub fn gen_about(hash_store: &HashStore, pedia: &Pedia, output: &impl Sink) -> Result<()> {
     let doc: DOMTree<String> = html!(
         <html lang="en">
             <head itemscope=true>
@@ -645,6 +645,15 @@ pub fn gen_about(hash_store: &HashStore, output: &impl Sink) -> Result<()> {
                         )
                     }</span></li>
                     <li>{text!("Update time: {}", Utc::now())}</li>
+                    <li>"Game hash:"
+                        <ul>
+                        {pedia.sha.iter().map(|sha| {
+                            html!(<li class="is-family-monospace">
+                            {text!("{}", sha)}
+                            </li>)
+                        })}
+                        </ul>
+                    </li>
                 </ul>
                 </section>
                 </main>
@@ -730,7 +739,7 @@ pub fn gen_website(
     gen_map_list(hash_store, pedia, output)?;
     gen_otomo_equips(hash_store, pedia_ex, config, output, &mut toc)?;
     gen_otomo_equip_list(hash_store, pedia_ex, output)?;
-    gen_about(hash_store, output)?;
+    gen_about(hash_store, pedia, output)?;
     gen_search(hash_store, output)?;
     gen_misc(hash_store, pedia, pedia_ex, output, &mut toc)?;
     gen_dlc_list(hash_store, pedia_ex, output)?;

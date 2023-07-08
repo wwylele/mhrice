@@ -595,7 +595,9 @@ fn get_version_hint<T: 'static + SingletonUser, U: FromRsz>(
     bail!("Type not found for version hint")
 }
 
-pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
+pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>, sha: bool) -> Result<Pedia> {
+    let sha = if sha { pak.sha256()? } else { vec![] };
+
     let version_hint = Some(get_version_hint::<MonsterListBossData, BossMonsterData>(
         pak,
     )?);
@@ -979,6 +981,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>) -> Result<Pedia> {
     let ec_name_mr = get_msg(pak, "Message/HunterNote_MR/EnvironmentCreature_Name_MR.msg")?;
 
     Ok(Pedia {
+        sha,
+
         monsters,
         small_monsters,
         monster_names,

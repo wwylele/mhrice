@@ -59,6 +59,8 @@ pub struct WeaponList<BaseData> {
 
 #[derive(Debug, Serialize)]
 pub struct Pedia {
+    pub sha: Vec<String>,
+
     pub monsters: Vec<Monster>,
     pub small_monsters: Vec<Monster>,
     pub monster_names: Msg,
