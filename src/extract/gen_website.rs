@@ -645,7 +645,7 @@ pub fn gen_about(hash_store: &HashStore, pedia: &Pedia, output: &impl Sink) -> R
                         )
                     }</span></li>
                     <li>{text!("Update time: {}", Utc::now())}</li>
-                    <li>"Game hash:"
+                    <li>"Game file SHA-256:"
                         <ul>
                         {pedia.sha.iter().map(|sha| {
                             html!(<li class="is-family-monospace">
