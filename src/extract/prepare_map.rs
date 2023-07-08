@@ -170,7 +170,7 @@ pub enum MapPopKind {
         behavior: rsz::FieldGimmickWrapper,
     },
     Bush {
-        behavior: rsz::DropObjectBehavior,
+        behavior: Vec<rsz::DropObjectBehavior>,
     },
 }
 
@@ -214,6 +214,8 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
     let scene = Scene::new(pak, files.scene_file)?;
 
     let mut pops = vec![];
+
+    let mut bush_groups: Vec<Vec<(Vec3, rsz::DropObjectBehavior)>> = vec![];
 
     scene.for_each_object(&mut |object: &GameObject, transforms: &[&rsz::Transform]| {
         // TODO: this isn't an accurate way to get the position, as it doesn't consider rotation and scaling
@@ -273,10 +275,21 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
         } else if let Ok(behavior) = object.get_component::<rsz::DropObjectBehavior>() {
             let mut behavior = behavior.clone();
             behavior.env_creature_lottery_data.load(pak, None)?;
-            pops.push(MapPop {
-                position,
-                kind: MapPopKind::Bush { behavior },
-            })
+            let mut new_group = vec![];
+            let mut i = 0;
+            let max_dist = 4.0;
+            while i < bush_groups.len() {
+                if bush_groups[i]
+                    .iter()
+                    .any(|(bush_pos, _)| distance2(bush_pos, &position) < max_dist * max_dist)
+                {
+                    new_group.append(&mut bush_groups.remove(i));
+                } else {
+                    i += 1
+                }
+            }
+            new_group.push((position, behavior));
+            bush_groups.push(new_group);
         } else if let Ok(behavior) = object.get_component::<rsz::TentBehavior>() {
             pops.push(MapPop {
                 position,
@@ -288,6 +301,16 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
 
         Ok(true)
     })?;
+
+    for group in bush_groups {
+        let pos_sum: Vec3 = group.iter().map(|(p, _)| p).sum();
+        let position = pos_sum / group.len() as f32;
+        let behavior = group.into_iter().map(|(_, b)| b).collect();
+        pops.push(MapPop {
+            position,
+            kind: MapPopKind::Bush { behavior },
+        })
+    }
 
     let ec_data = files
         .ec_file
