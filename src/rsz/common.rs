@@ -174,6 +174,32 @@ macro_rules! rsz_sumtype {
 }
 
 #[macro_export]
+macro_rules! rsz_sumuser {
+    (
+        $(#[$outer_meta:meta])*
+        $outer_vis:vis enum $enum_name:ident {
+            $( $variant:ident($variant_type:ty) ),*$(,)?
+        }
+    ) => {
+        $(#[$outer_meta])* #[allow(clippy::enum_variant_names)]
+        $outer_vis enum $enum_name {
+            $( $variant($variant_type), )*
+        }
+
+        impl $crate::rsz::FromUser for $enum_name {
+            fn from_any(any: AnyRsz) -> Result<Self> {
+                $(
+                    if any.symbol() == <$variant_type>::SYMBOL {
+                        return Ok($enum_name::$variant(Rc::try_unwrap(any.downcast().unwrap()).map_err(|_| anyhow!("Shared user node"))?))
+                    }
+                )*
+                bail!("No matching type for {}", any.symbol())
+            }
+        }
+    }
+}
+
+#[macro_export]
 macro_rules! rsz_bitflags {
     (
         $(#[$outer_meta:meta])*

@@ -169,6 +169,9 @@ pub enum MapPopKind {
     Fg {
         behavior: rsz::FieldGimmickWrapper,
     },
+    Bush {
+        behavior: rsz::DropObjectBehavior,
+    },
 }
 
 #[derive(Debug, Serialize)]
@@ -267,6 +270,13 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
                 position,
                 kind: MapPopKind::Fg { behavior },
             });
+        } else if let Ok(behavior) = object.get_component::<rsz::DropObjectBehavior>() {
+            let mut behavior = behavior.clone();
+            behavior.env_creature_lottery_data.load(pak, None)?;
+            pops.push(MapPop {
+                position,
+                kind: MapPopKind::Bush { behavior },
+            })
         } else if let Ok(behavior) = object.get_component::<rsz::TentBehavior>() {
             pops.push(MapPop {
                 position,

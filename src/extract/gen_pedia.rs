@@ -466,7 +466,7 @@ fn get_msg(pak: &mut PakReader<impl Read + Seek>, path: &str) -> Result<Msg> {
     Msg::new(Cursor::new(pak.read_file(index)?))
 }
 
-fn get_user<T: 'static>(
+fn get_user<T: FromUser>(
     pak: &mut PakReader<impl Read + Seek>,
     path: &str,
     version_hint: Option<u32>,
@@ -478,7 +478,7 @@ fn get_user<T: 'static>(
         .with_context(|| path.to_string())
 }
 
-fn get_user_opt<T: 'static>(
+fn get_user_opt<T: FromUser>(
     pak: &mut PakReader<impl Read + Seek>,
     path: &str,
     version_hint: Option<u32>,
@@ -514,7 +514,7 @@ fn get_singleton_opt<T: 'static + SingletonUser>(
     }
 }
 
-fn get_weapon_list<BaseData: 'static>(
+fn get_weapon_list<BaseData: FromUser>(
     pak: &mut PakReader<impl Read + Seek>,
     weapon_class: &str,
     version_hint: Option<u32>,

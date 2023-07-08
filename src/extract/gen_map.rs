@@ -438,6 +438,59 @@ fn gen_map(
 
                 filter = "ec";
             }
+            MapPopKind::Bush { behavior } => {
+                let (icon, color, title, lottery) =
+                    match behavior.env_creature_lottery_data.unwrap() {
+                        rsz::EnvCreatureLotteryData::Anthill(data) => (
+                            35,
+                            13,
+                            "Ant hill",
+                            data.lottery_data_list
+                                .iter()
+                                .map(|d| &d.base)
+                                .collect::<Vec<_>>(),
+                        ),
+                        rsz::EnvCreatureLotteryData::Bush(data) => (
+                            35,
+                            8,
+                            "Bush",
+                            data.lottery_data_list
+                                .iter()
+                                .map(|d| &d.base)
+                                .collect::<Vec<_>>(),
+                        ),
+                    };
+                if lottery.iter().all(|data| data.drop_rate == 0.0) {
+                    continue;
+                }
+
+                explain_inner = html!(<div>
+                    <div class="mh-reward-tables">
+                    <div class="mh-reward-box"><div class="mh-table"><table>
+                        <thead><tr>
+                        <th>{text!("{}", title)}</th>
+                        <th>"Probability"</th></tr></thead>
+                        <tbody> {
+                            lottery.iter().map(|data| {
+                                html!(<tr>
+                                    <td><div class="mh-icon-text">
+                                        {get_ec_icon(data.object_type)}
+                                        {get_ec_name(data.object_type)}
+                                    </div></td>
+                                    <td>{text!("{}%", data.drop_rate)}</td>
+                                </tr>)
+                            })
+                        } </tbody>
+                    </table></div></div>
+                    </div>
+                    </div>);
+
+                icon_inner = Box::new(move || {
+                    let icon_path = format!("resources/item/{:03}", icon);
+                    gen_colored_icon(color, &icon_path, [], false)
+                });
+                filter = "bush";
+            }
             MapPopKind::Fg { behavior } => 'assign_content: {
                 let icon;
                 let color;
@@ -532,7 +585,6 @@ fn gen_map(
                         filter = "ec";
                         icon = 35;
                         color = 8;
-                        // TODO
                     }
                     (3, _) => {
                         explain_inner = html!(
@@ -676,6 +728,7 @@ fn gen_map(
             <li id="mh-map-filter-button-jump" class="mh-map-filter-button"><a>"Jumping points"</a></li>
             <li id="mh-map-filter-button-fish" class="mh-map-filter-button"><a>"Fishing points"</a></li>
             <li id="mh-map-filter-button-ec" class="mh-map-filter-button"><a>"Endemic life"</a></li>
+            <li id="mh-map-filter-button-bush" class="mh-map-filter-button"><a>"Bush"</a></li>
             <li id="mh-map-filter-button-fg" class="mh-map-filter-button"><a>"Other"</a></li>
             </ul></div>
 

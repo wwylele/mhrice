@@ -279,13 +279,12 @@ impl Rsz {
         Ok(result.pop().unwrap())
     }
 
-    pub fn deserialize_single<T: 'static>(&self, version_hint: Option<u32>) -> Result<T> {
+    pub fn deserialize_single<T: FromUser>(&self, version_hint: Option<u32>) -> Result<T> {
         let mut result = self.deserialize(version_hint)?;
         if result.len() != 1 {
             bail!("Not a single-valued RSZ");
         }
-        Rc::try_unwrap(result.pop().unwrap().downcast().context("Type mismatch")?)
-            .map_err(|_| anyhow!("Shared node"))
+        FromUser::from_any(result.pop().unwrap())
     }
 
     pub fn root_count(&self) -> usize {
@@ -435,7 +434,7 @@ pub trait FromRsz: Sized {
 
 pub trait SingletonUser: Sized {
     const PATH: &'static str;
-    type RszType: 'static;
+    type RszType: FromUser;
     fn from_rsz(value: Self::RszType) -> Self;
 }
 
@@ -467,13 +466,23 @@ fn rsz_debug<T: 'static + Debug>(any: &dyn Any, f: &mut std::fmt::Formatter) -> 
     std::fmt::Debug::fmt(any.downcast_ref::<T>().unwrap(), f)
 }
 
+pub trait FromUser: Sized {
+    fn from_any(any: AnyRsz) -> Result<Self>;
+}
+
+impl<T: 'static + FromRsz> FromUser for T {
+    fn from_any(any: AnyRsz) -> Result<Self> {
+        Rc::try_unwrap(any.downcast()?).map_err(|_| anyhow!("Shared user node"))
+    }
+}
+
 #[derive(Debug, Serialize, Clone)]
 pub enum ExternUser<T> {
     Path(Rc<ExternPath>),
     Loaded(T),
 }
 
-impl<T: 'static> ExternUser<T> {
+impl<T: FromUser> ExternUser<T> {
     pub fn load<'a>(
         &'a mut self,
         pak: &'_ mut crate::pak::PakReader<impl Read + Seek>,
@@ -1105,6 +1114,10 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         PropsDelegate,
         DropObjectBehavior,
         WwiseBreakableObj,
+        EnvCreatureLotteryRateInfoAnthill,
+        EnvCreatureLotteryDataAnthill,
+        EnvCreatureLotteryRateInfoBush,
+        EnvCreatureLotteryDataBush
     );
 
     r!(
