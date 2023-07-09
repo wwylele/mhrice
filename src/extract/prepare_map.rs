@@ -74,7 +74,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         // 7
         tex_files: &["gui/80_Texture/map/map_007_IAM.tex"],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_007_sp.user", // special type
-        scene_file: "scene/m01/hyakuryu/m01_hyakuryu_A.scn",
+        scene_file: "scene/m01/hyakuryu/m01_hyakuryu_B.scn",
         ec_file: None,
     }),
     None, // 8
