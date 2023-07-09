@@ -2797,3 +2797,16 @@ rsz_struct! {
         pub stop_distance: f32,
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// types below are not necessary for generating the website, but I added them anyway to dump more scenes
+
+rsz_struct! {
+    #[rsz("snow.stage.props.HyakuryuBarricadeBehavior")]
+    #[derive(Debug, Serialize)]
+    pub struct HyakuryuBarricadeBehavior {
+        pub enabled: bool,
+        pub type_: i32, // snow.stage.props.HyakuryuBarricadeBehavior.Type
+        pub block_index: i32,
+    }
+}

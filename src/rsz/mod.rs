@@ -952,6 +952,7 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         InteractionShapeOBB,
         AIMapEffector,
         WwiseSphere,
+        WaterMesh,
     );
 
     r!(
@@ -1117,7 +1118,8 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         EnvCreatureLotteryRateInfoAnthill,
         EnvCreatureLotteryDataAnthill,
         EnvCreatureLotteryRateInfoBush,
-        EnvCreatureLotteryDataBush
+        EnvCreatureLotteryDataBush,
+        HyakuryuBarricadeBehavior
     );
 
     r!(

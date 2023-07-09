@@ -952,3 +952,36 @@ rsz_struct! {
         pub v0: Vec4
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// types below are not necessary for generating the website, but I added them anyway to dump more scenes
+
+rsz_struct! {
+    #[rsz("via.render.WaterMesh")]
+    #[derive(Debug, Serialize)]
+    pub struct WaterMesh {
+        pub v0: u32,
+        pub v1: u8,
+        pub v2: u8,
+        pub v3: u8,
+        pub v4: u8,
+        pub v5: u8,
+        pub v6: u8,
+        pub v7: u8,
+        pub v8: u8,
+        pub v9: u8,
+        pub v10: u8,
+        pub v11: u32,
+        pub v12: u32,
+        pub v13: u32,
+        pub v14: u8,
+        pub v15: u8,
+        pub v16: u32,
+        pub v17: Option<String>,
+        pub v18: Option<String>,
+        pub v19: u8,
+        pub v20: u32,
+        pub v21: u8,
+        pub v22: u8,
+    }
+}
