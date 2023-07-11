@@ -172,6 +172,7 @@ impl Gui {
 
             let old = file.tell()?;
 
+            // via.timeline.PropertyType?
             let value = match value_type {
                 1 => FieldValue::Bool(match value {
                     0 => false,
