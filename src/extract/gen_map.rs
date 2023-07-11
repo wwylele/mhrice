@@ -258,8 +258,22 @@ fn gen_map(
     let mut map_icons = vec![];
     let mut map_explains = vec![];
     for (i, pop) in map.pops.iter().enumerate() {
-        let x = (pop.position.x + map.x_offset) / map.map_scale * 100.0;
-        let y = (pop.position.y + map.y_offset) / map.map_scale * 100.0;
+        let mut px = pop.position.x;
+        let mut py = pop.position.y;
+        // snow.gui.QuestUIManager.isInNo42SafeZone
+        if id == 15
+            && (-43.0..=136.0).contains(&pop.position.x)
+            && (163.0..=197.0).contains(&pop.position.z)
+            && (56.0..=252.0).contains(&pop.position.y)
+        {
+            // Some magic constant from code and gui resource...
+            let magic_size = 1080.0;
+            px += -200.0 / magic_size * map.map_scale;
+            py += 100.0 / magic_size * map.map_scale;
+        }
+
+        let x = (px + map.x_offset) / map.map_scale * 100.0;
+        let y = (py + map.y_offset) / map.map_scale * 100.0;
 
         let icon_inner: Box<dyn Fn() -> Box<div<String>>>;
         let explain_inner;

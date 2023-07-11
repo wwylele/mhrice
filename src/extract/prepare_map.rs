@@ -136,7 +136,6 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
             "gui/80_Texture/map/map_042_2_IAM.tex",
             "gui/80_Texture/map/map_042_3_IAM.tex",
         ],
-        // This scale doesn't look right
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_042.user",
         scene_file: "scene/m42/normal/m42_normal.scn",
         ec_file: Some("environmentCreature/UserData/m42_ECData.user"),

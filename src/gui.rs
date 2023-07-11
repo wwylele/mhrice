@@ -19,6 +19,7 @@ pub enum FieldValue {
     Bool(bool),
     F64(f64),
     String(String),
+    Size(f32, f32),
     Texture(String),
     Unknown(u32, u64),
 }
@@ -181,6 +182,12 @@ impl Gui {
                 13 => {
                     file.seek(SeekFrom::Start(value))?;
                     FieldValue::String(file.read_u16str()?)
+                }
+                31 => {
+                    file.seek(SeekFrom::Start(value))?;
+                    let a = file.read_f32()?;
+                    let b = file.read_f32()?;
+                    FieldValue::Size(a, b)
                 }
                 32 => {
                     file.seek(SeekFrom::Start(value))?;
