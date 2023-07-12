@@ -657,7 +657,7 @@ fn gen_item_source_map(
                         }
                     }
                 }
-                MapPopKind::FishingPoint { behavior } => {
+                MapPopKind::FishingPoint { behavior, .. } => {
                     let spawn = behavior.fish_spawn_data.unwrap();
                     let fishes = spawn
                         .spawn_group_list_info_low

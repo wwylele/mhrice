@@ -83,6 +83,7 @@ document.addEventListener('DOMContentLoaded', function () {
     autoSearch();
 
     initWeaponTreeMasonry();
+    updateMapIconForFloor();
 });
 
 function imgOnLoad(img, callback) {
@@ -442,6 +443,7 @@ function switchMapLayer() {
     }
     prev.classList.add("mh-hidden");
     cur.classList.remove("mh-hidden");
+    updateMapIconForFloor();
 }
 
 function changeMapFilter(e) {
@@ -800,4 +802,12 @@ function onChangeDiagramColor(e) {
     createImageBitmap(imageData).then((bitmap) => {
         context.drawImage(bitmap, 0, 0, imageData.width, imageData.height, 0, 0, canvas.width, canvas.height)
     });
+}
+
+function updateMapIconForFloor() {
+    const style = document.getElementById('mh-map-floor-style');
+    if (style) {
+        const exclude_floor = g_map_layer == 0 ? 'indoor' : 'outdoor';
+        style.innerHTML = `.mh-map-filter-item[data-floor="${exclude_floor}"] { opacity: 50% !important; }`;
+    }
 }

@@ -132,9 +132,9 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
     Some(MapFiles {
         // 15
         tex_files: &[
-            "gui/80_Texture/map/map_042_IAM.tex",
-            "gui/80_Texture/map/map_042_2_IAM.tex",
+            // "gui/80_Texture/map/map_042_IAM.tex",
             "gui/80_Texture/map/map_042_3_IAM.tex",
+            "gui/80_Texture/map/map_042_2_IAM.tex",
         ],
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_042.user",
         scene_file: "scene/m42/normal/m42_normal.scn",
@@ -158,9 +158,11 @@ pub enum MapPopKind {
     },
     FishingPoint {
         behavior: rsz::FishingPoint,
+        pop_marker: Option<rsz::StageFacilityPopMarker>,
     },
     Recon {
         behavior: rsz::OtomoReconSpot,
+        pop_marker: Option<rsz::PlayerInfluencePopMarker>,
     },
     Ec {
         behavior: rsz::EnvironmentCreatureWrapper,
@@ -246,15 +248,27 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
         } else if let Ok(behavior) = object.get_component::<rsz::FishingPoint>() {
             let mut behavior = behavior.clone();
             behavior.fish_spawn_data.load(pak, None)?;
+            let pop_marker = object
+                .get_component::<rsz::StageFacilityPopMarker>()
+                .ok()
+                .cloned();
 
-            let kind = MapPopKind::FishingPoint { behavior };
+            let kind = MapPopKind::FishingPoint {
+                behavior,
+                pop_marker,
+            };
 
             pops.push(MapPop { position, kind });
         } else if let Ok(behavior) = object.get_component::<rsz::OtomoReconSpot>() {
+            let pop_marker = object
+                .get_component::<rsz::PlayerInfluencePopMarker>()
+                .ok()
+                .cloned();
             pops.push(MapPop {
                 position,
                 kind: MapPopKind::Recon {
                     behavior: behavior.clone(),
+                    pop_marker,
                 },
             });
         } else if let Ok(behavior) = object

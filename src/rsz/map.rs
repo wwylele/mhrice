@@ -7,6 +7,16 @@ use crate::rsz_sumuser;
 use nalgebra_glm::*;
 use serde::*;
 
+// snow.stage.StageDef.MapFloorType
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Copy, Clone, PartialEq, Eq)]
+    pub enum MapFloorType {
+        MapOutdoor = 0,
+        MapIndoor = 1,
+    }
+}
+
 rsz_struct! {
     #[rsz("snow.stage.props.PopMaterialController",
         0x5a71bf68 = 10_00_02
@@ -23,13 +33,12 @@ rsz_struct! {
     #[rsz("snow.access.PlayerInfluencePopMarker",
         0xf4a0af8f = 10_00_02
     )]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct PlayerInfluencePopMarker {
         pub base: ObjectPopMarker,
         pub test_bell_trigger: u32,
         pub creeping_point_adjust_transform: Quat,
-        pub map_floor_type: i32, // snow.stage.StageDef.MapFloorType
-
+        pub map_floor_type: MapFloorType,
     }
 }
 
@@ -46,7 +55,7 @@ rsz_struct! {
         pub pop_icon: i32, // snow.gui.SnowGuiCommonUtility.Icon.ItemIconPatternNo
         pub pop_icon_color: i32, // snow.gui.SnowGuiCommonUtility.Icon.ItemIconColor
         pub pop_category: i32, // snow.access.ItemPopMarker.ItemPopCategory
-        pub map_floor_type: i32, // snow.stage.StageDef.MapFloorType
+        pub map_floor_type: MapFloorType,
         pub action_target_point_offset: Vec3,
         pub one_time_only_flag: bool,
     }
@@ -117,7 +126,7 @@ rsz_struct! {
     #[rsz("snow.access.ObjectPopMarker.AccessableDigree",
         0xa042b98d = 0
     )]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct AccessableDigree {
         pub enable: bool,
         pub direction: DirectionType,
@@ -139,7 +148,7 @@ rsz_enum! {
 // snow.access.ObjectPopMarker
 rsz_struct! {
     #[rsz()]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct ObjectPopMarker {
         pub enabled: bool,
         pub category: i32, // snow.access.ObjectPopMarker.MarkerCategory
@@ -662,7 +671,7 @@ rsz_struct! {
         pub enabled: bool,
         pub camp_type: CampType,
         pub model_type: i32, // snow.stage.props.TentVisualController.ModelType
-        pub map_floor_type: i32, // snow.stage.StageDef.MapFloorType
+        pub map_floor_type: MapFloorType,
         pub include_objects: Vec<Guid>, // Is this correct??
     }
 }
@@ -681,10 +690,10 @@ rsz_struct! {
     #[rsz("snow.access.StageFacilityPopMarker",
         0xd5857982 = 10_00_02
     )]
-    #[derive(Debug, Serialize)]
+    #[derive(Debug, Serialize, Clone)]
     pub struct StageFacilityPopMarker {
         pub base: ObjectPopMarker,
-        pub map_floor_type: i32, // snow.stage.StageDef.MapFloorType
+        pub map_floor_type: MapFloorType,
     }
 }
 
@@ -1216,7 +1225,7 @@ rsz_struct! {
         pub culling_distance: f32,
         pub repop_wait_time: f32,
         pub move_radius: f32,
-        pub map_floor_type: i32, // snow.stage.StageDef.MapFloorType
+        pub map_floor_type: MapFloorType,
         pub hyakuryu_area_no_list: Vec<HyakuryuArea>,
         pub find_flag_setter: EnvironmentCreatureFindFlagSetter,
         pub is_ignore_valid_check: bool,
@@ -1850,7 +1859,7 @@ rsz_struct! {
         pub enabled: bool,
         pub unique_id: u32,
         pub type_: i32, // snow.stage.FieldGimmickManager.FieldGimmickType
-        pub map_floor_type: i32, // snow.stage.StageDef.MapFloorType
+        pub map_floor_type: MapFloorType,
     }
 }
 
@@ -2647,7 +2656,7 @@ rsz_struct! {
         pub separate_block_section: i32, // snow.ZoneDef.BlockSectionAttr
         pub group_id: i32,
         pub block_section: i32, // snow.ZoneDef.BlockSectionAttr
-        pub map_floor_type: i32, // snow.stage.StageDef.MapFloorType
+        pub map_floor_type: MapFloorType,
         pub register_map_icon_on_quest_start: bool,
     }
 }

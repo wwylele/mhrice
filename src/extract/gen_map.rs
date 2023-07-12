@@ -278,6 +278,7 @@ fn gen_map(
         let icon_inner: Box<dyn Fn() -> Box<div<String>>>;
         let explain_inner;
         let filter;
+        let floor;
         match &pop.kind {
             MapPopKind::Item { behavior, relic } => {
                 icon_inner = Box::new(|| {
@@ -303,6 +304,9 @@ fn gen_map(
                 } else {
                     filter = "item";
                 }
+
+                // Relics doesn't have reliable floor type
+                floor = relic_explain.is_none().then_some(behavior.map_floor_type);
 
                 if let Some(lot) = pedia_ex
                     .item_pop
@@ -359,6 +363,7 @@ fn gen_map(
                 }
             }
             MapPopKind::WireLongJump { behavior, angle: _ } => {
+                floor = None;
                 //let angle = *angle;
                 icon_inner = Box::new(move || {
                     //let rotate = format!("transform:rotate({}rad);", angle);
@@ -374,6 +379,7 @@ fn gen_map(
                 filter = "jump";
             }
             MapPopKind::Camp { behavior } => {
+                floor = None;
                 icon_inner = Box::new(|| {
                     html!(<div class="mh-icon-container"> {
                         if behavior.camp_type == rsz::CampType::BaseCamp {
@@ -392,7 +398,11 @@ fn gen_map(
 
                 filter = "camp";
             }
-            MapPopKind::FishingPoint { behavior } => {
+            MapPopKind::FishingPoint {
+                behavior,
+                pop_marker,
+            } => {
+                floor = pop_marker.as_ref().map(|pop| pop.map_floor_type);
                 icon_inner = Box::new(|| gen_colored_icon(0, "resources/item/046", [], false));
 
                 explain_inner = html!(<div class="mh-reward-tables">
@@ -406,7 +416,11 @@ fn gen_map(
 
                 filter = "fish";
             }
-            MapPopKind::Recon { behavior } => {
+            MapPopKind::Recon {
+                behavior,
+                pop_marker,
+            } => {
+                floor = pop_marker.as_ref().map(|pop| pop.map_floor_type);
                 icon_inner = Box::new(|| {
                     html!(<div class="mh-icon-container">
                         <img alt="Recon point" src="resources/recon.png"
@@ -421,6 +435,7 @@ fn gen_map(
                 filter = "camp";
             }
             MapPopKind::Ec { behavior } => {
+                floor = Some(behavior.base.map_floor_type);
                 icon_inner = Box::new(|| get_ec_icon(behavior.base.type_));
                 let name = get_ec_name(behavior.base.type_);
 
@@ -453,6 +468,7 @@ fn gen_map(
                 filter = "ec";
             }
             MapPopKind::Bush { behavior } => {
+                floor = None;
                 explain_inner = html!(<div>
                     "Bush"
                     <div class="mh-reward-tables">
@@ -503,6 +519,7 @@ fn gen_map(
                 filter = "bush";
             }
             MapPopKind::Fg { behavior } => 'assign_content: {
+                floor = Some(behavior.base.map_floor_type);
                 let icon;
                 let color;
                 match (behavior.base.type_, &behavior.extra) {
@@ -705,8 +722,15 @@ fn gen_map(
         let map_icon_id = format!("mh-map-icon-{i}");
         let map_explain_id = format!("mh-map-explain-{i}");
 
+        let floor_filter = match floor {
+            None => "unknown",
+            Some(rsz::MapFloorType::MapIndoor) => "indoor",
+            Some(rsz::MapFloorType::MapOutdoor) => "outdoor",
+        };
+
         map_icons.push(
-            html!(<div class="mh-map-filter-item" id={map_icon_id.as_str()} data-filter={filter}
+            html!(<div class="mh-map-filter-item" id={map_icon_id.as_str()}
+                data-filter={filter} data-floor={floor_filter}
                 style={format!("left:{x}%;top:{y}%")}> {icon_inner()} </div>),
         );
         map_explains.push(html!(<div class="mh-hidden" id={map_explain_id.as_str()}>
@@ -830,6 +854,7 @@ fn gen_map(
                     None, "", None, toc_sink.path(), config) }
                 { name.iter().flat_map(|&name|title_multi_lang(name)) }
                 <style id="mh-map-list-style">""</style>
+                <style id="mh-map-floor-style">""</style>
             </head>
             <body>
             { navbar() }
