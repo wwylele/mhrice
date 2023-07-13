@@ -104,6 +104,38 @@ pub struct Rsz {
     pub data: Vec<u8>,
 }
 
+#[derive(Debug, Clone)]
+enum NodeSlot {
+    None,
+    Extern(String),
+    Instance(AnyRsz),
+}
+
+impl NodeSlot {
+    fn get_extern(&self) -> Result<&str> {
+        match self {
+            NodeSlot::Extern(path) => Ok(path),
+            _ => bail!("The node slot doesn't contain extern: {:?}", self),
+        }
+    }
+
+    fn get_instance(&self) -> Result<&AnyRsz> {
+        match self {
+            NodeSlot::Instance(rsz) => Ok(rsz),
+            _ => bail!("The node slot doesn't contain instance: {:?}", self),
+        }
+    }
+
+    fn take_instance(&mut self) -> Result<AnyRsz> {
+        if matches!(self, NodeSlot::Instance(_)) {
+            let NodeSlot::Instance(rsz) = std::mem::replace(self, NodeSlot::None) else {unreachable!()};
+            Ok(rsz)
+        } else {
+            bail!("The node slot doesn't contain instance: {:?}", self)
+        }
+    }
+}
+
 impl Rsz {
     pub fn new<F: Read + Seek>(mut file: F, base: u64) -> Result<Rsz> {
         file.seek(SeekFrom::Start(base))?;
@@ -195,14 +227,14 @@ impl Rsz {
     }
 
     pub fn deserialize(&self, version_hint: Option<u32>) -> Result<Vec<AnyRsz>> {
-        let mut node_buf: Vec<Option<AnyRsz>> = vec![None];
+        let mut node_buf: Vec<NodeSlot> = vec![NodeSlot::None];
         let mut cursor = Cursor::new(&self.data);
         for (i, &TypeDescriptor { hash, crc }) in self.type_descriptors.iter().enumerate().skip(1) {
             if let Some(slot_extern) = self.extern_slots.get(&u32::try_from(i)?) {
                 if slot_extern.hash != hash {
                     bail!("Extern hash mismatch")
                 }
-                node_buf.push(Some(AnyRsz::new_extern(slot_extern.path.clone())));
+                node_buf.push(NodeSlot::Extern(slot_extern.path.clone()));
                 continue;
             }
 
@@ -239,7 +271,7 @@ impl Rsz {
                         type_info.symbol, pos, i
                     )
                 })?;
-            node_buf.push(Some(node));
+            node_buf.push(NodeSlot::Instance(node));
         }
 
         let result = self
@@ -249,13 +281,12 @@ impl Rsz {
                 node_buf
                     .get_mut(usize::try_from(root)?)
                     .context("Root index out of bound")?
-                    .take()
-                    .context("Empty root")
+                    .take_instance()
             })
             .collect::<Result<Vec<_>>>()?;
 
         for (i, node) in node_buf.into_iter().enumerate() {
-            if let Some(node) = node {
+            if let NodeSlot::Instance(node) = node {
                 if Rc::strong_count(&node.any) == 1 {
                     bail!("Left over node {} ({})", i, node.symbol())
                 }
@@ -305,12 +336,28 @@ impl Rsz {
 }
 
 pub struct RszDeserializer<'a, 'b> {
-    node_buf: &'a mut [Option<AnyRsz>],
+    node_buf: &'a mut [NodeSlot],
     cursor: &'a mut Cursor<&'b Vec<u8>>,
     version: u32,
 }
 
 impl<'a, 'b> RszDeserializer<'a, 'b> {
+    pub fn get_extern_opt(&mut self) -> Result<Option<&str>> {
+        let index = self.cursor.read_u32()?;
+        if index == 0 {
+            return Ok(None);
+        }
+        let slot = self
+            .node_buf
+            .get(usize::try_from(index)?)
+            .context("Child index out of bound")?;
+        Ok(Some(slot.get_extern()?))
+    }
+
+    pub fn get_extern(&mut self) -> Result<&str> {
+        self.get_extern_opt()?.context("Null extern")
+    }
+
     pub fn get_child_opt<T: 'static>(&mut self) -> Result<Option<T>> {
         let index = self.cursor.read_u32()?;
         if index == 0 {
@@ -321,12 +368,12 @@ impl<'a, 'b> RszDeserializer<'a, 'b> {
             .get_mut(usize::try_from(index)?)
             .context("Child index out of bound")?;
 
-        let slot_inner = slot.as_mut().context("Child taken")?;
+        let slot_inner = slot.get_instance()?;
         if Rc::strong_count(&slot_inner.any) != 1 {
             bail!("Shared node")
         }
         let node: Rc<T> = slot_inner.clone().downcast()?;
-        slot.take();
+        slot.take_instance()?;
         Ok(Some(Rc::try_unwrap(node).map_err(|_| ()).unwrap()))
     }
 
@@ -343,8 +390,8 @@ impl<'a, 'b> RszDeserializer<'a, 'b> {
             .node_buf
             .get_mut(usize::try_from(index)?)
             .context("Child index out of bound")?
-            .clone()
-            .context("Child taken")?;
+            .get_instance()?
+            .clone();
         Ok(Some(node))
     }
 
@@ -381,9 +428,6 @@ pub struct AnyRsz {
     type_info: &'static RszTypeInfo,
 }
 
-#[derive(Debug, Serialize)]
-pub struct ExternPath(String);
-
 impl Debug for AnyRsz {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         (self.type_info.debug)(&*self.any, f)
@@ -394,10 +438,6 @@ impl AnyRsz {
     pub fn new<T: Any + Serialize + Debug>(v: T, type_info: &'static RszTypeInfo) -> AnyRsz {
         let any = Rc::new(v);
         AnyRsz { any, type_info }
-    }
-
-    pub fn new_extern(path: String) -> AnyRsz {
-        Self::new(ExternPath(path), &EXTERN_PATH_TYPE_INFO)
     }
 
     pub fn downcast<T: Any>(self) -> Result<Rc<T>> {
@@ -478,7 +518,7 @@ impl<T: 'static + FromRsz> FromUser for T {
 
 #[derive(Debug, Serialize, Clone)]
 pub enum ExternUser<T> {
-    Path(Rc<ExternPath>),
+    Path(String),
     Loaded(T),
 }
 
@@ -490,7 +530,7 @@ impl<T: FromUser> ExternUser<T> {
     ) -> Result<&'a mut T> {
         match self {
             ExternUser::Path(path) => {
-                let index = pak.find_file(&path.0)?;
+                let index = pak.find_file(path)?;
                 let file = pak.read_file(index)?;
                 let user = crate::user::User::new(Cursor::new(file))?;
                 *self = ExternUser::Loaded(user.rsz.deserialize_single(version_hint)?);
@@ -514,17 +554,10 @@ impl<T: FromUser> ExternUser<T> {
     }
 }
 
-fn extern_path_deserializer(
-    _rsz: &mut RszDeserializer,
-    _type_info: &'static RszTypeInfo,
-) -> Result<AnyRsz> {
-    unreachable!()
-}
-
 impl<T> FieldFromRsz for ExternUser<T> {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
         rsz.cursor.seek_align_up(4)?;
-        let extern_path = rsz.get_child_rc()?;
+        let extern_path = rsz.get_extern()?.to_owned();
         Ok(ExternUser::Path(extern_path))
     }
 }
@@ -532,18 +565,10 @@ impl<T> FieldFromRsz for ExternUser<T> {
 impl<T> FieldFromRsz for Option<ExternUser<T>> {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
         rsz.cursor.seek_align_up(4)?;
-        let extern_path = rsz.get_child_rc_opt()?;
-        Ok(extern_path.map(ExternUser::Path))
+        let extern_path = rsz.get_extern_opt()?;
+        Ok(extern_path.map(|p| ExternUser::Path(p.to_owned())))
     }
 }
-
-static EXTERN_PATH_TYPE_INFO: Lazy<RszTypeInfo> = Lazy::new(|| RszTypeInfo {
-    deserializer: extern_path_deserializer,
-    to_json: rsz_to_json::<ExternPath>,
-    debug: rsz_debug::<ExternPath>,
-    versions: HashMap::new(),
-    symbol: "FAKE_SYMBOL_ExternPath",
-});
 
 pub fn register<T: 'static + FromRsz + Serialize + Debug>(m: &mut HashMap<u32, RszTypeInfo>) {
     let hash = T::type_hash();

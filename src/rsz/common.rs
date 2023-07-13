@@ -436,6 +436,13 @@ impl<T: FromRsz + 'static> FieldFromRsz for Rc<T> {
     }
 }
 
+impl<T: FromRsz + 'static> FieldFromRsz for Option<Rc<T>> {
+    fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
+        rsz.cursor.seek_align_up(4)?;
+        rsz.get_child_rc_opt()
+    }
+}
+
 impl<T: FieldFromRsz + 'static> FieldFromRsz for Vec<T> {
     fn field_from_rsz(rsz: &mut RszDeserializer) -> Result<Self> {
         rsz.cursor.seek_align_up(4)?;
