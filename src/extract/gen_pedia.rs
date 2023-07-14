@@ -1,3 +1,4 @@
+use super::logger::*;
 use super::pedia::*;
 use super::prepare_map::*;
 use super::sink::*;
@@ -20,6 +21,7 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::{HashMap, HashSet};
 use std::convert::{TryFrom, TryInto};
+use std::fmt::Write as _;
 use std::io::{Cursor, Read, Seek, Write};
 use std::ops::Deref;
 
@@ -266,7 +268,10 @@ pub fn gen_monsters(
     shell_collider_path_gen: fn(u32, u32) -> Vec<String>,
     is_large: bool,
     version_hint: Option<u32>,
+    logger: &mut Logger,
 ) -> Result<Vec<Monster>> {
+    lscope!(logger, "monsters(large:{is_large})");
+
     let mut monsters = vec![];
 
     fn sub_file<T: FromRsz + 'static>(
@@ -379,7 +384,7 @@ pub fn gen_monsters(
                     .context(atk_collider_path)?;
                 add_atk_colliders(rcol);
             } else {
-                eprintln!("Attack collider file not found {atk_collider_path}")
+                writeln!(logger, "Attack collider file not found {atk_collider_path}")?;
             }
 
             for shell_collider_path in shell_collider_path_gen(id, sub_id) {
@@ -388,7 +393,10 @@ pub fn gen_monsters(
                         .context(shell_collider_path)?;
                     add_atk_colliders(rcol);
                 } else {
-                    eprintln!("Shell collider file not found {shell_collider_path}")
+                    writeln!(
+                        logger,
+                        "Shell collider file not found {shell_collider_path}"
+                    )?;
                 }
             }
 
@@ -412,7 +420,7 @@ pub fn gen_monsters(
                 }
                 Some(data)
             } else {
-                eprintln!("Unique mystery file not found for {main_pfb_path}");
+                writeln!(logger, "Unique mystery file not found for {main_pfb_path}")?;
                 None
             };
 
@@ -595,7 +603,12 @@ fn get_version_hint<T: 'static + SingletonUser, U: FromRsz>(
     bail!("Type not found for version hint")
 }
 
-pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>, sha: bool) -> Result<Pedia> {
+pub fn gen_pedia(
+    pak: &mut PakReader<impl Read + Seek>,
+    sha: bool,
+    logger: &mut Logger,
+) -> Result<Pedia> {
+    lscope!(logger, "pedia");
     let sha = if sha { pak.sha256()? } else { vec![] };
 
     let version_hint = Some(get_version_hint::<MonsterListBossData, BossMonsterData>(
@@ -626,6 +639,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>, sha: bool) -> Result<Ped
         gen_em_shell_collider_path,
         true,
         version_hint,
+        logger,
     )
     .context("Generating large monsters")?;
 
@@ -641,6 +655,7 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>, sha: bool) -> Result<Ped
         gen_ems_shell_collider_path,
         false,
         version_hint,
+        logger,
     )
     .context("Generating small monsters")?;
 
@@ -1244,7 +1259,9 @@ fn gen_monster_hitzones(
     mesh_path_gen: fn(u32, u32) -> String,
     meat_file_name_gen: fn(u32, u32) -> String,
     parts_group_file_name_gen: fn(u32, u32) -> String,
+    logger: &mut Logger,
 ) -> Result<()> {
+    lscope!(logger, "hitzone");
     let mut monsters = vec![];
     for index in 0..1000 {
         for sub_id in 0..10 {
@@ -1262,6 +1279,26 @@ fn gen_monster_hitzones(
             };
             let mesh = pak.read_file(mesh)?;
             let collider = pak.read_file(collider)?;
+            {
+                let collider = Rcol::new(Cursor::new(&collider[..]), true)?;
+                // pre-check a glitchy thing
+                for attachment in &collider.group_attachments {
+                    if let Some(data) = attachment.user_data.downcast_ref::<EmHitDamageRsData>() {
+                        if data.parent_user_data.is_none() {
+                            writeln!(
+                                logger,
+                                "Found glitch collider '{}' for em{}_{}",
+                                data.name, index, sub_id
+                            )?;
+                        }
+                    }
+                }
+
+                if collider.get_special_ammo_filter() != 0 {
+                    writeln!(logger, "Found special ammo collider for em{index}_{sub_id}")?;
+                }
+            }
+
             monsters.push((index, sub_id, mesh, collider));
         }
     }
@@ -1271,22 +1308,6 @@ fn gen_monster_hitzones(
         .map(|(index, sub_id, mesh, collider)| {
             let mesh = Mesh::new(Cursor::new(mesh))?;
             let mut collider = Rcol::new(Cursor::new(collider), true)?;
-
-            // pre-check a glitchy thing
-            for attachment in &collider.group_attachments {
-                if let Some(data) = attachment.user_data.downcast_ref::<EmHitDamageRsData>() {
-                    if data.parent_user_data.is_none() {
-                        eprintln!(
-                            "Found glitch collider '{}' for em{}_{}",
-                            data.name, index, sub_id
-                        );
-                    }
-                }
-            }
-
-            if collider.get_special_ammo_filter() != 0 {
-                eprintln!("Found special ammo collider for em{index}_{sub_id}");
-            }
 
             let meat_path = output.create(&meat_file_name_gen(index, sub_id))?;
             let parts_group_path = output.create(&parts_group_file_name_gen(index, sub_id))?;
@@ -1348,7 +1369,12 @@ fn save_spriter(
     Ok(())
 }
 
-pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) -> Result<()> {
+pub fn gen_resources(
+    pak: &mut PakReader<impl Read + Seek>,
+    output: &impl Sink,
+    logger: &mut Logger,
+) -> Result<()> {
+    lscope!(logger, "resource");
     let mesh_path_gen = |id, mut sub_id| {
         if id == 99 && sub_id == 5 {
             sub_id = 0;
@@ -1363,6 +1389,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
         mesh_path_gen,
         |id, sub_id| format!("em{id:03}_{sub_id:02}_meat.png"),
         |id, sub_id| format!("em{id:03}_{sub_id:02}_parts_group.png"),
+        logger,
     )?;
 
     gen_monster_hitzones(
@@ -1372,6 +1399,7 @@ pub fn gen_resources(pak: &mut PakReader<impl Read + Seek>, output: &impl Sink) 
         |id, sub_id| format!("enemy/ems{id:03}/{sub_id:02}/mod/ems{id:03}_{sub_id:02}.mesh"),
         |id, sub_id| format!("ems{id:03}_{sub_id:02}_meat.png"),
         |id, sub_id| format!("ems{id:03}_{sub_id:02}_parts_group.png"),
+        logger,
     )?;
 
     for index in 0..1000 {
@@ -1788,7 +1816,9 @@ fn hash_map_unique<T, K: Eq + std::hash::Hash + std::fmt::Debug, V>(
     iter: impl IntoIterator<Item = T>,
     kv: impl Fn(T) -> (K, V),
     ignore_duplicate: bool,
+    logger: &mut Logger,
 ) -> Result<HashMap<K, V>> {
+    lscope!(logger, "hashmap({})", std::any::type_name::<V>());
     use std::collections::hash_map::Entry;
     let mut result = HashMap::new();
     for t in iter {
@@ -1801,7 +1831,7 @@ fn hash_map_unique<T, K: Eq + std::hash::Hash + std::fmt::Debug, V>(
                     slot.key()
                 );
                 if ignore_duplicate {
-                    eprintln!("{message}");
+                    writeln!(logger, "{message}")?;
                 } else {
                     bail!("{}", message);
                 }
@@ -1814,7 +1844,11 @@ fn hash_map_unique<T, K: Eq + std::hash::Hash + std::fmt::Debug, V>(
     Ok(result)
 }
 
-fn prepare_size_map(size_data: &EnemySizeListData) -> Result<HashMap<EmTypes, &SizeInfo>> {
+fn prepare_size_map<'a>(
+    size_data: &'a EnemySizeListData,
+    logger: &mut Logger,
+) -> Result<HashMap<EmTypes, &'a SizeInfo>> {
+    lscope!(logger, "size_map");
     hash_map_unique(
         size_data
             .size_info_list
@@ -1822,16 +1856,20 @@ fn prepare_size_map(size_data: &EnemySizeListData) -> Result<HashMap<EmTypes, &S
             .filter(|e| e.em_type != EmTypes::Em(0)),
         |e| (e.em_type, e),
         false,
+        logger,
     )
 }
 
-fn prepare_size_dist_map(
-    size_dist_data: &EnemyBossRandomScaleData,
-) -> Result<HashMap<i32, &[ScaleAndRateData]>> {
+fn prepare_size_dist_map<'a>(
+    size_dist_data: &'a EnemyBossRandomScaleData,
+    logger: &mut Logger,
+) -> Result<HashMap<i32, &'a [ScaleAndRateData]>> {
+    lscope!(logger, "size_dist_map");
     let mut result = hash_map_unique(
         &size_dist_data.random_scale_table_data_list,
         |e| (e.type_, &e.scale_and_rate_data[..]),
         false,
+        logger,
     )?;
     if result.contains_key(&0) {
         bail!("Defined size dist for 0");
@@ -1849,7 +1887,9 @@ fn prepare_size_dist_map(
 fn prepare_quests<'a>(
     pedia: &'a Pedia,
     reward_lot: &'_ HashMap<u32, &'a RewardIdLotTableUserDataParam>,
+    logger: &mut Logger,
 ) -> Result<BTreeMap<i32, Quest<'a>>> {
+    lscope!(logger, "quest");
     let all_msg = pedia
         .quest_hall_msg
         .entries
@@ -1862,7 +1902,7 @@ fn prepare_quests<'a>(
         .chain(&pedia.quest_hall_msg_mr.entries)
         .chain(&pedia.quest_hall_msg_mr2.entries);
 
-    let all_msg = hash_map_unique(all_msg, |e| (&e.name, e), false)?;
+    let all_msg = hash_map_unique(all_msg, |e| (&e.name, e), false, logger)?;
 
     let enemy_params = pedia
         .normal_quest_data_for_enemy
@@ -1878,7 +1918,8 @@ fn prepare_quests<'a>(
         )
         .filter(|e| e.quest_no != 0);
 
-    let enemy_params = hash_map_unique(enemy_params, |param| (param.quest_no, param), false)?;
+    let enemy_params =
+        hash_map_unique(enemy_params, |param| (param.quest_no, param), false, logger)?;
 
     let reward_params = hash_map_unique(
         pedia
@@ -1889,6 +1930,7 @@ fn prepare_quests<'a>(
             .filter(|e| e.quest_numer != 0),
         |param| (param.quest_numer, param),
         false,
+        logger,
     )?;
 
     let hyakuryu_list = pedia
@@ -1906,12 +1948,14 @@ fn prepare_quests<'a>(
         hyakuryu_list,
         |hyakuryu| (hyakuryu.quest_no, hyakuryu),
         false,
+        logger,
     )?;
 
     let servant = hash_map_unique(
         &pedia.quest_servant.quest_servant_data_list,
         |s| (s.quest_no, s),
         false,
+        logger,
     )?;
 
     let arena = hash_map_unique(
@@ -1926,12 +1970,14 @@ fn prepare_quests<'a>(
             .chain(&pedia.arena_quest.param_mr1),
         |p| (p.quest_no, p),
         false,
+        logger,
     )?;
 
     let time_attack = hash_map_unique(
         &pedia.time_attack_reward.data_list,
         |p| (p.quest_no, p),
         false,
+        logger,
     )?;
 
     let mr_all_clear_quest: HashSet<_> = pedia.talk_condition_quest_list.quest_group[0]
@@ -2171,7 +2217,11 @@ fn prepare_quests<'a>(
     Ok(result)
 }
 
-fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> {
+fn prepare_skills<'a>(
+    pedia: &'a Pedia,
+    logger: &mut Logger,
+) -> Result<BTreeMap<PlEquipSkillId, Skill<'a>>> {
+    lscope!(logger, "skill");
     let mut result = BTreeMap::new();
 
     let mut name_msg: HashMap<&String, &MsgEntry> = pedia.player_skill_name_msg.get_name_map();
@@ -2197,6 +2247,7 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> 
             .flat_map(|p| &p.param),
         |p| (p.skill_id, p.cost),
         false,
+        logger,
     )?;
 
     for skill in &pedia.equip_skill.param {
@@ -2264,6 +2315,7 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> 
             .filter(|product| product.id != DecorationsId::None),
         |product| (product.id, product),
         false,
+        logger,
     )?;
 
     let mut deco_dedup: HashSet<DecorationsId> = HashSet::new();
@@ -2276,7 +2328,7 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> 
         }
         let Some(product) = deco_products.remove(&deco.id) else {
             // Crapcom: 16.0.1 dummy deco??
-            eprintln!("No product for deco {:?}", deco.id);
+            writeln!(logger,"No product for deco {:?}", deco.id)?;
             continue;
         };
 
@@ -2352,9 +2404,11 @@ fn prepare_skills(pedia: &Pedia) -> Result<BTreeMap<PlEquipSkillId, Skill<'_>>> 
     Ok(result)
 }
 
-fn prepare_hyakuryu_skills(
-    pedia: &Pedia,
-) -> Result<BTreeMap<PlHyakuryuSkillId, HyakuryuSkill<'_>>> {
+fn prepare_hyakuryu_skills<'a>(
+    pedia: &'a Pedia,
+    logger: &mut Logger,
+) -> Result<BTreeMap<PlHyakuryuSkillId, HyakuryuSkill<'a>>> {
+    lscope!(logger, "hyakuryu_skill");
     let names = pedia.hyakuryu_skill_name_msg.get_name_map();
     let explains = pedia.hyakuryu_skill_explain_msg.get_name_map();
     let names_mr = pedia.hyakuryu_skill_name_msg_mr.get_name_map();
@@ -2367,6 +2421,7 @@ fn prepare_hyakuryu_skills(
             .filter(|r| r.skill_id != PlHyakuryuSkillId::None),
         |r| (r.skill_id, r),
         false,
+        logger,
     )?;
 
     let get_name_explain = |id: PlHyakuryuSkillId| -> Result<(&MsgEntry, &MsgEntry)> {
@@ -2422,6 +2477,7 @@ fn prepare_hyakuryu_skills(
             .filter(|product| product.id != HyakuryuDecoId::None),
         |product| (product.id, product),
         false,
+        logger,
     )?;
 
     let mut deco_dedup: HashSet<HyakuryuDecoId> = HashSet::new();
@@ -2448,10 +2504,11 @@ fn prepare_hyakuryu_skills(
             &mut skill.deco
         } else {
             // This happens for Fanged Exploit
-            eprintln!(
+            writeln!(
+                logger,
                 "Hyakuryu deco {:?} is for unknown skill {:?}. Going to make up one",
                 deco.id, deco.hyakuryu_skill_id
-            );
+            )?;
 
             let (skill_name, skill_explain) = get_name_explain(deco.hyakuryu_skill_id)?;
             result.insert(
@@ -2491,11 +2548,16 @@ fn prepare_hyakuryu_skills(
     Ok(result)
 }
 
-fn prepare_armors(pedia: &Pedia) -> Result<BTreeMap<PlArmorSeriesTypes, ArmorSeries<'_>>> {
+fn prepare_armors<'a>(
+    pedia: &'a Pedia,
+    logger: &mut Logger,
+) -> Result<BTreeMap<PlArmorSeriesTypes, ArmorSeries<'a>>> {
+    lscope!(logger, "armor");
     let mut product_map = hash_map_unique(
         &pedia.armor_product.param,
         |product| (product.id, product),
         false,
+        logger,
     )?;
     let mut series_map: BTreeMap<PlArmorSeriesTypes, ArmorSeries> = BTreeMap::new();
 
@@ -2512,7 +2574,7 @@ fn prepare_armors(pedia: &Pedia) -> Result<BTreeMap<PlArmorSeriesTypes, ArmorSer
         if series_map.contains_key(&armor_series.armor_series) {
             if armor_series.armor_series.0 == 0 {
                 // Crapcom please
-                eprintln!("Multiple armor series with ID 0. Ignoring");
+                writeln!(logger, "Multiple armor series with ID 0. Ignoring")?;
                 continue;
             }
             bail!(
@@ -2650,10 +2712,11 @@ fn prepare_armors(pedia: &Pedia) -> Result<BTreeMap<PlArmorSeriesTypes, ArmorSer
             .is_some()
         {
             // Crapcom: v16 chest 197??
-            eprintln!(
+            writeln!(
+                logger,
                 "Multiple definition for overwear product for {:?}",
                 overwear_product.id
-            );
+            )?;
         }
     }
 
@@ -2682,10 +2745,11 @@ fn prepare_armors(pedia: &Pedia) -> Result<BTreeMap<PlArmorSeriesTypes, ArmorSer
 
         if series.pieces[slot].is_none() {
             // Crapcom TU 5. Let's make up some entry
-            eprintln!(
+            writeln!(
+                logger,
                 "No armor slot for for overwear {:?}. Making up one",
                 overwear.id
-            );
+            )?;
 
             let data = ArmorBaseUserDataParam {
                 pl_armor_id: overwear.relative_id,
@@ -2742,7 +2806,11 @@ fn prepare_armors(pedia: &Pedia) -> Result<BTreeMap<PlArmorSeriesTypes, ArmorSer
     Ok(series_map)
 }
 
-fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, Vec<&MsgEntry>>> {
+fn prepare_meat_names<'a>(
+    pedia: &'a Pedia,
+    logger: &mut Logger,
+) -> Result<HashMap<MeatKey, Vec<&'a MsgEntry>>> {
+    lscope!(logger, "meat_name");
     let msg_map: HashMap<_, _> = pedia.hunter_note_msg.get_name_map();
 
     let mut result: HashMap<MeatKey, Vec<&MsgEntry>> = HashMap::new();
@@ -2764,10 +2832,11 @@ fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, Vec<&MsgEntry>>>
                 name
             } else {
                 // TODO: MR name
-                eprintln!(
+                writeln!(
+                    logger,
                     "Part text not found for {:?}-{part}-{phase}. part ID {}",
                     boss_monster.em_type, part_data.part
-                );
+                )?;
                 continue;
             };
 
@@ -2778,7 +2847,8 @@ fn prepare_meat_names(pedia: &Pedia) -> Result<HashMap<MeatKey, Vec<&MsgEntry>>>
     Ok(result)
 }
 
-fn prepare_items<'a>(pedia: &'a Pedia) -> Result<BTreeMap<ItemId, Item<'a>>> {
+fn prepare_items<'a>(pedia: &'a Pedia, logger: &mut Logger) -> Result<BTreeMap<ItemId, Item<'a>>> {
+    lscope!(logger, "item");
     let mut result: BTreeMap<ItemId, Item<'a>> = BTreeMap::new();
     let name_map: HashMap<_, _> = pedia.items_name_msg.get_name_map();
     let explain_map: HashMap<_, _> = pedia.items_explain_msg.get_name_map();
@@ -2786,7 +2856,7 @@ fn prepare_items<'a>(pedia: &'a Pedia) -> Result<BTreeMap<ItemId, Item<'a>>> {
     let explain_map_mr: HashMap<_, _> = pedia.items_explain_msg_mr.get_name_map();
     for param in &pedia.items.param {
         if let Some(existing) = result.get_mut(&param.id) {
-            eprintln!("Duplicate definition for item {:?}", param.id);
+            writeln!(logger, "Duplicate definition for item {:?}", param.id)?;
             existing.multiple_def = true;
             continue;
         }
@@ -2863,11 +2933,13 @@ fn prepare_weapon<'a, 'b, T, Param>(
         BTreeMap<i32, &'a HyakuryuWeaponHyakuryuBuildupUserDataParam>,
     >,
     chaos: &'b mut HashMap<WeaponId, &'a WeaponChaosCriticalUserDataParam>,
+    logger: &mut Logger,
 ) -> Result<WeaponTree<'a, Param>>
 where
     T: Deref<Target = [Param]>,
     Param: ToBase<WeaponBaseData>,
 {
+    lscope!(logger, "weapon({})", std::any::type_name::<Param>());
     let mut product_map = hash_map_unique(
         weapon_list
             .product
@@ -2876,6 +2948,7 @@ where
             .filter(|p| p.base.id != WeaponId::None && p.base.id != WeaponId::Null),
         |p| (p.base.id, p),
         false,
+        logger,
     )?;
 
     let mut change_map = hash_map_unique(
@@ -2886,6 +2959,7 @@ where
             .filter(|p| p.base.id != WeaponId::None && p.base.id != WeaponId::Null),
         |p| (p.base.id, p),
         false,
+        logger,
     )?;
 
     let mut process_map = hash_map_unique(
@@ -2896,6 +2970,7 @@ where
             .filter(|p| p.base.id != WeaponId::None && p.base.id != WeaponId::Null),
         |p| (p.base.id, p),
         false,
+        logger,
     )?;
 
     let mut name_map = weapon_list.name.get_name_map();
@@ -2911,11 +2986,13 @@ where
                 overwear.param.iter().filter(|p| p.id != 0),
                 |p| (p.relative_id, p),
                 true, // Crapcom made some duplicate entries
+                logger,
             )?,
             hash_map_unique(
                 product.param.iter().filter(|p| p.id != 0),
                 |p| (p.id, p),
                 false,
+                logger,
             )?,
         )
     } else {
@@ -2973,15 +3050,15 @@ where
     }
 
     if !product_map.is_empty() {
-        eprintln!("Left over product data: {product_map:?}")
+        writeln!(logger, "Left over product data: {product_map:?}")?
     }
 
     if !process_map.is_empty() {
-        eprintln!("Left over process data: {process_map:?}")
+        writeln!(logger, "Left over process data: {process_map:?}")?
     }
 
     if !change_map.is_empty() {
-        eprintln!("Left over change data: {change_map:?}")
+        writeln!(logger, "Left over change data: {change_map:?}")?
     }
 
     let mut tree_map = HashMap::new();
@@ -3058,20 +3135,22 @@ where
         let mut prev_child = None;
         for (t, i) in children {
             if prev_child == Some((t, i)) {
-                eprintln!(
+                writeln!(
+                    logger,
                     "Duplicate weapon branch at {:?}, {}, for weapon {:?}",
                     t, i, node.weapon_id
-                );
+                )?;
                 continue;
             }
             prev_child = Some((t, i));
             let next = if let Some(next) = tree_map.get(&(t, i)) {
                 next
             } else {
-                eprintln!(
+                writeln!(
+                    logger,
                     "Unknown children at {:?}, {}, for weapon {:?}",
                     t, i, node.weapon_id
-                );
+                )?;
                 continue;
             };
             if next.prev_weapon_type != node.tree_type || next.prev_weapon_index != node.index {
@@ -3094,9 +3173,11 @@ where
     Ok(result)
 }
 
-fn prepare_monster_lot(
-    pedia: &Pedia,
-) -> Result<HashMap<(EmTypes, QuestRank), &MonsterLotTableUserDataParam>> {
+fn prepare_monster_lot<'a>(
+    pedia: &'a Pedia,
+    logger: &mut Logger,
+) -> Result<HashMap<(EmTypes, QuestRank), &'a MonsterLotTableUserDataParam>> {
+    lscope!(logger, "monster_lot");
     let iter = pedia
         .monster_lot
         .param
@@ -3107,12 +3188,15 @@ fn prepare_monster_lot(
         iter.filter(|lot| lot.em_types != EmTypes::Em(0)),
         |lot| ((lot.em_types, lot.quest_rank), lot),
         false,
+        logger,
     )
 }
 
-fn prepare_parts_dictionary(
-    pedia: &Pedia,
-) -> Result<HashMap<(EmTypes, BrokenPartsTypes), &MsgEntry>> {
+fn prepare_parts_dictionary<'a>(
+    pedia: &'a Pedia,
+    logger: &mut Logger,
+) -> Result<HashMap<(EmTypes, BrokenPartsTypes), &'a MsgEntry>> {
+    lscope!(logger, "parts_dic");
     let msgs: HashMap<_, _> = pedia.hunter_note_msg.get_guid_map();
     let msgs_mr: HashMap<_, _> = pedia.hunter_note_msg_mr.get_guid_map();
 
@@ -3131,10 +3215,11 @@ fn prepare_parts_dictionary(
                     continue;
                 }
                 if result.insert((em, part.broken_parts_types), msg).is_some() {
-                    eprintln!(
+                    writeln!(
+                        logger,
                         "Multiple part text for {:?}, {:?}",
                         em, part.broken_parts_types
-                    );
+                    )?;
                 }
             }
         }
@@ -3177,7 +3262,11 @@ fn prepare_item_pop(
     Ok(res)
 }
 
-fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipSeries<'_>>> {
+fn prepeare_ot_equip<'a>(
+    pedia: &'a Pedia,
+    logger: &mut Logger,
+) -> Result<BTreeMap<OtEquipSeriesId, OtEquipSeries<'a>>> {
+    lscope!(logger, "ot_equip");
     let mut res = BTreeMap::new();
 
     let airou_series_name = pedia.airou_series_name.get_name_map();
@@ -3187,7 +3276,11 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
 
     for series in &pedia.ot_equip_series.param {
         if res.contains_key(&series.id) {
-            eprintln!("Found multiple definition for otomo series {:?}", series.id);
+            writeln!(
+                logger,
+                "Found multiple definition for otomo series {:?}",
+                series.id
+            )?;
             if series.id == OtEquipSeriesId::Airou(0) {
                 // this seems to be a placeholder. continue
                 continue;
@@ -3228,7 +3321,7 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
         .chain(&pedia.dog_weapon_product.param)
         .filter(|p| p.id != OtWeaponId::None);
 
-    let mut weapon_products = hash_map_unique(weapon_products, |p| (p.id, p), true)?;
+    let mut weapon_products = hash_map_unique(weapon_products, |p| (p.id, p), true, logger)?;
 
     let airou_weapon_name = pedia.airou_weapon_name.get_name_map();
     let dog_weapon_name = pedia.dog_weapon_name.get_name_map();
@@ -3280,7 +3373,11 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
             .with_context(|| format!("Cannot find explain for otomo weapon {:?}", weapon.id))?;
 
         if !weapon_dedup.insert(weapon.id) {
-            eprintln!("Multiple definition for otomo weapon {:?}", weapon.id);
+            writeln!(
+                logger,
+                "Multiple definition for otomo weapon {:?}",
+                weapon.id
+            )?;
             continue;
         }
         let entry = OtWeapon {
@@ -3300,10 +3397,11 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
             .weapon;
 
         if slot.is_some() {
-            eprintln!(
+            writeln!(
+                logger,
                 "Multiple weapon defintion for otomo series {:?}. Discarding the latest one {:?}",
                 weapon.series_id, weapon.id
-            );
+            )?;
             continue;
         }
 
@@ -3311,7 +3409,7 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
     }
 
     if !weapon_products.is_empty() {
-        eprintln!("Left over otomo weapon product {weapon_products:?}")
+        writeln!(logger, "Left over otomo weapon product {weapon_products:?}")?
     }
 
     let armor_products = pedia
@@ -3321,7 +3419,7 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
         .chain(&pedia.dog_armor_product.param)
         .filter(|p| p.id != OtArmorId::None);
 
-    let mut armor_products = hash_map_unique(armor_products, |p| (p.id, p), true)?;
+    let mut armor_products = hash_map_unique(armor_products, |p| (p.id, p), true, logger)?;
 
     let airou_armor_head_name = pedia.airou_armor_head_name.get_name_map();
     let dog_armor_head_name = pedia.dog_armor_head_name.get_name_map();
@@ -3406,7 +3504,7 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
             explain.with_context(|| format!("Cannot find explain for armor {:?}", armor.id))?;
 
         if !armor_dedup.insert(armor.id) {
-            eprintln!("Multiple definition for otomo armor {:?}", armor.id);
+            writeln!(logger, "Multiple definition for otomo armor {:?}", armor.id)?;
             continue;
         }
         let entry = OtArmor {
@@ -3431,10 +3529,11 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
         };
 
         if slot.is_some() {
-            eprintln!(
+            writeln!(
+                logger,
                 "Multiple {} armor defintion for otomo series {:?}. Discarding the latest one {:?}",
                 desc, armor.series_id, armor.id
-            );
+            )?;
             continue;
         }
 
@@ -3453,6 +3552,7 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
             .filter(|p| p.id != OtArmorId::None),
         |p| (p.id, p),
         true, // crapcom please: multiple AirouHead(0)
+        logger,
     )?;
 
     for overwear in pedia
@@ -3499,7 +3599,9 @@ fn prepeare_ot_equip(pedia: &Pedia) -> Result<BTreeMap<OtEquipSeriesId, OtEquipS
 fn prepare_monsters<'a>(
     pedia: &'a Pedia,
     reward_lot: &'_ HashMap<u32, &'a RewardIdLotTableUserDataParam>,
+    logger: &mut Logger,
 ) -> Result<BTreeMap<EmTypes, MonsterEx<'a>>> {
+    lscope!(logger, "monster");
     let mut result = BTreeMap::new();
 
     let names = pedia.monster_names.get_name_map();
@@ -3516,6 +3618,7 @@ fn prepare_monsters<'a>(
             .flat_map(|p| &p.lot_enemy_list),
         |p| (p.em_type, p),
         false,
+        logger,
     )?;
 
     let mut random_mystery_reward: HashMap<EmTypes, Vec<&RandomMysteryRewardBaseParam>> =
@@ -3536,6 +3639,7 @@ fn prepare_monsters<'a>(
             .flat_map(|p| &p.param_data),
         |p| (p.em_type, p),
         false,
+        logger,
     )?;
 
     let random_mystery_research_point = hash_map_unique(
@@ -3545,6 +3649,7 @@ fn prepare_monsters<'a>(
             .flat_map(|p| &p.param_data),
         |p| (p.em_type, p),
         false,
+        logger,
     )?;
 
     let discoveries: HashMap<EmTypes, &DiscoverEmSetDataParam> = hash_map_unique(
@@ -3555,6 +3660,7 @@ fn prepare_monsters<'a>(
             .filter(|p| p.em_type != EmTypes::Em(0)),
         |p| (p.em_type, p),
         false,
+        logger,
     )?;
 
     let ranks: HashMap<EmTypes, u8> = hash_map_unique(
@@ -3565,6 +3671,7 @@ fn prepare_monsters<'a>(
             .filter(|p| p.em_type != EmTypes::Em(0)),
         |p| (p.em_type, p.rank),
         false,
+        logger,
     )?;
 
     let speciess: HashMap<EmTypes, &EmSpeciesData> = hash_map_unique(
@@ -3575,6 +3682,7 @@ fn prepare_monsters<'a>(
             .filter(|p| p.em_type != EmTypes::Em(0)),
         |p| (p.em_type, p),
         false,
+        logger,
     )?;
 
     let mut mystery_rewards: HashMap<EmTypes, Vec<MysteryReward>> = HashMap::new();
@@ -3603,7 +3711,7 @@ fn prepare_monsters<'a>(
             .map(|i| -> Result<Option<&RewardIdLotTableUserDataParam>> {
                 let Some(reward) = reward_lot.get(i) else {
                     // crapcom: v13 chaotic gore
-                    eprintln!("Additional quest reward {i} not found for {mystery_reward:?}");
+                    writeln!(logger,"Additional quest reward {i} not found for {mystery_reward:?}")?;
                     return Ok(None)
                 };
                 Ok(Some(reward))
@@ -3668,6 +3776,7 @@ fn prepare_monsters<'a>(
         pedia.monster_list.data_list.iter(),
         |p| (p.em_type, p),
         false,
+        logger,
     )?;
 
     let monsters = pedia.monsters.iter().chain(&pedia.small_monsters);
@@ -3884,7 +3993,9 @@ pub fn prepare_armor_custom_buildup<'a>(
 pub fn prepare_weapon_custom_buildup<'a>(
     pedia: &'a Pedia,
     custom_buildup_pieces: &mut HashMap<(u32, u16, u16), &'a CustomBuildupBaseUserDataParam>,
+    logger: &mut Logger,
 ) -> Result<HashMap<u32, WeaponCustomBuildup<'a>>> {
+    lscope!(logger, "weapon_custom_buildup");
     let mut result = HashMap::<u32, WeaponCustomBuildup>::new();
     let material = hash_map_unique(
         pedia
@@ -3894,6 +4005,7 @@ pub fn prepare_weapon_custom_buildup<'a>(
             .filter(|p| p.id != 0),
         |p| (p.id, p),
         false,
+        logger,
     )?;
     for category in pedia.custom_buildup_wep_table.iter().flat_map(|p| &p.param) {
         if category.table_no == 0 {
@@ -3910,10 +4022,12 @@ pub fn prepare_weapon_custom_buildup<'a>(
                     data
                 } else {
                     // Crapcom: some is missing in v12.0.0, likely copy-paste error
-                    eprintln!(
+                    writeln!(
+                        logger,
                         "Weapon custom buildup data not found for table {} category {} id {}",
                         category.table_no, category.category_id, id
-                    );
+                    )
+                    .unwrap();
                     return None;
                 };
 
@@ -3963,7 +4077,11 @@ pub fn prepare_weapon_custom_buildup<'a>(
     Ok(result)
 }
 
-pub fn prepare_supply(pedia: &Pedia) -> Result<HashMap<i32, &SupplyDataParam>> {
+pub fn prepare_supply<'a>(
+    pedia: &'a Pedia,
+    logger: &mut Logger,
+) -> Result<HashMap<i32, &'a SupplyDataParam>> {
+    lscope!(logger, "supply");
     hash_map_unique(
         pedia
             .supply_data
@@ -3973,10 +4091,15 @@ pub fn prepare_supply(pedia: &Pedia) -> Result<HashMap<i32, &SupplyDataParam>> {
             .filter(|p| p.id != 0),
         |p| (p.id, p),
         false,
+        logger,
     )
 }
 
-pub fn prepare_progress(pedia: &Pedia) -> Result<HashMap<i32, &ProgressCheckerUserDataParam>> {
+pub fn prepare_progress<'a>(
+    pedia: &'a Pedia,
+    logger: &mut Logger,
+) -> Result<HashMap<i32, &'a ProgressCheckerUserDataParam>> {
+    lscope!(logger, "progress");
     hash_map_unique(
         pedia
             .progress
@@ -3985,6 +4108,7 @@ pub fn prepare_progress(pedia: &Pedia) -> Result<HashMap<i32, &ProgressCheckerUs
             .filter(|p| p.progress_flag != 0),
         |p| (p.progress_flag, p),
         false,
+        logger,
     )
 }
 
@@ -4091,7 +4215,11 @@ fn prepare_bbq<'a>(
     Ok(result)
 }
 
-fn prepare_npc_mission(pedia: &'_ Pedia) -> Result<BTreeMap<i32, NpcMission<'_>>> {
+fn prepare_npc_mission<'a>(
+    pedia: &'a Pedia,
+    logger: &mut Logger,
+) -> Result<BTreeMap<i32, NpcMission<'a>>> {
+    lscope!(logger, "npc_mission");
     let mut result: BTreeMap<i32, NpcMission> = BTreeMap::new();
 
     let all_msg = pedia
@@ -4100,7 +4228,7 @@ fn prepare_npc_mission(pedia: &'_ Pedia) -> Result<BTreeMap<i32, NpcMission<'_>>
         .iter()
         .chain(&pedia.npc_mission_msg_mr.entries);
 
-    let all_msg = hash_map_unique(all_msg, |e| (&e.name, e), false)?;
+    let all_msg = hash_map_unique(all_msg, |e| (&e.name, e), false, logger)?;
 
     for param in pedia
         .npc_mission
@@ -4141,7 +4269,8 @@ fn prepare_npc_mission(pedia: &'_ Pedia) -> Result<BTreeMap<i32, NpcMission<'_>>
     Ok(result)
 }
 
-pub fn prepare_dlc(pedia: &'_ Pedia) -> Result<BTreeMap<i32, Dlc<'_>>> {
+pub fn prepare_dlc<'a>(pedia: &'a Pedia, logger: &mut Logger) -> Result<BTreeMap<i32, Dlc<'a>>> {
+    lscope!(logger, "dlc");
     let mut result = BTreeMap::new();
 
     let mut dlc_adds = hash_map_unique(
@@ -4152,9 +4281,10 @@ pub fn prepare_dlc(pedia: &'_ Pedia) -> Result<BTreeMap<i32, Dlc<'_>>> {
             .filter(|p| p.dlc_id != 0 && p.slc_id == SaveLinkContents::Invalid),
         |p| (p.dlc_id, p),
         true, // crapcom: there seems to be duplicated identical stuff...
+        logger,
     )?;
 
-    let mut item_pack = hash_map_unique(&pedia.item_pack.param, |p| (p.dlc_id, p), false)?;
+    let mut item_pack = hash_map_unique(&pedia.item_pack.param, |p| (p.dlc_id, p), false, logger)?;
 
     let names = pedia.dlc_name.get_name_map();
     let names_mr = pedia.dlc_name_mr.get_name_map();
@@ -4237,7 +4367,8 @@ pub fn prepare_slc(pedia: &'_ Pedia) -> Result<BTreeMap<SaveLinkContents, Slc<'_
 //     )
 // }
 
-pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
+pub fn gen_pedia_ex<'a>(pedia: &'a Pedia, logger: &mut Logger) -> Result<PediaEx<'a>> {
+    lscope!(logger, "ex");
     let monster_order = pedia
         .monster_list
         .data_list
@@ -4269,6 +4400,7 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
             .chain(&pedia.reward_id_lot_table_mr.param),
         |param| (param.id, param),
         false,
+        logger,
     )?;
 
     let mut custom_buildup_pieces = hash_map_unique(
@@ -4279,69 +4411,121 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
             .filter(|p| p.table_no != 0),
         |p| ((p.table_no, p.category_id, p.id), p),
         true, // there seems to be a small bug with (table8, category7, id51)
+        logger,
     )?;
 
     let armor_custom_buildup = prepare_armor_custom_buildup(pedia, &mut custom_buildup_pieces)?;
-    let weapon_custom_buildup = prepare_weapon_custom_buildup(pedia, &mut custom_buildup_pieces)?;
+    let weapon_custom_buildup =
+        prepare_weapon_custom_buildup(pedia, &mut custom_buildup_pieces, logger)?;
 
     if !custom_buildup_pieces.is_empty() {
         bail!("Leftover custom buildup pieces {custom_buildup_pieces:?}");
     }
 
     let mut chaos = if let Some(chaos) = &pedia.weapon_chaos_critical {
-        hash_map_unique(&chaos.param, |p| (p.weapon, p), false)?
+        hash_map_unique(&chaos.param, |p| (p.weapon, p), false, logger)?
     } else {
         HashMap::new()
     };
 
     Ok(PediaEx {
-        monsters: prepare_monsters(pedia, &reward_lot)?,
-        sizes: prepare_size_map(&pedia.size_list)?,
-        size_dists: prepare_size_dist_map(&pedia.random_scale)?,
-        quests: prepare_quests(pedia, &reward_lot)?,
-        npc_missions: prepare_npc_mission(pedia)?,
-        skills: prepare_skills(pedia)?,
-        hyakuryu_skills: prepare_hyakuryu_skills(pedia)?,
-        armors: prepare_armors(pedia)?,
+        monsters: prepare_monsters(pedia, &reward_lot, logger)?,
+        sizes: prepare_size_map(&pedia.size_list, logger)?,
+        size_dists: prepare_size_dist_map(&pedia.random_scale, logger)?,
+        quests: prepare_quests(pedia, &reward_lot, logger)?,
+        npc_missions: prepare_npc_mission(pedia, logger)?,
+        skills: prepare_skills(pedia, logger)?,
+        hyakuryu_skills: prepare_hyakuryu_skills(pedia, logger)?,
+        armors: prepare_armors(pedia, logger)?,
         armor_buildup: prepare_armor_buildup(pedia)?,
-        meat_names: prepare_meat_names(pedia)?,
-        items: prepare_items(pedia)?,
+        meat_names: prepare_meat_names(pedia, logger)?,
+        items: prepare_items(pedia, logger)?,
         material_categories: prepare_material_categories(pedia),
-        monster_lot: prepare_monster_lot(pedia)?,
-        parts_dictionary: prepare_parts_dictionary(pedia)?,
+        monster_lot: prepare_monster_lot(pedia, logger)?,
+        parts_dictionary: prepare_parts_dictionary(pedia, logger)?,
 
-        great_sword: prepare_weapon(&pedia.great_sword, &mut hyakuryu_weapon_map, &mut chaos)?,
-        short_sword: prepare_weapon(&pedia.short_sword, &mut hyakuryu_weapon_map, &mut chaos)?,
-        hammer: prepare_weapon(&pedia.hammer, &mut hyakuryu_weapon_map, &mut chaos)?,
-        lance: prepare_weapon(&pedia.lance, &mut hyakuryu_weapon_map, &mut chaos)?,
-        long_sword: prepare_weapon(&pedia.long_sword, &mut hyakuryu_weapon_map, &mut chaos)?,
-        slash_axe: prepare_weapon(&pedia.slash_axe, &mut hyakuryu_weapon_map, &mut chaos)?,
-        gun_lance: prepare_weapon(&pedia.gun_lance, &mut hyakuryu_weapon_map, &mut chaos)?,
-        dual_blades: prepare_weapon(&pedia.dual_blades, &mut hyakuryu_weapon_map, &mut chaos)?,
-        horn: prepare_weapon(&pedia.horn, &mut hyakuryu_weapon_map, &mut chaos)?,
-        insect_glaive: prepare_weapon(&pedia.insect_glaive, &mut hyakuryu_weapon_map, &mut chaos)?,
-        charge_axe: prepare_weapon(&pedia.charge_axe, &mut hyakuryu_weapon_map, &mut chaos)?,
-        light_bowgun: prepare_weapon(&pedia.light_bowgun, &mut hyakuryu_weapon_map, &mut chaos)?,
-        heavy_bowgun: prepare_weapon(&pedia.heavy_bowgun, &mut hyakuryu_weapon_map, &mut chaos)?,
-        bow: prepare_weapon(&pedia.bow, &mut hyakuryu_weapon_map, &mut chaos)?,
+        great_sword: prepare_weapon(
+            &pedia.great_sword,
+            &mut hyakuryu_weapon_map,
+            &mut chaos,
+            logger,
+        )?,
+        short_sword: prepare_weapon(
+            &pedia.short_sword,
+            &mut hyakuryu_weapon_map,
+            &mut chaos,
+            logger,
+        )?,
+        hammer: prepare_weapon(&pedia.hammer, &mut hyakuryu_weapon_map, &mut chaos, logger)?,
+        lance: prepare_weapon(&pedia.lance, &mut hyakuryu_weapon_map, &mut chaos, logger)?,
+        long_sword: prepare_weapon(
+            &pedia.long_sword,
+            &mut hyakuryu_weapon_map,
+            &mut chaos,
+            logger,
+        )?,
+        slash_axe: prepare_weapon(
+            &pedia.slash_axe,
+            &mut hyakuryu_weapon_map,
+            &mut chaos,
+            logger,
+        )?,
+        gun_lance: prepare_weapon(
+            &pedia.gun_lance,
+            &mut hyakuryu_weapon_map,
+            &mut chaos,
+            logger,
+        )?,
+        dual_blades: prepare_weapon(
+            &pedia.dual_blades,
+            &mut hyakuryu_weapon_map,
+            &mut chaos,
+            logger,
+        )?,
+        horn: prepare_weapon(&pedia.horn, &mut hyakuryu_weapon_map, &mut chaos, logger)?,
+        insect_glaive: prepare_weapon(
+            &pedia.insect_glaive,
+            &mut hyakuryu_weapon_map,
+            &mut chaos,
+            logger,
+        )?,
+        charge_axe: prepare_weapon(
+            &pedia.charge_axe,
+            &mut hyakuryu_weapon_map,
+            &mut chaos,
+            logger,
+        )?,
+        light_bowgun: prepare_weapon(
+            &pedia.light_bowgun,
+            &mut hyakuryu_weapon_map,
+            &mut chaos,
+            logger,
+        )?,
+        heavy_bowgun: prepare_weapon(
+            &pedia.heavy_bowgun,
+            &mut hyakuryu_weapon_map,
+            &mut chaos,
+            logger,
+        )?,
+        bow: prepare_weapon(&pedia.bow, &mut hyakuryu_weapon_map, &mut chaos, logger)?,
         horn_melody: prepare_horn_melody(pedia),
         monster_order,
         item_pop: prepare_item_pop(pedia)?,
-        ot_equip: prepeare_ot_equip(pedia)?,
+        ot_equip: prepeare_ot_equip(pedia, logger)?,
         servant: prepare_servant(pedia)?,
 
         armor_custom_buildup,
         weapon_custom_buildup,
 
-        supply: prepare_supply(pedia)?,
-        progress: prepare_progress(pedia)?,
+        supply: prepare_supply(pedia, logger)?,
+        progress: prepare_progress(pedia, logger)?,
 
         switch_skills: prepare_switch_skills(pedia)?,
         buff_cage: prepare_buff_cage(pedia)?,
         item_shop_lot: prepare_item_shop_lot(pedia, &reward_lot)?,
         bbq: prepare_bbq(pedia, &reward_lot)?,
 
-        dlc: prepare_dlc(pedia)?,
+        dlc: prepare_dlc(pedia, logger)?,
         slc: prepare_slc(pedia)?,
         // map_icon_list: prepare_map_icon_list(pedia)?,
     })

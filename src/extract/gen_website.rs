@@ -654,6 +654,9 @@ pub fn gen_about(hash_store: &HashStore, pedia: &Pedia, output: &impl Sink) -> R
                         })}
                         </ul>
                     </li>
+                    <li>
+                    <a href="log.html" type="text/strings">"Build log"</a>
+                    </li>
                 </ul>
                 </section>
                 </main>

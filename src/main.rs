@@ -34,6 +34,7 @@ mod user;
 mod uvs;
 
 use extract::hash_store::*;
+use extract::logger::*;
 use extract::sink::*;
 use file_ext::*;
 use gui::*;
@@ -533,7 +534,9 @@ fn scan_rsz(pak: Vec<String>, print_all: bool) -> Result<()> {
 
 fn gen_json(pak: Vec<String>, sha: bool) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
-    let pedia = extract::gen_pedia(&mut pak, sha)?;
+    let mut logger_root = LoggerRoot::new();
+    let logger = &mut logger_root.logger();
+    let pedia = extract::gen_pedia(&mut pak, sha, logger)?;
     let json = serde_json::to_string_pretty(&pedia)?;
     println!("{json}");
     Ok(())
@@ -546,13 +549,19 @@ fn gen_website_to_sink(
     sha: bool,
 ) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
-    let pedia = extract::gen_pedia(&mut pak, sha)?;
-    let pedia_ex = extract::gen_pedia_ex(&pedia)?;
-    sink.create("mhrice.json")?
-        .write_all(serde_json::to_string_pretty(&pedia)?.as_bytes())?;
-    let mut hash_store = HashStore::new();
-    extract::gen_website(&mut hash_store, &pedia, &pedia_ex, &config, &sink)?;
-    extract::gen_resources(&mut pak, &sink.sub_sink("resources")?)?;
+    let mut logger_root = LoggerRoot::new();
+    {
+        let logger = &mut logger_root.logger();
+        let pedia = extract::gen_pedia(&mut pak, sha, logger)?;
+        let pedia_ex = extract::gen_pedia_ex(&pedia, logger)?;
+        sink.create("mhrice.json")?
+            .write_all(serde_json::to_string_pretty(&pedia)?.as_bytes())?;
+        let mut hash_store = HashStore::new();
+        extract::gen_website(&mut hash_store, &pedia, &pedia_ex, &config, &sink)?;
+        extract::gen_resources(&mut pak, &sink.sub_sink("resources")?, logger)?;
+    }
+    let mut log = sink.create("log.html")?;
+    write!(log, "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>MHRice log</title></head><body><pre>\n{}\n</pre></body></html>", logger_root.finalize())?;
     sink.finalize()?;
     Ok(())
 }
@@ -1196,10 +1205,12 @@ fn gen_meat(pak: Vec<String>, index: u32, output: impl Write) -> Result<()> {
 }
 
 fn gen_resources(pak: Vec<String>, output: String) -> Result<()> {
+    let mut logger_root = LoggerRoot::new();
+    let logger = &mut logger_root.logger();
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
 
     let sink = DiskSink::init(Path::new(&output))?;
-    extract::gen_resources(&mut pak, &sink)?;
+    extract::gen_resources(&mut pak, &sink, logger)?;
 
     Ok(())
 }
