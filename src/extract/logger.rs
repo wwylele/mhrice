@@ -51,7 +51,7 @@ impl<'a> std::fmt::Write for &mut Logger<'a> {
                 seg
             } else {
                 self.root.line_start = false;
-                std::mem::replace(&mut s, "")
+                std::mem::take(&mut s)
             };
             eprint!("{}", seg);
             write!(&mut self.root.buffer, "{}", seg)?;
