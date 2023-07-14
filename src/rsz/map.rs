@@ -2807,6 +2807,31 @@ rsz_struct! {
     }
 }
 
+rsz_struct! {
+    #[rsz("snow.gui.userdata.GuiMapDetailIconListG_PopData.MapDetailIconListG_PopData")]
+    #[derive(Debug, Serialize)]
+    pub struct MapDetailIconListGPopData {
+        pub stage_flag_list: Vec<bool>,
+        pub type_: i32, // snow.gui.QuestUIManager.MapDetailIconListCategoryType
+        pub item_id: ItemId,
+        pub pop_id: i32, // snow.stage.StageDef.SaisyuPopId PopId
+        pub name: Guid,
+        pub explain: Guid,
+        pub icon_no: i32, // snow.gui.SnowGuiCommonUtility.Icon.ItemIconPatternNo
+        pub icon_color: i32, // snow.gui.SnowGuiCommonUtility.Icon.ItemIconColor
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.gui.userdata.GuiMapDetailIconListG_PopData",
+        path = "gui/01_Common/Map/MapDetailIconListUserData/GuiMapDetailIconListG_PopData.user"
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct GuiMapDetailIconListGPopData {
+        pub map_icon_data_list: Vec<MapDetailIconListGPopData>,
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////
 // types below are not necessary for generating the website, but I added them anyway to dump more scenes
 

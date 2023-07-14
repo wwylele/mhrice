@@ -1144,7 +1144,9 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         EnvCreatureLotteryDataAnthill,
         EnvCreatureLotteryRateInfoBush,
         EnvCreatureLotteryDataBush,
-        HyakuryuBarricadeBehavior
+        HyakuryuBarricadeBehavior,
+        MapDetailIconListGPopData,
+        GuiMapDetailIconListGPopData,
     );
 
     r!(

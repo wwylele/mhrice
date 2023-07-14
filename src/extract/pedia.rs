@@ -328,6 +328,8 @@ pub struct Pedia {
 
     pub ec_name: Msg,
     pub ec_name_mr: Msg,
+
+    pub map_icon_list: GuiMapDetailIconListGPopData,
 }
 
 pub struct QuestReward<'a> {
@@ -661,4 +663,5 @@ pub struct PediaEx<'a> {
 
     pub dlc: BTreeMap<i32, Dlc<'a>>,
     pub slc: BTreeMap<SaveLinkContents, Slc<'a>>,
+    // pub map_icon_list: HashMap<i32, &'a MapDetailIconListGPopData>,
 }

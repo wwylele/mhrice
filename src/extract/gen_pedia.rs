@@ -1232,6 +1232,8 @@ pub fn gen_pedia(pak: &mut PakReader<impl Read + Seek>, sha: bool) -> Result<Ped
 
         ec_name,
         ec_name_mr,
+
+        map_icon_list: get_singleton(pak, version_hint)?,
     })
 }
 
@@ -4227,6 +4229,14 @@ pub fn prepare_slc(pedia: &'_ Pedia) -> Result<BTreeMap<SaveLinkContents, Slc<'_
     Ok(result)
 }
 
+// pub fn prepare_map_icon_list(pedia: &Pedia) -> Result<HashMap<i32, &'_ MapDetailIconListGPopData>> {
+//     hash_map_unique(
+//         pedia.map_icon_list.map_icon_data_list.iter(),
+//         |p| (p.pop_id, p),
+//         false,
+//     )
+// }
+
 pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
     let monster_order = pedia
         .monster_list
@@ -4333,5 +4343,6 @@ pub fn gen_pedia_ex(pedia: &Pedia) -> Result<PediaEx<'_>> {
 
         dlc: prepare_dlc(pedia)?,
         slc: prepare_slc(pedia)?,
+        // map_icon_list: prepare_map_icon_list(pedia)?,
     })
 }
