@@ -550,18 +550,20 @@ fn gen_website_to_sink(
 ) -> Result<()> {
     let mut pak = PakReader::new(open_pak_files(pak)?)?;
     let mut logger_root = LoggerRoot::new();
-    {
-        let logger = &mut logger_root.logger();
-        let pedia = extract::gen_pedia(&mut pak, sha, logger)?;
-        let pedia_ex = extract::gen_pedia_ex(&pedia, logger)?;
-        sink.create("mhrice.json")?
-            .write_all(serde_json::to_string_pretty(&pedia)?.as_bytes())?;
-        let mut hash_store = HashStore::new();
-        extract::gen_website(&mut hash_store, &pedia, &pedia_ex, &config, &sink)?;
-        extract::gen_resources(&mut pak, &sink.sub_sink("resources")?, logger)?;
-    }
+    let logger = &mut logger_root.logger();
+    let pedia = extract::gen_pedia(&mut pak, sha, logger)?;
+    let pedia_ex = extract::gen_pedia_ex(&pedia, logger)?;
+    sink.create("mhrice.json")?
+        .write_all(serde_json::to_string_pretty(&pedia)?.as_bytes())?;
+    let mut hash_store = HashStore::new();
+    extract::gen_website(&mut hash_store, &pedia, &pedia_ex, &config, &sink)?;
+    extract::gen_resources(&mut pak, &sink.sub_sink("resources")?, logger)?;
+    drop(logger);
+
     let mut log = sink.create("log.html")?;
     write!(log, "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>MHRice log</title></head><body><pre>\n{}\n</pre></body></html>", logger_root.finalize())?;
+    drop(log);
+
     sink.finalize()?;
     Ok(())
 }
