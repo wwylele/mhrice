@@ -442,6 +442,10 @@ pub fn gen_monsters(
                 None
             };
 
+            let block_move = is_large
+                .then(|| sub_file(pak, &main_pfb, version_hint).context("block_move"))
+                .transpose()?;
+
             monsters.push(Monster {
                 id,
                 sub_id,
@@ -462,6 +466,7 @@ pub fn gen_monsters(
                 pop_parameter,
                 unique_mystery,
                 unique_over_mystery,
+                block_move,
             })
         }
     }

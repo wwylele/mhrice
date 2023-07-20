@@ -40,6 +40,7 @@ pub struct Monster {
     pub pop_parameter: EnemyPopParameterData,
     pub unique_mystery: Option<EnemyUniqueMysteryDataWrapper>,
     pub unique_over_mystery: Option<EnemyUniqueOverMysteryData>,
+    pub block_move: Option<EnemyBlockMoveData>,
 }
 
 #[derive(Debug, Serialize)]
