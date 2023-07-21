@@ -1414,6 +1414,98 @@ fn gen_quest(
         ),
     });
 
+    let routes = quest
+        .param
+        .boss_em_type
+        .iter()
+        .copied()
+        .enumerate()
+        .filter(|&(_, em_type)| em_type != EmTypes::Em(0))
+        .map(|(i, em_type)| {
+            let is_target = quest.param.has_target(em_type);
+            let mystery = quest
+                .enemy_param
+                .and_then(|p| p.individual_type.get(i).cloned());
+            let sub_type = quest.enemy_param.and_then(|p| p.sub_type(i));
+            let route_no = quest
+                .enemy_param
+                .as_ref()
+                .and_then(|p| p.route_no.get(i))
+                .map(|route| u32::from(*route));
+            let route = pedia_ex
+                .monsters
+                .get(&em_type)
+                .and_then(|m| m.data.block_move.as_ref())
+                .and_then(|d| {
+                    d.stage_info_list
+                        .iter()
+                        .find(|s| s.map_type == quest.param.map_no)
+                })
+                .and_then(|s| {
+                    s.route_info_list
+                        .iter()
+                        .find(|s| Some(s.route_no) == route_no)
+                }).map(|route| {
+                let column_num = route.block_info_list.iter()
+                    .map(|item|item.lot_prev_block_info.len())
+                    .max().unwrap_or(1);
+                html!(<div class="mh-table"><table>
+                <thead><tr>
+                    <th>"Current zone"</th>
+                    <th colspan={column_num}>"Next zone"</th>
+                </tr></thead>
+                <tbody>
+                {
+                    route.block_info_list.iter().map(|cur_block| {
+                        html!(<tr>
+                            <td>{text!("{}", cur_block.block_no)}</td>
+                            {cur_block.lot_prev_block_info.iter().map(|column| {
+                                html!(<td>
+                                    <div>{match column.move_status {
+                                        MoveStatusType::None => text!("Normal"),
+                                        MoveStatusType::LowStamina => todo!("Exhausted"),
+                                        MoveStatusType::Dying => todo!("Limping"),
+                                        MoveStatusType::LowStmDying => todo!("Limping & exhausted"),
+                                    }}
+                                    {(column.prev_block_no != 0).then(||
+                                        text!(", prev zone {}", column.prev_block_no))}
+                                    </div>
+                                    <ul>{column.lot_info_list.iter().map(|lot|{
+                                    let move_pattern = lot.move_pattern.display();
+                                    let move_pattern_split = if move_pattern.is_empty() {
+                                        ""
+                                    } else {
+                                        ", "
+                                    };
+                                    html!(<li>
+                                        {text!("{}% to zone {}{}{}", lot.lot_value, lot.next_block_no, move_pattern_split, move_pattern)}
+                                    </li>)})}</ul>
+                                </td>)
+                            })}
+                        </tr>)
+                    })
+                }
+                </tbody></table></div>
+                )
+            });
+            html!(<section>
+                {gen_monster_tag(pedia_ex, em_type, is_target, false, mystery, sub_type)}
+                {route_no.map(|no|html!(<div>{text!("Route number: {}", no)}</div>))}
+                {route.is_none().then(||text!("Route not found"))}
+                {route}
+            </section>)
+        });
+
+    if has_normal_em {
+        sections.push(Section {
+            title: "Monster route".to_owned(),
+            content: html!(<section id="s-route">
+            <h2>"Monster route"</h2>
+            {routes}
+            </section>),
+        })
+    }
+
     let plain_title = format!("Quest {:06}", quest.param.quest_no);
     let doc: DOMTree<String> = html!(
         <html lang="en">

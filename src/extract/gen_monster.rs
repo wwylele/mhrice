@@ -10,7 +10,7 @@ use crate::part_color::PART_COLORS;
 use crate::rsz::*;
 use anyhow::Result;
 use once_cell::sync::Lazy;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::convert::TryFrom;
 use std::io::Write;
 use typed_html::{dom::*, elements::*, html, text};
@@ -1166,6 +1166,25 @@ pub fn gen_monster(
         <p class="mh-kv"><span>"life_area_timer_rate"</span>
             <span>{text!("{}", monster.anger_data.life_area_timer_rate)}</span>
         </p>
+        {monster.block_move.iter().flat_map(|block_move| {[
+            html!(<p class="mh-kv"><span>"Default move pattern"</span>
+                <span>{text!("{}", block_move.default_move_pattern.display())}</span>
+            </p>),
+            html!(<p class="mh-kv"><span>"Flying stance to move"</span>
+                <span>{text!("{}", block_move.is_enable_fly_stance_to_fly_move)}</span>
+            </p>),
+            // these looks the same for all monsters
+            /*
+            html!(<p class="mh-kv"><span>"target_enemy_block_move_early_rate"</span>
+                <span>{text!("{}", block_move.target_enemy_block_move_early_rate)}</span>
+            </p>),
+            html!(<p class="mh-kv"><span>"main_out_target_player_early_rate"</span>
+                <span>{text!("{}", block_move.main_out_target_player_early_rate)}</span>
+            </p>),
+            html!(<p class="mh-kv"><span>"damag_from_main_out_player_early_rate"</span>
+                <span>{text!("{}", block_move.damag_from_main_out_player_early_rate)}</span>
+            </p>),*/
+        ]})}
         </div>
         </section>
     )});
@@ -2373,6 +2392,94 @@ pub fn gen_monster(
         </table></div>
         </section>),
     });
+
+    if let Some(block_move) = &monster.block_move {
+        sections.push(Section {
+            title: "Map behavior".to_owned(),
+            content: html!(<section id="s-route">
+            <h2>"Map behavior"</h2>
+            {block_move.stage_info_list.iter().map(|stage| {
+
+                #[derive(Default)]
+                struct BlockInfo<'a> {
+                    pub sleep_point_list: Vec<&'a EnemyBlockMoveDataInsideMoveInfo>,
+                    pub map_meet_eat_point_list: Vec<&'a EnemyBlockMoveDataInsideMoveInfo>,
+                    pub map_escape_point_list: Vec<&'a EnemyBlockMoveDataInsideMoveInfo>,
+                    pub ecological_point_list: Vec<&'a EnemyBlockMoveDataInsideMoveInfo>,
+                    pub block_basic_info_list: Vec<&'a EnemyBlockMoveDataBlockBasicInfo>,
+                }
+
+                let mut block_infos: BTreeMap<i32, BlockInfo> = BTreeMap::new();
+                for block in &stage.sleep_point_list {
+                    block_infos.entry(block.block_no).or_default().sleep_point_list.push(block);
+                }
+                for block in &stage.map_meet_eat_point_list {
+                    block_infos.entry(block.block_no).or_default().map_meet_eat_point_list.push(block);
+                }
+                for block in &stage.map_escape_point_list {
+                    block_infos.entry(block.block_no).or_default().map_escape_point_list.push(block);
+                }
+                for block in &stage.ecological_point_list {
+                    block_infos.entry(block.block_no).or_default().ecological_point_list.push(block);
+                }
+                for block in &stage.block_basic_info_list {
+                    block_infos.entry(block.block_no).or_default().block_basic_info_list.push(block);
+                }
+
+                let display_inside = |list: Vec<&EnemyBlockMoveDataInsideMoveInfo>| {
+                    html!(<td>
+                        {list.into_iter().map(|d|html!(<div>
+                            {text!("[{}]", d.unique_id)}
+                            {(d.unique_2nd_id != 99999999).then(||text!(",[{}]", d.unique_2nd_id))}
+                            {(d.unique_3rd_id != 99999999).then(||text!(",[{}]", d.unique_3rd_id))}
+                            {text!(". flag:{}", d.flag)}
+                        </div>))}
+                    </td>)
+                };
+
+                html!(<section>
+                <h3>{gen_map_label(stage.map_type, pedia)}</h3>
+                <div class="mh-kvlist">
+                <p class="mh-kv"><span>"Active area land"</span>
+                <span>{text!("{}", stage.active_area_land)}</span></p>
+                <p class="mh-kv"><span>"Active area water"</span>
+                <span>{text!("{}", stage.active_area_water)}</span></p>
+                <p class="mh-kv"><span>"Active area special1"</span>
+                <span>{text!("{}", stage.active_area_special01)}</span></p>
+                <p class="mh-kv"><span>"Active area special2"</span>
+                <span>{text!("{}", stage.active_area_special02)}</span></p>
+                </div>
+                <div class="mh-table"><table>
+                <thead><tr>
+                    <th>"Zone"</th>
+                    <th>"Idle"</th>
+                    <th>"Combat"</th>
+                    <th>"Disable move"</th>
+                    <th>"Sleep"</th>
+                    <th>"Eat"</th>
+                    <th>"Escape"</th>
+                    //<th>"Ecology"</th>
+                </tr></thead>
+                <tbody>
+                {block_infos.into_iter().map(|(zone, info)| {
+                    html!(<tr>
+                        <td>{text!("{}", zone)}</td>
+                        <td>{info.block_basic_info_list.iter().map(|i|html!(<div>{text!("{}sec", i.non_combat_stay_sec_time)}</div>))}</td>
+                        <td>{info.block_basic_info_list.iter().map(|i|html!(<div>{text!("{}sec", i.combat_stay_sec_time)}</div>))}</td>
+                        <td>{info.block_basic_info_list.iter().map(|i|html!(<div>{text!("{}", i.move_disable_area)}</div>))}</td>
+                        {display_inside(info.sleep_point_list)}
+                        {display_inside(info.map_meet_eat_point_list)}
+                        {display_inside(info.map_escape_point_list)}
+                        //{display_inside(info.ecological_point_list)} // seems always empty
+                    </tr>)
+                })}
+                </tbody>
+                </table></div>
+                </section>)
+            })}
+            </section>),
+        })
+    }
 
     let plain_title = format!("Monster {:03}_{:02} - MHRice", monster.id, monster.sub_id);
 

@@ -29,7 +29,7 @@ rsz_struct! {
 // snow.enemy.EnemyFieldParam.BlockMovePatternType
 rsz_enum! {
     #[rsz(i8)]
-    #[derive(Debug, Serialize, Eq, PartialEq)]
+    #[derive(Debug, Serialize, Eq, PartialEq, Copy, Clone)]
     pub enum BlockMovePatternType {
         InvalidBlockMovePatternNo = 0,
         NaviBlockMove = 1,
@@ -42,6 +42,24 @@ rsz_enum! {
         SpecialFormMove = 8,
         SuperJumpMove = 9,
         Fly2ndMove = 10,
+    }
+}
+
+impl BlockMovePatternType {
+    pub fn display(self) -> &'static str {
+        match self {
+            BlockMovePatternType::InvalidBlockMovePatternNo => "",
+            BlockMovePatternType::NaviBlockMove => "navigate",
+            BlockMovePatternType::BurrowMove => "burrow",
+            BlockMovePatternType::FlyMove => "fly",
+            BlockMovePatternType::DiveMove => "dive",
+            BlockMovePatternType::JumpMove => "jump",
+            BlockMovePatternType::SwimMove => "swim",
+            BlockMovePatternType::MomongaMove => "momonga",
+            BlockMovePatternType::SpecialFormMove => "special",
+            BlockMovePatternType::SuperJumpMove => "super jump",
+            BlockMovePatternType::Fly2ndMove => "launch",
+        }
     }
 }
 
