@@ -25,7 +25,7 @@ pub struct WebsiteConfig {
     pub origin: Option<String>, // e.g. https://mhrice.info
 }
 
-pub const LANGUAGE_MAP: [Option<(&str, &str)>; 32] = [
+pub const LANGUAGE_MAP: [Option<(&str, &str)>; 33] = [
     Some(("Japanese", "ja")),
     Some(("English", "en")),
     Some(("French", "fr")),
@@ -58,6 +58,7 @@ pub const LANGUAGE_MAP: [Option<(&str, &str)>; 32] = [
     None,
     None,
     None,
+    Some(("Latin American Spanish", "es-419")),
 ];
 
 pub fn head_common(
@@ -468,7 +469,7 @@ where
     RefF: Fn(&str) -> Option<&'r MsgEntry> + Clone,
 {
     html!(<span> {
-        (0..32).filter_map(|i|{
+        (0..33).filter_map(|i|{
             let class_string = if i == 1 {
                 "mh-lang lang-default"
             } else {
