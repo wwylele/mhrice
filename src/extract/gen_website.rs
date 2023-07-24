@@ -413,11 +413,13 @@ where
                     }
                     "REF" => {
                         if let Some(entry) = reference(t.arg) {
-                            let (translated, _inner_has_warning) = translate_msg(
-                                &entry.content[language_i],
-                                language_i,
-                                reference.clone(),
-                            );
+                            let Some(content) = entry.content.get(language_i) else {
+                                return html! (<span class="mh-msg-place-holder">
+                                    <i class="fas fa-triangle-exclamation"/> "[Unsupported language]"
+                                </span>)
+                            };
+                            let (translated, _inner_has_warning) =
+                                translate_msg(content, language_i, reference.clone());
                             //has_warning |= _inner_has_warning; // TODO: ehh
                             translated
                         } else {
@@ -469,15 +471,20 @@ where
     RefF: Fn(&str) -> Option<&'r MsgEntry> + Clone,
 {
     html!(<span> {
-        (0..33).filter_map(|i|{
+        LANGUAGE_MAP.into_iter().enumerate().filter_map(|(i, language)|{
             let class_string = if i == 1 {
                 "mh-lang lang-default"
             } else {
                 "mh-lang"
             };
-            let (_, language_code) = LANGUAGE_MAP[i]?;
+            let (_, language_code) = language?;
             let language_code: LanguageTag = language_code.parse().unwrap();
-            let (msg, warning) = translate_msg(&msg.content[i], i, reference.clone());
+            let Some(content) = msg.content.get(i) else {
+                return Some(html! (<span class={class_string} lang={language_code} >
+                    <i class="fas fa-triangle-exclamation"/> "[Unsupported language]"
+                </span>))
+            };
+            let (msg, warning) = translate_msg(content, i, reference.clone());
             let warning = warning.then(||html!(<span class="icon has-text-warning">
                 <i class="fas fa-triangle-exclamation" title="There is a parsing error"/>
             </span>));

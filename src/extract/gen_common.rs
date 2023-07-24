@@ -109,8 +109,8 @@ pub fn right_aside() -> Box<aside<String>> {
     </p>
     <ul class="menu-list">
     {
-        (0..33).filter_map(|i| {
-            let (language_name, language_code) = LANGUAGE_MAP[i]?;
+        LANGUAGE_MAP.into_iter().filter_map(|language| {
+            let (language_name, language_code) = language?;
             let id_string = format!("mh-lang-menu-{language_code}");
             Some(html!{<li><button type="button" class="mh-lang-menu" id={id_string.as_str()}> {
                 text!("{}", language_name)
