@@ -12,6 +12,7 @@ mod custom_buildup;
 mod data_base;
 mod data_tune;
 mod dlc;
+mod ecological;
 mod facility;
 mod item;
 mod lot;
@@ -41,6 +42,7 @@ pub use custom_buildup::*;
 pub use data_base::*;
 pub use data_tune::*;
 pub use dlc::*;
+pub use ecological::*;
 pub use facility::*;
 pub use item::*;
 pub use lot::*;
@@ -1307,6 +1309,8 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         EnemyBlockMoveDataCalcRotSpeed,
         EnemyBlockMoveData,
     );
+
+    r!(EnemyEcologicalDataStageInfo, EnemyEcologicalData,);
 
     m.extend(unique_mystery::unique_mystery_type_map());
     m.extend(ec::ec_type_map());

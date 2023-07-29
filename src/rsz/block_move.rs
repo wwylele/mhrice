@@ -121,7 +121,7 @@ rsz_struct! {
         pub sleep_point_list: Vec<EnemyBlockMoveDataInsideMoveInfo>,
         pub map_meet_eat_point_list: Vec<EnemyBlockMoveDataInsideMoveInfo>,
         pub map_escape_point_list: Vec<EnemyBlockMoveDataInsideMoveInfo>,
-        pub ecological_point_list: Vec<EnemyBlockMoveDataInsideMoveInfo>,
+        pub ecological_point_list: [EnemyBlockMoveDataInsideMoveInfo; 0], // seems always empty
         pub active_area_land: bool,
         pub active_area_water: bool,
         pub active_area_special01: bool,

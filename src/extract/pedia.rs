@@ -41,6 +41,7 @@ pub struct Monster {
     pub unique_mystery: Option<EnemyUniqueMysteryDataWrapper>,
     pub unique_over_mystery: Option<EnemyUniqueOverMysteryData>,
     pub block_move: Option<EnemyBlockMoveData>,
+    pub ecological: EnemyEcologicalData,
 }
 
 #[derive(Debug, Serialize)]
@@ -523,6 +524,12 @@ pub struct MysteryReward<'a> {
     pub multiple_fix_reward: Option<&'a RewardIdLotTableUserDataParam>,
 }
 
+#[derive(Default)]
+pub struct MonsterMapData<'a> {
+    pub block_move: Option<&'a EnemyBlockMoveDataStageInfo>,
+    pub ecological: Option<&'a EnemyEcologicalDataStageInfo>,
+}
+
 pub struct MonsterEx<'a> {
     pub data: &'a Monster,
     pub name: Option<&'a MsgEntry>,
@@ -538,6 +545,7 @@ pub struct MonsterEx<'a> {
     pub rank: Option<u8>,
     pub species: Option<&'a EmSpeciesData>,
     pub family: Option<&'a MsgEntry>,
+    pub map_data: BTreeMap<i32, MonsterMapData<'a>>,
 }
 
 pub struct Servant<'a> {

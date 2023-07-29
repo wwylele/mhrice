@@ -446,6 +446,8 @@ pub fn gen_monsters(
                 .then(|| sub_file(pak, &main_pfb, version_hint).context("block_move"))
                 .transpose()?;
 
+            let ecological = sub_file(pak, &main_pfb, version_hint).context("ecological")?;
+
             monsters.push(Monster {
                 id,
                 sub_id,
@@ -467,6 +469,7 @@ pub fn gen_monsters(
                 unique_mystery,
                 unique_over_mystery,
                 block_move,
+                ecological,
             })
         }
     }
@@ -3810,6 +3813,37 @@ fn prepare_monsters<'a>(
                     .copied(),
                 _ => None,
             });
+        let mut map_data: BTreeMap<i32, MonsterMapData> = BTreeMap::new();
+        for block_move in monster
+            .block_move
+            .iter()
+            .flat_map(|b| b.stage_info_list.iter())
+        {
+            let entry = map_data.entry(block_move.map_type).or_default();
+            if entry.block_move.is_some() {
+                bail!(
+                    "Multiple block move for monster {:03}_{:02}, map {}",
+                    monster.id,
+                    monster.sub_id,
+                    block_move.map_type
+                )
+            }
+            entry.block_move = Some(block_move);
+        }
+        for ecological in &monster.ecological.stage_info_list {
+            let entry = map_data.entry(ecological.map_type).or_default();
+            if entry.ecological.is_some() {
+                // Crapcom: bazel dup map?
+                writeln!(
+                    logger,
+                    "Multiple ecological for monster {:03}_{:02}, map {}",
+                    monster.id, monster.sub_id, ecological.map_type
+                )?;
+                continue;
+            }
+            entry.ecological = Some(ecological);
+        }
+
         let entry = if let Some(index) = monster.enemy_type {
             let name = names
                 .get(&format!("EnemyIndex{index:03}"))
@@ -3855,6 +3889,7 @@ fn prepare_monsters<'a>(
                 rank,
                 species,
                 family,
+                map_data,
             }
         } else {
             MonsterEx {
@@ -3872,6 +3907,7 @@ fn prepare_monsters<'a>(
                 rank,
                 species,
                 family,
+                map_data,
             }
         };
         result.insert(monster.em_type, entry);
