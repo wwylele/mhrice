@@ -2443,7 +2443,7 @@ pub fn gen_monster(
             let display_inside = |list: Vec<&EnemyBlockMoveDataInsideMoveInfo>| {
                 html!(<td>
                     {list.into_iter().map(|d|html!(<div>
-                        {text!("[{}]", d.unique_id)}
+                        {text!("@{}", d.unique_id)}
                         {(d.unique_2nd_id != 99999999).then(||text!(",[{}]", d.unique_2nd_id))}
                         {(d.unique_3rd_id != 99999999).then(||text!(",[{}]", d.unique_3rd_id))}
                         {text!(". flag:{}", d.flag)}
@@ -2456,14 +2456,9 @@ pub fn gen_monster(
             <div class="mh-kvlist">
             {behavior.block_move.iter().flat_map(|block_move|
                 [
-                    html!(<p class="mh-kv"><span>"Active area land"</span>
-                    <span>{text!("{}", block_move.active_area_land)}</span></p>),
-                    html!(<p class="mh-kv"><span>"Active area water"</span>
-                    <span>{text!("{}", block_move.active_area_water)}</span></p>),
-                    html!(<p class="mh-kv"><span>"Active area special1"</span>
-                    <span>{text!("{}", block_move.active_area_special01)}</span></p>),
-                    html!(<p class="mh-kv"><span>"Active area special2"</span>
-                    <span>{text!("{}", block_move.active_area_special02)}</span></p>),
+                    html!(<p class="mh-kv"><span>"Allow area type"</span>
+                    <span>{text!("{}", gen_active_area(block_move.active_area_land, block_move.active_area_water,
+                        block_move.active_area_special01, block_move.active_area_special02))}</span></p>)
                 ]
             )}
             {behavior.ecological.iter().flat_map(|ecological| {

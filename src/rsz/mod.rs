@@ -22,6 +22,7 @@ mod monster_list;
 mod mystery;
 mod otomo;
 mod parts_break_data;
+mod pos;
 mod quest_data;
 mod random_quest;
 mod scene;
@@ -52,6 +53,7 @@ pub use monster_list::*;
 pub use mystery::*;
 pub use otomo::*;
 pub use parts_break_data::*;
+pub use pos::*;
 pub use quest_data::*;
 pub use random_quest::*;
 pub use scene::*;
@@ -1311,6 +1313,15 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
     );
 
     r!(EnemyEcologicalDataStageInfo, EnemyEcologicalData,);
+
+    r!(
+        BlockMovePosSetDataMovePosInfo,
+        BlockMovePosSetData,
+        EnemyInsideMoveInfo,
+        InsideMovePosSetData,
+        EnemyBossInitSetInfo,
+        BossInitSetPosSetData,
+    );
 
     m.extend(unique_mystery::unique_mystery_type_map());
     m.extend(ec::ec_type_map());

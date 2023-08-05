@@ -173,6 +173,28 @@ static EC_ID_MAP: &[&str] = &[
     "056_02", "057_00",
 ];
 
+pub fn gen_active_area(
+    active_area_land: bool,
+    active_area_water: bool,
+    active_area_special01: bool,
+    active_area_special02: bool,
+) -> String {
+    let mut tags = vec![];
+    if active_area_land {
+        tags.push("Land")
+    }
+    if active_area_water {
+        tags.push("Water")
+    }
+    if active_area_special01 {
+        tags.push("Sp1")
+    }
+    if active_area_special02 {
+        tags.push("Sp2")
+    }
+    tags.join(", ")
+}
+
 fn gen_map(
     hash_store: &HashStore,
     id: i32,
@@ -718,6 +740,75 @@ fn gen_map(
                     gen_colored_icon(color, &icon_path, [], false)
                 });
             }
+
+            MapPopKind::InsideMove { pos } => {
+                floor = None;
+                icon_inner = Box::new(move || gen_colored_icon(3, "resources/item/071", [], false));
+
+                explain_inner = html!(<div class="mh-kvlist">
+                    <p class="mh-kv"><span>"Name"</span>
+                    <span>"Behavior point"</span></p>
+                    <p class="mh-kv"><span>"ID"</span>
+                    <span>{text!("@{}", pos.base.unique_id)}</span></p>
+                    <p class="mh-kv"><span>"Zone"</span>
+                    <span>{text!("{}", pos.base.block_no)}</span></p>
+                    <p class="mh-kv"><span>"Radius"</span>
+                    <span>{text!("{}", pos.radius)}</span></p>
+                    <p class="mh-kv"><span>"Type"</span>
+                    <span>{text!("{:?}", pos.pos_type)}</span></p>
+                    <p class="mh-kv"><span>"Area type"</span>
+                    <span>{text!("{}", gen_active_area(pos.active_area_land, pos.active_area_water,
+                        pos.active_area_special01, pos.active_area_special02))}</span></p>
+                    <p class="mh-kv"><span>"Angle"</span>
+                    <span>{text!("{}", pos.angle)}</span></p>
+                    <p class="mh-kv"><span>"Redner offset"</span>
+                    <span>{text!("{}", pos.render_offset)}</span></p>
+                </div>);
+
+                filter = "behavior";
+            }
+            MapPopKind::BlockMove { pos } => {
+                floor = None;
+                icon_inner = Box::new(move || gen_colored_icon(6, "resources/item/071", [], false));
+
+                explain_inner = html!(<div class="mh-kvlist">
+                    <p class="mh-kv"><span>"Name"</span>
+                    <span>"BLock move point"</span></p>
+                    <p class="mh-kv"><span>"ID"</span>
+                    <span>{text!("@{}", pos.base.unique_id)}</span></p>
+                    <p class="mh-kv"><span>"Zone"</span>
+                    <span>{text!("{}", pos.base.block_no)}</span></p>
+                    <p class="mh-kv"><span>"Type"</span>
+                    <span>{text!("{:?}", pos.pos_type)}</span></p>
+                    <p class="mh-kv"><span>"Area type"</span>
+                    <span>{text!("{}", gen_active_area(pos.active_area_land, pos.active_area_water,
+                        pos.active_area_special01, pos.active_area_special02))}</span></p>
+                </div>);
+
+                filter = "behavior";
+            }
+            MapPopKind::InitSet { pos } => {
+                floor = None;
+                icon_inner =
+                    Box::new(move || gen_colored_icon(14, "resources/item/071", [], false));
+
+                explain_inner = html!(<div class="mh-kvlist">
+                    <p class="mh-kv"><span>"Name"</span>
+                    <span>"Spawn point"</span></p>
+                    <p class="mh-kv"><span>"ID"</span>
+                    <span>{text!("@{}", pos.base.unique_id)}</span></p>
+                    <p class="mh-kv"><span>"Zone"</span>
+                    <span>{text!("{}", pos.base.block_no)}</span></p>
+                    <p class="mh-kv"><span>"Internal name"</span>
+                    <span>{text!("{}", pos.unique_name)}</span></p>
+                    <p class="mh-kv"><span>"Radius"</span>
+                    <span>{text!("{}", pos.radius)}</span></p>
+                    <p class="mh-kv"><span>"Angle"</span>
+                    <span>{text!("{}", pos.angle)}</span></p>
+                </div>);
+
+                filter = "spawn";
+            }
         }
         let map_icon_id = format!("mh-map-icon-{i}");
         let map_explain_id = format!("mh-map-explain-{i}");
@@ -764,6 +855,8 @@ fn gen_map(
             <li id="mh-map-filter-button-fish" class="mh-map-filter-button"><a>"Fishing points"</a></li>
             <li id="mh-map-filter-button-ec" class="mh-map-filter-button"><a>"Endemic life"</a></li>
             <li id="mh-map-filter-button-bush" class="mh-map-filter-button"><a>"Bush"</a></li>
+            <li id="mh-map-filter-button-behavior" class="mh-map-filter-button"><a>"Behavior"</a></li>
+            <li id="mh-map-filter-button-spawn" class="mh-map-filter-button"><a>"Spawn"</a></li>
             <li id="mh-map-filter-button-fg" class="mh-map-filter-button"><a>"Other"</a></li>
             </ul></div>
 

@@ -257,6 +257,24 @@ pub fn gen_collider_mapping(rcol: Rcol) -> Result<ColliderMapping> {
     Ok(ColliderMapping { meat_map, part_map })
 }
 
+pub fn pfb_user<T: FromRsz + 'static>(
+    pak: &mut PakReader<impl Read + Seek>,
+    pfb: &Pfb,
+    version_hint: Option<u32>,
+) -> Result<T> {
+    let path = &exactly_one(
+        pfb.children
+            .iter()
+            .filter(|child| child.hash == T::type_hash()),
+    )?
+    .name;
+    let index = pak.find_file(path)?;
+    let data = User::new(Cursor::new(pak.read_file(index)?))?;
+    data.rsz
+        .deserialize_single(version_hint)
+        .context(path.clone())
+}
+
 #[allow(clippy::too_many_arguments)]
 pub fn gen_monsters(
     pak: &mut PakReader<impl Read + Seek>,
@@ -274,24 +292,6 @@ pub fn gen_monsters(
 
     let mut monsters = vec![];
 
-    fn sub_file<T: FromRsz + 'static>(
-        pak: &mut PakReader<impl Read + Seek>,
-        pfb: &Pfb,
-        version_hint: Option<u32>,
-    ) -> Result<T> {
-        let path = &exactly_one(
-            pfb.children
-                .iter()
-                .filter(|child| child.hash == T::type_hash()),
-        )?
-        .name;
-        let index = pak.find_file(path)?;
-        let data = User::new(Cursor::new(pak.read_file(index)?))?;
-        data.rsz
-            .deserialize_single(version_hint)
-            .context(path.clone())
-    }
-
     for id in 0..1000 {
         for sub_id in 0..10 {
             let main_pfb_path = pfb_path_gen(id, sub_id);
@@ -302,9 +302,9 @@ pub fn gen_monsters(
             };
             let main_pfb = Pfb::new(Cursor::new(pak.read_file(main_pfb_index)?))?;
 
-            let data_base = sub_file(pak, &main_pfb, version_hint).context("data_base")?;
+            let data_base = pfb_user(pak, &main_pfb, version_hint).context("data_base")?;
             let data_tune = {
-                // not using sub_file here because some pfb also somehow reference the variantion file
+                // not using pfb_user here because some pfb also somehow reference the variantion file
                 let path = data_tune_path_gen(id, sub_id);
                 let index = pak.find_file(&path)?;
                 User::new(Cursor::new(pak.read_file(index)?))?
@@ -312,13 +312,13 @@ pub fn gen_monsters(
                     .deserialize_single(version_hint)
                     .context("data_tune")?
             };
-            let meat_data = sub_file(pak, &main_pfb, version_hint).context("meat_data")?;
+            let meat_data = pfb_user(pak, &main_pfb, version_hint).context("meat_data")?;
             let condition_damage_data =
-                sub_file(pak, &main_pfb, version_hint).context("condition_damage_data")?;
-            let anger_data = sub_file(pak, &main_pfb, version_hint).context("anger_data")?;
-            let stamina_data = sub_file(pak, &main_pfb, version_hint).context("stamina_data")?;
+                pfb_user(pak, &main_pfb, version_hint).context("condition_damage_data")?;
+            let anger_data = pfb_user(pak, &main_pfb, version_hint).context("anger_data")?;
+            let stamina_data = pfb_user(pak, &main_pfb, version_hint).context("stamina_data")?;
             let parts_break_data =
-                sub_file(pak, &main_pfb, version_hint).context("parts_break_data")?;
+                pfb_user(pak, &main_pfb, version_hint).context("parts_break_data")?;
 
             let boss_init_set_data = if let Some(path) = boss_init_path_gen(id, sub_id) {
                 if let Ok(index) = pak.find_file(&path) {
@@ -346,9 +346,9 @@ pub fn gen_monsters(
                 Rcol::new(Cursor::new(pak.read_file(rcol_index)?), true).context(rcol_path)?;
             let collider_mapping = gen_collider_mapping(rcol)?;
 
-            let drop_item = sub_file(pak, &main_pfb, version_hint).context("drop_item")?;
+            let drop_item = pfb_user(pak, &main_pfb, version_hint).context("drop_item")?;
             let parts_break_reward = is_large
-                .then(|| sub_file(pak, &main_pfb, version_hint).context("parts_break_reward"))
+                .then(|| pfb_user(pak, &main_pfb, version_hint).context("parts_break_reward"))
                 .transpose()?;
 
             let em_type = if is_large { EmTypes::Em } else { EmTypes::Ems }(id | (sub_id << 8));
@@ -400,7 +400,7 @@ pub fn gen_monsters(
                 }
             }
 
-            let pop_parameter = sub_file(pak, &main_pfb, version_hint).context("pop_parameter")?;
+            let pop_parameter = pfb_user(pak, &main_pfb, version_hint).context("pop_parameter")?;
 
             let unique_mystery = if let Some((loader, path)) =
                 atmost_one(main_pfb.children.iter().filter_map(|child| {
@@ -443,10 +443,10 @@ pub fn gen_monsters(
             };
 
             let block_move = is_large
-                .then(|| sub_file(pak, &main_pfb, version_hint).context("block_move"))
+                .then(|| pfb_user(pak, &main_pfb, version_hint).context("block_move"))
                 .transpose()?;
 
-            let ecological = sub_file(pak, &main_pfb, version_hint).context("ecological")?;
+            let ecological = pfb_user(pak, &main_pfb, version_hint).context("ecological")?;
 
             monsters.push(Monster {
                 id,

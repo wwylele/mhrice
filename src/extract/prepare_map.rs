@@ -1,5 +1,7 @@
+use super::gen_pedia::pfb_user;
 use super::sink::Sink;
 use crate::pak::*;
+use crate::pfb::*;
 use crate::rsz;
 use crate::rsz::FromRsz;
 use crate::scn::*;
@@ -18,6 +20,7 @@ struct MapFiles {
     scale_file: &'static str,
     scene_file: &'static str,
     ec_file: Option<&'static str>,
+    enemy_file: &'static str,
 }
 
 static MAP_FILES: [Option<MapFiles>; 16] = [
@@ -28,6 +31,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_001.user",
         scene_file: "scene/m01/normal/m01_normal.scn",
         ec_file: Some("environmentCreature/UserData/m01_ECData.user"),
+        enemy_file: "enemy/prefab/EnemyM01MapUserData.pfb",
     }),
     Some(MapFiles {
         // 2
@@ -38,6 +42,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_002.user",
         scene_file: "scene/m02/normal/m02_normal.scn",
         ec_file: Some("environmentCreature/UserData/m02_ECData.user"),
+        enemy_file: "enemy/prefab/EnemyM02MapUserData.pfb",
     }),
     Some(MapFiles {
         // 3
@@ -48,6 +53,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_003.user",
         scene_file: "scene/m03/normal/m03_normal.scn",
         ec_file: Some("environmentCreature/UserData/m03_ECData.user"),
+        enemy_file: "enemy/prefab/EnemyM03MapUserDara.pfb", // Crapcom, "dara", really?
     }),
     Some(MapFiles {
         // 4
@@ -58,6 +64,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_004.user",
         scene_file: "scene/m04/normal/m04_normal.scn",
         ec_file: Some("environmentCreature/UserData/m04_ECData.user"),
+        enemy_file: "enemy/prefab/EnemyM04MapUserData.pfb",
     }),
     Some(MapFiles {
         // 5
@@ -68,6 +75,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_005.user",
         scene_file: "scene/m05/normal/m05_normal.scn",
         ec_file: Some("environmentCreature/UserData/m05_ECData.user"),
+        enemy_file: "enemy/prefab/EnemyM05MapUserData.pfb",
     }),
     None, // 6
     Some(MapFiles {
@@ -76,6 +84,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_007_sp.user", // special type
         scene_file: "scene/m01/hyakuryu/m01_hyakuryu_B.scn",
         ec_file: None,
+        enemy_file: "enemy/prefab/EnemyM07MapUserData.pfb",
     }),
     None, // 8
     Some(MapFiles {
@@ -84,6 +93,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_009.user",
         scene_file: "scene/m20/normal/m20_normal.scn",
         ec_file: Some("environmentCreature/UserData/m20_ECData.user"),
+        enemy_file: "enemy/prefab/EnemyM09MapUserData.pfb",
     }),
     Some(MapFiles {
         // 10
@@ -91,6 +101,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_010.user",
         scene_file: "scene/m21/normal/m21_normal.scn",
         ec_file: Some("environmentCreature/UserData/m21_ECData.user"),
+        enemy_file: "enemy/prefab/EnemyM10MapUserData.pfb",
     }),
     Some(MapFiles {
         // 11
@@ -101,6 +112,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_011.user",
         scene_file: "scene/m22/normal/m22_normal.scn",
         ec_file: Some("environmentCreature/UserData/m22_ECData.user"),
+        enemy_file: "enemy/prefab/EnemyM11MapUserData.pfb",
     }),
     Some(MapFiles {
         // 12
@@ -111,6 +123,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_031.user",
         scene_file: "scene/m31/normal/m31_normal.scn",
         ec_file: Some("environmentCreature/UserData/m31_ECData.user"),
+        enemy_file: "enemy/prefab/EnemyM31MapUserData.pfb",
     }),
     Some(MapFiles {
         // 13
@@ -121,6 +134,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_032.user",
         scene_file: "scene/m32/normal/m32_normal.scn",
         ec_file: Some("environmentCreature/UserData/m32_ECData.user"),
+        enemy_file: "enemy/prefab/EnemyM32MapUserData.pfb",
     }),
     Some(MapFiles {
         // 14
@@ -128,6 +142,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_041.user",
         scene_file: "scene/m41/normal/m41_normal.scn",
         ec_file: Some("environmentCreature/UserData/m41_ECData.user"),
+        enemy_file: "enemy/prefab/EnemyM41MapUserData.pfb",
     }),
     Some(MapFiles {
         // 15
@@ -139,6 +154,7 @@ static MAP_FILES: [Option<MapFiles>; 16] = [
         scale_file: "gui/01_Common/Map/MapScaleUserdata/GuiMapScaleDefineData_042.user",
         scene_file: "scene/m42/normal/m42_normal.scn",
         ec_file: Some("environmentCreature/UserData/m42_ECData.user"),
+        enemy_file: "enemy/prefab/EnemyM42MapUserData.pfb",
     }),
 ];
 
@@ -173,6 +189,16 @@ pub enum MapPopKind {
     Bush {
         behavior: Vec<rsz::DropObjectBehavior>,
     },
+    InsideMove {
+        pos: rsz::EnemyInsideMoveInfo,
+    },
+    #[allow(dead_code)]
+    BlockMove {
+        pos: rsz::BlockMovePosSetDataMovePosInfo,
+    },
+    InitSet {
+        pos: rsz::EnemyBossInitSetInfo,
+    },
 }
 
 #[derive(Debug, Serialize)]
@@ -191,7 +217,11 @@ pub struct GameMap {
     pub ec_data: Option<rsz::EnvironmentCreatureData>,
 }
 
-fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<Option<GameMap>> {
+fn get_map<F: Read + Seek>(
+    pak: &mut PakReader<F>,
+    files: &MapFiles,
+    map_no: i32,
+) -> Result<Option<GameMap>> {
     if pak.find_file(files.scene_file).is_err() {
         return Ok(None);
     }
@@ -339,6 +369,45 @@ fn get_map<F: Read + Seek>(pak: &mut PakReader<F>, files: &MapFiles) -> Result<O
         })
         .transpose()?;
 
+    let enemy_pfb = pak.find_file(files.enemy_file)?;
+    let enemy_pfb = Pfb::new(Cursor::new(pak.read_file(enemy_pfb)?))?;
+
+    let inside_move: rsz::InsideMovePosSetData = pfb_user(pak, &enemy_pfb, None)?;
+    if inside_move.map_no != map_no {
+        bail!(
+            "Map {map_no} got inside move for map {}",
+            inside_move.map_no
+        );
+    }
+    for pos in inside_move.pos_info_list {
+        pops.push(MapPop {
+            position: pos.base.pos.xzy(),
+            kind: MapPopKind::InsideMove { pos },
+        })
+    }
+
+    /*let block_move: rsz::BlockMovePosSetData = pfb_user(pak, &enemy_pfb, None)?;
+    if block_move.map_no != map_no {
+        bail!("Map {map_no} got block move for map {}", block_move.map_no);
+    }
+    for pos in block_move.pos_info_list {
+        pops.push(MapPop {
+            position: pos.base.pos.xzy(),
+            kind: MapPopKind::BlockMove { pos },
+        })
+    }*/
+
+    let init_set: rsz::BossInitSetPosSetData = pfb_user(pak, &enemy_pfb, None)?;
+    if init_set.map_no != map_no {
+        bail!("Map {map_no} got init set for map {}", init_set.map_no);
+    }
+    for pos in init_set.pos_info_list {
+        pops.push(MapPop {
+            position: pos.base.pos.xzy(),
+            kind: MapPopKind::InitSet { pos },
+        })
+    }
+
     Ok(Some(GameMap {
         layer_count: files.tex_files.len(),
         x_offset: scale.map_wide_min_pos,
@@ -355,7 +424,7 @@ pub fn prepare_maps(pak: &mut PakReader<impl Read + Seek>) -> Result<BTreeMap<i3
         .enumerate()
         .filter_map(|(i, f)| f.as_ref().map(|f| (i as i32, f)))
         .filter_map(|(i, f)| {
-            let game_map = match get_map(pak, f) {
+            let game_map = match get_map(pak, f, i) {
                 Ok(m) => m,
                 Err(e) => return Some(Err(e)),
             };

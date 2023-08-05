@@ -29,7 +29,7 @@ static PAK_SUB_KEY_EXP: Lazy<Vec<u8>> = Lazy::new(|| {
 const LANGUAGE_LIST: &[&str] = &[
     "", "Ja", "En", "Fr", "It", "De", "Es", "Ru", "Pl", "Nl", "Pt", "PtBR", "Ko", "ZhTW", "ZhCN",
     "Fi", "Sv", "Da", "No", "Cs", "Hu", "Sk", "Ar", "Tr", "Bu", "Gr", "Ro", "Th", "Uk", "Vi", "Id",
-    "Fc", "Hi", "Es419"
+    "Fc", "Hi", "Es419",
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]

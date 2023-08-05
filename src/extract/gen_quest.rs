@@ -941,7 +941,7 @@ fn gen_quest(
                     <td>{ condition }</td>
                     {init_set.into_iter().flat_map(|init_set|
                         init_set.info.iter().filter(|i|i.lot != 0).map(|i|html!(<td> {
-                        text!("Area {}, {}%", i.block, i.lot)
+                        text!("Zone {}, ID @{}, {}%", i.block, i.id, i.lot)
                     } </td>)))}
                 </tr>)
             })
