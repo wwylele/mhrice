@@ -7,7 +7,7 @@ use anyhow::{bail, Context, Result};
 use nalgebra_glm::*;
 use std::collections::HashSet;
 use std::convert::{TryFrom, TryInto};
-use std::io::{Cursor, Read, Seek, SeekFrom};
+use std::io::{Cursor, Read, Seek, SeekFrom, Write};
 use std::rc::*;
 
 pub enum UserData {
@@ -523,7 +523,8 @@ impl Rcol {
         Ok(())
     }
 
-    pub fn apply_skeleton(&mut self, mesh: &Mesh) -> Result<()> {
+    pub fn apply_skeleton(&mut self, mesh: &Mesh) -> Result<String> {
+        let mut log = Cursor::new(Vec::new());
         for group in &mut self.collider_groups {
             for collider in &mut group.colliders {
                 let bone_a = mesh
@@ -538,7 +539,7 @@ impl Rcol {
                 let bone_a = if let Some(bone_a) = bone_a {
                     bone_a
                 } else {
-                    eprintln!("Unknown bone a {}", collider.bone_a);
+                    writeln!(&mut log, "Unknown bone a {}", collider.bone_a)?;
                     continue;
                 };
 
@@ -547,7 +548,7 @@ impl Rcol {
                         let bone_b = if let Some(bone_b) = bone_b {
                             bone_b
                         } else {
-                            eprintln!("Unknown bone b {}", collider.bone_b);
+                            writeln!(&mut log, "Unknown bone b {}", collider.bone_b)?;
                             continue;
                         };
                         Shape::Capsule {
@@ -564,7 +565,7 @@ impl Rcol {
                 }
             }
         }
-        Ok(())
+        Ok(String::from_utf8(log.into_inner())?)
     }
 
     pub fn get_monster_ride_filter(&self) -> u32 {

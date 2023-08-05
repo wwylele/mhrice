@@ -1311,7 +1311,7 @@ fn gen_monster_hitzones(
         }
     }
 
-    monsters
+    let logs = monsters
         .into_par_iter()
         .map(|(index, sub_id, mesh, collider)| {
             let mesh = Mesh::new(Cursor::new(mesh))?;
@@ -1319,14 +1319,19 @@ fn gen_monster_hitzones(
 
             let meat_path = output.create(&meat_file_name_gen(index, sub_id))?;
             let parts_group_path = output.create(&parts_group_file_name_gen(index, sub_id))?;
-            collider.apply_skeleton(&mesh)?;
+            let log = collider.apply_skeleton(&mesh)?;
             let (vertexs, indexs) = collider.color_monster_model(&mesh)?;
             let HitzoneDiagram { meat, parts_group } = gen_hitzone_diagram(vertexs, indexs)?;
             meat.save_png(meat_path)?;
             parts_group.save_png(parts_group_path)?;
-            Ok(())
+            Ok((index, sub_id, log))
         })
-        .collect::<Result<Vec<()>>>()?;
+        .collect::<Result<Vec<(u32, u32, String)>>>()?;
+
+    for (index, sub_id, log) in logs {
+        lscope!(logger, "em{index:03}_{sub_id:02}");
+        write!(logger, "{}", log)?;
+    }
 
     Ok(())
 }
