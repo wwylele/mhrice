@@ -35,7 +35,7 @@ pub struct Scn {
     pub rsz: Rsz,
 }
 
-fn scn_option(v: u32) -> Option<u32> {
+pub fn scn_option(v: u32) -> Option<u32> {
     if v == 0xFFFFFFFF {
         None
     } else {
@@ -203,7 +203,7 @@ impl Scn {
         println!("Game objects:");
         for n in &self.game_objects {
             println!(
-                "object={}, parent={:?}, sub={}, {:?}",
+                "object={}, parent={:?}, components={}, {:?}",
                 n.object_index, n.parent_index, n.component_count, n.prefab_index
             )
         }
@@ -237,6 +237,10 @@ impl Scn {
         println!();
 
         println!("RSZ:");
+        for (i, root) in self.rsz.roots.iter().enumerate() {
+            println!("{i:4} -> {root:4}")
+        }
+        println!();
         match self.rsz.deserialize(None) {
             Ok(objects) => {
                 for (i, o) in objects.into_iter().enumerate() {

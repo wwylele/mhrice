@@ -379,6 +379,13 @@ enum Mhrice {
         scn: String,
     },
 
+    /// Print information of a PFB file
+    DumpPfb {
+        /// Path to the SCN file
+        #[clap(short, long)]
+        pfb: String,
+    },
+
     /// Print information of a SCN tree
     Scene {
         /// Paths to the PAK files, folder containing PAK files, or a .txt file listing all PAK files
@@ -1256,6 +1263,13 @@ fn dump_scn(scn: String) -> Result<()> {
     Ok(())
 }
 
+fn dump_pfb(pfb: String) -> Result<()> {
+    let pfb = Pfb::new(File::open(pfb)?)?;
+    pfb.dump();
+
+    Ok(())
+}
+
 fn scene_print_object(object: &GameObject, level: usize) {
     let ident_unit = 2;
     let ident = level * ident_unit;
@@ -1432,6 +1446,7 @@ fn main() -> Result<()> {
             options,
         } => read_dmp_tdb(dmp, address, options),
         Mhrice::DumpScn { scn } => dump_scn(scn),
+        Mhrice::DumpPfb { pfb } => dump_pfb(pfb),
         Mhrice::Scene { pak, name } => scene(pak, name),
         Mhrice::TypeInfo { dmp, hash, crc } => type_info(dmp, hash, crc),
         Mhrice::Map {

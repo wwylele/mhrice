@@ -1,11 +1,43 @@
 use crate::file_ext::*;
+use crate::rsz;
 use crate::rsz::Rsz;
+use crate::scn::scn_option;
 use crate::user::UserChild;
 use anyhow::{bail, Context, Result};
 use std::io::{Read, Seek};
 
 #[derive(Debug)]
+pub struct PfbGameObject {
+    object_index: u32,
+    parent_index: Option<u32>,
+    component_count: u32,
+}
+
+#[derive(Debug)]
+pub struct RefLink {
+    // this refers to a "root" in RSZ. However, this
+    // root isn't a real root object, but a reference to a leaf object
+    node_index: u32,
+
+    // This refers to a member to populate in the leaf object.
+    // It has type GameObjectRef, or an rray of it.
+    // Unclear how members are indexed. Roughly it seems to index property
+    // first, then fields.
+    member_index: u16,
+
+    b: u16,
+
+    // If the field is an rray, this is the index in to the array
+    array_index: u32,
+
+    // The game object the member should reference to
+    object_index: u32,
+}
+
+#[derive(Debug)]
 pub struct Pfb {
+    pub game_objects: Vec<PfbGameObject>,
+    pub ref_links: Vec<RefLink>,
     pub resource_names: Vec<String>,
     pub children: Vec<UserChild>,
     pub rsz: Rsz,
@@ -17,9 +49,9 @@ impl Pfb {
         if &magic != b"PFB\0" {
             bail!("Wrong magic for PFB file");
         }
-        let zinogre_count = file.read_u32()?;
+        let game_object_count = file.read_u32()?;
         let resource_count = file.read_u32()?;
-        let rathalos_count = file.read_u32()?;
+        let ref_link_count = file.read_u32()?;
         let child_count = file.read_u32()?;
         let padding = file.read_u32()?;
         if padding != 0 {
@@ -30,24 +62,35 @@ impl Pfb {
         let child_list_offset = file.read_u64()?;
         let rsz_offset = file.read_u64()?;
 
-        let _ = (0..zinogre_count)
+        let game_objects = (0..game_object_count)
             .map(|_| {
-                file.read_u32()?;
-                file.read_u32()?;
-                file.read_u32()?;
-                Ok(())
+                let object_index = file.read_u32()?;
+                let parent_index = scn_option(file.read_u32()?);
+                let component_count = file.read_u32()?;
+                Ok(PfbGameObject {
+                    object_index,
+                    parent_index,
+                    component_count,
+                })
             })
             .collect::<Result<Vec<_>>>()?;
         file.seek_noop(rathalos_offset)
             .context("Undisconvered data before rathalos list")?;
 
-        let _ = (0..rathalos_count)
+        let ref_links = (0..ref_link_count)
             .map(|_| {
-                file.read_u32()?;
-                file.read_u32()?;
-                file.read_u32()?;
-                file.read_u32()?;
-                Ok(())
+                let node_index = file.read_u32()?;
+                let member_index = file.read_u16()?;
+                let b = file.read_u16()?;
+                let array_index = file.read_u32()?;
+                let object_index = file.read_u32()?;
+                Ok(RefLink {
+                    node_index,
+                    member_index,
+                    b,
+                    array_index,
+                    object_index,
+                })
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -99,10 +142,89 @@ impl Pfb {
 
         let rsz = Rsz::new(file, rsz_offset)?;
 
+        /*if !ref_links.is_empty() {
+            println!("------------");
+            for ref_link in &ref_links {
+                let t = rsz.type_descriptors[rsz.roots[ref_link.node_index as usize] as usize].hash;
+                println!(
+                    "node={}, [{}, {}, {}], type={:08X}",
+                    ref_link.node_index, ref_link.member_index, ref_link.b, ref_link.array_index, t
+                )
+            }
+        }*/
+
         Ok(Pfb {
+            game_objects,
+            ref_links,
             resource_names,
             children,
             rsz,
         })
+    }
+
+    pub fn dump(&self) {
+        println!("Game objects:");
+        for game_object in &self.game_objects {
+            println!(
+                "object={}, parent={:?}, components={}",
+                game_object.object_index, game_object.parent_index, game_object.component_count
+            )
+        }
+        println!();
+
+        println!("Ref link:");
+        for ref_link in &self.ref_links {
+            println!(
+                "node={}, parent={}, [{}, {}, {}]",
+                ref_link.node_index,
+                ref_link.object_index,
+                ref_link.member_index,
+                ref_link.b,
+                ref_link.array_index,
+            )
+        }
+        println!();
+
+        println!("Resource:");
+        for r in &self.resource_names {
+            println!(" - {r}")
+        }
+        println!();
+
+        println!("Children:");
+        for c in &self.children {
+            println!(" - [{:08X}] {}", c.hash, c.name)
+        }
+        println!();
+
+        println!("RSZ:");
+        for (i, root) in self.rsz.roots.iter().enumerate() {
+            println!("{i:4} -> {root:4}")
+        }
+        println!();
+        match self.rsz.deserialize(None) {
+            Ok(objects) => {
+                for (i, o) in objects.into_iter().enumerate() {
+                    println!("== {i} ==");
+                    println!("{}", o.to_json().unwrap());
+                }
+            }
+            Err(e) => {
+                println!("Failed to serialize because {e}");
+                for (i, type_descriptor) in self.rsz.type_descriptors.iter().enumerate() {
+                    // let type_descriptor = self.rsz.type_descriptors[*root as usize];
+                    let hash = type_descriptor.hash;
+                    let symbol = rsz::RSZ_TYPE_MAP
+                        .get(&hash)
+                        .map(|t| t.symbol)
+                        .unwrap_or_default();
+                    println!(
+                        " [{}] - {:08X}, {:08X} - {}",
+                        i, hash, type_descriptor.crc, symbol
+                    )
+                }
+                Result::<()>::Err(e).unwrap()
+            }
+        }
     }
 }
