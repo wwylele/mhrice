@@ -78,6 +78,7 @@ pub fn get_fish_item_id(fish_id: i32) -> Option<rsz::ItemId> {
 // class snow.gui.SnowGuiCommonUtility.Icon {
 //     snow.gui.SnowGuiCommonUtility.Icon.ItemIconPatternNo getEcIconState(snow.envCreature.EnvironmentCreatureType type);
 // }
+#[allow(clippy::manual_range_patterns)]
 pub fn get_ec_icon_pattern(ec_type: i32) -> i32 {
     match ec_type {
         0 => 0x61,
@@ -117,6 +118,7 @@ pub fn get_ec_icon_pattern(ec_type: i32) -> i32 {
     }
 }
 
+#[allow(clippy::manual_range_patterns)]
 pub fn get_ec_icon_color(ec_type: i32) -> &'static str {
     match ec_type {
         0 | 8 | 9 | 0xc => "#26e196",

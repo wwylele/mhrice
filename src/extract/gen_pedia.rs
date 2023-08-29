@@ -81,7 +81,9 @@ fn exactly_one<T>(mut iterator: impl Iterator<Item = T>) -> Result<T> {
 }
 
 fn atmost_one<T>(mut iterator: impl Iterator<Item = T>) -> Result<Option<T>> {
-    let Some(next) = iterator.next() else {return Ok(None)};
+    let Some(next) = iterator.next() else {
+        return Ok(None);
+    };
     if iterator.next().is_some() {
         bail!("Multiple elements found");
     }
@@ -2341,7 +2343,7 @@ fn prepare_skills<'a>(
         }
         let Some(product) = deco_products.remove(&deco.id) else {
             // Crapcom: 16.0.1 dummy deco??
-            writeln!(logger,"No product for deco {:?}", deco.id)?;
+            writeln!(logger, "No product for deco {:?}", deco.id)?;
             continue;
         };
 
@@ -3724,8 +3726,11 @@ fn prepare_monsters<'a>(
             .map(|i| -> Result<Option<&RewardIdLotTableUserDataParam>> {
                 let Some(reward) = reward_lot.get(i) else {
                     // crapcom: v13 chaotic gore
-                    writeln!(logger,"Additional quest reward {i} not found for {mystery_reward:?}")?;
-                    return Ok(None)
+                    writeln!(
+                        logger,
+                        "Additional quest reward {i} not found for {mystery_reward:?}"
+                    )?;
+                    return Ok(None);
                 };
                 Ok(Some(reward))
             })

@@ -134,7 +134,9 @@ impl NodeSlot {
 
     fn take_instance(&mut self) -> Result<AnyRsz> {
         if matches!(self, NodeSlot::Instance(_)) {
-            let NodeSlot::Instance(rsz) = std::mem::replace(self, NodeSlot::None) else {unreachable!()};
+            let NodeSlot::Instance(rsz) = std::mem::replace(self, NodeSlot::None) else {
+                unreachable!()
+            };
             Ok(rsz)
         } else {
             bail!("The node slot doesn't contain instance: {:?}", self)

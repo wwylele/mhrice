@@ -416,7 +416,7 @@ where
                             let Some(content) = entry.content.get(language_i) else {
                                 return html! (<span class="mh-msg-place-holder">
                                     <i class="fas fa-triangle-exclamation"/> "[Unsupported language]"
-                                </span>)
+                                </span>);
                             };
                             let (translated, _inner_has_warning) =
                                 translate_msg(content, language_i, reference.clone());

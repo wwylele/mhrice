@@ -18,7 +18,9 @@ pub fn open_graph(
     path: &str,
     config: &WebsiteConfig,
 ) -> Vec<Box<dyn MetadataContent<String>>> {
-    let Some(origin) = &config.origin else {return vec![]};
+    let Some(origin) = &config.origin else {
+        return vec![];
+    };
     let mut title = if let Some(title) = title {
         translate_msg_plain(&title.content[1])
     } else {

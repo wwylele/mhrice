@@ -223,7 +223,7 @@ impl Pfb {
                         i, hash, type_descriptor.crc, symbol
                     )
                 }
-                Result::<()>::Err(e).unwrap()
+                panic!("{:?}", e)
             }
         }
     }

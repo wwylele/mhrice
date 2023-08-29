@@ -934,6 +934,7 @@ fn search_path(pak: Vec<String>, dmp: Vec<String>) -> Result<()> {
         if !c.is_ascii_graphic() {
             return false;
         }
+        #[allow(clippy::needless_raw_string_hashes)]
         if br###""*\:<>?*|"###.contains(&c) {
             return false;
         }
