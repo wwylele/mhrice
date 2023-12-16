@@ -324,7 +324,7 @@ impl S3SinkInner {
                     existing_objects.extend(
                         result
                             .contents()
-                            .into_iter()
+                            .iter()
                             .flat_map(|o| {
                                 o.key()
                                     .map(|s| s.to_owned())

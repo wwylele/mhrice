@@ -331,8 +331,11 @@ fn gen_otomo_equip(
         )
     });
 
+    #[allow(clippy::question_mark)] // clippy is drunk
     let layered_row = |piece: &Option<OtArmor>| {
-        let Some(piece) = piece else { return None };
+        let Some(piece) = piece else {
+            return None;
+        };
         piece.overwear.map(|overwear| {
             html!(<tr>
                 <td>{gen_atomo_armor_label(piece)}</td>
