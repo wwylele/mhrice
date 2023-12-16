@@ -109,7 +109,7 @@ impl Source {
         writer
             .create_element("source")
             .with_attribute(("id", self.id.as_str()))
-            .write_inner_content(|w| {
+            .write_inner_content(|w| -> quick_xml::Result<()> {
                 self.array_element.write(w)?;
                 self.technique_common.write(w)?;
                 Ok(())
@@ -188,7 +188,7 @@ impl PrimitiveElements {
                 writer
                     .create_element("triangles")
                     .with_attribute(("count", count.to_string().as_str()))
-                    .write_inner_content(|w| {
+                    .write_inner_content(|w| -> quick_xml::Result<()> {
                         write_seq(inputs, SharedInput::write)(w)?;
                         w.create_element("p")
                             .write_text_content(BytesText::new(&seq_string(p)))?;
@@ -218,12 +218,14 @@ impl GeometricElement {
                 vertices,
                 primitive_elements,
             } => {
-                writer.create_element("mesh").write_inner_content(|w| {
-                    write_seq(sources, Source::write)(w)?;
-                    vertices.write(w)?;
-                    write_seq(primitive_elements, PrimitiveElements::write)(w)?;
-                    Ok(())
-                })?;
+                writer.create_element("mesh").write_inner_content(
+                    |w| -> quick_xml::Result<()> {
+                        write_seq(sources, Source::write)(w)?;
+                        vertices.write(w)?;
+                        write_seq(primitive_elements, PrimitiveElements::write)(w)?;
+                        Ok(())
+                    },
+                )?;
                 Ok(())
             }
         }
@@ -240,7 +242,7 @@ impl Geometry {
         writer
             .create_element("geometry")
             .with_attribute(("id", self.id.as_str()))
-            .write_inner_content(|w| {
+            .write_inner_content(|w| -> quick_xml::Result<()> {
                 self.geometric_element.write(w)?;
                 Ok(())
             })?;
@@ -272,7 +274,7 @@ impl InstanceController {
         writer
             .create_element("instance_controller")
             .with_attribute(("url", self.url.as_str()))
-            .write_inner_content(|w| {
+            .write_inner_content(|w| -> quick_xml::Result<()> {
                 for skeleton in &self.skeletons {
                     w.create_element("skeleton")
                         .write_text_content(BytesText::new(skeleton))?;
@@ -322,7 +324,7 @@ impl Node {
             .with_attribute(("name", self.name.as_str()))
             .with_attribute(("sid", self.id.as_str()))
             .with_attribute(("node", type_str))
-            .write_inner_content(|w| {
+            .write_inner_content(|w| -> quick_xml::Result<()> {
                 if let Some(matrix) = &self.matrix {
                     write_matrix(matrix, w)?;
                 }
@@ -375,7 +377,7 @@ impl VertexWeights {
         writer
             .create_element("vertex_weights")
             .with_attribute(("count", self.count.to_string().as_str()))
-            .write_inner_content(|w| {
+            .write_inner_content(|w| -> quick_xml::Result<()> {
                 write_seq(&self.inputs, SharedInput::write)(w)?;
                 w.create_element("vcount")
                     .write_text_content(BytesText::new(&seq_string(&self.vcount)))?;
@@ -399,7 +401,7 @@ impl Skin {
         writer
             .create_element("skin")
             .with_attribute(("source", self.source.as_str()))
-            .write_inner_content(|w| {
+            .write_inner_content(|w| -> quick_xml::Result<()> {
                 write_seq(&self.sources, Source::write)(w)?;
                 self.joints.write(w)?;
                 self.vertex_weights.write(w)?;
@@ -460,13 +462,15 @@ pub struct Asset {
 
 impl Asset {
     fn write(&self, writer: &mut Writer<File>) -> quick_xml::Result<()> {
-        writer.create_element("asset").write_inner_content(|w| {
-            w.create_element("created")
-                .write_text_content(BytesText::new(&self.created))?;
-            w.create_element("modified")
-                .write_text_content(BytesText::new(&self.modified))?;
-            Ok(())
-        })?;
+        writer
+            .create_element("asset")
+            .write_inner_content(|w| -> quick_xml::Result<()> {
+                w.create_element("created")
+                    .write_text_content(BytesText::new(&self.created))?;
+                w.create_element("modified")
+                    .write_text_content(BytesText::new(&self.modified))?;
+                Ok(())
+            })?;
 
         Ok(())
     }
@@ -478,13 +482,15 @@ pub struct Scene {
 
 impl Scene {
     fn write(&self, writer: &mut Writer<File>) -> quick_xml::Result<()> {
-        writer.create_element("scene").write_inner_content(|w| {
-            w.create_element("instance_visual_scene")
-                .with_attribute(("url", self.instance_visual_scene.as_str()))
-                .write_empty()?;
+        writer
+            .create_element("scene")
+            .write_inner_content(|w| -> quick_xml::Result<()> {
+                w.create_element("instance_visual_scene")
+                    .with_attribute(("url", self.instance_visual_scene.as_str()))
+                    .write_empty()?;
 
-            Ok(())
-        })?;
+                Ok(())
+            })?;
         Ok(())
     }
 }
@@ -506,7 +512,7 @@ impl Collada {
             .create_element("COLLADA")
             .with_attribute(("xmlns", "http://www.collada.org/2008/03/COLLADASchema"))
             .with_attribute(("version", "1.5.0"))
-            .write_inner_content(|w| {
+            .write_inner_content(|w| -> quick_xml::Result<()> {
                 self.asset.write(w)?;
                 write_seq(&self.libraries, Library::write)(w)?;
                 self.scene.write(w)?;

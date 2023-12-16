@@ -1,5 +1,6 @@
 use super::hash_store::*;
 use anyhow::{anyhow, Context, Result};
+use aws_config::BehaviorVersion;
 use aws_sdk_s3::{primitives::*, types::*};
 use bytes::Bytes;
 use futures::{StreamExt, TryStreamExt};
@@ -305,7 +306,7 @@ impl S3SinkInner {
             let rt = Runtime::new().unwrap();
 
             let result = rt.block_on(async move {
-                let config = aws_config::load_from_env().await;
+                let config = aws_config::load_defaults(BehaviorVersion::latest()).await;
                 let client = aws_sdk_s3::Client::new(&config);
 
                 let mut existing_objects = HashMap::new();
@@ -324,7 +325,6 @@ impl S3SinkInner {
                         result
                             .contents()
                             .into_iter()
-                            .flatten()
                             .flat_map(|o| {
                                 o.key()
                                     .map(|s| s.to_owned())
@@ -333,7 +333,7 @@ impl S3SinkInner {
                             .filter(|object| !object.0.starts_with(&carved_prefix)),
                     );
 
-                    if result.is_truncated() {
+                    if result.is_truncated() == Some(true) {
                         continuation_token = result.next_continuation_token;
                     } else {
                         break;
@@ -420,7 +420,7 @@ impl S3SinkInner {
                     let mut more = false;
                     for key in objects.by_ref().take(1000) {
                         eprintln!("Deleting {key}...");
-                        delete = delete.objects(ObjectIdentifier::builder().key(key).build());
+                        delete = delete.objects(ObjectIdentifier::builder().key(key).build()?);
                         more = true;
                     }
                     if !more {
@@ -430,7 +430,7 @@ impl S3SinkInner {
                     client
                         .delete_objects()
                         .bucket(bucket.clone())
-                        .delete(delete.build())
+                        .delete(delete.build()?)
                         .send()
                         .await?;
                 }
