@@ -521,6 +521,10 @@ function changeFilter(e, category) {
     if (cur !== null) {
         cur.classList.add("is-active")
     }
+
+    if (g_weapon_masonry) {
+        g_weapon_masonry.layout();
+    }
 }
 
 function doSearch() {
