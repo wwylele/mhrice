@@ -251,6 +251,7 @@ function onChangeWeaponTree(e) {
     }
     if (select.value === "grid") {
         g_weapon_masonry.destroy();
+        g_weapon_masonry = null;
         root.classList.remove("mh-weapon-tree-list");
         root.classList.add("mh-weapon-tree-grid");
     } else {
