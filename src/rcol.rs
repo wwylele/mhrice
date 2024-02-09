@@ -636,7 +636,7 @@ impl Rcol {
                                     // seen in magmadron, seems incorrect attachment. skipping
                                     continue;
                                 }
-                                new_parts_group = Some(usize::try_from(data.parts_group)?);
+                                new_parts_group = Some(usize::from(data.parts_group));
                             }
                         }
                     }

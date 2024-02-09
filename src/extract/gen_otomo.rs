@@ -234,6 +234,7 @@ fn gen_otomo_equip(
         })
     }
 
+    #[allow(clippy::get_first)]
     let three_item_condition = |ty: EvaluationTypeFor3Argument, item: &[ItemId]| {
         let item0 = item.get(0).filter(|&&i| i != ItemId::None);
         let item1 = item.get(1).filter(|&&i| i != ItemId::None);

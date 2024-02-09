@@ -561,8 +561,8 @@ impl Tex {
             bail!("Volume texture")
         }
         let texture = &self.textures[index][mipmap];
-        let width = usize::try_from(self.width >> mipmap)?;
-        let height = usize::try_from(self.height >> mipmap)?;
+        let width = usize::from(self.width >> mipmap);
+        let height = usize::from(self.height >> mipmap);
 
         let mut data = vec![0; width * height * 4];
         let writer = |x, y, v: [u8; 4]| {

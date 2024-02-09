@@ -233,7 +233,7 @@ pub fn gen_collider_mapping(rcol: Rcol) -> Result<ColliderMapping> {
             continue;
         }
         if let Some(data) = attachment.user_data.downcast::<EmHitDamageRsData>() {
-            let entry = part_map.entry(data.parts_group.try_into()?).or_default();
+            let entry = part_map.entry(data.parts_group.into()).or_default();
             entry.insert(data.name.clone());
             entry.insert(attachment.name);
             entry.insert(
@@ -1653,7 +1653,7 @@ pub fn gen_resources(
     let icon = Tex::new(Cursor::new(pak.read_file(equip_icon)?))?.to_rgba(0, 0)?;
     let spriter = icon_uvs.spriter_groups[0]
         .spriters
-        .get(0)
+        .first()
         .context("Broken Arms_addonicon_MR.uvs")?;
     icon.sub_image_f(spriter.p0, spriter.p1)?
         .save_png(output.create("afflicted.png")?)?;

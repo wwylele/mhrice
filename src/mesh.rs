@@ -380,7 +380,7 @@ impl Mesh {
                 if index == 0xFFFF {
                     Ok(None)
                 } else {
-                    Ok(Some(index.try_into()?))
+                    Ok(Some(index.into()))
                 }
             }
 
@@ -561,7 +561,7 @@ impl Mesh {
             .into_iter()
             .map(|name_index| {
                 Ok(strings
-                    .get(usize::try_from(name_index)?)
+                    .get(usize::from(name_index))
                     .context("Material name out of bound")?
                     .clone())
             })
@@ -571,7 +571,7 @@ impl Mesh {
             .into_iter()
             .map(|name_index| {
                 Ok(strings
-                    .get(usize::try_from(name_index)?)
+                    .get(usize::from(name_index))
                     .context("Blend shape name out of bound")?
                     .clone())
             })
@@ -582,7 +582,7 @@ impl Mesh {
             .enumerate()
             .map(|(bone_index, name_index)| {
                 let name = strings
-                    .get(usize::try_from(name_index)?)
+                    .get(usize::from(name_index))
                     .context("Bone name out of bound")?
                     .clone();
                 bones[bone_index].name = name.clone();
@@ -1228,7 +1228,7 @@ impl Mesh {
                                 ],
                             },
                             vertex_weights: VertexWeights {
-                                count: index_bound.try_into()?,
+                                count: index_bound.into(),
                                 inputs: vec![
                                     SharedInput {
                                         semantic: "JOINT".to_owned(),

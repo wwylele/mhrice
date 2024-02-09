@@ -352,7 +352,7 @@ impl S3SinkInner {
                         let name = prefix.clone() + &name;
 
                         if let Some(etag) = existing_objects.remove(&name) {
-                            let md5: [u8; 16] = Md5::digest(&data).try_into().unwrap();
+                            let md5: [u8; 16] = Md5::digest(&data).into();
                             let md5_tag: String = md5
                                 .into_iter()
                                 .map(|b| format!("{b:02x}"))

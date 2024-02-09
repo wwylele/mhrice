@@ -1092,7 +1092,7 @@ impl Tdb {
                     namespace_offset,
                     len: len.try_into()?,
                     static_len,
-                    method_count: method_count.try_into()?,
+                    method_count: method_count.into(),
                     native_vtable_size,
                     field_count: field_count.try_into()?,
                     attribute_list_index: attribute_list_index.try_into()?,
@@ -1122,7 +1122,7 @@ impl Tdb {
                 let impl_flag = file.read_u16()?;
                 let name_offset = file.read_u32()?;
                 Ok(Method {
-                    attribute_list_index: attribute_list_index.try_into()?,
+                    attribute_list_index: attribute_list_index.into(),
                     vtable_slot,
                     attributes: MethodAttribute::from_bits(attributes)
                         .context("Unknown method attr")?,
@@ -1192,7 +1192,7 @@ impl Tdb {
                 let name_offset = file.read_u32()?;
                 Ok(Property {
                     flags: PropertyFlag::from_bits(flags).context("Unknown property flag")?,
-                    attribute_list_index: attribute_list_index.try_into()?,
+                    attribute_list_index: attribute_list_index.into(),
                     name_offset,
                 })
             })
@@ -1254,8 +1254,8 @@ impl Tdb {
                 let (type_instance_index, attribute) = file.read_u32()?.bit_split((19, 13));
 
                 Ok(Param {
-                    attribute_list_index: attribute_list_index.try_into()?,
-                    default_const_index: default_const_index.try_into()?,
+                    attribute_list_index: attribute_list_index.into(),
+                    default_const_index: default_const_index.into(),
                     name_offset,
                     modifier,
                     type_instance_index: type_instance_index.try_into()?,
