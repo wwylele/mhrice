@@ -918,6 +918,10 @@ pub static RSZ_TYPE_MAP: Lazy<HashMap<u32, RszTypeInfo>> = Lazy::new(|| {
         OverwearWeaponProductUserData,
         WeaponChaosCriticalUserDataParam,
         WeaponChaosCriticalUserData,
+        InsectBaseUserDataParam,
+        InsectBaseUserData,
+        InsectRateTableUserDataParam,
+        InsectRateTableUserData,
     );
 
     r!(

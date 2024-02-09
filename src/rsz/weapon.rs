@@ -2,6 +2,7 @@ use super::common::Versioned;
 use super::*;
 use crate::rsz_enum;
 use crate::rsz_struct;
+use crate::rsz_with_singleton;
 use serde::*;
 use std::ops::Deref;
 
@@ -1157,4 +1158,143 @@ rsz_struct! {
     pub struct WeaponChaosCriticalUserData {
         pub param: Vec<WeaponChaosCriticalUserDataParam>
     }
+}
+
+// snow.data.OtWeaponData.AtkTypes
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Copy, Clone)]
+    pub enum InsectAtkTypes {
+        Smash = 0,
+        Blow = 1,
+    }
+}
+
+// snow.data.InsectData.ButtleTypes
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Copy, Clone)]
+    pub enum InsectButtleTypes {
+        Normal = 0,
+        JointStruggle = 1,
+        Dust = 2,
+        Quick = 3,
+    }
+}
+
+// snow.data.InsectData.DustTypes
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Copy, Clone)]
+    pub enum DustTypes {
+        None = 0,
+        Paralyze = 1,
+        Poison = 2,
+        Bomb = 3,
+        Heal = 4,
+        PoisonParalyze = 5,
+        HealPoison = 6,
+        BombHeal = 7,
+        HealParalyze = 8,
+    }
+}
+
+impl DustTypes {
+    pub fn normalize(self) -> Vec<DustTypes> {
+        match self {
+            DustTypes::None => vec![],
+            DustTypes::Paralyze | DustTypes::Poison | DustTypes::Bomb | DustTypes::Heal => {
+                vec![self]
+            }
+            DustTypes::PoisonParalyze => vec![DustTypes::Poison, DustTypes::Paralyze],
+            DustTypes::HealPoison => vec![DustTypes::Heal, DustTypes::Poison],
+            DustTypes::BombHeal => vec![DustTypes::Bomb, DustTypes::Heal],
+            DustTypes::HealParalyze => vec![DustTypes::Heal, DustTypes::Paralyze],
+        }
+    }
+
+    pub fn display(self) -> String {
+        match self {
+            DustTypes::Paralyze => "Paralyze".to_string(),
+            DustTypes::Poison => "Poison".to_string(),
+            DustTypes::Bomb => "Blast".to_string(),
+            DustTypes::Heal => "Heal".to_string(),
+            x => match &x.normalize()[..] {
+                [] => "".to_string(),
+                [a, b] => format!("{} / {}", a.display(), b.display()),
+                _ => unreachable!(),
+            },
+        }
+    }
+}
+
+// snow.data.InsectData.InsectSkillId
+rsz_enum! {
+    #[rsz(i32)]
+    #[derive(Debug, Serialize, Copy, Clone)]
+    pub enum InsectSkillId {
+        Heal = 0,
+        DualExtractiveDef = 1,
+        ReduseUseStamina = 2,
+        TripleUp = 3,
+        DualExtractiveAtk = 4,
+        DualExtractiveSpd = 5,
+        AutoAttackSpdUp = 6,
+        StaminaRecoverUp = 7,
+        MultiChargeAttack = 8,
+        QuickCharge = 9,
+        OnTheSpotCharge = 10,
+        ExtractPowderDrop = 11,
+        Absorb = 12,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.equip.InsectBaseUserData.Param")]
+    #[derive(Debug, Serialize)]
+    pub struct InsectBaseUserDataParam {
+        pub base: WeaponBaseData,
+        pub insect_atk_type: InsectAtkTypes,
+        pub insect_buttle_type: InsectButtleTypes,
+        pub insect_atk_table_index_list: Vec<f32>,
+        pub insect_speed_table_index_list: Vec<f32>,
+        pub insect_heal_table_index_list: Vec<f32>,
+        pub insect_skill_id: InsectSkillId,
+        pub dust_type: DustTypes,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.equip.InsectBaseUserData",
+        path = "data/Define/Player/Weapon/Insect/InsectBaseData.user"
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct InsectBaseUserData {
+        pub param: Vec<InsectBaseUserDataParam>,
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.InsectRateTableUserData.Param")]
+    #[derive(Debug, Serialize)]
+    pub struct InsectRateTableUserDataParam {
+        pub attack_rate: f32,
+        pub heal_rate: f32,
+        pub speed_rate: f32
+    }
+}
+
+rsz_struct! {
+    #[rsz("snow.data.InsectRateTableUserData",
+        path = "data/Define/Player/Weapon/Insect/InsectRateTableData.user"
+    )]
+    #[derive(Debug, Serialize)]
+    pub struct InsectRateTableUserData {
+        pub param: Vec<InsectRateTableUserDataParam>,
+    }
+}
+
+rsz_with_singleton! {
+    #[path("data/Define/Player/Weapon/Insect/InsectProductData.user")]
+    pub struct InsectProductData(WeaponProductUserData);
 }

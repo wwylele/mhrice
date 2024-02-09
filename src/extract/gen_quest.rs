@@ -3,6 +3,7 @@ use super::gen_common::*;
 use super::gen_hyakuryu_skill::*;
 use super::gen_item::*;
 use super::gen_map::*;
+use super::gen_misc::*;
 use super::gen_monster::*;
 use super::gen_otomo::*;
 use super::gen_skill::*;
@@ -1190,7 +1191,15 @@ fn gen_quest(
 
                     <tr>
                         <td>"Weapon"</td>
-                        <td>{ gen_weapon_label_from_id(pedia_ex, pl.wep_id) }</td>
+                        <td><div>{ gen_weapon_label_from_id(pedia_ex, pl.wep_id) }</div>
+                        { (pl.insect_id != WeaponId::None && pl.insect_id != WeaponId::Null).then( ||
+                            if let Some(insect) = pedia_ex.insect.get(&pl.insect_id) {
+                                html!(<div>{gen_insect_label(insect)}</div>)
+                            } else {
+                                html!(<div>{text!("Unknown kinsect {:?}", pl.insect_id)}</div>)
+                            }
+                        ) }
+                        </td>
                         <td><ul class="mh-armor-skill-list">{ pl.hyakuryu_skill.iter()
                             .filter(|&&s|s != PlHyakuryuSkillId::None).map(|s|
                             if let Some(skill) = pedia_ex.hyakuryu_skills.get(s) {

@@ -60,6 +60,120 @@ fn gen_petalace(hash_store: &HashStore, pedia_ex: &PediaEx, folder: &impl Sink) 
     Ok(())
 }
 
+fn gen_insect_icon(insect: &InsectBaseUserDataParam) -> Box<div<String>> {
+    let icon_index = match insect.insect_atk_type {
+        InsectAtkTypes::Smash => 7,
+        InsectAtkTypes::Blow => 8,
+    };
+    let icon = format!("resources/equip/{:03}", icon_index);
+
+    let element_to_class = |element: DustTypes| match element {
+        DustTypes::Paralyze => "mh-addon-para",
+        DustTypes::Poison => "mh-addon-poison",
+        DustTypes::Bomb => "mh-addon-blast",
+        DustTypes::Heal => "mh-addon-heal",
+        _ => unreachable!(),
+    };
+
+    let addons = match &insect.dust_type.normalize()[..] {
+        [] => vec![],
+        [e1] => vec![format!("{} mh-addon-el", element_to_class(*e1))],
+        [e1, e2] => vec![
+            format!("{} mh-addon-el1", element_to_class(*e1)),
+            format!("{} mh-addon-el2", element_to_class(*e2)),
+        ],
+        _ => unreachable!(),
+    };
+
+    gen_rared_icon(
+        insect.base.rare_type,
+        &icon,
+        addons.iter().map(|s| s.as_str()),
+        false,
+    )
+}
+
+pub fn gen_insect_label(insect: &Insect) -> Box<a<String>> {
+    html!(
+        <a href="misc/kinsect.html" class="mh-icon-text">
+            {gen_insect_icon(insect.param)}
+            <span class="mh-weapon-name">{gen_multi_lang(insect.name)}</span>
+        </a>
+    )
+}
+
+fn gen_kinsect(hash_store: &HashStore, pedia_ex: &PediaEx, folder: &impl Sink) -> Result<()> {
+    let mut output = folder.create_html("kinsect.html")?;
+    let mut kinsect: Vec<_> = pedia_ex.insect.values().collect();
+    kinsect.sort_unstable_by_key(|p| (p.param.base.sort_id, p.param.base.id));
+
+    let doc: DOMTree<String> = html!(
+        <html lang="en">
+            <head itemscope=true>
+                <title>{text!("Kinsect - MHRice")}</title>
+                { head_common(hash_store, folder) }
+            </head>
+            <body>
+                { navbar() }
+                <main>
+                <header><h1>"Kinsect"</h1></header>
+                <div class="mh-table"><table>
+                <thead><tr>
+                    <th>"Name"</th>
+                    <th>"Attack type"</th>
+                    <th>"Kinsect type"</th>
+                    <th>"Powder"</th>
+                    <th>"Bonus"</th>
+                    <th>"Cost"</th>
+                    <th>"Unlock"</th>
+                </tr></thead>
+                <tbody>
+                { kinsect.into_iter().map(|kinsect| html!(<tr>
+                    <td><div class="mh-icon-text">
+                        {gen_insect_icon(&kinsect.param)}
+                        <span>{gen_multi_lang(kinsect.name)}</span>
+                    </div></td>
+                    <td>{ match kinsect.param.insect_atk_type {
+                        InsectAtkTypes::Smash => text!("Severing"),
+                        InsectAtkTypes::Blow => text!("Blunt"),
+                    } }</td>
+                    <td>{ match kinsect.param.insect_buttle_type {
+                        InsectButtleTypes::Normal => text!("Normal"),
+                        InsectButtleTypes::JointStruggle => text!("Assist"),
+                        InsectButtleTypes::Dust => text!("Powder"),
+                        InsectButtleTypes::Quick => text!("Speed"),
+                    } }</td>
+                    <td>{text!("{}", kinsect.param.dust_type.display())}</td>
+                    <td>{match kinsect.param.insect_skill_id {
+                        InsectSkillId::Heal => text!("Bonus Heal"),
+                        InsectSkillId::DualExtractiveDef => text!("Dual Color (Defense)"),
+                        InsectSkillId::ReduseUseStamina => text!("Stamina Use Slowed"),
+                        InsectSkillId::TripleUp => text!("Triple Up Time"),
+                        InsectSkillId::DualExtractiveAtk => text!("Dual Color (Attack)"),
+                        InsectSkillId::DualExtractiveSpd => text!("Dual Color (Speed)"),
+                        InsectSkillId::AutoAttackSpdUp => text!("Auto-attack Frequency Up"),
+                        InsectSkillId::StaminaRecoverUp => text!("Idle Stamina Recovery Up"),
+                        InsectSkillId::MultiChargeAttack => text!("Charged Chain Attack"),
+                        InsectSkillId::QuickCharge => text!("Fast Charge"),
+                        InsectSkillId::OnTheSpotCharge => text!("Kinsect Charge"),
+                        InsectSkillId::ExtractPowderDrop => text!("Boosted Powder Extract"),
+                        InsectSkillId::Absorb => text!("Powder Vortex"),
+                    }}</td>
+                    <td>{text!("{}", kinsect.param.base.base_val * 3 / 2)}</td>
+                    <td>{gen_progress(kinsect.product.base.progress_flag, pedia_ex)}</td>
+                </tr>)) }
+                </tbody>
+                </table></div>
+                </main>
+                { right_aside() }
+            </body>
+        </html>
+    );
+    output.write_all(doc.to_string().as_bytes())?;
+
+    Ok(())
+}
+
 fn gen_market(
     hash_store: &HashStore,
     pedia: &Pedia,
@@ -953,6 +1067,7 @@ fn gen_misc_page(hash_store: &HashStore, folder: &impl Sink) -> Result<()> {
                 <header><h1>"Miscellaneous"</h1></header>
                 <div class="mh-misc-list">
                 <a href="misc/petalace.html">"Petalace"</a>
+                <a href="misc/kinsect.html">"Kinsect"</a>
                 <a href="misc/market.html">"Market"</a>
                 <a href="misc/lab.html">"Anomaly research lab"</a>
                 <a href="misc/mix.html">"Item crafting"</a>
@@ -983,6 +1098,7 @@ pub fn gen_misc(
 ) -> Result<()> {
     let folder = output.sub_sink("misc")?;
     gen_petalace(hash_store, pedia_ex, &folder)?;
+    gen_kinsect(hash_store, pedia_ex, &folder)?;
     gen_market(hash_store, pedia, pedia_ex, &folder)?;
     gen_lab(hash_store, pedia, pedia_ex, &folder)?;
     gen_mix(hash_store, pedia, pedia_ex, &folder)?;

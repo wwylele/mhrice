@@ -332,6 +332,14 @@ pub struct Pedia {
     pub ec_name_mr: Msg,
 
     pub map_icon_list: GuiMapDetailIconListGPopData,
+
+    pub insect: InsectBaseUserData,
+    pub insect_rate: InsectRateTableUserData,
+    pub insect_product: InsectProductData,
+    pub insect_skill: Msg,
+    pub insect_skill_mr: Msg,
+    pub insect_name: Msg,
+    pub insect_name_mr: Msg,
 }
 
 pub struct QuestReward<'a> {
@@ -620,6 +628,12 @@ pub struct Slc<'a> {
     pub item_pack: Option<&'a SlcItemPackParam>,
 }
 
+pub struct Insect<'a> {
+    pub param: &'a InsectBaseUserDataParam,
+    pub product: &'a WeaponProductUserDataParam,
+    pub name: &'a MsgEntry,
+}
+
 pub struct PediaEx<'a> {
     pub monsters: BTreeMap<EmTypes, MonsterEx<'a>>,
     pub sizes: HashMap<EmTypes, &'a SizeInfo>,
@@ -673,4 +687,5 @@ pub struct PediaEx<'a> {
     pub dlc: BTreeMap<i32, Dlc<'a>>,
     pub slc: BTreeMap<SaveLinkContents, Slc<'a>>,
     // pub map_icon_list: HashMap<i32, &'a MapDetailIconListGPopData>,
+    pub insect: HashMap<WeaponId, Insect<'a>>,
 }

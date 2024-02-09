@@ -1005,6 +1005,20 @@ pub fn gen_pedia(
     let ec_name = get_msg(pak, "Message/HunterNote/EnvironmentCreature_Name.msg")?;
     let ec_name_mr = get_msg(pak, "Message/HunterNote_MR/EnvironmentCreature_Name_MR.msg")?;
 
+    let insect_skill = get_msg(
+        pak,
+        "data/Define/Player/Weapon/Insect/IG_InsectSkill_Name.msg",
+    )?;
+    let insect_skill_mr = get_msg(
+        pak,
+        "data/Define/Player/Weapon/Insect/IG_InsectSkill_Name_MR.msg",
+    )?;
+    let insect_name = get_msg(pak, "data/Define/Player/Weapon/Insect/IG_Insect_Name.msg")?;
+    let insect_name_mr = get_msg(
+        pak,
+        "data/Define/Player/Weapon/Insect/IG_Insect_Name_MR.msg",
+    )?;
+
     Ok(Pedia {
         sha,
 
@@ -1259,6 +1273,14 @@ pub fn gen_pedia(
         ec_name_mr,
 
         map_icon_list: get_singleton(pak, version_hint)?,
+
+        insect: get_singleton(pak, version_hint)?,
+        insect_rate: get_singleton(pak, version_hint)?,
+        insect_product: get_singleton(pak, version_hint)?,
+        insect_skill,
+        insect_skill_mr,
+        insect_name,
+        insect_name_mr,
     })
 }
 
@@ -4418,6 +4440,46 @@ pub fn prepare_slc(pedia: &'_ Pedia) -> Result<BTreeMap<SaveLinkContents, Slc<'_
 //     )
 // }
 
+fn prepare_insect<'a>(
+    pedia: &'a Pedia,
+    logger: &'_ mut Logger,
+) -> Result<HashMap<WeaponId, Insect<'a>>> {
+    lscope!(logger, "insect");
+    let names = pedia.insect_name.get_name_map();
+    let names_mr = pedia.insect_name_mr.get_name_map();
+    let products = hash_map_unique(
+        &pedia.insect_product.param,
+        |i| (i.base.id, i),
+        false,
+        logger,
+    )?;
+    let mut result = HashMap::new();
+    for param in &pedia.insect.param {
+        let name_tag = format!("IG_{}_Name", param.base.id.to_tag());
+        let name = *names
+            .get(&name_tag)
+            .or_else(|| names_mr.get(&name_tag))
+            .with_context(|| format!("Name not found for insect {:?}", param.base.id))?;
+        let product = products
+            .get(&param.base.id)
+            .with_context(|| format!("Product not found for insect {:?}", param.base.id))?;
+        if result
+            .insert(
+                param.base.id,
+                Insect {
+                    param,
+                    name,
+                    product,
+                },
+            )
+            .is_some()
+        {
+            bail!("Multiple insect found for id {:?}", param.base.id);
+        }
+    }
+    Ok(result)
+}
+
 pub fn gen_pedia_ex<'a>(pedia: &'a Pedia, logger: &mut Logger) -> Result<PediaEx<'a>> {
     lscope!(logger, "ex");
     let monster_order = pedia
@@ -4579,5 +4641,6 @@ pub fn gen_pedia_ex<'a>(pedia: &'a Pedia, logger: &mut Logger) -> Result<PediaEx
         dlc: prepare_dlc(pedia, logger)?,
         slc: prepare_slc(pedia)?,
         // map_icon_list: prepare_map_icon_list(pedia)?,
+        insect: prepare_insect(pedia, logger)?,
     })
 }
