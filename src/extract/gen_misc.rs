@@ -130,7 +130,7 @@ fn gen_kinsect(hash_store: &HashStore, pedia_ex: &PediaEx, folder: &impl Sink) -
                 <tbody>
                 { kinsect.into_iter().map(|kinsect| html!(<tr>
                     <td><div class="mh-icon-text">
-                        {gen_insect_icon(&kinsect.param)}
+                        {gen_insect_icon(kinsect.param)}
                         <span>{gen_multi_lang(kinsect.name)}</span>
                     </div></td>
                     <td>{ match kinsect.param.insect_atk_type {
