@@ -265,47 +265,6 @@ rsz_struct! {
     }
 }
 
-pub trait ArmorProduct {
-    fn item_flag(&self) -> ItemId;
-    fn enemy_flag(&self) -> EmTypes;
-    fn progress_flag(&self) -> i32;
-    fn item(&self) -> &Vec<ItemId>;
-    fn item_num(&self) -> &Vec<u32>;
-    fn material_category(&self) -> MaterialCategory;
-    fn material_category_num(&self) -> u32;
-}
-
-macro_rules! impl_armor_product {
-    ($name:ty) => {
-        impl ArmorProduct for $name {
-            fn item_flag(&self) -> ItemId {
-                self.item_flag
-            }
-            fn enemy_flag(&self) -> EmTypes {
-                self.enemy_flag
-            }
-            fn progress_flag(&self) -> i32 {
-                self.progress_flag
-            }
-            fn item(&self) -> &Vec<ItemId> {
-                &self.item
-            }
-            fn item_num(&self) -> &Vec<u32> {
-                &self.item_num
-            }
-            fn material_category(&self) -> MaterialCategory {
-                self.material_category
-            }
-            fn material_category_num(&self) -> u32 {
-                self.material_category_num
-            }
-        }
-    };
-}
-
-impl_armor_product!(ArmorProductUserDataParam);
-impl_armor_product!(PlOverwearProductUserDataParam);
-
 rsz_struct! {
     #[rsz("snow.data.ArmorBuildupTableUserData.Param",
         0x88ABDC38 = 13_00_00,
