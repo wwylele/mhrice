@@ -539,7 +539,7 @@ fn gen_item_usage_hyakuryu_deco(item_id: ItemId, pedia_ex: &PediaEx) -> Option<B
     let mut htmls = vec![];
 
     for (&id, skill) in &pedia_ex.hyakuryu_skills {
-        for deco in &skill.deco {
+        if let Some(deco) = &skill.deco {
             if deco.product.item_id_list.contains(&item_id) {
                 htmls.push(html!(<li>
                     <a href={format!("hyakuryu_skill/{}", hyakuryu_skill_page(id))}>
